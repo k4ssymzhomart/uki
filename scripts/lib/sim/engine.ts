@@ -13,7 +13,12 @@
 //   resume, end) are read back from `sessions`.
 import { randomUUID } from "node:crypto";
 import type { ExamChecks, SessionState, SessionStatus } from "../../../packages/contracts/src/index.ts";
-import { isFinalState, isPreExamState, uuidv7 } from "../../../packages/contracts/src/index.ts";
+import {
+  isFinalState,
+  isPreExamState,
+  parseStatusDetail,
+  uuidv7,
+} from "../../../packages/contracts/src/index.ts";
 import type { Json } from "../../../packages/db/src/index.ts";
 import { formatDuration, type Logger, must } from "../cli.ts";
 import type { ServerClock } from "../clock.ts";
@@ -178,7 +183,8 @@ export class SimEngine {
         sessionId: adopted?.sessionId ?? null,
         state: adopted?.state ?? null,
         reported: adopted && isPreExamState(adopted.state) ? (adopted.state as LobbyStep) : "joined",
-        detail: adopted?.status.detail ?? undefined,
+        // A stored detail outside the vocabulary (an older run) is not sent again.
+        detail: parseStatusDetail(adopted?.status.detail) ? (adopted?.status.detail ?? undefined) : undefined,
         question: adopted?.status.question ?? 0,
         seq: adopted?.seq ?? 0,
         agenda: [],

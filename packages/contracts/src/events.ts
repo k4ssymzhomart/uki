@@ -140,6 +140,14 @@ export const CameraLostReason = z.enum(["ended", "muted", "error"]);
 export type CameraLostReason = z.infer<typeof CameraLostReason>;
 export const CopyKind = z.enum(["copy", "cut", "paste", "print"]);
 export type CopyKind = z.infer<typeof CopyKind>;
+/**
+ * Why the app paused its own session: the reasons a client may send in session.paused. "proctor" is
+ * not one of them: only the server's proctor.paused is a proctor pause, so a forged session.paused
+ * cannot escape the 300 s self-pause cap ("Session states").
+ */
+export const ClientPauseReason = z.enum(["face_missing", "camera_lost"]);
+export type ClientPauseReason = z.infer<typeof ClientPauseReason>;
+/** A pause's reason as the wall shows it: a self pause's reason, or "proctor" for proctor.paused. */
 export const PauseReason = z.enum(["face_missing", "camera_lost", "proctor"]);
 export type PauseReason = z.infer<typeof PauseReason>;
 export const HelpTopic = z.enum(["identity", "question", "technical"]);
@@ -152,6 +160,13 @@ export type DisconnectSide = z.infer<typeof DisconnectSide>;
 export const BlockedAppName = z.string().min(1).max(100);
 
 const Empty = z.object({});
+
+/**
+ * A group command (scope `group`) writes one proctor.time_added or proctor.message per session; all
+ * of them carry the same `group_id` (`session_commands.group_id`), so the wall's feed shows the
+ * command once.
+ */
+export const CommandGroupId = Uuid;
 
 /** From Üki Lock: the tab's host, or null when focus left every browser window. */
 export const TabBlockedLockData = z.object({ host: Host.nullable() });
@@ -174,17 +189,21 @@ export const EVENT_DATA = {
   "exam.started": Empty,
   "browser.locked": Empty,
   "answer.saved": z.object({ question_id: Uuid }),
-  "session.paused": z.object({ reason: PauseReason }),
+  "session.paused": z.object({ reason: ClientPauseReason }),
   "session.resumed": z.object({ paused_ms: DurationMs, by: z.literal("student") }),
   "exam.submitted": z.object({ time_used_s: z.number().int().nonnegative() }),
   "exam.time_up": Empty,
   "proctor.paused": z.object({ staff_id: Uuid }),
   "proctor.resumed": z.object({ staff_id: Uuid }),
   "proctor.ended": z.object({ staff_id: Uuid, reason: z.string().min(1).max(END_REASON_MAX) }),
-  "proctor.time_added": z.object({ minutes: z.number().int().min(1).max(60), scope: CommandScope }),
+  "proctor.time_added": z.object({
+    minutes: z.number().int().min(1).max(60),
+    scope: CommandScope,
+    group_id: CommandGroupId.optional(),
+  }),
   "proctor.message": z.union([
-    z.object({ text: MessageText, scope: CommandScope }),
-    z.object({ preset: MessagePreset, scope: CommandScope }),
+    z.object({ text: MessageText, scope: CommandScope, group_id: CommandGroupId.optional() }),
+    z.object({ preset: MessagePreset, scope: CommandScope, group_id: CommandGroupId.optional() }),
   ]),
   "student.help_requested": z.object({ topic: HelpTopic, text: MessageText.optional() }),
   "lock.app_disconnected": z.object({ side: DisconnectSide }),

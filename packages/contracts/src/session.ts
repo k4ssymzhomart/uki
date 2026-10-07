@@ -74,7 +74,8 @@ export const STATUS_DETAIL_MAX = 200;
  * `sessions.status`: what the lobby (1.5) and the wall (2.4) show next to a student. Every field is
  * optional because the column defaults to `{}`; null is tolerated on read.
  * - `step`: the check-in step the app is on.
- * - `detail`: a short machine-readable detail for the step, for example the blocked app's name.
+ * - `detail`: why the student is held at the step, a wire form of the status-detail.ts vocabulary
+ *   (`app:Telegram`, `card:retry:2`). Read leniently: text outside the vocabulary shows as no detail.
  * - `question`: the 1-based number of the question on screen during the exam ("on screen · Q 9").
  */
 export const SessionStatus = z.object({

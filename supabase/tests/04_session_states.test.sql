@@ -192,18 +192,38 @@ select is(t.state(t.id('s')), 'paused', 'proctor.paused: paused');
 select t.event(t.id('s'), 'proctor.resumed', now(), now(), jsonb_build_object('staff_id', t.id('lead')), 'proctor', 'log');
 select is(t.state(t.id('s')), 'writing', 'proctor.resumed: writing');
 select is((select paused_s from public.sessions where id = t.id('s')), 700, 'a proctor pause gives back all of its time');
--- A pause the app reports with reason proctor counts as a proctor pause.
+-- Only proctor.paused is a proctor pause: a session.paused that claims reason proctor (a client can
+-- send one) is a self pause, so past the cap it gives nothing back, even when a proctor resumes it.
 select t.event(t.id('s'), 'session.paused', now() - interval '50 seconds', now() - interval '50 seconds',
   '{"reason":"proctor"}', p_review => 'log');
 select t.event(t.id('s'), 'proctor.resumed', now(), now(), jsonb_build_object('staff_id', t.id('lead')), 'proctor', 'log');
-select is((select paused_s from public.sessions where id = t.id('s')), 750, 'a session.paused with reason proctor is a proctor pause');
+select is((select paused_s from public.sessions where id = t.id('s')), 700, 'a session.paused with reason proctor is capped like a self pause');
 -- A resume without a pause changes nothing.
 select t.event(t.id('s'), 'session.resumed', now(), now(), '{"paused_ms":1000,"by":"student"}');
-select is((select paused_s from public.sessions where id = t.id('s')), 750, 'a resume without a pause adds nothing');
+select is((select paused_s from public.sessions where id = t.id('s')), 700, 'a resume without a pause adds nothing');
 -- The session's end moves with the credit.
 select is((select public.session_ends_at(se) from public.sessions se where se.id = t.id('s')),
-  (select starts_at + interval '90 minutes' + interval '750 seconds' from public.exams where id = t.id('math2')),
+  (select starts_at + interval '90 minutes' + interval '700 seconds' from public.exams where id = t.id('math2')),
   'session_ends_at = starts_at + duration + extra + paused');
+
+-- A forged hour-long pause: the student's own client sends session.paused with reason proctor, then
+-- session.resumed an hour later. It is a self pause: 300 s back at most, and the end moves by 300 s.
+select t.put('forged', t.new_session(t.id('math2'), '20230877', 'writing'));
+select t.event(t.id('forged'), 'session.paused', now() - interval '1 hour', now() - interval '1 hour',
+  '{"reason":"proctor"}', p_review => 'log');
+select is(t.state(t.id('forged')), 'paused', 'a client session.paused with reason proctor still pauses');
+select is((select public.pending_pause_s(se) from public.sessions se where se.id = t.id('forged')), 300,
+  'pending_pause_s caps a running session.paused with reason proctor at 300 s');
+select t.event(t.id('forged'), 'session.resumed', now(), now(), '{"paused_ms":3600000,"by":"student"}');
+select is((select array[paused_s, self_paused_s] from public.sessions where id = t.id('forged')), array[300, 300],
+  'an hour-long client pause with reason proctor gives back 300 s, counted as a self pause');
+select is((select public.session_ends_at(se) - e.starts_at from public.sessions se join public.exams e on e.id = se.exam_id
+  where se.id = t.id('forged')), interval '95 minutes', 'the forged pause moves the end by 300 s, not an hour');
+-- A session.paused without a reason is a self pause too: past the cap it gives nothing back.
+select t.event(t.id('forged'), 'session.paused', now() - interval '100 seconds', now() - interval '100 seconds',
+  '{}', p_review => 'log');
+select t.event(t.id('forged'), 'session.resumed', now(), now(), '{"paused_ms":100000,"by":"student"}');
+select is((select paused_s from public.sessions where id = t.id('forged')), 300, 'a session.paused without a reason is capped');
 
 -- ---------------------------------------------------------------------------
 -- proctor.ended -> ended, ended_at, end_reason; nothing leaves a final state
@@ -250,6 +270,12 @@ update public.sessions set extra_min = 4 where id = t.id('grace');
 select t.put('paused', t.new_session(t.id('math2'), '20231302', 'writing'));
 select t.event(t.id('paused'), 'proctor.paused', now() - interval '10 minutes', now() - interval '10 minutes',
   jsonb_build_object('staff_id', t.id('lead')), 'proctor', 'log');
+-- A client pause that claims reason proctor, running for 10 minutes with 60 s of the self cap left,
+-- moves the end by 60 s only: 3 minutes past the end it is time_up.
+select t.put('claimed', t.new_session(t.id('math2'), '20235001', 'writing'));
+update public.sessions set self_paused_s = 240 where id = t.id('claimed');
+select t.event(t.id('claimed'), 'session.paused', now() - interval '10 minutes', now() - interval '10 minutes',
+  '{"reason":"proctor"}', p_review => 'log');
 -- A live exam whose window has closed and whose sessions are all final.
 select t.schedule(t.id('history'), interval '-2 hours', 'live', 60);
 -- A scheduled exam whose start has passed.
@@ -259,13 +285,14 @@ create table t.tick as select public.session_tick() as r;
 select is(t.state(t.id('overdue')), 'time_up', 'session_tick: time_up 2 minutes past the end');
 select is(t.state(t.id('grace')), 'writing', 'session_tick waits 2 minutes past the end');
 select is(t.state(t.id('paused')), 'paused', 'session_tick counts a running proctor pause');
+select is(t.state(t.id('claimed')), 'time_up', 'session_tick caps a running session.paused with reason proctor');
 select is((select count(*) from public.events where session_id = t.id('overdue') and type = 'exam.time_up' and source = 'server'),
   1::bigint, 'session_tick writes exam.time_up');
 select is((select status::text from public.exams where id = t.id('phys1')), 'live', 'session_tick: scheduled exams go live at starts_at');
 select is((select status::text from public.exams where id = t.id('history')), 'to_review',
   'session_tick: to_review once the window closed and every session is final');
 select is((select status::text from public.exams where id = t.id('math2')), 'live', 'an exam with a session still writing stays live');
-select is((select (r ->> 'time_up')::int from t.tick), 1, 'session_tick reports what it changed');
+select is((select (r ->> 'time_up')::int from t.tick), 2, 'session_tick reports what it changed');
 
 -- The job is scheduled every minute.
 select is((select schedule from cron.job where jobname = 'session_tick'), '* * * * *', 'pg_cron runs session_tick every minute');

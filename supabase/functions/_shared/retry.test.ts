@@ -16,6 +16,18 @@ describe("isGatewayFailure", () => {
     ).toBe(true);
   });
 
+  it("does not retry PostgREST's pool timeout", () => {
+    const poolTimeout = {
+      error: {
+        code: "PGRST003",
+        message: "Timed out acquiring connection from connection pool.",
+        details: null,
+      },
+      status: 504,
+    };
+    expect(isGatewayFailure(poolTimeout)).toBe(false);
+  });
+
   it("leaves database and client errors alone", () => {
     expect(isGatewayFailure({ error: null, status: 200 })).toBe(false);
     expect(isGatewayFailure({ error: { code: "P0001", message: "conflict" }, status: 400 })).toBe(false);

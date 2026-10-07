@@ -248,6 +248,8 @@ export async function createWorld(options: { students?: number } = {}): Promise<
     await admin.from("exam_students").delete().eq("exam_id", exam.id);
     await admin.from("exam_groups").delete().eq("exam_id", exam.id);
     await admin.from("exams").delete().eq("id", exam.id);
+    // Questions a test added (exam_questions went with the exam).
+    await admin.from("questions").delete().eq("workspace_id", workspace.id);
     await admin.from("students").delete().eq("workspace_id", workspace.id);
     await admin.from("staff").delete().eq("workspace_id", workspace.id);
     await admin.from("groups").delete().eq("workspace_id", workspace.id);

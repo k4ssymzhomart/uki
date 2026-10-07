@@ -155,7 +155,14 @@ describe("ingest", () => {
       IngestRequest.safeParse({
         session_id: SESSION_ID,
         events: [],
-        status: { step: "checking", detail: "Telegram" },
+        status: { step: "checking", detail: "app:Telegram" },
+      }).success,
+    ).toBe(true);
+    expect(
+      IngestRequest.safeParse({
+        session_id: SESSION_ID,
+        events: [],
+        status: { step: "identity", detail: "card:retry:2" },
       }).success,
     ).toBe(true);
     expect(
@@ -164,6 +171,16 @@ describe("ingest", () => {
     expect(
       IngestRequest.safeParse({ session_id: SESSION_ID, events: [], status: { step: "writing" } }).success,
     ).toBe(false);
+  });
+
+  it("takes only details of the status-detail vocabulary", () => {
+    for (const detail of ["Telegram", "camera_blocked", "card_retry:2", "card_unreadable:2", "help", ""]) {
+      expect(
+        IngestRequest.safeParse({ session_id: SESSION_ID, events: [], status: { step: "checking", detail } })
+          .success,
+        detail,
+      ).toBe(false);
+    }
   });
 
   it("parses a response with uploads and the session's timing", () => {
@@ -186,6 +203,48 @@ describe("ingest", () => {
       server_time: pgTime(T0),
     });
     expect(response.uploads[0]?.stills).toHaveLength(3);
+    expect(response.pending_commands).toBeUndefined();
+  });
+
+  it("carries the session's unacked commands, at most 20, in the broadcast's shape", () => {
+    const command = (n: number) => ({
+      id: uuidv7(T0 + n),
+      session_id: SESSION_ID,
+      exam_id: EXAM_ID,
+      type: "message",
+      payload: { preset: "message.preset.phones_away", scope: "student" },
+      issued_at: pgTime(T0 + n),
+      by_name: "Aigerim Sadykova",
+    });
+    const base = {
+      accepted: [],
+      duplicates: [],
+      uploads: [],
+      session: { state: "writing", ends_at: pgTime(T0 + 90 * 60_000), extra_min: 0, paused_s: 0 },
+      server_time: pgTime(T0),
+    };
+    const one = IngestResponse.parse({ ...base, pending_commands: [command(1)] });
+    expect(one.pending_commands?.[0]).toMatchObject({ type: "message", by_name: "Aigerim Sadykova" });
+    expect(IngestResponse.safeParse({ ...base, pending_commands: [] }).success).toBe(true);
+    expect(
+      IngestResponse.safeParse({
+        ...base,
+        pending_commands: Array.from({ length: 20 }, (_, i) => command(i)),
+      }).success,
+    ).toBe(true);
+    expect(
+      IngestResponse.safeParse({
+        ...base,
+        pending_commands: Array.from({ length: 21 }, (_, i) => command(i)),
+      }).success,
+    ).toBe(false);
+    expect(
+      IngestResponse.safeParse({ ...base, pending_commands: [{ ...command(1), payload: { minutes: 5 } }] })
+        .success,
+      "a payload that does not fit its type",
+    ).toBe(false);
+    const { by_name: _name, ...nameless } = command(1);
+    expect(IngestResponse.safeParse({ ...base, pending_commands: [nameless] }).success).toBe(false);
   });
 });
 
@@ -233,6 +292,30 @@ describe("command request", () => {
         payload: { text: "Eyes on screen", scope: "student" },
       }).success,
     ).toBe(true);
+  });
+
+  it("takes an optional request id for safe retries", () => {
+    const requestId = uuidv7();
+    const parsed = CommandRequest.parse({
+      session_id: SESSION_ID,
+      type: "pause",
+      payload: {},
+      request_id: requestId,
+    });
+    expect(parsed).toMatchObject({ request_id: requestId });
+    expect(
+      CommandRequest.safeParse({
+        exam_id: EXAM_ID,
+        scope: "group",
+        type: "message",
+        payload: { preset: "message.preset.time_15", scope: "group" },
+        request_id: requestId,
+      }).success,
+    ).toBe(true);
+    expect(
+      CommandRequest.safeParse({ session_id: SESSION_ID, type: "pause", payload: {}, request_id: "r-1" })
+        .success,
+    ).toBe(false);
   });
 
   it("takes a group command", () => {

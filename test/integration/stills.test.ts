@@ -122,6 +122,50 @@ describe("stills", () => {
     expect(resent.uploads[0]?.stills.map((s) => s.index)).toEqual([1]);
   });
 
+  it("an upload URL creates its still once and can never replace it, before or after frames confirms it", async () => {
+    const { event, reply } = await flag(owner, 1);
+    const still = reply.uploads[0]?.stills[0];
+    if (!still) throw new Error("no upload URL");
+    await upload(owner, still.path, still.token);
+
+    const other = Buffer.from(TINY_JPEG);
+    other[other.length - 3] = 0x00;
+    const replace = () =>
+      owner.client.storage
+        .from("frames")
+        .uploadToSignedUrl(still.path, still.token, other, { contentType: "image/jpeg", upsert: true });
+    const before = await replace();
+    expect(before.error?.message).toMatch(/already exists/i);
+
+    const confirmed = await call("frames", { event_id: event.id, paths: [still.path] }, owner.token);
+    expect(confirmed.status).toBe(200);
+    const after = await replace();
+    expect(after.error?.message).toMatch(/already exists/i);
+
+    const stored = await adminClient().storage.from("frames").download(still.path);
+    expect(Buffer.from(await (stored.data as Blob).arrayBuffer()).equals(TINY_JPEG)).toBe(true);
+  });
+
+  it("confirms a resent event's still that is already in Storage instead of offering a URL for it", async () => {
+    // The upload went through, but its reply and the confirm were lost; the app resends the event.
+    const { event, reply } = await flag(owner, 2);
+    const [first, second] = reply.uploads[0]?.stills ?? [];
+    if (!first || !second) throw new Error("no upload URLs");
+    await upload(owner, first.path, first.token);
+
+    const resent = await call("ingest", { session_id: owner.sessionId, events: [event] }, owner.token);
+    expect(resent.status).toBe(200);
+    const resentReply = IngestResponse.parse(resent.body);
+    expect(resentReply.duplicates).toEqual([event.id]);
+    // Only the still never uploaded gets a URL.
+    expect(resentReply.uploads).toHaveLength(1);
+    expect(resentReply.uploads[0]?.stills.map((s) => s.index)).toEqual([1]);
+    const frames = await adminClient().from("frames").select("storage_path").eq("event_id", event.id);
+    expect(frames.data?.map((row) => row.storage_path)).toEqual([first.path]);
+    const notice = FrameMessage.parse((await wall.waitFor((m) => m.payload.event_id === event.id)).payload);
+    expect(notice.session_id).toBe(owner.sessionId);
+  });
+
   it("frames refuses paths outside the session folder, missing objects, and other callers", async () => {
     const { event, reply } = await flag(owner, 1);
     const still = reply.uploads[0]?.stills[0];

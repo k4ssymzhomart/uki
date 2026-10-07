@@ -30,12 +30,18 @@ const lockToApp: LockToApp[] = [
   { type: "pair.confirm", code: "048213" },
   { type: "lock.started", tabs_closed: 3 },
   { type: "lock.released", tabs_restored: 3 },
+  { type: "lock.released", tabs_restored: 0, trigger: "deadline" },
   { type: "lock.event", event: { id: uuidv7(), at, type: "tab.blocked", data: { host: "wikipedia.org" } } },
   { type: "lock.event", event: { id: uuidv7(), at, type: "tab.blocked", data: { host: null } } },
   { type: "lock.event", event: { id: uuidv7(), at, type: "site.closed", data: { host: "wikipedia.org" } } },
   { type: "lock.event", event: { id: uuidv7(), at, type: "copy.blocked", data: { kind: "print" } } },
   { type: "lock.event", event: { id: uuidv7(), at, type: "lock.fullscreen_exit", data: { count: 3 } } },
   { type: "lock.event", event: { id: uuidv7(), at, type: "exam.submitted", data: {} } },
+  {
+    type: "lock.event",
+    session_id: SESSION_ID,
+    event: { id: uuidv7(), at, type: "exam.submitted", data: {} },
+  },
   { type: "ping", at: T0 },
   { type: "pong" },
 ];
@@ -61,6 +67,7 @@ const appToLock: AppToLock[] = [
       lms_url: "https://uki-lms-mock.vercel.app/physics-1/quiz-3",
       done_path: "/physics-1/quiz-3/review",
     },
+    clock_offset_ms: -2_400_000,
   },
   { type: "lock.start" },
   { type: "lock.release", reason: "submitted" },
@@ -123,6 +130,11 @@ describe("messages", () => {
       ).ok,
     ).toBe(false);
     expect(parseAppToLock(JSON.stringify({ type: "lock.release", reason: "bored" })).ok).toBe(false);
+    expect(
+      parseLockToApp(JSON.stringify({ type: "lock.released", tabs_restored: 0, trigger: "bored" })).ok,
+    ).toBe(false);
+    const state = { type: "exam.state", phase: "idle", watch: "watching", locale: "kk", exam: null };
+    expect(parseAppToLock(JSON.stringify({ ...state, clock_offset_ms: 1.5 })).ok).toBe(false);
     expect(parseAppToLock("x".repeat(70_000))).toEqual({ ok: false, error: "message too large" });
   });
 });

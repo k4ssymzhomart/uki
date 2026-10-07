@@ -10,5 +10,6 @@ export * from "./primitives.ts";
 export * from "./realtime.ts";
 export * from "./receipt.ts";
 export * from "./session.ts";
+export * from "./status-detail.ts";
 export * from "./timer.ts";
 export * from "./wall.ts";

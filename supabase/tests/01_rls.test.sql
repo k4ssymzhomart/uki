@@ -325,6 +325,77 @@ select throws_ok($$
 $$, '42501', null, 'an answer arriving more than 10 minutes after the end is refused');
 reset role;
 
+-- A proctor's end closes the answers at ended_at, an hour before the scheduled end: saved before it,
+-- accepted for 10 minutes after it.
+select t.schedule(t.id('math2'), interval '-30 minutes', 'live');
+select t.event(t.id('owner_session'), 'proctor.ended', now() - interval '2 minutes', now() - interval '2 minutes',
+  jsonb_build_object('staff_id', t.id('proctor'), 'reason', 'Second person in the room'), 'proctor', 'flag');
+select is(t.state(t.id('owner_session')), 'ended', 'the proctor ended the owner''s session');
+select t.login(t.id('owner'));
+select lives_ok($$
+  insert into public.answers (session_id, question_id, choice_id, saved_at)
+  values (t.id('owner_session'), 'c0000000-0000-4000-8000-000000000011', 'a', now() - interval '3 minutes')
+$$, 'an answer saved before a proctor''s end syncs within 10 minutes after it');
+select throws_ok($$
+  insert into public.answers (session_id, question_id, choice_id, saved_at)
+  values (t.id('owner_session'), 'c0000000-0000-4000-8000-000000000012', 'a', now() - interval '1 minute')
+$$, '42501', null, 'an answer saved after a proctor''s end is refused');
+select throws_ok($$
+  update public.answers set choice_id = 'b', saved_at = now() - interval '1 minute'
+  where session_id = t.id('owner_session') and question_id = 'c0000000-0000-4000-8000-000000000011'
+$$, '42501', null, 'an answer cannot be changed after a proctor''s end');
+select throws_ok($$
+  insert into public.answers (session_id, question_id, choice_id, saved_at)
+  values (t.id('owner_session'), 'c0000000-0000-4000-8000-000000000011', 'b', now() + interval '20 minutes')
+  on conflict (session_id, question_id) do update set choice_id = excluded.choice_id, saved_at = excluded.saved_at
+$$, '42501', null, 'an upsert after a proctor''s end is refused');
+reset role;
+update public.sessions set ended_at = now() - interval '11 minutes' where id = t.id('owner_session');
+select t.login(t.id('owner'));
+select throws_ok($$
+  insert into public.answers (session_id, question_id, choice_id, saved_at)
+  values (t.id('owner_session'), 'c0000000-0000-4000-8000-000000000013', 'a', now() - interval '12 minutes')
+$$, '42501', null, 'an answer arriving more than 10 minutes after a proctor''s end is refused');
+select is((select choice_id from public.answers where session_id = t.id('owner_session')
+  and question_id = 'c0000000-0000-4000-8000-000000000011'), 'a', 'the answer saved before the end is kept as saved');
+reset role;
+
+-- The student's own submit closes the answers at submitted_at in the same way.
+update public.sessions set state = 'writing', started_at = now() - interval '30 minutes' where id = t.id('math2_session2');
+select t.login(t.uid_of(t.id('math2_session2')));
+select is((select public.submit_session(t.id('math2_session2')) ->> 'state'), 'submitted', 'the second student submits');
+select lives_ok($$
+  insert into public.answers (session_id, question_id, choice_id, saved_at)
+  values (t.id('math2_session2'), 'c0000000-0000-4000-8000-000000000011', 'a', now() - interval '1 second')
+$$, 'an answer saved before the submit syncs within 10 minutes after it');
+select throws_ok($$
+  insert into public.answers (session_id, question_id, choice_id, saved_at)
+  values (t.id('math2_session2'), 'c0000000-0000-4000-8000-000000000012', 'a', now() + interval '1 second')
+$$, '42501', null, 'an answer saved after the receipt is refused');
+select throws_ok($$
+  update public.answers set choice_id = 'b', saved_at = now() + interval '1 second'
+  where session_id = t.id('math2_session2') and question_id = 'c0000000-0000-4000-8000-000000000011'
+$$, '42501', null, 'an answer cannot be changed after the receipt');
+reset role;
+update public.sessions set submitted_at = now() - interval '11 minutes' where id = t.id('math2_session2');
+select t.login(t.uid_of(t.id('math2_session2')));
+select throws_ok($$
+  insert into public.answers (session_id, question_id, choice_id, saved_at)
+  values (t.id('math2_session2'), 'c0000000-0000-4000-8000-000000000013', 'a', now() - interval '12 minutes')
+$$, '42501', null, 'an answer arriving more than 10 minutes after the submit is refused');
+reset role;
+
+-- time_up keeps the 10 minutes after the scheduled end, also when the student submitted after it.
+select t.schedule(t.id('math2'), interval '-95 minutes', 'live');
+select t.put('late_session', t.new_session(t.id('math2'), '20231044', 'time_up'));
+update public.sessions set submitted_at = now() - interval '4 minutes' where id = t.id('late_session');
+select t.login(t.uid_of(t.id('late_session')));
+select lives_ok($$
+  insert into public.answers (session_id, question_id, choice_id, saved_at)
+  values (t.id('late_session'), 'c0000000-0000-4000-8000-000000000011', 'a', now() - interval '6 minutes')
+$$, 'a time_up session takes answers saved before the scheduled end for 10 minutes after it');
+reset role;
+
 -- ---------------------------------------------------------------------------
 -- Other student
 -- ---------------------------------------------------------------------------

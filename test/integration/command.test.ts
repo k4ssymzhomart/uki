@@ -7,7 +7,9 @@ import {
   type CommandRequest,
   CommandResponse,
   IngestResponse,
+  SessionCommandRow,
   sessionTopic,
+  uuidv7,
 } from "../../packages/contracts/src/index.ts";
 import { call, envelope, errorCode, type Listener, latencySummary, listen } from "./api.ts";
 import { adminClient, createWorld, type Student, type World } from "./world.ts";
@@ -236,5 +238,165 @@ describe("command", () => {
     expect(late.status).toBe(409);
     const unknown = await send({ session_id: crypto.randomUUID(), type: "resume", payload: {} });
     expect(unknown.status).toBe(404);
+  });
+});
+
+describe("command follow-ups", () => {
+  it("stores by_name on the rows the student reads after a reconnect", async () => {
+    const { data, error } = await writerA.client
+      .from("session_commands")
+      .select("id, session_id, exam_id, type, payload, issued_by, issued_at, acked_at, by_name")
+      .eq("session_id", writerA.sessionId)
+      .order("issued_at", { ascending: true });
+    expect(error).toBeNull();
+    const rows = (data ?? []).map((row) => SessionCommandRow.parse(row));
+    expect(rows.length).toBeGreaterThan(0);
+    expect(new Set(rows.map((row) => row.by_name))).toEqual(new Set([world.lead.name]));
+    // The student still reads no staff row.
+    const staff = await writerA.client.from("staff").select("id");
+    expect(staff.data).toEqual([]);
+  });
+
+  it("writes one group_id into every event and command of a group call", async () => {
+    const text = `Ten minutes left ${world.runId}`;
+    const reply = await send({
+      exam_id: world.examId,
+      scope: "group",
+      type: "message",
+      payload: { text, scope: "group" },
+    });
+    expect(reply.status).toBe(200);
+    const { command_ids } = CommandResponse.parse(reply.body);
+    const events = await adminClient()
+      .from("events")
+      .select("session_id, data")
+      .eq("exam_id", world.examId)
+      .eq("type", "proctor.message")
+      .eq("data->>text", text);
+    const groupIds = new Set((events.data ?? []).map((e) => (e.data as { group_id?: string }).group_id));
+    expect(events.data).toHaveLength(command_ids.length);
+    expect(groupIds.size).toBe(1);
+    const commands = await adminClient().from("session_commands").select("group_id").in("id", command_ids);
+    expect(new Set(commands.data?.map((c) => c.group_id))).toEqual(groupIds);
+    expect([...groupIds][0]).toMatch(/^[0-9a-f-]{36}$/);
+  });
+
+  it("answers a repeated request id with the first call's commands and writes nothing again", async () => {
+    const requestId = uuidv7();
+    const body = {
+      session_id: writerA.sessionId,
+      type: "message",
+      payload: { text: `Once ${world.runId}`, scope: "student" },
+      request_id: requestId,
+    } as const;
+    const first = await send(body);
+    const again = await send(body);
+    expect(first.status).toBe(200);
+    expect(again.status).toBe(200);
+    expect(CommandResponse.parse(again.body)).toEqual(CommandResponse.parse(first.body));
+    const rows = await adminClient().from("session_commands").select("id").eq("request_id", requestId);
+    expect(rows.data).toHaveLength(1);
+    const events = await adminClient()
+      .from("events")
+      .select("id")
+      .eq("session_id", writerA.sessionId)
+      .eq("data->>text", `Once ${world.runId}`);
+    expect(events.data).toHaveLength(1);
+
+    const stolen = await send(body, world.office.token);
+    expect(stolen.status).toBe(409);
+    expect(errorCode(stolen)).toBe("conflict");
+
+    const groupRequest = uuidv7();
+    const before = await sessionRow(writerA.sessionId);
+    const group = {
+      exam_id: world.examId,
+      scope: "group",
+      type: "add_time",
+      payload: { minutes: 2, scope: "group" },
+      request_id: groupRequest,
+    } as const;
+    const g1 = await send(group);
+    const g2 = await send(group);
+    expect(CommandResponse.parse(g2.body)).toEqual(CommandResponse.parse(g1.body));
+    expect((await sessionRow(writerA.sessionId)).extra_min).toBe(before.extra_min + 2);
+  });
+
+  it("carries the unacked commands, with by_name, on every ingest reply until they are acked", async () => {
+    // Ack everything so far, as the app does after applying it.
+    const acked = await writerA.client
+      .from("session_commands")
+      .update({ acked_at: new Date().toISOString() })
+      .eq("session_id", writerA.sessionId)
+      .is("acked_at", null)
+      .select("id");
+    expect(acked.error).toBeNull();
+    expect((await ingest(writerA, {})).pending_commands).toEqual([]);
+
+    const ids: string[] = [];
+    for (const text of ["First", "Second"]) {
+      const reply = await send({
+        session_id: writerA.sessionId,
+        type: "message",
+        payload: { text: `${text} ${world.runId}`, scope: "student" },
+      });
+      ids.push(...CommandResponse.parse(reply.body).command_ids);
+    }
+    const pending = (await ingest(writerA, {})).pending_commands ?? [];
+    expect(pending.map((c) => c.id)).toEqual(ids);
+    expect(pending.map((c) => [c.type, c.by_name, c.session_id])).toEqual([
+      ["message", world.lead.name, writerA.sessionId],
+      ["message", world.lead.name, writerA.sessionId],
+    ]);
+    // Exactly the broadcast's shape: the app handles both the same way.
+    for (const command of pending) expect(CommandMessage.parse(command)).toEqual(command);
+
+    await writerA.client
+      .from("session_commands")
+      .update({ acked_at: new Date().toISOString() })
+      .eq("id", ids[0] ?? "");
+    expect(((await ingest(writerA, {})).pending_commands ?? []).map((c) => c.id)).toEqual([ids[1]]);
+    // Another session's reply never carries them.
+    const other = (await ingest(ready, {})).pending_commands ?? [];
+    expect(other.some((c) => ids.includes(c.id))).toBe(false);
+  });
+
+  it("tells exam staff how many questions the exam has; nobody else", async () => {
+    const admin = adminClient();
+    const questions = Array.from({ length: 3 }, (_, i) => ({
+      workspace_id: world.workspaceId,
+      body: { kk: `Q${i}`, ru: `Q${i}`, en: `Q${i}` },
+      choices: [{ id: "a", body: { kk: "A", ru: "A", en: "A" } }],
+    }));
+    const inserted = await admin.from("questions").insert(questions).select("id");
+    expect(inserted.error).toBeNull();
+    const links = (inserted.data ?? []).map((q, position) => ({
+      exam_id: world.examId,
+      question_id: q.id,
+      position,
+    }));
+    expect((await admin.from("exam_questions").insert(links)).error).toBeNull();
+
+    const count = async (client: typeof world.lead.client) => {
+      const { data, error } = await client.rpc("exam_question_count", { exam_id: world.examId });
+      expect(error).toBeNull();
+      return data;
+    };
+    expect(await count(world.lead.client)).toBe(3);
+    expect(await count(world.office.client)).toBe(3);
+    expect(await count(world.otherProctor.client)).toBeNull();
+    expect(await count(writerA.client)).toBeNull();
+    // The proctor still cannot read the questions themselves.
+    const direct = await world.lead.client
+      .from("exam_questions")
+      .select("question_id")
+      .eq("exam_id", world.examId);
+    expect(direct.data).toEqual([]);
+    const overview = await world.lead.client
+      .from("exam_overview")
+      .select("question_count")
+      .eq("id", world.examId)
+      .single();
+    expect(overview.data?.question_count).toBe(3);
   });
 });
