@@ -28,3 +28,4 @@ e2e/.auth/
 .claude/
 apps/desktop/test/results/
 shots/
+apps/web/next-env.d.ts
