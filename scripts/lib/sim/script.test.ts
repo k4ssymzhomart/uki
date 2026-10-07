@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { IngestStatus } from "../../../packages/contracts/src/index.ts";
 import { type CastMember, LOBBY_ROLES, planCast, WALL_ROLES } from "./cast.ts";
 import { draftsFor, toBatchEvent } from "./events.ts";
 import { seedRoster } from "./fixtures.ts";
@@ -73,7 +74,12 @@ describe("planLobby", () => {
       detail: STATUS_DETAIL.blockedApp("Telegram"),
     });
     expect(last("help_camera")).toEqual({ kind: "status", step: "checking", detail: "camera:busy" });
-    expect(last("help_identity")).toEqual({ kind: "status", step: "identity", detail: "card_unreadable:2" });
+    expect(last("help_identity")).toEqual({ kind: "status", step: "identity", detail: "card:retry:2" });
+    expect(STATUS_DETAIL.blockedApp("Telegram")).toBe("app:Telegram");
+    for (const role of ["help_app", "help_camera", "help_identity"] as const) {
+      const detail = last(role)?.detail;
+      expect(IngestStatus.safeParse({ step: "checking", detail }).success, role).toBe(true);
+    }
   });
 
   it("joins late students only after the start", () => {

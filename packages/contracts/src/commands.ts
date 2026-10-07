@@ -100,7 +100,11 @@ function commandVariants<S extends z.ZodRawShape>(shape: S) {
 export const Command = z.discriminatedUnion("type", commandVariants({}));
 export type Command = z.infer<typeof Command>;
 
-/** A `session_commands` row as the student app reads it (unacked commands after a reconnect). */
+/**
+ * A `session_commands` row as the student app reads it (unacked commands after a reconnect).
+ * `by_name` is the issuing staff member's `full_name`, stored when the command was issued (students
+ * cannot read staff rows); it is read leniently so a row from before the column never drops a command.
+ */
 export const SessionCommandRow = z.discriminatedUnion(
   "type",
   commandVariants({
@@ -110,13 +114,15 @@ export const SessionCommandRow = z.discriminatedUnion(
     issued_by: Uuid,
     issued_at: Timestamp,
     acked_at: Timestamp.nullable(),
+    by_name: z.string().nullish(),
   }),
 );
 export type SessionCommandRow = z.infer<typeof SessionCommandRow>;
 
 /**
- * The `command` broadcast on `session:{session_id}`, sent by the `commands_broadcast` trigger.
- * `by_name` is the issuing staff member's `full_name`, for 2.1c, 2.1d and 2.1e.
+ * The `command` broadcast on `session:{session_id}`, sent by the `commands_broadcast` trigger, and each
+ * entry of `IngestResponse.pending_commands`. `by_name` is the issuing staff member's `full_name`
+ * (`session_commands.by_name`), for 2.1c, 2.1d and 2.1e.
  */
 export const CommandBroadcast = z.discriminatedUnion(
   "type",
@@ -129,3 +135,9 @@ export const CommandBroadcast = z.discriminatedUnion(
   }),
 );
 export type CommandBroadcast = z.infer<typeof CommandBroadcast>;
+
+/**
+ * At most this many unacked commands ride on each ingest reply (`IngestResponse.pending_commands`),
+ * oldest first: the fallback when a broadcast was lost while the channel looked connected.
+ */
+export const PENDING_COMMANDS_MAX = 20;

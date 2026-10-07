@@ -586,31 +586,40 @@ export type Database = {
       session_commands: {
         Row: {
           acked_at: string | null
+          by_name: string
           exam_id: string
+          group_id: string | null
           id: string
           issued_at: string | null
           issued_by: string
           payload: Json
+          request_id: string | null
           session_id: string
           type: Database["public"]["Enums"]["command_type"]
         }
         Insert: {
           acked_at?: string | null
+          by_name?: string
           exam_id: string
+          group_id?: string | null
           id?: string
           issued_at?: string | null
           issued_by: string
           payload?: Json
+          request_id?: string | null
           session_id: string
           type: Database["public"]["Enums"]["command_type"]
         }
         Update: {
           acked_at?: string | null
+          by_name?: string
           exam_id?: string
+          group_id?: string | null
           id?: string
           issued_at?: string | null
           issued_by?: string
           payload?: Json
+          request_id?: string | null
           session_id?: string
           type?: Database["public"]["Enums"]["command_type"]
         }
@@ -875,6 +884,7 @@ export type Database = {
           mode: Database["public"]["Enums"]["exam_mode"] | null
           paused: number | null
           proctor_count: number | null
+          question_count: number | null
           roster_size: number | null
           sessions_final: number | null
           starts_at: string | null
@@ -907,11 +917,17 @@ export type Database = {
         Args: { p_event_id: string; p_paths: string[] }
         Returns: string[]
       }
+      exam_question_count: { Args: { exam_id: string }; Returns: number }
       exam_started: { Args: { p_exam_id: string }; Returns: boolean }
       exam_workspace: { Args: { p_exam_id: string }; Returns: string }
       has_session_in: { Args: { p_exam_id: string }; Returns: boolean }
       ingest_batch: {
-        Args: { p_events: Json; p_session_id: string; p_status?: Json }
+        Args: {
+          p_events: Json
+          p_owner?: string
+          p_session_id: string
+          p_status?: Json
+        }
         Returns: Json
       }
       is_anonymous: { Args: never; Returns: boolean }
@@ -928,6 +944,7 @@ export type Database = {
         Args: {
           p_exam_id?: string
           p_payload?: Json
+          p_request_id?: string
           p_scope?: string
           p_session_id?: string
           p_type?: Database["public"]["Enums"]["command_type"]

@@ -68,6 +68,16 @@ describe("ingest", () => {
     const forged = await call("ingest", { session_id: student.sessionId, events: [proctor] }, student.token);
     expect(forged.status).toBe(400);
 
+    // Only the server's proctor.paused is a proctor pause, which is not capped at 300 s.
+    const claimed = envelope(student.sessionId, "session.paused", { data: { reason: "proctor" } });
+    const selfAsProctor = await call(
+      "ingest",
+      { session_id: student.sessionId, events: [claimed] },
+      student.token,
+    );
+    expect(selfAsProctor.status).toBe(400);
+    expect(errorCode(selfAsProctor)).toBe("bad_request");
+
     const notJson = await call("ingest", "{", student.token);
     expect(notJson.status).toBe(400);
     expect(errorCode(notJson)).toBe("bad_request");
@@ -174,12 +184,22 @@ describe("ingest", () => {
   it("moves the session forward with status.step and to writing on exam.started", async () => {
     const student = world.students[2];
     if (!student) throw new Error("no student");
+    // A detail outside the status-detail vocabulary is refused; one in it is stored as sent.
+    const adHoc = await call(
+      "ingest",
+      { session_id: student.sessionId, events: [], status: { step: "checking", detail: "camera_blocked" } },
+      student.token,
+    );
+    expect(adHoc.status).toBe(400);
+    expect(errorCode(adHoc)).toBe("bad_request");
     const checking = await call(
       "ingest",
-      { session_id: student.sessionId, events: [], status: { step: "checking", detail: "camera" } },
+      { session_id: student.sessionId, events: [], status: { step: "checking", detail: "camera:busy" } },
       student.token,
     );
     expect(checking.status).toBe(200);
+    const stored = await adminClient().from("sessions").select("status").eq("id", student.sessionId).single();
+    expect(stored.data?.status).toEqual({ step: "checking", detail: "camera:busy" });
     const reply = IngestResponse.parse(checking.body);
     expect(reply.session.state).toBe("checking");
     expect(Date.parse(reply.server_time)).toBeGreaterThan(Date.now() - 60_000);

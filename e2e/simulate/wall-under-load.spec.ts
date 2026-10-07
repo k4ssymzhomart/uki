@@ -20,6 +20,7 @@
 import { type ChildProcess, spawn } from "node:child_process";
 import { createWriteStream, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { expect, type Page, test } from "@playwright/test";
+import { parseServerTiming } from "../../scripts/lib/perf/stats.ts";
 import { NAMED_PARTS } from "../../scripts/lib/sim/cast.ts";
 import { examRow, pageStatus, signIn, waitForWallSubscribed } from "../support/dashboard.ts";
 import { ROOT } from "../support/env.ts";
@@ -65,6 +66,53 @@ async function until<T>(what: string, check: () => Promise<T | null>, timeoutMs:
     if (Date.now() > deadline) throw new Error(`e2e load: timed out waiting for ${what}`);
     await sleep(everyMs);
   }
+}
+
+/** One HTTP attempt at the ingest function from this process (the probes), with its Server-Timing. */
+interface FunctionAttempt {
+  status: number;
+  /** Request sent to reply read, on this process's clock. */
+  ms: number;
+  /** The function's own time (Server-Timing total), null when the reply carried none. */
+  total: number | null;
+  /** Set on the first request of a fresh isolate: its start to the function being ready. */
+  boot: number | null;
+}
+
+/**
+ * Records every ingest attempt this process makes until stopped, by wrapping fetch: the probes' calls
+ * go through e2e/support, and the split between the function's own time and the rest (gateway, edge
+ * runtime queue, worker start) is what tells a slow function from a busy runtime.
+ */
+function recordFunctionAttempts(): { attempts: FunctionAttempt[]; stop: () => void } {
+  const attempts: FunctionAttempt[] = [];
+  const original = globalThis.fetch;
+  globalThis.fetch = async (input, init) => {
+    const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+    if (!url.includes("/functions/v1/ingest")) return original(input, init);
+    const started = performance.now();
+    try {
+      const response = await original(input, init);
+      const body = await response.arrayBuffer();
+      const timing = parseServerTiming(response.headers.get("server-timing"));
+      attempts.push({
+        status: response.status,
+        ms: performance.now() - started,
+        total: timing.total ?? null,
+        boot: timing.boot ?? null,
+      });
+      return new Response(body, response);
+    } catch (error) {
+      attempts.push({ status: 0, ms: performance.now() - started, total: null, boot: null });
+      throw error;
+    }
+  };
+  return {
+    attempts,
+    stop: () => {
+      globalThis.fetch = original;
+    },
+  };
 }
 
 interface ExamState {
@@ -179,15 +227,23 @@ interface DbEvent {
 async function flagAndLogEvents(fromMs: number, toMs: number): Promise<DbEvent[]> {
   const rows: DbEvent[] = [];
   for (let offset = 0; ; offset += 1000) {
-    const { data, error } = await adminClient()
-      .from("events")
-      .select("id, session_id, type, at, received_at")
-      .eq("exam_id", EXAMS.math2.id)
-      .in("review", ["flag", "log"])
-      .gte("received_at", new Date(fromMs).toISOString())
-      .lte("received_at", new Date(toMs).toISOString())
-      .order("received_at")
-      .range(offset, offset + 999);
+    const page = () =>
+      adminClient()
+        .from("events")
+        .select("id, session_id, type, at, received_at")
+        .eq("exam_id", EXAMS.math2.id)
+        .in("review", ["flag", "log"])
+        .gte("received_at", new Date(fromMs).toISOString())
+        .lte("received_at", new Date(toMs).toISOString())
+        .order("received_at")
+        .range(offset, offset + 999);
+    // A loaded laptop can stall Postgres past PostgREST's 8 s statement timeout; the read is safe to repeat.
+    let result = await page();
+    for (let attempt = 1; result.error && attempt < 4; attempt += 1) {
+      await sleep(3000 * attempt);
+      result = await page();
+    }
+    const { data, error } = result;
     if (error) throw new Error(`e2e load: reading events failed: ${error.message}`);
     rows.push(...data);
     if (data.length < 1000) return rows;
@@ -268,14 +324,20 @@ test("the wall follows 120 simulated students within 1 s, and another exam's pro
     const other = await otherContext.newPage();
     await signIn(other, STAFF.gulnara);
     for (const number of probeNumbers) {
-      try {
-        const probe = await joinExam(EXAMS.math2.code, number);
-        probes.push(probe);
-        probeUids.push(probe.uid);
-      } catch (error) {
-        const uid = (error as { uid?: unknown }).uid;
-        if (typeof uid === "string") probeUids.push(uid);
-        throw error;
+      for (let attempt = 1; ; attempt += 1) {
+        try {
+          const probe = await joinExam(EXAMS.math2.code, number);
+          probes.push(probe);
+          probeUids.push(probe.uid);
+          break;
+        } catch (error) {
+          const uid = (error as { uid?: unknown }).uid;
+          if (typeof uid === "string") probeUids.push(uid);
+          // A sign-in that timed out on a loaded laptop made no user and no session: try it again.
+          // A failed join_exam (it carries the uid) may have bound the seat, so it is not repeated.
+          if (typeof uid === "string" || attempt >= 3) throw error;
+          await sleep(5000 * attempt);
+        }
       }
     }
 
@@ -331,6 +393,7 @@ test("the wall follows 120 simulated students within 1 s, and another exam's pro
     /** The ingest call itself failed (gateway or function error after retries). */
     const ingestFailures: { probe: number; k: number; reason: string }[] = [];
     const counts = probes.map(() => 0);
+    const recorder = recordFunctionAttempts();
     const windowStart = Date.now();
     let turn = 0;
     while (Date.now() - windowStart < WINDOW_MS) {
@@ -393,6 +456,8 @@ test("the wall follows 120 simulated students within 1 s, and another exam's pro
       await sleep(Math.max(0, PROBE_EVERY_MS - (Date.now() - slot)));
     }
     const windowEnd = Date.now();
+    recorder.stop();
+    const attempts = recorder.attempts;
     // Let the wall's periodic reconcile pick up anything Realtime did not deliver before reading.
     await sleep(WALL_RECONCILE_MS + 5000);
 
@@ -460,6 +525,10 @@ test("the wall follows 120 simulated students within 1 s, and another exam's pro
       endToEndProbeTile: summarize(probeSamples.map((sample) => sample.ms)),
       endToEndSimulatedFeed: summarize(feed.sim),
       probeIngestCall: summarize(probeSamples.map((sample) => sample.ingestMs)),
+      probeAttemptInFunction: summarize(attempts.flatMap((a) => (a.total === null ? [] : [a.total]))),
+      probeAttemptOutsideFunction: summarize(
+        attempts.flatMap((a) => (a.total === null ? [] : [Math.max(0, a.ms - a.total)])),
+      ),
       serverProbe: summarize(probeLegs.map((leg) => leg.server)),
       serverAllEvents: summarize(feed.server),
       dashboardProbeTile: summarize(probeLegs.map((leg) => leg.dashboard)),
@@ -469,6 +538,8 @@ test("the wall follows 120 simulated students within 1 s, and another exam's pro
       endToEndProbeTile: "end to end: probe event at -> tile update (app path through ingest)",
       endToEndSimulatedFeed: "end to end: simulated event at -> Live events row",
       probeIngestCall: "probe ingest function call",
+      probeAttemptInFunction: "probe ingest attempt: inside the function (Server-Timing total)",
+      probeAttemptOutsideFunction: "probe ingest attempt: gateway and edge runtime (call minus function)",
       serverProbe: "server side: probe event at -> Realtime frame in the page",
       serverAllEvents: "server side: event at -> Realtime frame (all flag and log events)",
       dashboardProbeTile: "dashboard: Realtime frame -> probe tile update",
@@ -483,6 +554,18 @@ test("the wall follows 120 simulated students within 1 s, and another exam's pro
       summaries,
       probeMisses,
       ingestFailures,
+      functionAttempts: {
+        n: attempts.length,
+        byStatus: Object.fromEntries(
+          [...new Set(attempts.map((a) => a.status))].map((status) => [
+            status,
+            attempts.filter((a) => a.status === status).length,
+          ]),
+        ),
+        withoutTiming: attempts.filter((a) => a.total === null).length,
+        freshIsolates: attempts.filter((a) => a.boot !== null).length,
+        boot: summarize(attempts.flatMap((a) => (a.boot === null ? [] : [a.boot]))),
+      },
       feed: {
         eventsInWindow: events.length,
         queuedOffline: queued,

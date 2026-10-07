@@ -7,21 +7,25 @@
 // exam starts. Live wall (2.4): after the start every student answers questions; the parts in cast.ts
 // play the frame's moments in the first three minutes; everyone else adds an occasional look away;
 // students submit between minute 55 and 85 (two submit after four to seven minutes).
-import type { GazeDirection, StatusStep } from "../../../packages/contracts/src/index.ts";
+import {
+  formatStatusDetail,
+  type GazeDirection,
+  type StatusStep,
+} from "../../../packages/contracts/src/index.ts";
 import type { CastMember } from "./cast.ts";
 import type { Rng } from "./rng.ts";
 
 /**
- * `sessions.status.detail` values the simulator writes. They follow the contract's "short
- * machine-readable detail" (packages/contracts/src/session.ts); see docs/decisions.md for the format.
+ * `sessions.status.detail` values the simulator writes, in the vocabulary the app uses
+ * (packages/contracts/src/status-detail.ts), so the lobby (1.5) shows the frame's three details.
  */
 export const STATUS_DETAIL = {
   /** 1.2 Other apps row failed: "Telegram is open". The name comes from blocked-apps.ts. */
-  blockedApp: (name: string) => `app:${name}`,
+  blockedApp: (name: string) => formatStatusDetail({ kind: "app", name }),
   /** 1.2 Camera row failed because another app holds the camera: "Camera blocked by another app". */
-  cameraBusy: "camera:busy",
+  cameraBusy: formatStatusDetail({ kind: "camera", problem: "busy" }),
   /** 1.3 card match failed on try `tries` of 3: "Card unreadable · retry 2 of 3". */
-  cardUnreadable: (tries: number) => `card_unreadable:${tries}`,
+  cardUnreadable: (tries: number) => formatStatusDetail({ kind: "card", problem: "retry", tries }),
 } as const;
 
 export type SimAction =

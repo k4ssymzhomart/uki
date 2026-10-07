@@ -67,6 +67,21 @@ export const RELEASE_REASONS = ["submitted", "time_up", "ended"] as const;
 export const ReleaseReason = z.enum(RELEASE_REASONS);
 export type ReleaseReason = z.infer<typeof ReleaseReason>;
 
+/**
+ * Why the Lock let go: the exam tab reached `lms_done_path`, the app sent lock.release, the app reported
+ * the exam done, or the end time plus 2 minutes passed with no app holding the exam.
+ */
+export const LOCK_RELEASE_TRIGGERS = ["done_path", "app", "exam_done", "deadline"] as const;
+export const LockReleaseTrigger = z.enum(LOCK_RELEASE_TRIGGERS);
+export type LockReleaseTrigger = z.infer<typeof LockReleaseTrigger>;
+
+/**
+ * Server time minus the laptop's clock in ms, from the app's ClockOffset. The app and the browser read
+ * the same laptop clock, so the Lock adds it to Date.now() to get server time for its deadline and
+ * countdowns.
+ */
+export const ClockOffsetMs = z.number().int();
+
 export const PAIR_FAIL_REASONS = ["wrong_code", "expired", "no_code"] as const;
 export const PairFailReason = z.enum(PAIR_FAIL_REASONS);
 export type PairFailReason = z.infer<typeof PairFailReason>;
@@ -119,8 +134,14 @@ export const LockToApp = z.discriminatedUnion("type", [
   z.object({ type: z.literal("pair.request") }),
   z.object({ type: z.literal("pair.confirm"), code: PairCode }),
   z.object({ type: z.literal("lock.started"), tabs_closed: z.number().int().nonnegative() }),
-  z.object({ type: z.literal("lock.released"), tabs_restored: z.number().int().nonnegative() }),
-  z.object({ type: z.literal("lock.event"), event: LockEvent }),
+  /** `trigger` says why; `deadline` while the app still holds the exam means the browser is free. */
+  z.object({
+    type: z.literal("lock.released"),
+    tabs_restored: z.number().int().nonnegative(),
+    trigger: LockReleaseTrigger.optional(),
+  }),
+  /** `session_id` is the exam the Lock was locked to when the event happened; the app drops others. */
+  z.object({ type: z.literal("lock.event"), session_id: Uuid.optional(), event: LockEvent }),
   Ping,
   Pong,
 ]);
@@ -155,13 +176,17 @@ export const AppToLock = z.discriminatedUnion("type", [
   z.object({ type: z.literal("pair.code"), code: PairCode, expires_at: UtcTimestamp }),
   z.object({ type: z.literal("pair.ok") }),
   z.object({ type: z.literal("pair.fail"), reason: PairFailReason }),
-  /** On every change and every 5 s. `exam` is null in phase `idle`. */
+  /**
+   * On every change and every 5 s. `exam` is null in phase `idle`. Its times are server time;
+   * `clock_offset_ms` lets the Lock read them without trusting the laptop clock.
+   */
   z.object({
     type: z.literal("exam.state"),
     phase: ExamStatePhase,
     watch: WatchLabel,
     locale: Locale,
     exam: LockExam.nullable(),
+    clock_offset_ms: ClockOffsetMs.optional(),
   }),
   /** Exams in the app: lock the browser when 2.1 opens. */
   z.object({ type: z.literal("lock.start") }),

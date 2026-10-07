@@ -214,6 +214,35 @@ select public.ingest_batch(t.id('lobby'), '[]', '{"step":"writing"}');
 select is(t.state(t.id('lobby')), 'rules', 'status.step cannot set writing');
 
 -- ---------------------------------------------------------------------------
+-- last_seen_at: every call writes it, except a quiet one (no events, the same status) under 10 s
+-- after the stored value, which the app never makes (its empty calls come 10 s after the last reply)
+-- ---------------------------------------------------------------------------
+select t.put('seen', t.new_session(t.id('math2'), '20231219', 'writing'));
+select t.put('seen_ev', gen_random_uuid());
+update public.sessions set status = '{"question":2}', last_seen_at = now() - interval '9.9 seconds' where id = t.id('seen');
+select public.ingest_batch(t.id('seen'),
+  jsonb_build_array(t.ev(t.id('seen'), 'gaze.on_screen', 'none', 1, 0, t.id('seen_ev'))), '{"question":2}');
+select is((select last_seen_at from public.sessions where id = t.id('seen')), now(),
+  'a call with events writes last_seen_at, also 9.9 s after the stored one');
+update public.sessions set last_seen_at = now() - interval '9.9 seconds' where id = t.id('seen');
+select public.ingest_batch(t.id('seen'),
+  jsonb_build_array(t.ev(t.id('seen'), 'gaze.on_screen', 'none', 1, 0, t.id('seen_ev'))), '{"question":2}');
+select is((select last_seen_at from public.sessions where id = t.id('seen')), now(),
+  'a resend whose events are all duplicates writes last_seen_at');
+update public.sessions set last_seen_at = now() - interval '9.9 seconds' where id = t.id('seen');
+select public.ingest_batch(t.id('seen'), '[]', '{"question":3}');
+select is((select last_seen_at from public.sessions where id = t.id('seen')), now(),
+  'a call with a new status writes last_seen_at');
+update public.sessions set last_seen_at = now() - interval '9.9 seconds' where id = t.id('seen');
+select public.ingest_batch(t.id('seen'), '[]', '{"question":3}');
+select is((select last_seen_at from public.sessions where id = t.id('seen')), now() - interval '9.9 seconds',
+  'a quiet call under 10 s after the stored last_seen_at writes nothing');
+update public.sessions set last_seen_at = now() - interval '10 seconds' where id = t.id('seen');
+select public.ingest_batch(t.id('seen'), '[]', '{"question":3}');
+select is((select last_seen_at from public.sessions where id = t.id('seen')), now(),
+  'a quiet call 10 s or more after the stored last_seen_at writes it');
+
+-- ---------------------------------------------------------------------------
 -- What ingest refuses
 -- ---------------------------------------------------------------------------
 select throws_ok(format('select public.ingest_batch(%L, %L, null)', t.id('s'),

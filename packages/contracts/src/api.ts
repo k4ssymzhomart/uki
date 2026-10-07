@@ -2,7 +2,15 @@
 // Storage layout of flagged stills.
 import { z } from "zod";
 import { ExamChecks, THRESHOLDS } from "./checks.ts";
-import { AddTimePayload, EndPayload, MessagePayload, PausePayload, ResumePayload } from "./commands.ts";
+import {
+  AddTimePayload,
+  CommandBroadcast,
+  EndPayload,
+  MessagePayload,
+  PausePayload,
+  PENDING_COMMANDS_MAX,
+  ResumePayload,
+} from "./commands.ts";
 import { ClientEventEnvelope } from "./events.ts";
 import { Timestamp, Uuid } from "./primitives.ts";
 import {
@@ -12,9 +20,9 @@ import {
   Locale,
   LocalizedText,
   SessionState,
-  STATUS_DETAIL_MAX,
   StatusStep,
 } from "./session.ts";
+import { StatusDetailText } from "./status-detail.ts";
 
 // ---------------------------------------------------------------------------------------------------
 // Storage constants (used by the schemas below)
@@ -203,11 +211,12 @@ export type JoinExamOutput = z.infer<typeof JoinExamOutput>;
 
 /**
  * Optional status in an ingest call; `ingest` writes it to `sessions.status`. Setting `step` moves the
- * session forward (see `nextState`). `question` is the 1-based question number on screen.
+ * session forward (see `nextState`). `detail` is a wire form of the status-detail.ts vocabulary
+ * (`formatStatusDetail`); `question` is the 1-based question number on screen.
  */
 export const IngestStatus = z.object({
   step: StatusStep.optional(),
-  detail: z.string().max(STATUS_DETAIL_MAX).optional(),
+  detail: StatusDetailText.optional(),
   question: z.number().int().positive().optional(),
 });
 export type IngestStatus = z.infer<typeof IngestStatus>;
@@ -256,13 +265,17 @@ export type IngestSession = z.infer<typeof IngestSession>;
 /**
  * `accepted`: ids stored by this call. `duplicates`: ids already stored. `uploads`: for every flag
  * event in the batch with `frame_count > 0`, new or duplicate, the stills not yet confirmed by
- * `frames`, each with a fresh signed upload URL valid for 2 hours.
+ * `frames`, each with a fresh signed upload URL valid for 2 hours. `pending_commands`: the session's
+ * commands with no `acked_at`, oldest first, at most PENDING_COMMANDS_MAX, shaped like the `command`
+ * broadcast; the app applies each once by id and acks it, so the ingest heartbeat delivers a command
+ * whose broadcast was lost. The `ingest` function always sends it; it is optional for older servers.
  */
 export const IngestResponse = z.object({
   accepted: z.array(Uuid),
   duplicates: z.array(Uuid),
   uploads: z.array(z.object({ event_id: Uuid, stills: z.array(SignedStillUpload) })),
   session: IngestSession,
+  pending_commands: z.array(CommandBroadcast).max(PENDING_COMMANDS_MAX).optional(),
   server_time: Timestamp,
 });
 export type IngestResponse = z.infer<typeof IngestResponse>;
@@ -337,12 +350,23 @@ function requestVariants<S extends z.ZodRawShape>(shape: S) {
   ] as const;
 }
 
+/**
+ * The caller's id for one command call (UUIDv7). A call with a request id that already issued commands
+ * returns those ids and issues nothing, so a call that failed at the gateway can be sent again. The
+ * `command` function makes one when the request has none.
+ */
+export const CommandRequestId = Uuid;
+
 /** A command for one student. */
-export const SessionCommandRequest = z.union(requestVariants({ session_id: Uuid }));
+export const SessionCommandRequest = z.union(
+  requestVariants({ session_id: Uuid, request_id: CommandRequestId.optional() }),
+);
 export type SessionCommandRequest = z.infer<typeof SessionCommandRequest>;
 
 /** A command for every session of the exam in rules, ready, writing or paused. */
-export const GroupCommandRequest = z.union(requestVariants({ exam_id: Uuid, scope: z.literal("group") }));
+export const GroupCommandRequest = z.union(
+  requestVariants({ exam_id: Uuid, scope: z.literal("group"), request_id: CommandRequestId.optional() }),
+);
 export type GroupCommandRequest = z.infer<typeof GroupCommandRequest>;
 
 /**

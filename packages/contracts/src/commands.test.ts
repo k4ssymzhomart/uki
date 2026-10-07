@@ -9,6 +9,7 @@ import {
   MESSAGE_PRESETS,
   MessagePayload,
   PausePayload,
+  PENDING_COMMANDS_MAX,
   parseCommandPayload,
   ResumePayload,
   SessionCommandRow,
@@ -87,6 +88,12 @@ describe("payloads", () => {
   });
 });
 
+describe("pending commands on ingest", () => {
+  it("sends at most 20 a call", () => {
+    expect(PENDING_COMMANDS_MAX).toBe(20);
+  });
+});
+
 describe("rows and broadcasts", () => {
   const base = {
     id: uuidv7(),
@@ -104,6 +111,20 @@ describe("rows and broadcasts", () => {
       payload: { minutes: 10, scope: "group" },
     });
     expect(row.type === "add_time" && row.payload.minutes).toBe(10);
+  });
+
+  it("reads by_name on a session_commands row, leniently", () => {
+    const row = {
+      ...base,
+      issued_by: STAFF_ID,
+      acked_at: null,
+      type: "pause",
+      payload: { text: "Stay seated" },
+    } as const;
+    expect(SessionCommandRow.parse({ ...row, by_name: "Aigerim Sadykova" }).by_name).toBe("Aigerim Sadykova");
+    expect(SessionCommandRow.parse(row).by_name, "a row read without the column").toBeUndefined();
+    expect(SessionCommandRow.parse({ ...row, by_name: null }).by_name).toBeNull();
+    expect(SessionCommandRow.safeParse({ ...row, by_name: 7 }).success).toBe(false);
   });
 
   it("parses a command broadcast with by_name", () => {

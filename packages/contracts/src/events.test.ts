@@ -170,6 +170,26 @@ describe("EVENT_DATA", () => {
     }
   });
 
+  it("keeps a group command's group_id on proctor.message and proctor.time_added", () => {
+    const groupId = "0199a9d2-4c3e-7a10-8b2c-1d2e3f405199";
+    const message = parseEventData("proctor.message", {
+      preset: "message.preset.time_15",
+      scope: "group",
+      group_id: groupId,
+      staff_id: groupId,
+    });
+    expect(message.success && message.data).toEqual({
+      preset: "message.preset.time_15",
+      scope: "group",
+      group_id: groupId,
+    });
+    const time = parseEventData("proctor.time_added", { minutes: 5, scope: "group", group_id: groupId });
+    expect(time.success && time.data.group_id).toBe(groupId);
+    expect(parseEventData("proctor.time_added", { minutes: 5, scope: "group", group_id: "g1" }).success).toBe(
+      false,
+    );
+  });
+
   it("takes proctor.message with a preset or a text", () => {
     expect(parseEventData("proctor.message", { text: "Eyes on your screen", scope: "group" }).success).toBe(
       true,
@@ -219,6 +239,22 @@ describe("ClientEventEnvelope", () => {
     const bad = ClientEventEnvelope.safeParse(envelope({ data: { duration_ms: "long" } }));
     expect(bad.success).toBe(false);
     expect(bad.error?.issues[0]?.path).toEqual(["data", "duration_ms"]);
+  });
+
+  it("refuses a session.paused that claims a proctor pause: only proctor.paused is one", () => {
+    for (const source of ["app", "lock"]) {
+      const claimed = ClientEventEnvelope.safeParse(
+        envelope({ type: "session.paused", source, data: { reason: "proctor" } }),
+      );
+      expect(claimed.success).toBe(false);
+      expect(claimed.error?.issues[0]?.path).toEqual(["data", "reason"]);
+    }
+    for (const reason of ["face_missing", "camera_lost"]) {
+      expect(
+        ClientEventEnvelope.safeParse(envelope({ type: "session.paused", data: { reason } })).success,
+      ).toBe(true);
+    }
+    expect(parseEventData("session.paused", { reason: "proctor" }).success).toBe(false);
   });
 });
 

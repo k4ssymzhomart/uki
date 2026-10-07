@@ -2,7 +2,7 @@
 // the dashboard feeds them its store and a 1-second ticker. Lines are structured data for i18n, never
 // text. Phase 0 has no review table, so every phone.detected and face.second counts as unreviewed.
 import { THRESHOLDS } from "./checks.ts";
-import { type CompactEvent, PauseReason } from "./events.ts";
+import { ClientPauseReason, type CompactEvent, type PauseReason } from "./events.ts";
 import { toMs } from "./primitives.ts";
 import { type FinalState, isFinalState, type SessionState, type SessionStatus } from "./session.ts";
 
@@ -113,7 +113,8 @@ export function tileState(input: TileInput, nowMs: number): TileResult {
     let reason: PauseReason | null = null;
     if (pause?.type === "proctor.paused") reason = "proctor";
     else if (pause !== undefined) {
-      const parsed = PauseReason.safeParse(pause.data.reason);
+      // A session.paused comes from the laptop: it never names the proctor, whatever its data says.
+      const parsed = ClientPauseReason.safeParse(pause.data.reason);
       reason = parsed.success ? parsed.data : null;
     }
     return { state: "paused", line: { kind: "paused", reason, sinceMs: sinceMs(pause?.at, nowMs) } };

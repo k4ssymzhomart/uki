@@ -39,6 +39,8 @@ export const IngestBatchResult = z.object({
     }),
   ),
   session: IngestSession,
+  /** Checked one by one in the function (CommandBroadcast), so one odd row never fails the call. */
+  pending_commands: z.array(z.unknown()).default([]),
   server_time: Timestamp,
 });
 export type IngestBatchResult = z.infer<typeof IngestBatchResult>;

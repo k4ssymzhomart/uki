@@ -86,6 +86,15 @@ describe("tileState: one row of the Live wall table at a time", () => {
     });
   });
 
+  it("2 Paused: a session.paused that claims the proctor is not a proctor pause", () => {
+    const events = [...quietWriting, compact("session.paused", NOW - 20 * S, { reason: "proctor" })];
+    expect(tileState({ session: session({ state: "paused" }), events }, NOW).line).toEqual({
+      kind: "paused",
+      reason: null,
+      sinceMs: 20 * S,
+    });
+  });
+
   it("2 Paused: the pause event not in the store yet", () => {
     expect(tileState({ session: session({ state: "paused" }), events: quietWriting }, NOW).line).toEqual({
       kind: "paused",
