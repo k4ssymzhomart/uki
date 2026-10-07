@@ -1,0 +1,83 @@
+"use client";
+
+import { ToastContext, ToastProvider } from "@uki/ui";
+import { useTranslations } from "next-intl";
+import { type ReactNode, useCallback, useContext, useEffect, useState } from "react";
+import { browserSupabase } from "./browser-services.ts";
+import { DarkTheme } from "./dark-theme.tsx";
+import { LiveEvents } from "./live-events.tsx";
+import type { AnyClient } from "./queries.ts";
+import type { OrderOptions } from "./tiles.ts";
+import { setDrawerSession, TimelineDrawer, useDrawerSession } from "./timeline-drawer.tsx";
+import { useExamChannel } from "./use-exam-channel.ts";
+import { WallGrid } from "./wall-grid.tsx";
+import { WallHeader } from "./wall-header.tsx";
+import { WallStats } from "./wall-stats.tsx";
+import type { WallInitialData } from "./wall-store.ts";
+import { WallStoreProvider } from "./wall-store-context.tsx";
+import { WallToolbar, type WallView } from "./wall-toolbar.tsx";
+
+/** A browser clock this far from the server's is corrected; smaller gaps are page-load time. */
+const CLOCK_SKEW_MS = 2000;
+
+/** Uses the shell's toasts when the layout has them, otherwise brings its own. */
+function EnsureToasts({ children }: { children: ReactNode }) {
+  const t = useTranslations("dashboard.wall.toast");
+  if (useContext(ToastContext) !== null) return children;
+  return (
+    <ToastProvider label={t("region")} closeLabel={t("close")}>
+      {children}
+    </ToastProvider>
+  );
+}
+
+function Channel({ client, examId, offsetMs }: { client: AnyClient; examId: string; offsetMs: number }) {
+  useExamChannel({ client, examId, offsetMs });
+  return null;
+}
+
+export interface LiveWallProps {
+  initial: WallInitialData;
+  /** Tests pass a fake; the app uses the browser Supabase client. */
+  getClient?: () => AnyClient;
+}
+
+/** 2.4 Live wall with 2.4a to 2.4e and the 2.5 drawer, fed by Realtime. */
+export function LiveWall({ initial, getClient = browserSupabase }: LiveWallProps) {
+  const [client, setClient] = useState<AnyClient | null>(null);
+  const [offsetMs, setOffsetMs] = useState(0);
+  const [view, setView] = useState<WallView>("flags");
+  const drawerSession = useDrawerSession();
+
+  // Browser-only: the Supabase client and the clock offset are set after hydration.
+  useEffect(() => {
+    setClient(getClient());
+    const skew = initial.serverNowMs - Date.now();
+    setOffsetMs(Math.abs(skew) > CLOCK_SKEW_MS ? skew : 0);
+  }, [getClient, initial.serverNowMs]);
+
+  const onOpenTimeline = useCallback((sessionId: string) => setDrawerSession(sessionId), []);
+  const options: OrderOptions = {
+    sort: view === "seat" ? "seat" : "flags",
+    filter: view === "paused" ? "paused" : "all",
+  };
+
+  return (
+    <WallStoreProvider initial={initial} nowMs={initial.serverNowMs}>
+      <EnsureToasts>
+        <DarkTheme />
+        {client === null ? null : <Channel client={client} examId={initial.exam.id} offsetMs={offsetMs} />}
+        <div data-theme="dark" className="flex w-full min-w-0 flex-1 flex-col bg-canvas text-fg-primary">
+          <WallHeader />
+          <div className="flex w-full flex-col gap-4.5 px-8 pt-6 pb-7">
+            <WallStats />
+            <WallToolbar view={view} onViewChange={setView} />
+            <WallGrid options={options} onOpenTimeline={onOpenTimeline} />
+            <LiveEvents />
+          </div>
+        </div>
+        {client === null ? null : <TimelineDrawer client={client} sessionId={drawerSession} />}
+      </EnsureToasts>
+    </WallStoreProvider>
+  );
+}

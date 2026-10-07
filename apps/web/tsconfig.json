@@ -1,0 +1,11 @@
+{
+  "extends": "@uki/config/tsconfig.react.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "allowJs": true,
+    "incremental": true,
+    "plugins": [{ "name": "next" }]
+  },
+  "include": ["next-env.d.ts", "src", "test", "*.ts", ".next/types/**/*.ts", ".next/dev/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}

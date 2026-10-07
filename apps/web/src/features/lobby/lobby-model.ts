@@ -1,0 +1,308 @@
+import {
+  Device,
+  ExamStatus,
+  SessionState,
+  SessionStatus,
+  type SessionTileMessage,
+  THRESHOLDS,
+  Timestamp,
+  toMs,
+  Uuid,
+} from "@uki/contracts";
+import type { ChipStatus } from "@uki/ui";
+import { z } from "zod";
+
+/**
+ * 1.5 Lobby as pure functions: who is where in check-in, the counts on the banner, the stat cards and
+ * the tabs, the client-side filters and search, and how a realtime `session` message changes a row.
+ * Unit-tested in lobby-model.test.ts.
+ *
+ * `sessions.status.detail` (set by the app through ingest) says what is wrong at a check step; a
+ * session at a check step with a detail needs help. The app sends:
+ * - `camera_blocked`: the camera is used by another app (1.2);
+ * - `card_retry:<n>`: the card match failed n times (1.3);
+ * - `app:<Name>` or just the app's name at the system check: a blocked app is open (1.2).
+ * Any other text is shown as it is.
+ */
+
+// ---------------------------------------------------------------------------------------------------
+// Rows from the database
+
+export const LobbyExam = z.object({
+  id: Uuid,
+  title: z.string(),
+  status: ExamStatus,
+  starts_at: Timestamp,
+  duration_min: z.number().int().positive(),
+  lobby_opens_at: Timestamp,
+  groups: z.array(z.string()),
+});
+export type LobbyExam = z.infer<typeof LobbyExam>;
+
+export const RosterEntry = z.object({
+  student_id: Uuid,
+  seat: z.number().int().nullable(),
+  invite_status: z.string(),
+  student: z.object({ full_name: z.string(), student_number: z.string() }),
+});
+export type RosterEntry = z.infer<typeof RosterEntry>;
+
+/** sessions.device as the app writes it; anything unreadable shows as no device. */
+const DeviceCell = Device.pick({ os: true, app_version: true }).nullable().catch(null);
+
+export const LobbySession = z.object({
+  id: Uuid,
+  student_id: Uuid,
+  state: SessionState,
+  status: SessionStatus.catch({}),
+  device: DeviceCell,
+});
+export type LobbySession = z.infer<typeof LobbySession>;
+
+export const LOBBY_SESSION_COLUMNS = "id, student_id, state, status, device";
+
+export function parseRows<T>(schema: z.ZodType<T>, rows: readonly unknown[]): T[] {
+  return rows.flatMap((row) => {
+    const parsed = schema.safeParse(row);
+    return parsed.success ? [parsed.data] : [];
+  });
+}
+
+// ---------------------------------------------------------------------------------------------------
+// What a row shows
+
+export type LobbyCategory = "needHelp" | "notJoined" | "checking" | "ready" | "writing" | "done";
+
+/** dashboard.lobby.step.* */
+export type StepKey = "notJoined" | "joined" | "checking" | "identity" | "rules" | "writing" | "finished";
+
+/** dashboard.lobby.detail.*, or the app's text as it is. */
+export type StepDetail =
+  | { key: "waiting" }
+  | { key: "bounced" }
+  | { key: "cameraBlocked" }
+  | { key: "appOpen"; app: string }
+  | { key: "cardRetry"; attempt: number; max: number }
+  | { key: "text"; text: string };
+
+/** dashboard.lobby.chip.* */
+export type ChipKey = "needsHelp" | "notJoined" | "checking" | "ready" | "writing" | "paused" | "done";
+
+export type LobbyRow = {
+  studentId: string;
+  sessionId: string | null;
+  name: string;
+  number: string;
+  seat: number | null;
+  category: LobbyCategory;
+  step: StepKey;
+  detail: StepDetail | null;
+  device: { os: "macos" | "windows"; version: string } | null;
+  chip: { status: ChipStatus; key: ChipKey };
+};
+
+const CHECK_STATES: readonly SessionState[] = ["joined", "checking", "identity"];
+
+const STEP_OF_STATE: Record<SessionState, StepKey> = {
+  joined: "joined",
+  checking: "checking",
+  identity: "identity",
+  rules: "rules",
+  ready: "rules",
+  writing: "writing",
+  paused: "writing",
+  submitted: "finished",
+  time_up: "finished",
+  ended: "finished",
+};
+
+function problemDetail(state: SessionState, detail: string): StepDetail {
+  if (detail === "camera_blocked") return { key: "cameraBlocked" };
+  const retry = /^card_retry:(\d{1,2})$/.exec(detail);
+  if (retry) return { key: "cardRetry", attempt: Number(retry[1]), max: THRESHOLDS.identity.maxTries };
+  const app = /^app:(.+)$/.exec(detail);
+  if (app?.[1]) return { key: "appOpen", app: app[1].trim() };
+  if (state === "checking") return { key: "appOpen", app: detail };
+  return { key: "text", text: detail };
+}
+
+export function categoryOf(session: LobbySession | null): LobbyCategory {
+  if (!session) return "notJoined";
+  const detail = session.status.detail?.trim();
+  if (CHECK_STATES.includes(session.state)) return detail ? "needHelp" : "checking";
+  if (session.state === "rules" || session.state === "ready") return "ready";
+  if (session.state === "writing" || session.state === "paused") return "writing";
+  return "done";
+}
+
+function chipOf(category: LobbyCategory, state: SessionState | null): LobbyRow["chip"] {
+  switch (category) {
+    case "needHelp":
+      return { status: "warn", key: "needsHelp" };
+    case "notJoined":
+      return { status: "idle", key: "notJoined" };
+    case "checking":
+      return { status: "idle", key: "checking" };
+    case "ready":
+      return { status: "ok", key: "ready" };
+    case "writing":
+      return state === "paused" ? { status: "warn", key: "paused" } : { status: "ok", key: "writing" };
+    case "done":
+      return { status: "idle", key: "done" };
+  }
+}
+
+/** One student's row: the roster entry and the student's session, if they joined. */
+export function lobbyRow(entry: RosterEntry, session: LobbySession | null): LobbyRow {
+  const category = categoryOf(session);
+  const base = {
+    studentId: entry.student_id,
+    sessionId: session?.id ?? null,
+    name: entry.student.full_name,
+    number: entry.student.student_number,
+    seat: entry.seat,
+    category,
+    chip: chipOf(category, session?.state ?? null),
+  };
+  if (!session) {
+    return {
+      ...base,
+      step: "notJoined",
+      detail: entry.invite_status === "bounced" ? { key: "bounced" } : null,
+      device: null,
+    };
+  }
+  const detail = session.status.detail?.trim();
+  return {
+    ...base,
+    step: STEP_OF_STATE[session.state],
+    detail: detail
+      ? CHECK_STATES.includes(session.state)
+        ? problemDetail(session.state, detail)
+        : { key: "text", text: detail }
+      : session.state === "ready"
+        ? { key: "waiting" }
+        : null,
+    device: session.device ? { os: session.device.os, version: session.device.app_version } : null,
+  };
+}
+
+/** Every roster student's row, in roster order. A session of a student not on the roster is left out. */
+export function lobbyRows(roster: readonly RosterEntry[], sessions: readonly LobbySession[]): LobbyRow[] {
+  const byStudent = new Map(sessions.map((session) => [session.student_id, session]));
+  return roster.map((entry) => lobbyRow(entry, byStudent.get(entry.student_id) ?? null));
+}
+
+// ---------------------------------------------------------------------------------------------------
+// Counts, filters, search
+
+export type LobbyCounts = {
+  total: number;
+  joined: number;
+  ready: number;
+  needHelp: number;
+  notJoined: number;
+  /** Not joined, but the invite email was opened (NOT JOINED caption). */
+  invitesOpened: number;
+};
+
+export function lobbyCounts(rows: readonly LobbyRow[], roster: readonly RosterEntry[]): LobbyCounts {
+  const opened = new Set(roster.filter((e) => e.invite_status === "opened").map((e) => e.student_id));
+  const count = (category: LobbyCategory) => rows.filter((row) => row.category === category).length;
+  return {
+    total: rows.length,
+    joined: rows.filter((row) => row.sessionId !== null).length,
+    ready: count("ready"),
+    needHelp: count("needHelp"),
+    notJoined: count("notJoined"),
+    invitesOpened: rows.filter((row) => row.category === "notJoined" && opened.has(row.studentId)).length,
+  };
+}
+
+/** The Check-in tabs, in Figma order. */
+export const LOBBY_FILTERS = ["needHelp", "notJoined", "ready", "all"] as const;
+export type LobbyFilter = (typeof LOBBY_FILTERS)[number];
+
+/** Figma opens on Need help; with nobody needing help the list starts on All. */
+export function defaultLobbyFilter(counts: LobbyCounts): LobbyFilter {
+  return counts.needHelp > 0 ? "needHelp" : "all";
+}
+
+const CATEGORY_ORDER: Record<LobbyCategory, number> = {
+  needHelp: 0,
+  notJoined: 1,
+  checking: 2,
+  ready: 3,
+  writing: 4,
+  done: 5,
+};
+
+function compareRows(a: LobbyRow, b: LobbyRow): number {
+  return (
+    CATEGORY_ORDER[a.category] - CATEGORY_ORDER[b.category] ||
+    (a.seat ?? Number.MAX_SAFE_INTEGER) - (b.seat ?? Number.MAX_SAFE_INTEGER) ||
+    a.name.localeCompare(b.name)
+  );
+}
+
+function matches(row: LobbyRow, query: string): boolean {
+  const q = query.trim().toLocaleLowerCase();
+  if (q === "") return true;
+  return row.name.toLocaleLowerCase().includes(q) || row.number.includes(q);
+}
+
+/** The rows a tab and the search show: those who need help first, then by seat and name. */
+export function visibleRows(rows: readonly LobbyRow[], filter: LobbyFilter, query: string): LobbyRow[] {
+  return rows
+    .filter((row) => filter === "all" || row.category === filter)
+    .filter((row) => matches(row, query))
+    .sort(compareRows);
+}
+
+// ---------------------------------------------------------------------------------------------------
+// The banner and Start exam
+
+export type LobbyRole = { role: "exam_office" | "proctor" | "admin"; isLead: boolean };
+
+/** True before the scheduled start of a scheduled exam (start_exam refuses anything else). */
+export function beforeStart(exam: LobbyExam, nowMs: number): boolean {
+  return exam.status === "scheduled" && nowMs < toMs(exam.starts_at);
+}
+
+/** Start exam is enabled for the lead proctor and the exam office, only before the scheduled start. */
+export function canStartExam(exam: LobbyExam, who: LobbyRole, nowMs: number): boolean {
+  return (who.role !== "proctor" || who.isLead) && beforeStart(exam, nowMs);
+}
+
+// ---------------------------------------------------------------------------------------------------
+// Realtime
+
+export type SessionUpdate = Pick<SessionTileMessage, "id" | "state" | "status">;
+
+/**
+ * Applies a `session` message from the exam channel. A known session gets the new state and status;
+ * an unknown one (a student who has just joined) has to be read from the database, because the
+ * message carries no student or device.
+ */
+export function applySessionUpdate(
+  sessions: readonly LobbySession[],
+  update: SessionUpdate,
+): { sessions: LobbySession[]; unknown: boolean } {
+  let found = false;
+  const next = sessions.map((session) => {
+    if (session.id !== update.id) return session;
+    found = true;
+    return { ...session, state: update.state, status: update.status };
+  });
+  return { sessions: found ? next : [...sessions], unknown: !found };
+}
+
+/** Adds or replaces sessions read from the database, keyed by session id. */
+export function mergeSessions(
+  sessions: readonly LobbySession[],
+  fresh: readonly LobbySession[],
+): LobbySession[] {
+  const byId = new Map(sessions.map((session) => [session.id, session]));
+  for (const session of fresh) byId.set(session.id, session);
+  return [...byId.values()];
+}
