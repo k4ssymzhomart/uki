@@ -3,7 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "inputs": ["catalog.json", "dashboard.json", "scripts/**", "package.json"],
+      "inputs": ["catalog.json", "dashboard*.json", "scripts/**", "package.json"],
       "outputs": ["messages/**"]
     }
   }

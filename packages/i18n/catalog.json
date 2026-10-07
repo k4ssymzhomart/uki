@@ -1,5 +1,5 @@
 {
-  "about": "Üki student app and Üki Lock strings for Phase 0. 135 keys come from Figma sheets S.1 (171:15780) and S.2 (172:15868); 87 keys are added by the Phase 0 plan; 3 keys (language.*) are the ҚАЗ, РУС and ENG switch labels from the title bar in Figma. Kazakh and Russian are first-pass translations; a Kazakh and a Russian speaker read them before Demo Day. Plural messages use ICU syntax. Build with `pnpm i18n:build` into packages/i18n/messages/{en,kk,ru}.json.",
+  "about": "Üki student app and Üki Lock strings for Phase 0. 135 keys come from Figma sheets S.1 (171:15780) and S.2 (172:15868); 87 keys are added by the Phase 0 plan; 3 keys (language.*) are the ҚАЗ, РУС and ENG switch labels from the title bar in Figma; 13 keys were added after the plan for lines the screens need (app.name, lock.name, os.*, lock.pair.device, pair.card.when.*, app.title.offline_unlocked, join.error.* for the other join errors, rules.faq.video.answer), with source added when a frame shows the text and added-not-in-figma otherwise. Kazakh and Russian are first-pass translations; a Kazakh and a Russian speaker read them before Demo Day. Plural messages use ICU syntax. Build with `pnpm i18n:build` into packages/i18n/messages/{en,kk,ru}.json.",
   "file": "packages/i18n/catalog.json",
   "figma_file": "9RB9aBz6lzS6XHpf5do5Gh",
   "renames": {
@@ -7,7 +7,8 @@
     "event.phone": "event.phone.title",
     "done.submitted": "done.submitted.label",
     "done.time_used": "done.time_used.label",
-    "done.flags": "done.flags.label"
+    "done.flags": "done.flags.label",
+    "rules.faq.video": "rules.faq.video.question"
   },
   "keys": [
     {
@@ -36,6 +37,15 @@
       "kk": "Üki · {course} · {examType} · тапсырылды",
       "ru": "Üki · {course} · {examType} · сдано",
       "notes": "Value"
+    },
+    {
+      "key": "app.name",
+      "group": "Shared",
+      "source": "added",
+      "en": "Üki",
+      "kk": "Üki",
+      "ru": "Üki",
+      "notes": "The title bar before a join (frame 1.1, 51:2058) and the app window on E.3 (95:9379). The product name reads the same in every language."
     },
     {
       "key": "exam.type.midterm",
@@ -270,6 +280,42 @@
       "kk": "Код үш бөліктен тұрады: курс, топ және күн, мысалы MATH2-204-FRI.",
       "ru": "Код состоит из трёх частей: курс, группа и день, например MATH2-204-FRI.",
       "notes": "Frame 1.1a."
+    },
+    {
+      "key": "join.error.already_joined",
+      "group": "1.1 Join",
+      "source": "added-not-in-figma",
+      "en": "This student ID is already in this exam on another laptop. Ask your proctor.",
+      "kk": "Бұл студенттік ID-мен емтиханға басқа ноутбуктан кірген. Проктордан сұраңыз.",
+      "ru": "С этим ID студента уже вошли на экзамен с другого ноутбука. Спросите проктора.",
+      "notes": "Under the student ID field when join_exam returns already_joined: another laptop holds this student’s session. 1.1 has no frame for it. Kazakh and Russian are a first pass: a native speaker must review them."
+    },
+    {
+      "key": "join.error.lobby_closed",
+      "group": "1.1 Join",
+      "source": "added-not-in-figma",
+      "en": "This exam is not open to join now. Check the time in your invitation email.",
+      "kk": "Бұл емтиханға қазір кіру мүмкін емес. Уақытын шақыру хатынан тексеріңіз.",
+      "ru": "Сейчас войти на этот экзамен нельзя. Проверьте время в письме-приглашении.",
+      "notes": "Under the exam code field when join_exam returns lobby_closed: before the lobby opens or after the exam ends. 1.1 has no frame for it. Kazakh and Russian are a first pass: a native speaker must review them."
+    },
+    {
+      "key": "join.error.rate_limited",
+      "group": "1.1 Join",
+      "source": "added-not-in-figma",
+      "en": "Too many tries. Wait a minute and try again.",
+      "kk": "Әрекет тым көп. Бір минут күтіп, қайталап көріңіз.",
+      "ru": "Слишком много попыток. Подождите минуту и попробуйте снова.",
+      "notes": "Under the exam code field when join_exam returns rate_limited (10 tries a minute). 1.1 has no frame for it. Kazakh and Russian are a first pass: a native speaker must review them."
+    },
+    {
+      "key": "join.error.network",
+      "group": "1.1 Join",
+      "source": "added-not-in-figma",
+      "en": "The exam server does not reply. Check your connection and try again.",
+      "kk": "Емтихан сервері жауап бермейді. Желіні тексеріп, қайталап көріңіз.",
+      "ru": "Сервер экзамена не отвечает. Проверьте подключение и попробуйте снова.",
+      "notes": "Under the exam code field when join_exam gets no reply. 1.1 has no frame for it. Kazakh and Russian are a first pass: a native speaker must review them."
     },
     {
       "key": "check.title",
@@ -713,6 +759,15 @@
       "notes": ""
     },
     {
+      "key": "rules.faq.video.answer",
+      "group": "1.4 Rules and lobby",
+      "source": "added",
+      "en": "It isn’t uploaded anywhere. Üki checks the video on this laptop. Only events and flagged frames are sent.",
+      "kk": "Ешқайда жүктелмейді. Üki бейнені осы ноутбукта тексереді. Тек оқиғалар мен белгіленген кадрлар жіберіледі.",
+      "ru": "Никуда не загружается. Üki проверяет видео на этом ноутбуке. Передаются только события и отмеченные кадры.",
+      "notes": "The answer under rules.faq.video, which is renamed to rules.faq.video.question in code. Kazakh from frame 1.4a (87:8156); English and Russian are a first pass: a native speaker must review the Russian."
+    },
+    {
       "key": "lobby.countdown.label",
       "group": "1.4 Rules and lobby",
       "source": "figma",
@@ -1028,6 +1083,15 @@
       "notes": "+117% RU"
     },
     {
+      "key": "lock.name",
+      "group": "Üki Lock",
+      "source": "added",
+      "en": "Üki Lock",
+      "kk": "Üki Lock",
+      "ru": "Üki Lock",
+      "notes": "The header of every Üki Lock popup (Ext/Popup header 92:2533, E.3 to E.9). The product name reads the same in every language."
+    },
+    {
       "key": "lock.tab.portal",
       "group": "Üki Lock",
       "source": "figma",
@@ -1260,6 +1324,15 @@
       "kk": "Üki · {course} · {examType} · браузер құлыпталған · желі жоқ",
       "ru": "Üki · {course} · {examType} · браузер заблокирован · нет сети",
       "notes": "Value. From frame 2.1a."
+    },
+    {
+      "key": "app.title.offline_unlocked",
+      "group": "2.1a Offline",
+      "source": "added-not-in-figma",
+      "en": "Üki · {course} · {examType} · offline",
+      "kk": "Üki · {course} · {examType} · желі жоқ",
+      "ru": "Üki · {course} · {examType} · нет сети",
+      "notes": "Value. Offline in an exam whose browser is not locked (no Üki Lock); frame 2.1a draws only the locked variant, app.title.offline. Kazakh and Russian are a first pass: a native speaker must review them."
     },
     {
       "key": "offline.title",
@@ -1676,6 +1749,24 @@
       "notes": "Value. App side of E.3."
     },
     {
+      "key": "pair.card.when.today",
+      "group": "E.3 Pairing",
+      "source": "added",
+      "en": "today {time}",
+      "kk": "бүгін {time}",
+      "ru": "сегодня в {time}",
+      "notes": "Value. The {when} of pair.card.next for an exam that starts today, as in “Next: Physics 1 · Quiz 3 · today 14:00” (E.3, 95:9394). Kazakh and Russian are a first pass: a native speaker must review them."
+    },
+    {
+      "key": "pair.card.when.date",
+      "group": "E.3 Pairing",
+      "source": "added-not-in-figma",
+      "en": "{date}, {time}",
+      "kk": "{date}, {time}",
+      "ru": "{date} в {time}",
+      "notes": "Value. The {when} of pair.card.next for an exam on another day; {date} is the receipt date (formatDate). E.3 shows only today. Kazakh and Russian are a first pass: a native speaker must review them."
+    },
+    {
       "key": "lock.pair.badge",
       "group": "E.3 Pairing",
       "source": "added",
@@ -1710,6 +1801,33 @@
       "kk": "Üki қолданбасы табылды",
       "ru": "Приложение Üki найдено",
       "notes": "Popup in E.3. The line under it is {os} · {student}."
+    },
+    {
+      "key": "lock.pair.device",
+      "group": "E.3 Pairing",
+      "source": "added",
+      "en": "{os} · {student}",
+      "kk": "{os} · {student}",
+      "ru": "{os} · {student}",
+      "notes": "Value. The line under lock.pair.found in the E.3 popup (“Windows 11 · Aliya S.”, 95:9192): os.* and the student’s name. Before the student joins, the line is the OS name alone."
+    },
+    {
+      "key": "os.macos",
+      "group": "E.3 Pairing",
+      "source": "added",
+      "en": "macOS",
+      "kk": "macOS",
+      "ru": "macOS",
+      "notes": "{os} in lock.pair.device. The app reports macOS or Windows without a version. Trade names read the same in every language."
+    },
+    {
+      "key": "os.windows",
+      "group": "E.3 Pairing",
+      "source": "added",
+      "en": "Windows",
+      "kk": "Windows",
+      "ru": "Windows",
+      "notes": "{os} in lock.pair.device (E.3 shows Windows 11; the app reports no version). Trade names read the same in every language."
     },
     {
       "key": "lock.pair.action",

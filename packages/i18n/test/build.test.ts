@@ -26,7 +26,7 @@ describe("i18n build on the shipped catalog", () => {
   it("passes with no problems", () => {
     expect(result.problems).toEqual([]);
     expect(result.messages).not.toBeNull();
-    expect(result.counts.catalog).toBe(225);
+    expect(result.counts.catalog).toBe(238);
   });
 
   it("matches the committed messages files, so the build is deterministic and up to date", () => {
@@ -39,14 +39,16 @@ describe("i18n build on the shipped catalog", () => {
     expect(generateAll()).toEqual(generateAll());
   });
 
-  it("applies the five renames", () => {
+  it("applies the six renames", () => {
     const en = result.messages?.en as Record<string, Record<string, unknown>>;
     expect(en.app?.title).toMatchObject({ default: "Üki · {course} · {examType}" });
     expect(en.event?.phone).toMatchObject({ title: "Phone in frame" });
     expect(en.done?.submitted).toMatchObject({ label: "Submitted" });
     expect(en.done?.time_used).toMatchObject({ label: "Time used" });
     expect(en.done?.flags).toMatchObject({ label: "Flags" });
-    expect(Object.keys(catalog.renames)).toHaveLength(5);
+    // The plan's five, and the 1.4a FAQ question next to its answer.
+    expect(en.rules?.faq).toMatchObject({ video: { question: "Where is the video?" } });
+    expect(Object.keys(catalog.renames)).toHaveLength(6);
   });
 
   it("names the plan's eight count messages", () => {
