@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>Üki — экзамен</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header id="statusbar">
+    <div class="brand">Üki</div>
+    <div class="chips">
+      <span class="chip" id="chip-camera">Камера</span>
+      <span class="chip" id="chip-gaze">Взгляд</span>
+      <span class="chip" id="chip-phone">Телефон</span>
+      <span class="chip" id="chip-env">Окружение</span>
+    </div>
+    <div class="risk">Риск: <b id="risk">0</b></div>
+  </header>
+
+  <main>
+    <!-- Real exams: point this iframe at a whitelisted Platonus / Moodle URL. -->
+    <iframe id="exam" title="Экзамен" hidden></iframe>
+
+    <section id="demo-exam">
+      <h1>Демо-экзамен</h1>
+      <p class="q">1. Столица Казахстана?</p>
+      <label><input type="radio" name="q1" /> Алматы</label>
+      <label><input type="radio" name="q1" /> Астана</label>
+      <label><input type="radio" name="q1" /> Шымкент</label>
+      <p class="hint">Поднимите телефон к экрану — вопросы размоются (anti-photo shield).</p>
+    </section>
+  </main>
+
+  <div id="shield" hidden><div>Экран защищён</div></div>
+  <div id="toasts"></div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Node / Electron
+node_modules/
+dist/
+out/
+*.log
+
+# Models (download on setup, do not commit weights)
+*.pt
+*.onnx
+*.task
+models/
+
+# Evidence and recordings (never commit student data)
+evidence/
+clips/
+*.mp4
+*.db
+
+# Env / secrets
+.env
+.DS_Store

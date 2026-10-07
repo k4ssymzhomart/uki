@@ -1,0 +1,14 @@
+{
+  "name": "uki-shell",
+  "version": "0.1.0",
+  "description": "Üki student exam shell (Electron kiosk)",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "author": "k4ssymzhomart",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "electron": "^32.0.0"
+  }
+}

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>Üki — консоль проктора</title>
+  <style>
+    :root { --bg:#0b1020; --panel:#121a33; --ink:#e8eefc; --muted:#8aa0c8; --ok:#36d399; --warn:#ffb020; --bad:#ff5d5d; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font-family:Manrope,"Segoe UI",system-ui,sans-serif; }
+    header { padding:14px 20px; font-weight:800; border-bottom:1px solid #1e2a4a; }
+    header .muted { color:var(--muted); font-weight:400; }
+    .wrap { display:grid; grid-template-columns:2fr 1fr; gap:16px; padding:16px; }
+    h3 { color:var(--muted); font-weight:600; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; }
+    .seat { background:var(--panel); border-radius:12px; padding:12px; border-left:4px solid var(--ok); }
+    .seat.warn { border-color:var(--warn); }
+    .seat.bad { border-color:var(--bad); }
+    .seat .sid { font-weight:700; }
+    .seat .muted { color:var(--muted); font-size:13px; }
+    .seat .risk { font-size:22px; font-weight:800; margin-top:6px; }
+    .feed { background:var(--panel); border-radius:12px; padding:12px; max-height:80vh; overflow:auto; }
+    .row { padding:8px 10px; border-bottom:1px solid #1e2a4a; font-size:14px; }
+    .row.critical, .row.high { color:var(--bad); }
+    .row.medium { color:var(--warn); }
+    .row .muted { color:var(--muted); }
+  </style>
+</head>
+<body>
+  <header>Üki <span class="muted">— консоль проктора</span></header>
+  <div class="wrap">
+    <div><h3>Места</h3><div id="grid" class="grid"></div></div>
+    <div><h3>События</h3><div id="feed" class="feed"></div></div>
+  </div>
+  <script>
+    const seats = {}, grid = document.getElementById("grid"), feed = document.getElementById("feed");
+    const tone = (r) => (r >= 60 ? "bad" : r >= 30 ? "warn" : "");
+    function render() {
+      grid.innerHTML = "";
+      Object.values(seats).forEach((s) => {
+        const d = document.createElement("div");
+        d.className = "seat " + tone(s.risk);
+        d.innerHTML = `<div class="sid">${s.session_id}</div>
+          <div class="muted">${s.gaze} · ${s.phone ? "телефон" : "ок"}</div>
+          <div class="risk">${s.risk}</div>`;
+        grid.appendChild(d);
+      });
+    }
+    function addEvent(e) {
+      const r = document.createElement("div");
+      r.className = "row " + e.severity;
+      const t = new Date(e.ts * 1000).toLocaleTimeString();
+      r.innerHTML = `<b>${e.session_id}</b> ${e.label_ru} <span class="muted">${t}</span>`;
+      feed.prepend(r);
+    }
+    function connect() {
+      const ws = new WebSocket(`ws://${location.host}/ws`);
+      ws.onmessage = (m) => {
+        const x = JSON.parse(m.data);
+        if (x.type === "snapshot") {
+          x.sessions.forEach((s) => (seats[s.session_id] = s));
+          x.events.forEach(addEvent);
+          render();
+        } else if (x.type === "status") { seats[x.session_id] = x; render(); }
+        else if (x.type === "event") { addEvent(x); }
+      };
+      ws.onclose = () => setTimeout(connect, 1000);
+    }
+    connect();
+  </script>
+</body>
+</html>
