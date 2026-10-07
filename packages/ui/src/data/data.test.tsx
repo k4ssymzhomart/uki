@@ -14,6 +14,7 @@ import { RowAction } from "./row-action.tsx";
 import { RowExam } from "./row-exam.tsx";
 import { RowLobby } from "./row-lobby.tsx";
 import { RowSession } from "./row-session.tsx";
+import { shortName } from "./short-name.ts";
 import { ariaSort, nextSort } from "./sort.ts";
 import { StatTile } from "./stat-tile.tsx";
 import { Table } from "./table.tsx";
@@ -50,6 +51,25 @@ describe("initials", () => {
     expect(initials("Kassymzhomart")).toBe("K");
     expect(initials("   ")).toBe("");
     expect(initials("әсел нұрланқызы", "kk")).toBe("ӘН");
+  });
+});
+
+describe("shortName", () => {
+  it("keeps the first name and the last name's initial, as Figma names people", () => {
+    expect(shortName("Aigerim Sadykova")).toBe("Aigerim S.");
+    expect(shortName("Madina Serikovna Tulegenova")).toBe("Madina T.");
+    expect(shortName("  Aliya  Seitkali ")).toBe("Aliya S.");
+  });
+
+  it("keeps a transliterated Kazakh digraph whole and handles Kazakh letters", () => {
+    expect(shortName("Dana Zhaksylykova")).toBe("Dana Zh.");
+    expect(shortName("Erlan Shynarov")).toBe("Erlan Sh.");
+    expect(shortName("Ұлжан Әбдіқадыр")).toBe("Ұлжан Ә.");
+  });
+
+  it("leaves one word as it is and an empty name empty", () => {
+    expect(shortName("Cher")).toBe("Cher");
+    expect(shortName("   ")).toBe("");
   });
 });
 
@@ -177,6 +197,20 @@ describe("TableHeaderCell", () => {
     const header = screen.getByRole("columnheader", { name: "Device" });
     expect(header.getAttribute("aria-sort")).toBeNull();
     expect(within(header).queryByRole("button")).toBeNull();
+  });
+
+  it("wraps its content in a block flex box, so no inherited line box adds height", () => {
+    render(
+      <InHead>
+        <TableHeaderCell label="Device" />
+        <TableHeaderCell label="Student" sort="none" onSortChange={() => {}} />
+      </InHead>,
+    );
+    for (const name of ["Device", "Student"]) {
+      const content = screen.getByRole("columnheader", { name }).firstElementChild;
+      expect(content?.className.split(" ")).toContain("flex");
+      expect(content?.className).not.toContain("inline-flex");
+    }
   });
 
   it("asks for the next sort state on click", () => {

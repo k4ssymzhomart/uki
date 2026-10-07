@@ -28,7 +28,8 @@ export function SegmentChoice({ labelId, label, options, value, onValueChange }:
         aria-labelledby={labelId}
         value={value}
         onValueChange={onValueChange}
-        className="flex w-full border-0 inset-ring-0"
+        variant="plain"
+        className="flex w-full"
       >
         {options.map((option) => (
           <Tab key={option.value} value={option.value} className="min-w-0 flex-1">

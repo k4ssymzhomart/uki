@@ -38,6 +38,13 @@ export interface ActionMenuProps {
   modal?: boolean;
   side?: "top" | "right" | "bottom" | "left";
   align?: "start" | "center" | "end";
+  /** Gap between the trigger and the menu; 8 px by default, as under Figma's buttons. */
+  sideOffset?: number;
+  /**
+   * Shift along the trigger edge from `align`. The wall's tile menu uses 12: Figma 2.4a opens it 12 px
+   * in from the tile's left edge.
+   */
+  alignOffset?: number;
   /** Portal target; pass a node inside the dark live wall to keep its theme. */
   container?: HTMLElement | null;
   /** Classes of the menu panel, for example its width. */
@@ -75,6 +82,8 @@ export function ActionMenu({
   modal = true,
   side = "bottom",
   align = "start",
+  sideOffset,
+  alignOffset,
   container,
   className,
 }: ActionMenuProps) {
@@ -92,6 +101,8 @@ export function ActionMenu({
       <MenuContent
         side={side}
         align={align}
+        sideOffset={sideOffset}
+        alignOffset={alignOffset}
         container={container}
         className={className}
         onKeyDown={(event) => {

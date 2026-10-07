@@ -40,8 +40,9 @@ export type DialogProps = {
 };
 
 /**
- * Modal dialog on a 40 % ink scrim (Figma Dialog 144:2725): icon badge, title, body, an optional
- * field and the Cancel and confirm buttons. Escape and Cancel close it; focus stays inside while open.
+ * Modal dialog on a 40 % bg-inverse scrim (Figma Dialog 144:2725): ink on light pages, a paper wash on
+ * dark ones such as the live wall (2.4e, 181:18746). Icon badge, title, body, an optional field and the
+ * Cancel and confirm buttons. Escape and Cancel close it; focus stays inside while open.
  */
 export function Dialog({
   open,
@@ -67,7 +68,7 @@ export function Dialog({
     <DialogPrimitive.Root open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange} modal={modal}>
       {trigger ? <DialogPrimitive.Trigger asChild>{trigger}</DialogPrimitive.Trigger> : null}
       <DialogPrimitive.Portal container={container}>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-inverse/40 dark:bg-canvas/40" />
+        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-inverse/40" />
         <DialogPrimitive.Content
           data-tone={tone}
           {...(body ? {} : { "aria-describedby": undefined })}

@@ -20,7 +20,7 @@ import { LIVE_WIDGET_STATES, LiveWidget } from "./live-widget.tsx";
 import { QuickMessageMenu } from "./quick-message-menu.tsx";
 import { StudentPopover } from "./student-popover.tsx";
 import { StudentPopoverCard } from "./student-popover-card.tsx";
-import { STUDENT_TILE_STATES, StudentTile } from "./student-tile.tsx";
+import { STUDENT_TILE_STATES, StudentTile, StudentTileMore } from "./student-tile.tsx";
 import { TileActionsMenu } from "./tile-actions-menu.tsx";
 import { Timer } from "./timer.tsx";
 
@@ -50,6 +50,7 @@ const WIDGET_TEXT = {
   phone: ["Phone found", "phone in frame · 0.94"],
   paused: ["Paused", "no face in frame"],
   submitted: ["Submitted", "0 flags · 58:02"],
+  offline: ["Offline", "saving on this laptop · 00:00:16"],
 } as const;
 
 const HUD_TEXT = {
@@ -157,6 +158,19 @@ export default function ProctoringGallery() {
           <StudentTile state="ok" name="Yerlan T." detail="on screen · Q 9" />
           <StudentTile state="ok" name="Focus state" detail="keyboard focus" className="shadow-focus" />
           <StudentTile state="ok" name="Disabled" detail="no actions" disabled />
+          <StudentTile
+            state="flag"
+            name="Madina T."
+            detail="hover: the ⋯ replaces the dot"
+            trailing={<StudentTileMore />}
+          />
+          <StudentTile
+            state="flag"
+            name="Madina T."
+            detail="menu open (2.4a)"
+            data-state="open"
+            trailing={<StudentTileMore />}
+          />
         </div>
       </Pair>
 
@@ -183,6 +197,20 @@ export default function ProctoringGallery() {
               detail={WIDGET_TEXT[state][1]}
             />
           ))}
+          <div className="flex w-85 flex-col gap-4 bg-subtle p-0">
+            <LiveWidget
+              state="offline"
+              title="Offline (340 px, 2.1a)"
+              detail={WIDGET_TEXT.offline[1]}
+              className="w-full"
+            />
+            <LiveWidget
+              state="watching"
+              title="Watching (276 px)"
+              detail={WIDGET_TEXT.watching[1]}
+              className="w-69"
+            />
+          </div>
         </div>
       </Pair>
 
@@ -209,7 +237,14 @@ export default function ProctoringGallery() {
             <TileActionsMenu
               header="MADINA T. · 20231187"
               groups={tileGroups}
-              trigger={<StudentTile state="flag" name="Madina T." detail="click or Enter" />}
+              trigger={
+                <StudentTile
+                  state="flag"
+                  name="Madina T."
+                  detail="click or Enter"
+                  trailing={<StudentTileMore />}
+                />
+              }
             />
           </div>
         </div>

@@ -198,6 +198,24 @@ describe("TabGroup and Tab", () => {
     expect(onValueChange).toHaveBeenCalledWith("ru");
   });
 
+  it("draws the default stroke when outlined (title bar) and none when plain (dashboard filters)", () => {
+    const { rerender } = render(
+      <TabGroup aria-label="Filter" value="all">
+        <Tab value="all">All</Tab>
+      </TabGroup>,
+    );
+    const group = screen.getByRole("radiogroup", { name: "Filter" });
+    expect(group.dataset.variant).toBe("outlined");
+    expect(group.className).toContain("inset-ring-line-default");
+    rerender(
+      <TabGroup aria-label="Filter" value="all" variant="plain">
+        <Tab value="all">All</Tab>
+      </TabGroup>,
+    );
+    expect(group.dataset.variant).toBe("plain");
+    expect(group.className).not.toContain("inset-ring");
+  });
+
   it("moves focus with the arrow keys and keeps one tab stop", async () => {
     render(<Language onValueChange={() => {}} />);
     const english = screen.getByRole("radio", { name: "ENG" });
