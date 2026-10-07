@@ -58,6 +58,460 @@
       "title": "Üki version"
     }
   },
+  "dashboard": {
+    "common": {
+      "allGroups": "All groups",
+      "dateTime": "{date} · {time}",
+      "groups": "{count, plural, one {Group {codes}} other {Groups {codes}}}",
+      "minutes": "{minutes} min",
+      "proctors": "{count, plural, one {# proctor} other {# proctors}}",
+      "todayTime": "Today · {time}",
+      "withDetail": "{main} · {detail}"
+    },
+    "lobby": {
+      "banner": {
+        "joined": "{joined} of {total} students are in.",
+        "needHelp": "{count, plural, =1 {One needs help.} =2 {Two need help.} =3 {Three need help.} =4 {Four need help.} =5 {Five need help.} =6 {Six need help.} =7 {Seven need help.} =8 {Eight need help.} =9 {Nine need help.} =10 {Ten need help.} one {# needs help.} other {# need help.}}",
+        "notJoined": "{count, plural, =1 {One has not opened Üki yet.} =2 {Two have not opened Üki yet.} =3 {Three have not opened Üki yet.} =4 {Four have not opened Üki yet.} =5 {Five have not opened Üki yet.} =6 {Six have not opened Üki yet.} =7 {Seven have not opened Üki yet.} =8 {Eight have not opened Üki yet.} =9 {Nine have not opened Üki yet.} =10 {Ten have not opened Üki yet.} one {# has not opened Üki yet.} other {# have not opened Üki yet.}}",
+        "started": "Started at {time}",
+        "startsAt": "Starts at {time} · in {minutes} min"
+      },
+      "breadcrumb": "Live / {exam} · {groups}",
+      "chip": {
+        "checking": "Checking in",
+        "done": "Done",
+        "needsHelp": "Needs help",
+        "notJoined": "Not joined",
+        "paused": "Paused",
+        "ready": "Ready",
+        "writing": "Writing"
+      },
+      "column": {
+        "action": "Action",
+        "device": "Device",
+        "status": "Status",
+        "student": "Student",
+        "where": "Where they are"
+      },
+      "detail": {
+        "appOpen": "{app} is open",
+        "bounced": "Invite email bounced",
+        "cameraBlocked": "Camera blocked by another app",
+        "cardRetry": "Card unreadable · retry {attempt} of {max}",
+        "waiting": "Waiting for the start"
+      },
+      "device": "{os} · Üki {version}",
+      "message": "Message",
+      "messageEveryone": "Message everyone",
+      "noDevice": "—",
+      "os": {
+        "macos": "macOS",
+        "windows": "Windows"
+      },
+      "startError": {
+        "alreadyStarted": "The exam has already started.",
+        "failed": "The exam did not start. Try again.",
+        "forbidden": "Only the lead proctor or the exam office can start the exam."
+      },
+      "startExam": "Start exam",
+      "stat": {
+        "joined": {
+          "caption": "of {total} students",
+          "label": "Joined"
+        },
+        "needHelp": {
+          "caption": "Identity or other apps",
+          "label": "Need help"
+        },
+        "notJoined": {
+          "caption": "Invite opened by {count}",
+          "label": "Not joined"
+        },
+        "ready": {
+          "caption": "Passed every check",
+          "label": "Ready"
+        }
+      },
+      "step": {
+        "checking": "System check",
+        "finished": "Finished",
+        "identity": "Identity check",
+        "joined": "Joined",
+        "notJoined": "Not joined",
+        "rules": "Rules",
+        "writing": "Writing"
+      },
+      "table": {
+        "empty": "No students in this list.",
+        "filter": {
+          "all": "All",
+          "needHelp": "Need help · {count}",
+          "notJoined": "Not joined · {count}",
+          "ready": "Ready · {count}"
+        },
+        "filterLabel": "Filter students",
+        "search": "Find a student",
+        "title": "Check-in"
+      },
+      "title": "Lobby"
+    },
+    "overview": {
+      "check": {
+        "gaze": "Gaze",
+        "id": "Student card",
+        "lock": "Üki Lock",
+        "phone": "Phone"
+      },
+      "column": {
+        "checks": "Checks",
+        "exam": "Exam",
+        "open": "Open",
+        "status": "Status",
+        "students": "Students",
+        "when": "When"
+      },
+      "exams": {
+        "empty": "No exams here.",
+        "title": "Exams"
+      },
+      "filter": {
+        "all": "All",
+        "done": "Done",
+        "label": "Filter exams",
+        "live": "Live",
+        "upcoming": "Upcoming"
+      },
+      "next": {
+        "body": "Lobby opens at {time}. {students, plural, one {# student} other {# students}}, {proctors, plural, one {# proctor} other {# proctors}}.",
+        "openLobby": "Open lobby",
+        "overline": "Next exam · {date}",
+        "title": "{course} · {time}"
+      },
+      "readiness": {
+        "body": "Roster {ready} of {total} · rules in ҚАЗ, РУС, ENG · proctors assigned.",
+        "overline": "Before {weekday}",
+        "title": "Ready to run"
+      },
+      "stat": {
+        "live": {
+          "label": "Live now"
+        },
+        "review": {
+          "label": "Needs review"
+        },
+        "upcoming": {
+          "caption": "Next: {course} · {weekday} {time}",
+          "label": "Upcoming"
+        },
+        "video": {
+          "caption": "Events and flagged frames only",
+          "label": "Video uploaded",
+          "value": "{megabytes} MB"
+        }
+      },
+      "status": {
+        "cancelled": "Cancelled",
+        "draft": "Draft",
+        "live": "Live now",
+        "reviewed": "Reviewed",
+        "scheduled": "Scheduled",
+        "toReview": "{count, plural, one {# flag to review} other {# flags to review}}"
+      },
+      "title": "Overview"
+    },
+    "shell": {
+      "nav": {
+        "exams": "Exams",
+        "live": "Live",
+        "overview": "Overview"
+      },
+      "navLabel": "Dashboard",
+      "note": {
+        "body": "Video never leaves student laptops. Only events and flagged frames travel.",
+        "title": "On device"
+      },
+      "role": {
+        "admin": "Admin",
+        "exam_office": "Exam office",
+        "proctor": "Proctor"
+      },
+      "section": {
+        "workspace": "Workspace"
+      },
+      "signOut": "Sign out",
+      "toast": {
+        "close": "Close",
+        "label": "Notifications"
+      }
+    },
+    "signIn": {
+      "brand": {
+        "body": "Üki watches on the laptop. Only events and flagged frames leave it. A person reviews every flag.",
+        "fact": {
+          "human": "Every flag gets a human decision",
+          "languages": "Kazakh, Russian, English",
+          "video": "Video never leaves the laptop"
+        },
+        "overline": "KRU · Kostanay · Exam office",
+        "title": "Exams that stay on the student’s laptop."
+      },
+      "copyright": "© 2026 Üki · Kostanay",
+      "email": "Work email",
+      "error": {
+        "credentials": "The email or password is wrong.",
+        "email": "Enter your work email.",
+        "notStaff": "This account cannot use the dashboard.",
+        "password": "Enter your password.",
+        "rateLimited": "Too many tries. Wait a minute, then try again.",
+        "unavailable": "Sign-in is unavailable right now. Try again."
+      },
+      "hidePassword": "Hide password",
+      "keep": "Keep me signed in for 12 hours",
+      "lead": "Use the email your exam office invited.",
+      "legal": "Privacy  ·  Terms",
+      "noAccount": "No account? Your exam office sends the invitation email.",
+      "password": "Password",
+      "showPassword": "Show password",
+      "submit": "Sign in",
+      "title": "Sign in to Üki."
+    },
+    "wall": {
+      "action": {
+        "end": "End session",
+        "header": "{name} · {number}",
+        "message": "Message",
+        "pause": "Pause exam",
+        "resume": "Resume exam",
+        "timeline": "Open timeline"
+      },
+      "breadcrumb": "Live / {exam} · {left} left",
+      "drawer": {
+        "close": "Close timeline",
+        "loading": "Loading the timeline",
+        "messageLabel": "{pronoun, select, he {Quick message · sent in his language} she {Quick message · sent in her language} other {Quick message · sent in their language}}",
+        "meta": "{number}{seat, select, none {} other { · seat {seat}}}{os, select, macos { · macOS} windows { · Windows} other {}}",
+        "phoneChip": "phone {score, number, ::.00}",
+        "question": "Q {question} of {total}",
+        "questionNoTotal": "Q {question}",
+        "send": "Send",
+        "state": "{state, select, paused {paused} no_signal {no signal} submitted {submitted} time_up {time up} ended {ended} lobby {checking in} other {on screen now}}",
+        "still": "Still {index} of {count}, {time}",
+        "stills": "Stills",
+        "timeline": "Timeline"
+      },
+      "end": {
+        "body": "{pronoun, select, he {His answers so far are saved and he can’t continue.} she {Her answers so far are saved and she can’t continue.} other {Their answers so far are saved and they can’t continue.}} The exam office sees your reason in the report.",
+        "cancel": "{pronoun, select, he {Keep him writing} she {Keep her writing} other {Keep them writing}}",
+        "confirm": "End exam",
+        "helper": "Goes into the integrity report · {count}/{max}",
+        "reason": "Reason (required)",
+        "title": "End {name}’s exam?"
+      },
+      "error": "{code, select, forbidden {You can’t send commands for this exam.} not_found {That session no longer exists.} conflict {The session changed before the command arrived. Nothing was sent.} unauthorized {Your sign-in has expired. Sign in again.} rate_limited {Too many commands at once. Try again in a moment.} bad_request {That command was not accepted.} other {Could not reach Üki. Try again.}}",
+      "event": {
+        "answer_saved": {
+          "title": "Answer saved"
+        },
+        "browser_locked": {
+          "title": "Browser locked, other tabs closed"
+        },
+        "camera_lost": {
+          "detail": "Camera stopped sending frames",
+          "feed": "camera lost",
+          "title": "Camera lost"
+        },
+        "copy_blocked": {
+          "detail": "{kind, select, copy {Copy} cut {Cut} paste {Paste} other {Print}}",
+          "feed": "copy blocked",
+          "title": "Copy or paste blocked in Üki Lock"
+        },
+        "exam_started": {
+          "title": "Exam started"
+        },
+        "exam_submitted": {
+          "detail": "Time used {duration}",
+          "title": "Answers handed in"
+        },
+        "exam_time_up": {
+          "title": "Time ran out, answers handed in"
+        },
+        "face_missing": {
+          "detail": "{seconds, number, ::.#} s",
+          "feed": "no face",
+          "title": "No face in frame"
+        },
+        "face_second": {
+          "detail": "Someone leaned in for {seconds, number, ::.#} s",
+          "feed": "second face",
+          "title": "Second face"
+        },
+        "gaze_down": {
+          "detail": "{seconds, number, ::.#} s",
+          "feed": "looked down",
+          "title": "Looked down"
+        },
+        "gaze_off_screen": {
+          "detail": "{seconds, number, ::.#} s, {direction, select, left {to the left} right {to the right} other {up}}",
+          "feed": "looked away",
+          "repeat": "{count, plural, =2 {Second} =3 {Third} =4 {Fourth} =5 {Fifth} other {{count, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}}} time, {seconds, number, ::.#} s in total",
+          "title": "Looked away"
+        },
+        "gaze_on_screen": {
+          "title": "On screen again"
+        },
+        "identity_matched": {
+          "detail": "Similarity {score, number, ::.00} · {tries, plural, one {# try} other {# tries}}",
+          "title": "Card and face matched at check-in"
+        },
+        "lock_app_disconnected": {
+          "detail": "{side, select, lock {Üki Lock went away} other {The app closed}}",
+          "feed": "app disconnected",
+          "title": "Üki app closed while Üki Lock was on"
+        },
+        "lock_fullscreen_exit": {
+          "detail": "{count, plural, one {# time} other {# times}} this session",
+          "feed": "left full screen",
+          "title": "Left full screen"
+        },
+        "net_offline": {
+          "detail": "{seconds, number, ::.#} s offline · {queued, plural, one {# event} other {# events}} queued",
+          "feed": "network lost",
+          "title": "Network lost"
+        },
+        "phone_detected": {
+          "detail": "Confidence {score, number, ::.00}{kept, select, yes { · frame kept} other {}}",
+          "feed": "phone in frame",
+          "held": "Held for {seconds, number, ::.#} s",
+          "title": "Phone in frame"
+        },
+        "proctor_by": "By {name}",
+        "proctor_ended": {
+          "detail": "{reason}",
+          "feed": "ended by the proctor",
+          "title": "Ended by the proctor"
+        },
+        "proctor_message": {
+          "detail": "“{text}”",
+          "feed": "message sent",
+          "title": "Message sent"
+        },
+        "proctor_paused": {
+          "feed": "paused by the proctor",
+          "title": "Paused by the proctor"
+        },
+        "proctor_resumed": {
+          "feed": "resumed by the proctor",
+          "title": "Resumed by the proctor"
+        },
+        "proctor_time_added": {
+          "detail": "{scope, select, group {Everyone} other {This student}}",
+          "feed": "time added · +{minutes} min",
+          "title": "Time added · +{minutes} min"
+        },
+        "session_paused": {
+          "detail": "{reason, select, face_missing {No face} camera_lost {Camera lost} other {By the proctor}} · timer stopped",
+          "feed": "session paused",
+          "title": "Session paused"
+        },
+        "session_resumed": {
+          "detail": "Paused for {seconds, number, ::.#} s",
+          "title": "Session resumed"
+        },
+        "site_closed": {
+          "detail": "{host}",
+          "feed": "blocked site closed",
+          "title": "Blocked site closed"
+        },
+        "student_help_requested": {
+          "detail": "{topic, select, identity {Identity check} question {About a question} other {Technical problem}}",
+          "feed": "asked for help",
+          "title": "Asked for help"
+        },
+        "tab_blocked": {
+          "detail": "{target, select, named {Tried to open {name}} lock {Tried to open a browser tab} other {Tried to open another tab or app}}",
+          "feed": "new tab blocked",
+          "title": "New tab blocked"
+        }
+      },
+      "extend": {
+        "add": "Add",
+        "everyone": "Everyone · {count}",
+        "note": "Ends at {newEnd} instead of {oldEnd}. Students see the new time at once.",
+        "option": "+{minutes} min",
+        "submit": "Add {minutes} minutes",
+        "title": "Extend time",
+        "who": "Who"
+      },
+      "extendTime": "Extend time",
+      "feed": {
+        "row": "{name} · {event}",
+        "title": "Live events"
+      },
+      "filter": {
+        "paused": "Paused · {count}"
+      },
+      "grid": {
+        "label": "Students"
+      },
+      "message": {
+        "cancel": "Cancel",
+        "counter": "{count}/{max}",
+        "dialogBody": "Goes to {target} as typed, without translation.",
+        "everyone": "everyone in {group}",
+        "field": "Message",
+        "headerGroup": "Quick message · {group}",
+        "headerStudent": "Quick message · {name}",
+        "note": "Each student reads it in their language.",
+        "send": "Send",
+        "write": "Write a message"
+      },
+      "messageGroup": "Message group",
+      "sort": {
+        "flags": "Flags first",
+        "label": "Order of the wall",
+        "seat": "Seat order"
+      },
+      "stat": {
+        "flagged": {
+          "caption": "phone, second face",
+          "label": "Flagged"
+        },
+        "onScreen": {
+          "caption": "of {writing} writing",
+          "label": "On screen"
+        },
+        "paused": {
+          "caption": "no face or camera lost",
+          "label": "Paused"
+        },
+        "warnings": {
+          "caption": "gaze or tabs, last 5 min",
+          "label": "Warnings"
+        }
+      },
+      "tile": {
+        "done": "{state, select, submitted {submitted} time_up {time up} other {ended}}",
+        "lookedAway": "looked away {count}× · {seconds, number, ::.#} s",
+        "lookedAwayOnce": "looked away {seconds, number, ::.#} s",
+        "noSignal": "no signal · {duration}",
+        "noSignalNever": "no signal",
+        "onScreen": "on screen · Q {question}",
+        "onScreenNoQuestion": "on screen",
+        "paused": "{reason, select, face_missing {no face} camera_lost {camera lost} proctor {paused by proctor} other {paused}} · {duration}",
+        "pausedNoTime": "{reason, select, face_missing {no face} camera_lost {camera lost} proctor {paused by proctor} other {paused}}",
+        "phone": "phone {score, number, ::.00} · {time}",
+        "phoneNoScore": "phone · {time}",
+        "secondFace": "second face · {time}",
+        "state": "{state, select, flagged {Flagged} warning {Warning} paused {Paused} no_signal {No signal} done {Done} other {On screen}}",
+        "tabBlocked": "tab blocked · {time}"
+      },
+      "title": "Live wall",
+      "toast": {
+        "close": "Close",
+        "region": "Notifications"
+      }
+    }
+  },
   "done": {
     "body": "Your answers are in.",
     "close": "Close Üki",

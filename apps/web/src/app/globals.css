@@ -1,0 +1,4 @@
+@import "@uki/tokens/theme.css";
+@import "@uki/tokens/fonts.css";
+/* Tailwind's automatic scan does not reach workspace packages. */
+@source "../../../../packages/ui/src";

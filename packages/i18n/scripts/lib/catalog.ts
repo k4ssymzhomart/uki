@@ -40,7 +40,7 @@ export const COUNT_MESSAGES: Readonly<Record<string, readonly Language[]>> = {
 
 const SEGMENT = /^[a-z0-9][a-zA-Z0-9_]*$/;
 /** CLAUDE.md: no emoji in product copy. */
-const EMOJI = /\p{Extended_Pictographic}/u;
+const EMOJI = /(?![\u00A9\u00AE\u2122])\p{Extended_Pictographic}/u; // ©, ® and ™ are text, not emoji
 
 export const catalogEntrySchema = z.strictObject({
   key: z.string(),
