@@ -74,15 +74,42 @@ describe("timer", () => {
 
   it("adds proctor time at once and never twice", () => {
     let t = syncTimer(timer(), reply(0, 0), START + 30 * MIN);
-    t = addTime(t, 10, START + 31 * MIN + 5000);
+    t = addTime(t, "add-1", 10, START + 31 * MIN + 5000);
     expect(remainingMs(t, START + 31 * MIN + 5000)).toBe(69 * MIN - 5000);
     expect(totalMs(t)).toBe(100 * MIN);
     // The next reply already includes the 10 minutes.
     t = syncTimer(t, reply(10, 0), START + 31 * MIN + 7000);
     expect(effectiveEndsAt(t)).toBe(START + 100 * MIN);
     // A catch-up read of the same command after the reply must not add it again.
-    t = addTime(t, 10, START + 31 * MIN + 5000);
+    t = addTime(t, "add-1", 10, START + 31 * MIN + 5000);
     expect(effectiveEndsAt(t)).toBe(START + 100 * MIN);
+    // Nor a command issued before the join, which the join's extra_min already holds.
+    t = addTime(t, "add-0", 5, START - 6 * MIN);
+    expect(effectiveEndsAt(t)).toBe(START + 100 * MIN);
+  });
+
+  it("keeps added minutes when an ingest reply that read the session before the command comes after it", () => {
+    const end = START + 90 * MIN;
+    // The last reply came 12 s before the end; the proctor adds 10 minutes 6 s before the end.
+    let t = syncTimer(timer(), reply(0, 0), end - 12_000);
+    t = addTime(t, "add-1", 10, end - 6000);
+    expect(effectiveEndsAt(t)).toBe(end + 10 * MIN);
+    // An ingest call in flight since before the command answers now, without the 10 minutes.
+    t = syncTimer(t, reply(0, 0), end - 6500);
+    expect(effectiveEndsAt(t)).toBe(end + 10 * MIN);
+    expect(isTimeUp(t, end + 500)).toBe(false);
+    // The same when the stale reply's server_time is after issued_at (the command waited for the
+    // session's row lock) and it arrives before the broadcast.
+    let u = syncTimer(timer(), reply(0, 0), end - 12_000);
+    u = syncTimer(u, reply(0, 0), end - 5000);
+    u = addTime(u, "add-1", 10, end - 6000);
+    expect(effectiveEndsAt(u)).toBe(end + 10 * MIN);
+    // A fresh reply carries the minutes: nothing is added twice.
+    t = syncTimer(t, reply(10, 0), end - 2000);
+    u = syncTimer(u, reply(10, 0), end - 2000);
+    expect(effectiveEndsAt(t)).toBe(end + 10 * MIN);
+    expect(effectiveEndsAt(u)).toBe(end + 10 * MIN);
+    expect(t.pendingExtraMin).toBe(0);
   });
 
   it("moves the start earlier when the proctor starts the exam before the schedule", () => {

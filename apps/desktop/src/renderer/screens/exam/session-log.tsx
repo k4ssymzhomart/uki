@@ -1,5 +1,5 @@
 import { formatTime, type Locale } from "@uki/i18n";
-import { EventRow, type EventRowKind } from "@uki/ui";
+import { EventRow, type EventRowKind, shortName } from "@uki/ui";
 import { useTranslations } from "use-intl";
 import type { LogEntry } from "../../flow/view-model.ts";
 import { isoTime } from "../shared/format.ts";
@@ -42,7 +42,7 @@ function useLine() {
       case "proctor_paused":
         return {
           kind: "warn",
-          title: t("event.proctor_paused.title", { proctor: entry.proctorName ?? "" }),
+          title: t("event.proctor_paused.title", { proctor: shortName(entry.proctorName ?? "") }),
           detail: t("event.proctor_paused.detail"),
         };
       case "time_added":
@@ -53,7 +53,7 @@ function useLine() {
             entry.proctorName === null
               ? undefined
               : t("event.time_added.detail", {
-                  proctor: entry.proctorName,
+                  proctor: shortName(entry.proctorName),
                   time: formatTime(entry.endsAt, locale),
                 }),
         };

@@ -153,7 +153,6 @@ export function createStudentApi(
         result = await Promise.race([
           client.storage.from(FRAMES_BUCKET).uploadToSignedUrl(upload.path, upload.token, jpeg, {
             contentType: STILL.mimeType,
-            upsert: true,
           }),
           new Promise<never>((_, reject) =>
             setTimeout(() => reject(new ServiceError("network", "upload timed out")), CALL_TIMEOUT_MS),
@@ -168,6 +167,11 @@ export function createStudentApi(
           status?: number | string;
           statusCode?: number | string;
         };
+        // "The resource already exists" (HTTP 400 with statusCode "409", or a 409): ingest's URLs create
+        // a still once, so an earlier upload of this still went through. The sync loop confirms it.
+        if (String(error.statusCode) === "409" || Number(error.status) === 409) {
+          throw new ServiceError("conflict", error.message ?? "still already uploaded", 409);
+        }
         const status = Number(error.status ?? error.statusCode ?? 0);
         if (!status || /fetch|network/i.test(error.message ?? "")) {
           throw new ServiceError("network", error.message ?? "upload failed");
@@ -179,7 +183,7 @@ export function createStudentApi(
     async unackedCommands(sessionId) {
       const { data, error, status } = await client
         .from("session_commands")
-        .select("id, session_id, exam_id, type, payload, issued_by, issued_at, acked_at")
+        .select("id, session_id, exam_id, type, payload, issued_by, issued_at, acked_at, by_name")
         .eq("session_id", sessionId)
         .is("acked_at", null)
         .order("issued_at", { ascending: true })

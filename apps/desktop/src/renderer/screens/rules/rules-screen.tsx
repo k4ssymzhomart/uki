@@ -71,7 +71,7 @@ export function RulesScreen({ model, onAgree, onLanguage, os }: RulesScreenProps
             onCheckedChange={(checked) => onAgree(checked === true)}
             className="shrink-0"
           />
-          <FaqDisclosure question={t("rules.faq.video")} answer={t("join.privacy")} />
+          <FaqDisclosure question={t("rules.faq.video.question")} answer={t("rules.faq.video.answer")} />
         </section>
         <section
           data-theme="dark"

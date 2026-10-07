@@ -3,6 +3,11 @@
 // Between replies the app adds what it already knows but the server has not confirmed yet: minutes a
 // proctor just added, and the pause that just ended. It stops while paused and keeps running offline.
 // All times are server-clock milliseconds.
+//
+// Added minutes are counted, not timed: extra_min only grows, so the app's extra_min is the larger of
+// the server's last report and the join's extra_min plus every add_time applied since (each command id
+// once). An ingest reply that read the session before the command committed, and arrives after its
+// broadcast, therefore cannot take the minutes back.
 import { type IngestSession, sessionEndsAt, THRESHOLDS, toMs } from "@uki/contracts";
 
 export interface TimerState {
@@ -14,9 +19,13 @@ export interface TimerState {
   pausedS: number;
   /** session_ends_at from the server. */
   endsAt: number;
-  /** Server time of that report: commands issued before it are already in it. */
-  syncedAt: number;
-  /** Minutes added by add_time commands issued after `syncedAt`. */
+  /** Server time of the join's report: add_time commands issued before it are in its extra_min. */
+  joinedAt: number;
+  /** The join's extra_min plus the minutes of every add_time applied since. */
+  knownExtraMin: number;
+  /** Ids of the add_time commands counted in `knownExtraMin`. */
+  addedIds: readonly string[];
+  /** Added minutes the server's last report does not show yet: knownExtraMin - extraMin, at least 0. */
   pendingExtraMin: number;
   /** A pause that ended but is not in `pausedS` yet: its credit and the `pausedS` it adds to. */
   pendingCredit: { ms: number; basePausedS: number; at: number } | null;
@@ -46,7 +55,9 @@ export function initialTimer(input: {
       { starts_at: startsAt, duration_min: input.durationMin },
       { extra_min: input.extraMin, paused_s: input.pausedS },
     ).getTime(),
-    syncedAt: toMs(input.serverTime),
+    joinedAt: toMs(input.serverTime),
+    knownExtraMin: input.extraMin,
+    addedIds: [],
     pendingExtraMin: 0,
     pendingCredit: null,
     pause: null,
@@ -100,17 +111,25 @@ export function syncTimer(
     extraMin: session.extra_min,
     pausedS: session.paused_s,
     endsAt,
-    syncedAt: Math.max(timer.syncedAt, syncedAt),
-    // The server's extra_min now holds every add_time issued before this reply.
-    pendingExtraMin: 0,
+    // Minutes this reply does not show yet stay added, whenever the reply's session was read.
+    pendingExtraMin: Math.max(0, timer.knownExtraMin - session.extra_min),
     pendingCredit,
   };
 }
 
-/** add_time: counts only when the last server report predates the command. */
-export function addTime(timer: TimerState, minutes: number, issuedAt: number): TimerState {
-  if (issuedAt <= timer.syncedAt) return timer;
-  return { ...timer, pendingExtraMin: timer.pendingExtraMin + minutes };
+/**
+ * add_time: counts once per command id, and not at all when the join's report already holds it (a
+ * catch-up read after a restart of a command issued before the join).
+ */
+export function addTime(timer: TimerState, id: string, minutes: number, issuedAt: number): TimerState {
+  if (issuedAt <= timer.joinedAt || timer.addedIds.includes(id)) return timer;
+  const knownExtraMin = timer.knownExtraMin + minutes;
+  return {
+    ...timer,
+    knownExtraMin,
+    addedIds: [...timer.addedIds, id],
+    pendingExtraMin: Math.max(0, knownExtraMin - timer.extraMin),
+  };
 }
 
 export function startPause(timer: TimerState, since: number, kind: "self" | "proctor"): TimerState {

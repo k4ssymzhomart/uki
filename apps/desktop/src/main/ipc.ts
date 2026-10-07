@@ -96,7 +96,7 @@ export function cameraSettingsUrl(os: DesktopOs): string {
 /** What the handlers drive; index.ts passes the real modules, tests pass fakes. */
 export type HandlerDeps = {
   info: { version: string; os: DesktopOs; arch: string };
-  /** app.quit(); refused while the exam holds the app (lockdown or the browser-exam tray). */
+  /** app.quit(); refused while the exam holds the app (lockdown, the tray or the exam's scan). */
   quit: () => void;
   examActive: () => boolean;
   scan: () => Promise<ScanResult>;

@@ -13,6 +13,7 @@ import {
 } from "@uki/contracts";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { WebSocket } from "ws";
+import { LockLink } from "../renderer/services/lock-link.ts";
 import {
   ANY_EXTENSION_ORIGIN,
   createFilePairingStore,
@@ -140,8 +141,8 @@ function connect(port: number, origin: string | null = ORIGIN): Promise<FakeLock
   });
 }
 
-function hello(installId: string): LockToApp {
-  return { type: "hello", lock_version: "0.0.0", browser: "chrome", install_id: installId };
+function hello(installId: string, browser = "chrome"): LockToApp {
+  return { type: "hello", lock_version: "0.0.0", browser, install_id: installId };
 }
 
 async function waitFor(condition: () => boolean, timeoutMs = 2000): Promise<void> {
@@ -389,6 +390,129 @@ describe("createLockRelay", () => {
     expect(relay.startPairing()).toBeNull();
     lock.send({ type: "pair.request" });
     expect(await lock.next("pair.fail")).toEqual({ type: "pair.fail", reason: "no_code" });
+  });
+
+  it("keeps the pairing while a Lock holds the browser: another browser's Lock cannot pair", async () => {
+    const store = createMemoryPairingStore();
+    const chrome = uuidv7();
+    await store.save({ install_id: chrome, paired_at: "2026-10-07T08:00:00.000Z" });
+    const { port, relay, messages, codes } = await startRelay({ store, makeCode: () => "482913" });
+    relay.send(EXAM_STATE);
+    const locked = await connect(port);
+    locked.send(hello(chrome));
+    expect((await locked.next("hello")).paired).toBe(true);
+    locked.send({ type: "lock.started", tabs_closed: 2 });
+    await waitFor(() => messages.some((m) => m.type === "lock.started"));
+    // The student quits Chrome; Edge's Lock, never paired, takes the one slot.
+    locked.socket.close();
+    await locked.closed;
+    await waitFor(() => relay.status() === "absent");
+    const edge = await connect(port);
+    edge.send(hello(uuidv7(), "edge"));
+    expect((await edge.next("hello")).paired).toBe(false);
+
+    edge.send({ type: "pair.request" });
+    expect(await edge.next("pair.fail")).toEqual({ type: "pair.fail", reason: "no_code" });
+    expect(relay.startPairing()).toBeNull();
+    edge.send({ type: "pair.confirm", code: "482913" });
+    expect(await edge.next("pair.fail")).toEqual({ type: "pair.fail", reason: "no_code" });
+    expect(edge.inbox.some((m) => m.type === "pair.code")).toBe(false);
+    expect(codes).toEqual([]);
+    expect(messages.map((m) => m.type)).not.toContain("pair.request");
+    expect(relay.status()).toBe("connected");
+    expect((await store.load())?.install_id).toBe(chrome);
+
+    // Once the app releases the lock, pairing works again.
+    relay.send({ type: "lock.release", reason: "submitted" });
+    edge.send({ type: "pair.request" });
+    expect((await edge.next("pair.code")).code).toBe("482913");
+  });
+
+  it("refuses to pair while exam.state says the exam runs, and pairs again once it is done", async () => {
+    const { port, relay } = await startRelay();
+    const lock = await connect(port);
+    lock.send(hello(uuidv7()));
+    await lock.next("hello");
+    for (const phase of ["writing", "paused"] as const) {
+      relay.send({ ...EXAM_STATE, phase });
+      lock.send({ type: "pair.request" });
+      expect(await lock.next("pair.fail")).toEqual({ type: "pair.fail", reason: "no_code" });
+    }
+    relay.send({ ...EXAM_STATE, phase: "done" });
+    lock.send({ type: "pair.request" });
+    await lock.next("pair.code");
+  });
+
+  it("with the renderer's LockLink: another browser's Lock taking the slot is reported", async () => {
+    const store = createMemoryPairingStore();
+    const chrome = uuidv7();
+    await store.save({ install_id: chrome, paired_at: "2026-10-07T08:00:00.000Z" });
+    const messageListeners = new Set<(message: LockToApp) => void>();
+    const statusListeners = new Set<(status: LockStatus) => void>();
+    const { port, relay } = await startRelay({
+      store,
+      onMessage: (message) => {
+        for (const listener of messageListeners) listener(message);
+      },
+      onStatus: (status) => {
+        for (const listener of statusListeners) listener(status);
+      },
+    });
+    let clock = Date.parse("2026-10-07T09:10:00Z");
+    const disconnects: number[] = [];
+    const link = new LockLink({
+      bridge: {
+        lock: {
+          status: async () => relay.status(),
+          send: async (message) => {
+            relay.send(message);
+          },
+          onMessage: (listener) => {
+            messageListeners.add(listener);
+            return () => messageListeners.delete(listener);
+          },
+          onStatus: (listener) => {
+            statusListeners.add(listener);
+            return () => statusListeners.delete(listener);
+          },
+          onPairCode: () => () => {},
+        },
+      },
+      onStarted: () => {},
+      onSubmitted: () => {},
+      onEvent: () => {},
+      onDisconnected: () => disconnects.push(clock),
+      now: () => clock,
+    });
+    link.start();
+    try {
+      link.update(EXAM_STATE);
+      const locked = await connect(port);
+      locked.send(hello(chrome));
+      await locked.next("hello");
+      locked.send({ type: "lock.started", tabs_closed: 2 });
+      await waitFor(() => link.isLocked);
+      link.update({ ...EXAM_STATE, phase: "writing" });
+
+      locked.socket.close();
+      await locked.closed;
+      await waitFor(() => relay.status() === "absent");
+      const edge = await connect(port);
+      edge.send(hello(uuidv7(), "edge"));
+      await edge.next("hello");
+      edge.send({ type: "pair.request" });
+      await edge.next("pair.fail");
+
+      // 60 s of the renderer's 2-second poll while Edge's unpaired Lock holds the slot.
+      for (let i = 0; i < 30; i += 1) {
+        clock += 2000;
+        await link.poll();
+      }
+      expect(relay.status()).toBe("connected");
+      expect(disconnects).toHaveLength(1);
+    } finally {
+      link.stop();
+    }
   });
 });
 

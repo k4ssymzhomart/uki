@@ -1,3 +1,6 @@
+// First: Kazakh Intl for Electron, whose ICU has no Kazakh, before anything creates a formatter.
+import "@uki/i18n/polyfill";
+
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./app.tsx";

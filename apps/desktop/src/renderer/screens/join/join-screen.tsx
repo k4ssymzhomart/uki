@@ -5,7 +5,7 @@ import { Button, Icon, Input } from "@uki/ui";
 import { type FormEvent, useEffect, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import type { JoinModel } from "../../flow/view-model.ts";
-import deskScene from "../shared/assets/uki-scene-desk.png";
+import deskScene from "../shared/assets/uki-scene-desk.webp";
 import { ScreenFrame } from "../shared/screen-frame.tsx";
 
 export type JoinScreenProps = {
@@ -47,10 +47,16 @@ export function JoinScreen({ model, onJoin, onLanguage, os }: JoinScreenProps) {
   const wrongCode = model.frame === "1.1a" || model.error === "invalid_code";
   const formatErrors = shown ?? { code: false, studentNumber: false };
 
+  // 1.1a draws the wrong code; the other join_exam errors reuse its field errors (no frame yet).
   let codeError: string | undefined;
   if (formatErrors.code) codeError = t("join.code.format");
   else if (wrongCode) codeError = t("join.error.body");
-  else if (model.error === "network") codeError = t("check.network.fail");
+  else if (model.error === "lobby_closed") codeError = t("join.error.lobby_closed");
+  else if (model.error === "rate_limited") codeError = t("join.error.rate_limited");
+  else if (model.error === "network") codeError = t("join.error.network");
+  let studentNumberError: string | undefined;
+  if (formatErrors.studentNumber) studentNumberError = t("join.student_id.helper");
+  else if (model.error === "already_joined") studentNumberError = t("join.error.already_joined");
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -100,7 +106,7 @@ export function JoinScreen({ model, onJoin, onLanguage, os }: JoinScreenProps) {
           name="studentNumber"
           label={t("join.student_id.label")}
           helper={t("join.student_id.helper")}
-          error={formatErrors.studentNumber ? t("join.student_id.helper") : undefined}
+          error={studentNumberError}
           value={studentNumber}
           onChange={(event) => {
             setStudentNumber(event.target.value);

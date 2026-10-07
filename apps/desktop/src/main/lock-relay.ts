@@ -1,10 +1,15 @@
 // The app's side of the link with Üki Lock ("Pairing (E.3)" and "Lock messages" in docs/phase-0-plan.md):
-// a WebSocket server on 127.0.0.1 at the first free port of LOCK_PORTS. It accepts one connection at a time,
-// and only from the Üki Lock origin, so no web page can connect. Every frame is parsed with the contracts'
+// a WebSocket server on 127.0.0.1 at the first free port of LOCK_PORTS. It serves one Lock at a time (one
+// that is not paired gives way to the paired install), and only from the Üki Lock origin, so no web page
+// can connect. Every frame is parsed with the contracts'
 // Zod schemas. Pairing: the Lock sends pair.request, the app makes a 6-digit code with crypto.randomInt
 // (valid 2 minutes), shows it on its pairing card and sends pair.code; pair.confirm with the same code
 // stores the pairing. Both sides ping every 5 s; three missed answers close the link. The app's exam.state
 // is resent on every change and every 5 s.
+//
+// While an exam holds the browser (a paired Lock sent lock.started and has not released, or exam.state
+// says writing or paused) the pairing stays as it is: pair.request and pair.confirm get pair.fail, so a
+// Lock in another browser cannot take over the link and read as the paired one.
 //
 // The module imports no Electron API: the main process passes a PairingStore that writes a JSON file in
 // app.getPath("userData"), and the tests run it in plain Node with a real ws client.
@@ -17,6 +22,7 @@ import {
   type AppToLock,
   type DesktopOs,
   EXAM_STATE_INTERVAL_MS,
+  type ExamStatePhase,
   encodeLockMessage,
   LOCK_HOST,
   LOCK_MAX_MESSAGE_CHARS,
@@ -215,6 +221,9 @@ interface Client {
 
 const PAIRED_ONLY: ReadonlySet<AppToLock["type"]> = new Set(["exam.state", "lock.start", "lock.release"]);
 
+/** exam.state phases in which the exam runs: no pairing until it is done. */
+const EXAM_RUNNING: ReadonlySet<ExamStatePhase> = new Set(["writing", "paused"]);
+
 export function createLockRelay(options: LockRelayOptions): LockRelay {
   const log = options.log ?? consoleLog;
   const store = options.store ?? createMemoryPairingStore();
@@ -230,10 +239,14 @@ export function createLockRelay(options: LockRelayOptions): LockRelay {
   let server: Server | null = null;
   let boundPort: number | null = null;
   let client: Client | null = null;
+  /** A second Lock that connected while the first is not paired; its hello decides (see onUpgrade). */
+  let pending: Client | null = null;
   let currentStatus: LockStatus = "absent";
   let pairCode: (PairCode & { expiresMs: number }) | null = null;
   let pairCodeTimer: ReturnType<typeof setTimeout> | null = null;
   let lastExamState: Extract<AppToLock, { type: "exam.state" }> | null = null;
+  /** The install whose lock.started holds the browser, until lock.released or the app's lock.release. */
+  let lockHolder: string | null = null;
   let rebindTimer: ReturnType<typeof setTimeout> | null = null;
   let closed = false;
   const pairingLoaded = store.load().catch((error: unknown) => {
@@ -270,8 +283,13 @@ export function createLockRelay(options: LockRelayOptions): LockRelay {
     }
   }
 
+  /** Whether an exam holds the browser, so the pairing must not change. */
+  function examHoldsLock(): boolean {
+    return lockHolder !== null || (lastExamState !== null && EXAM_RUNNING.has(lastExamState.phase));
+  }
+
   function startPairing(): PairCode | null {
-    if (!client || client.installId === null) return null;
+    if (!client || client.installId === null || examHoldsLock()) return null;
     clearPairCode();
     const expiresMs = now() + pairCodeTtlMs;
     const next = { code: makeCode(), expires_at: new Date(expiresMs).toISOString(), expiresMs };
@@ -332,6 +350,7 @@ export function createLockRelay(options: LockRelayOptions): LockRelay {
       return;
     }
     const message = parsed.message;
+    if (target === pending && message.type !== "hello") return;
     switch (message.type) {
       case "ping":
         write(target, { type: "pong", at: now() });
@@ -340,6 +359,15 @@ export function createLockRelay(options: LockRelayOptions): LockRelay {
         return;
       case "hello": {
         await pairingLoaded;
+        if (target === pending) {
+          pending = null;
+          if (pairing?.install_id !== message.install_id) {
+            // Another install that is not paired either: the Lock that has the slot keeps it.
+            target.socket.close();
+            return;
+          }
+          takeSlot(target);
+        }
         if (client !== target) return;
         target.installId = message.install_id;
         target.browser = message.browser;
@@ -363,10 +391,21 @@ export function createLockRelay(options: LockRelayOptions): LockRelay {
           write(target, { type: "pair.fail", reason: "no_code" });
           return;
         }
+        if (examHoldsLock()) {
+          log.warn("refused pair.request: an exam holds the browser");
+          write(target, { type: "pair.fail", reason: "no_code" });
+          return;
+        }
         startPairing();
         options.onMessage(message);
         return;
       case "pair.confirm":
+        if (examHoldsLock()) {
+          log.warn("refused pair.confirm: an exam holds the browser");
+          clearPairCode();
+          write(target, { type: "pair.fail", reason: "no_code" });
+          return;
+        }
         await confirmPairing(target, message.code);
         return;
       default:
@@ -374,11 +413,24 @@ export function createLockRelay(options: LockRelayOptions): LockRelay {
           log.warn(`ignored ${message.type} from a Lock that is not paired`);
           return;
         }
+        if (message.type === "lock.started") lockHolder = target.installId;
+        else if (message.type === "lock.released") lockHolder = null;
         options.onMessage(message);
     }
   }
 
-  function attach(socket: WebSocket): void {
+  /** The paired install takes the one slot from a Lock that is not paired (another browser's, say). */
+  function takeSlot(target: Client): void {
+    const previous = client;
+    client = target;
+    clearPairCode();
+    if (!previous) return;
+    log.info("the paired Lock took the link from a Lock that is not paired");
+    clearInterval(previous.pingTimer);
+    previous.socket.terminate();
+  }
+
+  function attach(socket: WebSocket, waiting = false): void {
     const target: Client = {
       socket,
       installId: null,
@@ -396,8 +448,11 @@ export function createLockRelay(options: LockRelayOptions): LockRelay {
         write(target, { type: "ping", at: now() });
       }, pingIntervalMs),
     };
-    client = target;
-    setStatus("connected");
+    if (waiting) pending = target;
+    else {
+      client = target;
+      setStatus("connected");
+    }
     socket.on("message", (data, isBinary) => {
       handleFrame(target, data, isBinary).catch((error: unknown) =>
         log.error(`failed to handle a Lock frame: ${String(error)}`),
@@ -406,6 +461,7 @@ export function createLockRelay(options: LockRelayOptions): LockRelay {
     socket.on("error", (error) => log.warn(`socket error: ${error.message}`));
     socket.on("close", () => {
       clearInterval(target.pingTimer);
+      if (pending === target) pending = null;
       if (client !== target) return;
       client = null;
       clearPairCode();
@@ -425,17 +481,26 @@ export function createLockRelay(options: LockRelayOptions): LockRelay {
       refuse(socket, 403, "Forbidden");
       return;
     }
-    if (client) {
+    if (client && !canWait()) {
       refuse(socket, 409, "Conflict");
       return;
     }
     wss.handleUpgrade(req, socket, head, (ws) => {
-      if (closed || client) {
+      if (closed || (client && !canWait())) {
         ws.terminate();
         return;
       }
-      attach(ws);
+      attach(ws, client !== null);
     });
+  }
+
+  /**
+   * One Lock at a time, but a Lock that is not paired must not shut the paired install out: Üki Lock in
+   * Edge or another Chrome profile may wake first. While the Lock that has the slot said hello and is
+   * not paired, one more may connect and wait; if its hello names the paired install, it takes the slot.
+   */
+  function canWait(): boolean {
+    return client !== null && client.installId !== null && !client.paired && pending === null;
   }
 
   function listenOn(port: number): Promise<Server | null> {
@@ -486,6 +551,7 @@ export function createLockRelay(options: LockRelayOptions): LockRelay {
     ready,
     send(message) {
       if (message.type === "exam.state") lastExamState = message;
+      if (message.type === "lock.release") lockHolder = null;
       if (!client) return false;
       if (PAIRED_ONLY.has(message.type) && !client.paired) return false;
       return write(client, message);
@@ -496,9 +562,10 @@ export function createLockRelay(options: LockRelayOptions): LockRelay {
       clearInterval(examStateTimer);
       if (rebindTimer) clearTimeout(rebindTimer);
       clearPairCode();
-      if (client) {
-        clearInterval(client.pingTimer);
-        client.socket.terminate();
+      for (const open of [client, pending]) {
+        if (!open) continue;
+        clearInterval(open.pingTimer);
+        open.socket.terminate();
       }
       wss.close();
       const current = server;

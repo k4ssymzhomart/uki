@@ -3,10 +3,13 @@
 // leave the window locked or the camera running by mistake.
 import {
   type AppToLock,
+  appDetail,
+  CardTries,
   type ExamStatePhase,
+  formatStatusDetail,
   Host,
   type IngestStatus,
-  STATUS_DETAIL_MAX,
+  type StatusDetail,
 } from "@uki/contracts";
 import type { SnapshotFrom } from "xstate";
 import type { studentFlowMachine } from "./machine.ts";
@@ -68,6 +71,19 @@ export function wantsLockdown(snapshot: FlowSnapshot): boolean {
 }
 
 /**
+ * The exam holds the app, in both modes, from its start until 3.1 or 2.1d: the 15 s process scan runs
+ * (a blocked app or screen-sharing tool that appears sends tab.blocked with its name), and the main
+ * process refuses close and quit while it does, also while 2.1c, 2.1e or an offline submit brings a
+ * browser exam's window out of the tray. A browser exam starts when Üki Lock reports lock.started.
+ */
+export function wantsExamWatch(snapshot: FlowSnapshot): boolean {
+  const { context } = snapshot;
+  const stage = stageOf(snapshot);
+  if (!context.joined || !context.exam.startedSent) return false;
+  return isExamStage(stage) || stage === "submitting" || stage === "ending";
+}
+
+/**
  * Browser exams hide the window to the tray while the student writes in the browser; pause, message
  * and end bring it back with 2.1c, 2.1e or 2.1d, and 3.1 shows in it.
  */
@@ -110,33 +126,71 @@ export function wantsIdentity(snapshot: FlowSnapshot): boolean {
   return stage === "identity" || stage === "identityHelp";
 }
 
-/** The first failing 1.2 row, as a short machine-readable detail (the blocked app's name if any). */
-export function checkDetail(context: FlowContext): string | undefined {
+/**
+ * The first failing 1.2 row as a status detail (packages/contracts/src/status-detail.ts), in the
+ * screen's order: other apps, screen sharing, camera, network, browser lock, storage. A camera with no
+ * picture at all is `busy` (1.2 tells the student to close the other apps that use it).
+ */
+export function checkDetail(context: FlowContext): StatusDetail | null {
   const { checks } = context;
-  if (checks.apps.status === "fail" && checks.apps.app) return checks.apps.app;
-  if (checks.screenShare.status === "fail" && checks.screenShare.app) return checks.screenShare.app;
-  if (checks.camera.status === "fail") return `camera:${checks.camera.problem ?? "error"}`;
-  if (checks.network.status === "fail") return "network";
+  const app =
+    (checks.apps.status === "fail" && checks.apps.app ? appDetail(checks.apps.app) : null) ??
+    (checks.screenShare.status === "fail" && checks.screenShare.app
+      ? appDetail(checks.screenShare.app)
+      : null);
+  if (app) return app;
+  if (checks.camera.status === "fail") {
+    const problem = checks.camera.problem;
+    return { kind: "camera", problem: problem === null || problem === "no_camera" ? "busy" : problem };
+  }
+  if (checks.network.status === "fail") {
+    return { kind: "network", problem: checks.network.ms === null ? "offline" : "slow" };
+  }
   const lockRequired = context.joined?.exam.checks.lock ?? true;
-  if (lockRequired && checks.lock !== null && checks.lock !== "paired") return "browser_lock";
-  if (checks.storage.status === "fail") return "storage";
-  return undefined;
+  if (lockRequired && checks.lock !== null && checks.lock !== "paired") {
+    return { kind: "lock", problem: "not_paired" };
+  }
+  // A failed scan (no free space figure) is not low storage.
+  if (checks.storage.status === "fail" && checks.storage.freeGb !== null)
+    return { kind: "storage", problem: "low" };
+  return null;
 }
 
-/** `status` for ingest: the check-in step (1.2 to 1.4) or the question on screen (2.1). */
+/** Failed card tries as the detail carries them (1 to 99). */
+function cardTries(tries: number): number {
+  return CardTries.parse(Math.min(99, Math.max(1, Math.floor(tries))));
+}
+
+/** `status` for ingest: the check-in step (1.2 to 1.4) with its detail, or the question on screen (2.1). */
 export function ingestStatus(snapshot: FlowSnapshot): IngestStatus | undefined {
   const { context } = snapshot;
   const stage = stageOf(snapshot);
   switch (stage) {
     case "system": {
-      const detail = checkDetail(context)?.slice(0, STATUS_DETAIL_MAX);
-      return detail ? { step: "checking", detail } : { step: "checking" };
+      const detail = checkDetail(context);
+      return detail ? { step: "checking", detail: formatStatusDetail(detail) } : { step: "checking" };
     }
-    case "identity":
+    case "identity": {
+      // 1.3 after a failed try: "Card unreadable · retry 2 of 3" in the lobby.
+      const { tries, status } = context.identity;
+      return tries > 0 && status !== "matched"
+        ? {
+            step: "identity",
+            detail: formatStatusDetail({ kind: "card", problem: "retry", tries: cardTries(tries) }),
+          }
+        : { step: "identity" };
+    }
     case "identityMatched":
       return { step: "identity" };
     case "identityHelp":
-      return { step: "identity", detail: "help" };
+      return {
+        step: "identity",
+        detail: formatStatusDetail({
+          kind: "card",
+          problem: "help",
+          tries: cardTries(context.identity.tries),
+        }),
+      };
     case "rules":
       return { step: context.agreed ? "ready" : "rules" };
     case "writing":
@@ -194,11 +248,9 @@ function lockPhase(snapshot: FlowSnapshot): ExamStatePhase {
     case "submitted":
     case "ended":
       return "done";
-    case "rules":
-      return context.timer !== null && (context.startRequested || context.now >= context.timer.startsAt)
-        ? "ready"
-        : "lobby";
     default:
+      // 1.4 included: the exam opens the moment the box is ticked and the start has come (canStart), so
+      // the Lock offers Lock and start only once the exam waits for it (ready above).
       return "lobby";
   }
 }

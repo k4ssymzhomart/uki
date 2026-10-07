@@ -54,6 +54,7 @@ export function ExamScreen({
       locale={model.locale}
       titleBar={model.titleBar}
       os={os}
+      browserLocked={model.browserLocked !== null}
       onLanguage={onLanguage}
     >
       <div className="relative flex h-full min-w-0 flex-1">

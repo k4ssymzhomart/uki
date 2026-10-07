@@ -1,6 +1,6 @@
 import type { DesktopOs } from "@uki/contracts";
 import { formatDate, formatTime, type Locale } from "@uki/i18n";
-import { Spinner } from "@uki/ui";
+import { Spinner, shortName } from "@uki/ui";
 import { useTranslations } from "use-intl";
 import type { EndedModel } from "../../flow/view-model.ts";
 import { ScreenFrame } from "../shared/screen-frame.tsx";
@@ -18,8 +18,9 @@ export type EndedScreenProps = {
 };
 
 /**
- * 2.1d Ended by proctor (Figma 181:16655): when and by whom, the receipt with the answered count and
- * the reason, and where to write if the student thinks it is a mistake.
+ * 2.1d Ended by proctor (Figma 181:16655): when and by whom ("Aigerim S.", first name and initial),
+ * the receipt with the answered count and the reason, and where to write if the student thinks it is
+ * a mistake.
  */
 export function EndedScreen({ model, onSavePdf, onQuit, onLanguage, os }: EndedScreenProps) {
   const t = useTranslations();
@@ -37,7 +38,10 @@ export function EndedScreen({ model, onSavePdf, onQuit, onLanguage, os }: EndedS
         pose="standing"
         mascotSize="md"
         title={t("ended.title")}
-        body={t("ended.body", { proctor: model.proctorName ?? "", time: formatTime(model.endedAt, locale) })}
+        body={t("ended.body", {
+          proctor: shortName(model.proctorName ?? ""),
+          time: formatTime(model.endedAt, locale),
+        })}
         bodyWrap
         rows={[
           {

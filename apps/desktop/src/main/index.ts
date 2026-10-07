@@ -1,6 +1,7 @@
 // Üki main process: single-instance lock, app lifecycle and the wiring behind window.uki. One window
 // takes the student from join to receipt; closing it quits the app on every OS, except while the exam
-// holds the app (lockdown in the app, or the tray in a browser exam), when close and quit are blocked.
+// holds the app (lockdown, the tray, or the exam's process scan: quit-guard.ts), when close and quit are
+// blocked.
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { IPC_CHANNELS, type IpcEventArgs, type IpcEventChannel } from "@uki/contracts";
@@ -26,7 +27,7 @@ import { startLockLink } from "./lock-link.ts";
 import { createLockdown } from "./lockdown.ts";
 import { appMenuTemplate } from "./menu.ts";
 import { protocolRoots, registerAppProtocol, registerPrivilegedSchemes } from "./protocol.ts";
-import { guardQuit } from "./quit-guard.ts";
+import { examHolds, guardClose, guardQuit } from "./quit-guard.ts";
 import { saveReceiptPdf } from "./receipt-pdf.ts";
 import { createBlockedAppWatcher, findBlockedApps, scanSystem } from "./scan.ts";
 import { createTrayMode } from "./tray.ts";
@@ -70,6 +71,12 @@ function notify<C extends IpcEventChannel>(channel: C, ...args: IpcEventArgs<C>)
   if (window) sendToRenderer(window.webContents, channel, ...args);
 }
 
+const watcher = createBlockedAppWatcher({
+  findApps: () => (devFlags.ignoreBlockedApps ? Promise.resolve([]) : findBlockedApps(os)),
+  onAppeared: (apps) => notify(IPC_CHANNELS.checksBlockedApps, apps),
+  onError: (error) => console.error("[desktop] process scan failed:", error),
+});
+
 const lockdown = devFlags.noKiosk
   ? createScreenlessLockdown((on) =>
       console.warn(`[desktop] lockdown ${on ? "on" : "off"} (UKI_DEV_NO_KIOSK)`),
@@ -78,7 +85,11 @@ const lockdown = devFlags.noKiosk
       os,
       devEscape: isDevelopmentBuild,
       onBlur: () => notify(IPC_CHANNELS.examBlur),
-      onDevEscape: () => console.warn("[desktop] development escape hatch: lockdown off"),
+      onDevEscape: () => {
+        // The running scan holds the app too: the escape hatch lets quit through again.
+        watcher.stop();
+        console.warn("[desktop] development escape hatch: lockdown and the process scan off");
+      },
       activateApp: () => app.focus({ steal: true }),
       onKioskFailed: () => console.error("[desktop] lockdown: the window did not go full screen"),
     });
@@ -90,16 +101,8 @@ const trayMode = createTrayMode({
   powerSaveBlocker,
 });
 
-const watcher = createBlockedAppWatcher({
-  findApps: () => (devFlags.ignoreBlockedApps ? Promise.resolve([]) : findBlockedApps(os)),
-  onAppeared: (apps) => notify(IPC_CHANNELS.checksBlockedApps, apps),
-  onError: (error) => console.error("[desktop] process scan failed:", error),
-});
-
-/** Lockdown (exam in the app) or the tray (exam in the browser): close and quit wait for submit or end. */
-function examHoldsApp(): boolean {
-  return lockdown.active || trayMode.active;
-}
+/** Close and quit wait for submit or end while the exam holds the app (quit-guard.ts). */
+const examHoldsApp = examHolds({ lockdown, trayMode, watcher });
 
 function openMainWindow(): void {
   const window = createMainWindow({
@@ -108,7 +111,7 @@ function openMainWindow(): void {
     allowCapture: shouldAllowCapture(app.isPackaged, process.env),
     devTools: isDevelopmentBuild,
   });
-  const detach = [lockdown.attach(window), trayMode.attach(window)];
+  const detach = [lockdown.attach(window), trayMode.attach(window), guardClose(window, examHoldsApp)];
   window.on("closed", () => {
     for (const undo of detach) undo();
     if (mainWindow === window) mainWindow = null;

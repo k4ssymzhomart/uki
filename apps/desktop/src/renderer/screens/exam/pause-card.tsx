@@ -1,4 +1,4 @@
-import { Button } from "@uki/ui";
+import { Button, shortName } from "@uki/ui";
 import { type ReactNode, useId } from "react";
 import { useTranslations } from "use-intl";
 import type { ExamModel } from "../../flow/view-model.ts";
@@ -22,7 +22,8 @@ export function PauseCard({ selfPause, proctorPause, onImHere }: PauseCardProps)
 
   let content: ReactNode;
   if (proctorPause !== null) {
-    const proctor = proctorPause.proctorName;
+    // Figma 2.1c names the proctor by first name and initial: "Aigerim S.".
+    const proctor = proctorPause.proctorName === null ? null : shortName(proctorPause.proctorName);
     content = (
       <>
         <MascotBox pose="standing" />

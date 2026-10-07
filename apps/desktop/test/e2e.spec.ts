@@ -12,6 +12,8 @@ import { join } from "node:path";
 import { expect, type Page, test } from "@playwright/test";
 import { RECEIPT_ID_PATTERN } from "@uki/contracts";
 import type { Locale } from "@uki/i18n";
+// The module itself, not the @uki/ui barrel, which would load React components into the test runner.
+import { shortName } from "../../../packages/ui/src/data/short-name.ts";
 import { DESKTOP_DIR, type LaunchedApp, launchApp } from "./support/app.ts";
 import { connectFakeLock } from "./support/fake-lock.ts";
 import { createFixture, destroyWorkspace, type Fixture, STUDENTS } from "./support/fixture.ts";
@@ -166,7 +168,7 @@ async function allSynced(page: Page): Promise<{ answers: OutboxAnswer[]; events:
  * (Docker DNS inside the auth container); a student would press Continue again, and so does the test.
  */
 async function joinExam(page: Page, expected: "1.1a" | "1.2"): Promise<void> {
-  const networkError = page.getByText(en.check.network.fail, { exact: true });
+  const networkError = page.getByText(en.join.error.network, { exact: true });
   for (let attempt = 1; ; attempt += 1) {
     await button(page, en.action.continue).click();
     await networkError.waitFor({ state: "hidden", timeout: 5000 }).catch(() => {});
@@ -450,8 +452,8 @@ test("2.1a: a network cut loses nothing and duplicates nothing", async () => {
 test("2.1c: the proctor pauses and resumes", async () => {
   const { page } = madina;
   await timeCommand(page, "2.1c", { session_id: sessionId, type: "pause", payload: {} }, "pause");
-  // by_name: the lead proctor who pressed Pause.
-  await expect(page.getByText(fixture.lead.name).first()).toBeVisible();
+  // by_name: the lead proctor who pressed Pause, as Figma 2.1c writes it ("Aigerim S.").
+  await expect(page.getByText(shortName(fixture.lead.name)).first()).toBeVisible();
   await shotInEveryLanguage(page, "2.1c");
   await timeCommand(page, "2.1", { session_id: sessionId, type: "resume", payload: {} }, "resume");
 });

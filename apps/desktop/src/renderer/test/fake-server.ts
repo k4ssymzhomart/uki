@@ -25,6 +25,8 @@ export class FakeServer implements SyncApi {
   online = true;
   /** Store the next N calls but fail them like a lost reply. */
   dropReplies = 0;
+  /** Store the next N still uploads but fail them like a lost reply. */
+  dropUploadReplies = 0;
   /** Every call in order, for ordering checks. */
   readonly calls: Array<{ kind: "answers" | "ingest" | "upload" | "frames"; at: number; size: number }> = [];
   readonly events = new Map<string, ClientEventEnvelope>();
@@ -82,6 +84,11 @@ export class FakeServer implements SyncApi {
         for (let index = 0; index < event.frame_count; index += 1) {
           const path = stillPath(this.options.examId, event.session_id, event.id, index);
           if (this.frames.has(path)) continue;
+          if (this.objects.has(path)) {
+            // Uploaded but never confirmed: ingest confirms it and offers no URL.
+            this.frames.set(path, crypto.randomUUID());
+            continue;
+          }
           this.grantSerial += 1;
           stills.push({
             index,
@@ -108,9 +115,17 @@ export class FakeServer implements SyncApi {
     };
   }
 
+  /** Like ingest's URLs, an upload creates its still once and never replaces it. */
   async uploadStill(upload: StillGrant, jpeg: Blob): Promise<void> {
     this.check("upload", 1);
+    if (this.objects.has(upload.path)) {
+      throw new ServiceError("conflict", "The resource already exists", 409);
+    }
     this.objects.set(upload.path, jpeg.size);
+    if (this.dropUploadReplies > 0) {
+      this.dropUploadReplies -= 1;
+      throw new ServiceError("network", "reply lost");
+    }
   }
 
   async confirmFrames(request: FramesRequest): Promise<FramesResponse> {
