@@ -1,0 +1,395 @@
+{
+  "action": {
+    "ask_proctor": "Ask proctor",
+    "cancel": "Cancel",
+    "continue": "Continue"
+  },
+  "app": {
+    "title": {
+      "default": "Üki · {course} · {examType}",
+      "ended": "Üki · {course} · {examType} · ended by proctor",
+      "locked": "Üki · {course} · {examType} · browser locked",
+      "offline": "Üki · {course} · {examType} · browser locked · offline",
+      "proctor_paused": "Üki · {course} · {examType} · paused by proctor",
+      "submitted": "Üki · {course} · {examType} · submitted"
+    }
+  },
+  "check": {
+    "again": "Check again",
+    "apps": {
+      "fail": "{app} is open. Close it to continue.",
+      "title": "Other apps"
+    },
+    "browser": {
+      "fail": "Pair Üki Lock to continue.",
+      "ok": "Üki can close other tabs during the exam.",
+      "title": "Browser lock"
+    },
+    "camera": {
+      "fail": "No camera picture. Close other apps that use the camera.",
+      "ok": "One face, good light, lens not covered.",
+      "title": "Camera"
+    },
+    "network": {
+      "fail": "The exam server does not reply.",
+      "ok": "Exam server replies in {ms} ms.",
+      "title": "Network"
+    },
+    "preview": {
+      "badge": "LIVE · LOCAL",
+      "caption": "This preview never leaves your laptop.",
+      "status": "{count, plural, one {# face} other {# faces}} · good light"
+    },
+    "screen": {
+      "fail": "{app} is running. Close it to continue.",
+      "ok": "No screen sharing or remote desktop running.",
+      "title": "Screen sharing"
+    },
+    "storage": {
+      "fail": "Free at least 1 GB to continue.",
+      "ok": "{free} GB free.",
+      "running": "Checking free space for local evidence…",
+      "title": "Storage"
+    },
+    "subtitle": "Fix anything red, then check again.",
+    "title": "System check",
+    "version": {
+      "ok": "{version} is the latest. No update needed.",
+      "title": "Üki version"
+    }
+  },
+  "done": {
+    "body": "Your answers are in.",
+    "close": "Close Üki",
+    "flags": {
+      "label": "Flags",
+      "value": "{count} · a person will review {count, plural, one {it} other {them}}"
+    },
+    "receipt": "Receipt",
+    "save": "Save receipt",
+    "submitted": {
+      "label": "Submitted",
+      "value": "{time} · {date}"
+    },
+    "time_used": {
+      "label": "Time used",
+      "value": "{used} of {total} min"
+    },
+    "title": "Submitted."
+  },
+  "ended": {
+    "answered": {
+      "title": "Answered",
+      "value": "{answered} of {total, plural, one {# question} other {# questions}}"
+    },
+    "body": "{proctor} ended your session at {time}. Answers up to then are saved. The exam office reviews what happened.",
+    "contact": "Think this is a mistake? Write to the exam office at {email}.",
+    "label": "Ended",
+    "reason": {
+      "proctor": "Ended by proctor",
+      "title": "Reason"
+    },
+    "title": "Your exam was ended."
+  },
+  "event": {
+    "browser_locked": "Browser locked · {count, plural, one {# tab} other {# tabs}} closed",
+    "exam_started": "Exam started",
+    "face_matched": "Face matched at check-in",
+    "network_lost": {
+      "detail": "Answers and events wait on this laptop",
+      "title": "Network lost"
+    },
+    "no_face": "No face in frame",
+    "on_screen": "On screen",
+    "paused": {
+      "detail": "Session paused · timer stopped"
+    },
+    "phone": {
+      "detail": "Confidence {confidence, number, ::.00} · frame kept as evidence",
+      "title": "Phone in frame"
+    },
+    "proctor_paused": {
+      "detail": "Timer stopped until your proctor resumes",
+      "title": "Paused by {proctor}"
+    },
+    "question_saved": "Question {n} saved",
+    "stored_locally": "Stored on this laptop",
+    "time_added": {
+      "detail": "By {proctor} · ends {time}",
+      "title": "Time added · +{minutes} min"
+    }
+  },
+  "exam": {
+    "back": "Back",
+    "camera": {
+      "faces": "{count, plural, one {# face} other {# faces}}",
+      "no_face": "no face"
+    },
+    "counter": "Question {n} of {total}",
+    "log": {
+      "title": "This session"
+    },
+    "next": "Next question",
+    "offline": {
+      "status": "saving on this laptop · {elapsed}",
+      "status_title": "Offline"
+    },
+    "option": "Option {letter}",
+    "paused": {
+      "body": "No face in the frame. Come back to the camera and your time continues.",
+      "resume": "I’m here",
+      "status": "no face in frame",
+      "status_title": "Paused",
+      "timer": "Paused for {duration}",
+      "title": "Paused."
+    },
+    "phone": {
+      "status": "phone in frame · {confidence, number, ::.00}",
+      "title": "Phone found",
+      "toast": "Phone in frame. Put it away."
+    },
+    "proctor_paused": {
+      "status": "timer stopped · {elapsed}",
+      "status_title": "Paused by proctor"
+    },
+    "saved": "Saved on this laptop · {time}",
+    "saved_offline": "Saved on this laptop · {time} · syncs when online",
+    "submit": "Submit",
+    "timer": {
+      "added": "left · +{minutes} min",
+      "left": "left"
+    },
+    "toast": {
+      "flag": "flag"
+    },
+    "type": {
+      "midterm": "Midterm"
+    },
+    "watch": {
+      "status": "eyes on screen · {elapsed}",
+      "title": "Watching"
+    }
+  },
+  "identity": {
+    "caption": "The card and your face are compared on this laptop. Nothing is uploaded.",
+    "card": {
+      "failed": "Couldn’t read the card · {n} of {total} tries",
+      "running": "Reading the card… keep it still.",
+      "title": "Student card"
+    },
+    "face": {
+      "fail": "Doesn’t match the photo on your card yet.",
+      "ok": "Matches the photo on your card.",
+      "title": "Face"
+    },
+    "help": {
+      "body": "Üki couldn’t read the card after {tries, plural, one {# try} other {# tries}}. Your proctor is joining this check.",
+      "hint": "Hold still for your proctor",
+      "privacy": "{proctor} sees your step and device, never the photo. Stay in front of the camera.",
+      "requested": "Help requested at {time}",
+      "title": "Your proctor will help.",
+      "waiting": "Waiting for {proctor}"
+    },
+    "hint": "Hold your student card inside the lime frame",
+    "person": {
+      "fail": "More than one person in the frame.",
+      "ok": "Only you are in the frame.",
+      "title": "One person"
+    },
+    "privacy": "Your proctor only sees “matched” or “needs help”, never the photo.",
+    "subtitle": "Once, before the start. Üki checks that the card and your face match.",
+    "title": "Show your student card."
+  },
+  "join": {
+    "body": "Enter the exam code from your invitation email and your student ID. Üki checks your laptop next.",
+    "code": {
+      "format": "Codes have three parts: course, group and day, like MATH2-204-FRI.",
+      "helper": "Not case sensitive. Ask your proctor if you lost it.",
+      "label": "Exam code"
+    },
+    "error": {
+      "body": "No exam has this code. Copy it from your invitation email.",
+      "title": "Check the code."
+    },
+    "privacy": "Your camera stays on this laptop. Only events and flagged frames are sent.",
+    "step": "Step {n} of {total}",
+    "student_id": {
+      "helper": "8 digits, printed on your student card.",
+      "label": "Student ID"
+    },
+    "title": "Join your exam."
+  },
+  "language": {
+    "en": "ENG",
+    "kk": "ҚАЗ",
+    "ru": "РУС"
+  },
+  "lobby": {
+    "countdown": {
+      "body": "When the exam starts, Üki sits next to this window.",
+      "label": "Until the start"
+    },
+    "waiting": "Waiting for the start"
+  },
+  "lock": {
+    "app": {
+      "connected": "Üki app · connected · camera on",
+      "found": "Üki app · found on this laptop",
+      "idle": "Üki app · idle"
+    },
+    "ask": {
+      "body": "Your proctor sees this on the live wall. Your time keeps running.",
+      "note": {
+        "helper": "Only your proctor sees this · {count}/{max}",
+        "label": "Note (optional)"
+      },
+      "reason": {
+        "break": "I need a break",
+        "other": "Something else",
+        "technical": "Technical problem",
+        "unclear": "Question is unclear"
+      },
+      "send": "Send to proctor",
+      "title": "Ask your proctor"
+    },
+    "badge": "LOCKED",
+    "blocked": {
+      "back": "Back to the exam",
+      "body": {
+        "full": "Only the exam portal and the calculator are open. This attempt is in your exam log.",
+        "portal_only": "Only the exam portal is open. This attempt is in your exam log."
+      },
+      "meta": "{host} · {time}",
+      "title": "This site is closed during the exam."
+    },
+    "calc": {
+      "note": "Works offline. Keeps no history after you submit.",
+      "title": "Calculator · built into Üki Lock"
+    },
+    "copy": {
+      "noted": "{time} · noted",
+      "toast": "Copy is off during the exam."
+    },
+    "done": {
+      "badge": "DONE",
+      "blocked": {
+        "title": "Blocked attempts",
+        "value": "{count} · in your exam log"
+      },
+      "body": "Submitted at {time}. {count, plural, one {Your tab is back.} other {Your # tabs are back.}}",
+      "close": "Close",
+      "locked_for": {
+        "title": "Locked for",
+        "value": "{minutes} min"
+      },
+      "sent": {
+        "title": "Sent to the proctor",
+        "value": "Events only"
+      },
+      "title": "Lock released"
+    },
+    "pair": {
+      "action": "Pair",
+      "badge": "NOT PAIRED",
+      "body": "Both should show the same code.",
+      "found": "Üki app found",
+      "mismatch": "Different code? Close this and restart the Üki app.",
+      "open_app": {
+        "body": "It pairs on its own.",
+        "title": "Open the Üki app"
+      },
+      "title": "Pair with the Üki app"
+    },
+    "ready": {
+      "app": {
+        "ok": "Connected · camera on",
+        "title": "Üki app"
+      },
+      "badge": "READY",
+      "next": "NEXT EXAM",
+      "note": {
+        "full": "Only the exam portal and the calculator stay open.",
+        "portal_only": "Only the exam portal stays open."
+      },
+      "screen": {
+        "off": "Off"
+      },
+      "start": "Lock and start",
+      "tabs": {
+        "body": "{count} open. They close at the start and come back after you submit.",
+        "title": "Other tabs"
+      },
+      "when": "Starts {time} · {minutes} min · {host}"
+    },
+    "tab": {
+      "calculator": "Calculator",
+      "portal": "Exam portal"
+    },
+    "watching": "Üki watching"
+  },
+  "message": {
+    "ack": "Got it",
+    "body": "“{text}”",
+    "preset": {
+      "camera_view": "Stay in camera view",
+      "phone_away": "Put the phone away",
+      "phones_away": "Phones away, please",
+      "time_15": "15 minutes left"
+    },
+    "title": "Message from {proctor} · {time}"
+  },
+  "offline": {
+    "body": "Answers save on this laptop and sync when the network is back. Your timer keeps running.",
+    "title": "You’re offline. Keep writing."
+  },
+  "pair": {
+    "card": {
+      "body": "Confirm this code in your browser.",
+      "next": "Next: {exam} · {when}",
+      "title": "Pair Üki Lock"
+    }
+  },
+  "proctor_paused": {
+    "body": "{proctor}: “{message}” Your timer is stopped.",
+    "timer": "Paused for {duration} · you can’t resume yourself",
+    "title": "Your proctor paused the exam."
+  },
+  "rules": {
+    "agree": "I have read the rules and agree.",
+    "eyes": {
+      "body": "Look away for more than {seconds} s and Üki notes it.",
+      "title": "Eyes on the screen"
+    },
+    "faq": {
+      "video": "Where is the video?"
+    },
+    "phone": {
+      "body": "Keep your phone out of the camera’s view.",
+      "title": "No phone"
+    },
+    "title": "Exam rules",
+    "video": {
+      "body": "Only events and flagged frames are sent.",
+      "title": "Video stays on this laptop"
+    },
+    "window": {
+      "body": "Other tabs and apps stay closed during the exam.",
+      "title": "Only this window"
+    }
+  },
+  "status": {
+    "checking": "Checking",
+    "fix": "Fix this",
+    "needs_help": "Needs help",
+    "ready": "Ready"
+  },
+  "stepper": {
+    "check": "System check",
+    "identity": "Identity",
+    "join": "Join",
+    "rules": "Rules"
+  },
+  "tray": {
+    "open": "Open Üki"
+  }
+}
