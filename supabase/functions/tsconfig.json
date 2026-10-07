@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "//": "Node tsc check of the Deno Edge Functions, without Node types. Deno resolves imports through deno.json and ignores this file; _shared/types holds declaration shims for @supabase/server and the Deno globals. The *.test.ts files run under Node and are checked by test/integration/tsconfig.json.",
+  "extends": "@uki/config/tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "types": []
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["**/*.test.ts"]
+}

@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "//": "Runtime files only, with no DOM and no Node types: the same files run in Deno Edge Functions and the Lock's service worker.",
+  "extends": "@uki/config/tsconfig.base.json",
+  "compilerOptions": { "lib": ["ES2023"], "types": [] },
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts"]
+}
