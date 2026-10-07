@@ -15,6 +15,8 @@ export type ScreenFrameProps = {
   face?: FaceState;
   /** Window chrome to draw; window.uki.app.info() when absent. */
   os?: DesktopOs;
+  /** Üki Lock has locked the browser: the offline title says so (app.title.offline). */
+  browserLocked?: boolean;
   onLanguage: (locale: Locale) => void;
   /** Classes for the body under the title bar. */
   className?: string;
@@ -32,13 +34,14 @@ export function ScreenFrame({
   titleBar,
   face = "neutral",
   os,
+  browserLocked,
   onLanguage,
   className,
   children,
 }: ScreenFrameProps) {
   const windowOs = useScreenOs(os);
   const current = useScreenLocale(locale);
-  const title = useTitle(titleBar);
+  const title = useTitle(titleBar, { browserLocked });
   return (
     <div
       data-frame={frame}

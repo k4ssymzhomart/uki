@@ -1,3 +1,4 @@
+import { IngestStatus } from "@uki/contracts";
 import { describe, expect, it } from "vitest";
 import type { FlowCommand } from "../services/commands.ts";
 import { JoinFailure } from "../services/student-api.ts";
@@ -8,11 +9,12 @@ import {
   lockExamState,
   stageOf,
   wantsDetection,
+  wantsExamWatch,
   wantsHidden,
   wantsLockdown,
 } from "./derive.ts";
 import { selectScreen } from "./select.ts";
-import type { FlowEffect } from "./types.ts";
+import type { CheckRows, FlowEffect } from "./types.ts";
 
 type Flow = ReturnType<typeof startFlow>;
 
@@ -127,13 +129,44 @@ describe("1.2 System check", () => {
       canContinue: false,
       apps: { status: "fail", app: "Telegram" },
     });
-    expect(ingestStatus(flow.actor.getSnapshot())).toEqual({ step: "checking", detail: "Telegram" });
+    expect(ingestStatus(flow.actor.getSnapshot())).toEqual({ step: "checking", detail: "app:Telegram" });
     expect(wantsDetection(flow.actor.getSnapshot())).toBe("check");
     flow.actor.send({ type: "CHECK_AGAIN" });
     expect(flow.effects).toContainEqual({ type: "effect.systemCheck", action: "again" });
     flow.actor.send({ type: "CHECK_ROWS", rows: READY_ROWS });
     flow.actor.send({ type: "CONTINUE" });
     expect(frame(flow)).toBe("1.3");
+  });
+
+  it("reports the first failing row as a status detail the lobby can read", async () => {
+    const flow = startFlow();
+    await settle();
+    await joined(flow);
+    const detailFor = (rows: Partial<CheckRows>): string | undefined => {
+      flow.actor.send({ type: "CHECK_ROWS", rows: { ...READY_ROWS, ...rows } });
+      const status = ingestStatus(flow.actor.getSnapshot());
+      expect(IngestStatus.safeParse(status).success, JSON.stringify(status)).toBe(true);
+      return status?.detail;
+    };
+    const camera = (problem: CheckRows["camera"]["problem"]): Partial<CheckRows> => ({
+      camera: { status: "fail", faces: null, problem },
+    });
+    expect(detailFor({})).toBeUndefined();
+    expect(detailFor({ screenShare: { status: "fail", app: "AnyDesk" } })).toBe("app:AnyDesk");
+    expect(detailFor(camera("no_camera"))).toBe("camera:busy");
+    expect(detailFor(camera(null))).toBe("camera:busy");
+    expect(detailFor(camera("dark"))).toBe("camera:dark");
+    expect(detailFor(camera("many_faces"))).toBe("camera:many_faces");
+    expect(detailFor({ network: { status: "fail", ms: null } })).toBe("network:offline");
+    expect(detailFor({ network: { status: "fail", ms: 1450 } })).toBe("network:slow");
+    expect(detailFor({ lock: "connected" })).toBe("lock:not_paired");
+    expect(detailFor({ lock: "absent" })).toBe("lock:not_paired");
+    expect(detailFor({ storage: { status: "fail", freeGb: 0.4 } })).toBe("storage:low");
+    expect(detailFor({ storage: { status: "fail", freeGb: null } })).toBeUndefined();
+    expect(
+      detailFor({ apps: { status: "fail", app: "Telegram" }, network: { status: "fail", ms: null } }),
+      "the first failing row wins",
+    ).toBe("app:Telegram");
   });
 
   it("needs a paired Üki Lock only when checks.lock is on, and skips 1.3 when checks.identity is off", async () => {
@@ -168,6 +201,8 @@ describe("1.3 Identity and 1.3a Proctor help", () => {
       tries: 1,
       canContinue: false,
     });
+    // The lobby's "Card unreadable · retry 1 of 3".
+    expect(ingestStatus(flow.actor.getSnapshot())).toEqual({ step: "identity", detail: "card:retry:1" });
     flow.actor.send({ type: "CONTINUE" });
     expect(frame(flow)).toBe("1.3");
     flow.actor.send({
@@ -187,6 +222,7 @@ describe("1.3 Identity and 1.3a Proctor help", () => {
       canContinue: true,
       status: "matched",
     });
+    expect(ingestStatus(flow.actor.getSnapshot())).toEqual({ step: "identity" });
     flow.actor.send({ type: "CONTINUE" });
     expect(frame(flow)).toBe("1.4");
   });
@@ -209,7 +245,7 @@ describe("1.3 Identity and 1.3a Proctor help", () => {
       frame: "1.3a",
       help: { requestedAt: START - 8 * MIN, proctorName: "Aigerim Sadykova" },
     });
-    expect(ingestStatus(flow.actor.getSnapshot())).toEqual({ step: "identity", detail: "help" });
+    expect(ingestStatus(flow.actor.getSnapshot())).toEqual({ step: "identity", detail: "card:help:3" });
     flow.actor.send({
       type: "IDENTITY_VERDICT",
       kind: "help",
@@ -274,6 +310,29 @@ describe("1.4 Rules and lobby", () => {
     flow.actor.send({ type: "COMMAND", command: command("start", {}, START - 5 * MIN) });
     await settle();
     expect(stageOf(flow.actor.getSnapshot())).toBe("writing");
+  });
+
+  it("tells Üki Lock lobby until the box is ticked, and starts at once on a lock.started that came first", async () => {
+    const flow = startFlow({ join: async () => joinOutput({ mode: "browser" }) });
+    await settle();
+    await toRules(flow);
+    flow.actor.send({ type: "TICK", now: START + 1000 });
+    expect(stageOf(flow.actor.getSnapshot())).toBe("rules");
+    // Lock and start stays off in the popup: the exam cannot start before the box is ticked.
+    expect(lockExamState(flow.actor.getSnapshot()).phase).toBe("lobby");
+    // A Lock that locked anyway (an older exam.state): kept, not dropped.
+    flow.actor.send({ type: "LOCK_STARTED", tabsClosed: 2 });
+    expect(stageOf(flow.actor.getSnapshot())).toBe("rules");
+    expect(events(flow.effects)).not.toContain("exam.started");
+    flow.actor.send({ type: "SET_AGREED", agreed: true });
+    await settle();
+    const snapshot = flow.actor.getSnapshot();
+    expect(stageOf(snapshot)).toBe("writing");
+    expect(events(flow.effects).filter((type) => type === "exam.started")).toHaveLength(1);
+    expect(wantsDetection(snapshot)).toBe("exam");
+    expect(wantsHidden(snapshot)).toBe(true);
+    expect(lockExamState(snapshot).phase).toBe("writing");
+    expect(selectScreen(snapshot)).toMatchObject({ frame: "2.1", browserLocked: { tabsClosed: 2 } });
   });
 
   it("moves the countdown when an ingest reply shows the exam started early", async () => {
@@ -429,6 +488,40 @@ describe("2.1 Exam and its states", () => {
     expect(selectScreen(flow.actor.getSnapshot())).toMatchObject({
       frame: "2.1",
       timer: { running: true, remainingMs: 40 * MIN + 30_000 },
+    });
+  });
+
+  it("2.1c takes over from 2.3: I'm here no longer resumes, only the resume command does", async () => {
+    const flow = startFlow();
+    await settle();
+    await toExam(flow);
+    flow.actor.send({ type: "TICK", now: START + 50 * MIN });
+    flow.actor.send({ type: "CUE_PAUSED", on: true, reason: "face_missing", at: START + 50 * MIN });
+    flow.actor.send({ type: "TICK", now: START + 51 * MIN });
+    expect(frame(flow)).toBe("2.3");
+    // The proctor paused while the app was offline in 2.3; the command comes in now.
+    flow.actor.send({
+      type: "COMMAND",
+      command: command("pause", { text: "Stay in your seat." }, START + 50 * MIN + 30_000),
+    });
+    expect(selectScreen(flow.actor.getSnapshot())).toMatchObject({
+      frame: "2.1c",
+      proctorPause: { text: "Stay in your seat.", pausedMs: 30_000 },
+      timer: { running: false, remainingMs: 40 * MIN },
+    });
+    expect(lockExamState(flow.actor.getSnapshot()).phase).toBe("paused");
+    const resumes = () => flow.effects.filter((e) => e.type === "effect.resume").length;
+    const before = resumes();
+    flow.actor.send({ type: "IM_HERE" });
+    flow.actor.send({ type: "CUE_PAUSED", on: false, reason: null, at: START + 51 * MIN });
+    expect(resumes()).toBe(before);
+    expect(frame(flow)).toBe("2.1c");
+    flow.actor.send({ type: "TICK", now: START + 52 * MIN });
+    flow.actor.send({ type: "COMMAND", command: command("resume", {}, START + 52 * MIN) });
+    // 30 s of self-pause and 90 s of the proctor's pause given back: the timer did not move.
+    expect(selectScreen(flow.actor.getSnapshot())).toMatchObject({
+      frame: "2.1",
+      timer: { running: true, remainingMs: 40 * MIN },
     });
   });
 
@@ -633,6 +726,30 @@ describe("browser exams", () => {
     expect(wantsHidden(flow.actor.getSnapshot())).toBe(false);
     flow.actor.send({ type: "ACK_NOTICE" });
     expect(wantsHidden(flow.actor.getSnapshot())).toBe(true);
+  });
+
+  it("watches the exam (process scan, quit held) from lock.started until 3.1, also while 2.1c and 2.1e show", async () => {
+    const flow = startFlow({ join: async () => joinOutput({ mode: "browser" }) });
+    await settle();
+    await toBrowserExam(flow);
+    expect(wantsExamWatch(flow.actor.getSnapshot())).toBe(false);
+    flow.actor.send({ type: "LOCK_STARTED", tabsClosed: 2 });
+    expect(wantsExamWatch(flow.actor.getSnapshot())).toBe(true);
+    flow.actor.send({ type: "COMMAND", command: command("pause", {}, START + 2 * MIN) });
+    expect(wantsHidden(flow.actor.getSnapshot())).toBe(false);
+    expect(wantsExamWatch(flow.actor.getSnapshot())).toBe(true);
+    flow.actor.send({ type: "COMMAND", command: command("resume", {}, START + 3 * MIN) });
+    flow.actor.send({
+      type: "COMMAND",
+      command: command("message", { text: "Five minutes left", scope: "group" }),
+    });
+    expect(frame(flow)).toBe("2.1e");
+    expect(wantsExamWatch(flow.actor.getSnapshot())).toBe(true);
+    flow.actor.send({ type: "LOCK_SUBMITTED" });
+    expect(wantsExamWatch(flow.actor.getSnapshot())).toBe(true);
+    await settle();
+    expect(frame(flow)).toBe("3.1");
+    expect(wantsExamWatch(flow.actor.getSnapshot())).toBe(false);
   });
 
   it("submits when Üki Lock reports exam.submitted and shows 3.1 in the window", async () => {

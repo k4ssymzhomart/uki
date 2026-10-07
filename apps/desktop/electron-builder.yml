@@ -27,6 +27,12 @@ extraResources:
     to: resources/models
     filter:
       - "**/*"
+# The five fuses ("Hardening") are flipped by this hook, not by electron-builder's own electronFuses
+# option. In electron-builder 26.15 both run at the same point: after the asar integrity data is written
+# (Windows resource, macOS Info.plist) and before signing and the Windows resource edit, and both give the
+# same fuse wire on Electron 44 (compared on 2026-10-07 with `electron-fuses read`, dir builds only). The
+# hook uses @electron/fuses 2.x from this package and renews the ad hoc signature on macOS only;
+# electronFuses would use app-builder-lib's 1.8 and could not limit resetAdHocDarwinSignature to macOS.
 afterPack: build/after-pack.cjs
 mac:
   target:

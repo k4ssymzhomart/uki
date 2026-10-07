@@ -151,6 +151,66 @@ describe("proctor commands", () => {
     again.stop();
   });
 
+  it("takes the issuer's name from a catch-up row (session_commands.by_name)", async () => {
+    const pause = {
+      ...row("0199a000-0000-7000-8000-0000000000e1", "pause", {}, "2026-10-09T10:20:00.000Z"),
+      by_name: "Aigerim Sadykova",
+    } as SessionCommandRow;
+    const unnamed = {
+      ...row("0199a000-0000-7000-8000-0000000000e2", "resume", {}, "2026-10-09T10:21:00.000Z"),
+      by_name: "",
+    } as SessionCommandRow;
+    api.rows.push(pause, unnamed);
+    api.onStatus?.("SUBSCRIBED");
+    await flushIo(100);
+    expect(applied.map((c) => [c.type, c.byName])).toEqual([
+      ["pause", "Aigerim Sadykova"],
+      ["resume", null],
+    ]);
+  });
+
+  it("applies the commands an ingest reply carries once, oldest first, and acks them", async () => {
+    const message = row(
+      "0199a000-0000-7000-8000-0000000000f1",
+      "message",
+      { text: "Eyes on your screen", scope: "student" },
+      "2026-10-09T10:30:00.000Z",
+    );
+    const pause = row("0199a000-0000-7000-8000-0000000000f2", "pause", {}, "2026-10-09T10:31:00.000Z");
+    const pending = [message, pause].map((source) => {
+      const { issued_by: _by, acked_at: _acked, ...rest } = source;
+      return { ...rest, by_name: "Aigerim Sadykova" } as CommandMessage;
+    });
+    // The broadcast of the message arrived; the pause's was lost.
+    api.broadcast(message, "Aigerim Sadykova");
+    await flushIo(50);
+    await router.deliver(pending);
+    await router.deliver(pending);
+    await flushIo(100);
+    expect(applied.map((c) => [c.id, c.byName])).toEqual([
+      [message.id, "Aigerim Sadykova"],
+      [pause.id, "Aigerim Sadykova"],
+    ]);
+    expect([...new Set(api.acked)].sort()).toEqual([message.id, pause.id].sort());
+    expect((await outbox.command(pause.id))?.ackedAt).not.toBeNull();
+  });
+
+  it("ignores pending commands of another session and does nothing once stopped", async () => {
+    const other = {
+      ...row("0199a000-0000-7000-8000-0000000000f3", "pause", {}, "2026-10-09T10:32:00.000Z"),
+      session_id: EXAM_ID,
+    };
+    const { issued_by: _by, acked_at: _acked, ...rest } = other;
+    await router.deliver([{ ...rest, by_name: "X" } as CommandMessage]);
+    router.stop();
+    const late = row("0199a000-0000-7000-8000-0000000000f4", "pause", {}, "2026-10-09T10:33:00.000Z");
+    const { issued_by: _by2, acked_at: _acked2, ...lateRest } = late;
+    await router.deliver([{ ...lateRest, by_name: "X" } as CommandMessage]);
+    await flushIo(50);
+    expect(applied).toHaveLength(0);
+    expect(api.acked).toEqual([]);
+  });
+
   it("ignores a command whose payload does not fit its type", async () => {
     const bad = row(
       "0199a000-0000-7000-8000-0000000000d1",
@@ -161,5 +221,27 @@ describe("proctor commands", () => {
     api.broadcast(bad, "X");
     await flushIo(50);
     expect(applied).toHaveLength(0);
+  });
+
+  it("shares a catch-up read that is running, and reports whether the list was read", async () => {
+    const pause = row("0199a000-0000-7000-8000-0000000000a9", "pause", {}, "2026-10-09T10:49:30.000Z");
+    api.rows.push(pause);
+    let reads = 0;
+    const unacked = api.unackedCommands.bind(api);
+    api.unackedCommands = async () => {
+      reads += 1;
+      return unacked();
+    };
+    // SUBSCRIBED starts a read; a restart into a paused session waits for the same one.
+    api.onStatus?.("SUBSCRIBED");
+    expect(await router.catchUp()).toBe(true);
+    expect(reads).toBe(1);
+    expect(applied.map((c) => c.type)).toEqual(["pause"]);
+    api.unackedCommands = async () => {
+      throw new ServiceError("network", "offline");
+    };
+    expect(await router.catchUp()).toBe(false);
+    router.stop();
+    expect(await router.catchUp()).toBe(false);
   });
 });

@@ -6,7 +6,9 @@
 //    offline (2.1a); the next successful call ends it and queues net.offline {offline_ms, queued}
 //    before that call's events, so on reconnect answers go first, then events in seq order.
 // 3. Stills upload to the signed URLs from ingest, frames confirms them, then the laptop copy is
-//    deleted. A still with no valid URL gets a fresh one by resending its event (a duplicate).
+//    deleted. A still with no valid URL gets a fresh one by resending its event (a duplicate). A URL
+//    creates its still once: "already exists" means an earlier upload went through, and a still the
+//    reply offers no URL for is confirmed on the server already.
 // 4. Nothing leaves the outbox before the server confirms it.
 import {
   type AnswerUpsert,
@@ -249,8 +251,9 @@ export class SyncLoop {
         } catch (error) {
           const failure = toServiceError(error);
           if (failure.retryable) throw failure;
-          // Refused for good (past the session's end, not this student's question): keep, never resend.
-          await this.outbox.markAnswers(rows, "rejected");
+          // One refused row fails the whole statement: find it by sending them one at a time.
+          if (rows.length > 1) await this.upsertEach(rows);
+          else await this.outbox.markAnswers(rows, "rejected");
         }
         reconnected = await this.endOffline(queuedBefore);
       }
@@ -331,9 +334,27 @@ export class SyncLoop {
         });
       }
     }
+    await this.confirmUnoffered(events, response);
     this.options.onReply?.({ response, sentAt, receivedAt });
     if (reconnectQueued !== null) await this.endOffline(reconnectQueued);
     return events;
+  }
+
+  /**
+   * Answers one at a time, after the server refused a batch. A row refused for good (saved at or after
+   * the session's end, not this student's question) is kept and never resent; the others are synced.
+   */
+  private async upsertEach(rows: readonly AnswerUpsert[]): Promise<void> {
+    for (const row of rows) {
+      try {
+        await this.api.upsertAnswers([row]);
+        await this.outbox.markAnswers([row], "synced");
+      } catch (error) {
+        const failure = toServiceError(error);
+        if (failure.retryable) throw failure;
+        await this.outbox.markAnswers([row], "rejected");
+      }
+    }
   }
 
   /** Ends an offline spell after a successful call; true when one ended. */
@@ -369,6 +390,27 @@ export class SyncLoop {
     return stored.filter((row) => needing.has(row.id) && row.envelope.frame_count > 0).slice(0, limit);
   }
 
+  /**
+   * Ingest offers upload URLs for exactly the stills of a stored flag event that the server lacks. A
+   * waiting still it does not offer is confirmed there already (ingest confirms a still whose upload
+   * went through unseen, before a restart lost its URL): the laptop copy is done with.
+   */
+  private async confirmUnoffered(events: readonly EventRow[], response: IngestResponse): Promise<void> {
+    const stored = new Set([...response.accepted, ...response.duplicates]);
+    for (const row of events) {
+      if (!row.flag || row.envelope.frame_count === 0 || !stored.has(row.id)) continue;
+      const offered = new Set(
+        response.uploads.find((upload) => upload.event_id === row.id)?.stills.map((still) => still.index),
+      );
+      const taken = (await this.outbox.stillsFor(row.id))
+        .filter((still) => still.state === "pending" && !offered.has(still.index))
+        .map((still) => still.index);
+      if (taken.length === 0) continue;
+      await this.outbox.confirmStills(row.id, taken);
+      for (const index of taken) this.grants.delete(`${row.id}-${index}`);
+    }
+  }
+
   private async uploadStills(): Promise<void> {
     const now = this.now();
     const stills = await this.outbox.sessionStills(this.sessionId);
@@ -384,6 +426,12 @@ export class SyncLoop {
       } catch (error) {
         const failure = toServiceError(error);
         if (failure.kind === "network" || failure.kind === "rate_limited") throw failure;
+        if (failure.kind === "conflict") {
+          // Already in Storage: an earlier upload went through and only its reply was lost (a URL
+          // creates its still once). frames confirms what is there.
+          await this.outbox.markStillUploaded(still.id, grant.path);
+          continue;
+        }
         // Expired or refused: drop the URL; the event is resent for a fresh one.
         this.grants.delete(still.id);
       }

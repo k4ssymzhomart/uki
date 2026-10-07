@@ -25,6 +25,8 @@ export function supabaseConnectSources(supabaseUrl: string): string[] {
  * default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:;
  * connect-src 'self' https://<supabase-host> wss://<supabase-host>; img-src 'self' blob: data:;
  * media-src 'self' blob: mediastream:
+ * With no style-src, inline <style> elements are blocked. The renderer uses no Radix overlay that injects
+ * one (Dialog, Select, menus); csp.test.ts keeps it that way until the policy says otherwise.
  */
 export function buildCsp({ supabaseUrl, dev = false }: CspOptions = {}): string {
   const supabase = supabaseUrl ? supabaseConnectSources(supabaseUrl) : [];

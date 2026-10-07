@@ -1,5 +1,5 @@
 import { formatTime, type Locale } from "@uki/i18n";
-import { Banner, Button } from "@uki/ui";
+import { Banner, Button, shortName } from "@uki/ui";
 import { useTranslations } from "use-intl";
 import type { ExamModel } from "../../flow/view-model.ts";
 
@@ -12,7 +12,8 @@ export type NoticeBannersProps = {
 
 /**
  * The banners above the question: 2.1e's proctor message or added time with Got it (Banner Info,
- * 199:19002), then 2.1a's offline banner (Banner Offline, 145:2763). Both can show at once.
+ * 199:19002), then 2.1a's offline banner (Banner Offline, 145:2763). Both can show at once. The proctor
+ * is named by first name and initial, as in Figma ("Message from Aigerim S. · 10:31").
  */
 export function NoticeBanners({ notice, offline, locale, onGotIt }: NoticeBannersProps) {
   const t = useTranslations();
@@ -23,7 +24,7 @@ export function NoticeBanners({ notice, offline, locale, onGotIt }: NoticeBanner
     if (message !== null) {
       return {
         title: t("message.title", {
-          proctor: message.proctorName ?? "",
+          proctor: shortName(message.proctorName ?? ""),
           time: formatTime(message.at, locale),
         }),
         body: t("message.body", { text: message.text ?? t(message.preset) }),
@@ -36,7 +37,7 @@ export function NoticeBanners({ notice, offline, locale, onGotIt }: NoticeBanner
           timeAdded.proctorName === null
             ? undefined
             : t("event.time_added.detail", {
-                proctor: timeAdded.proctorName,
+                proctor: shortName(timeAdded.proctorName),
                 time: formatTime(timeAdded.endsAt, locale),
               }),
       };

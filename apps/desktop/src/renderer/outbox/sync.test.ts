@@ -89,6 +89,35 @@ describe("outbox order", () => {
     const left = await outbox.unsyncedAnswers(SESSION_ID);
     expect(left.map((row) => row.choiceId)).toEqual(["b"]);
   });
+
+  it("sends a refused batch of answers one at a time and sets aside only the rows refused", async () => {
+    // RLS refuses an answer saved at or after the session's end, and with it the whole statement.
+    const end = Date.now() + 60_000;
+    const upsert = server.upsertAnswers.bind(server);
+    server.upsertAnswers = async (rows) => {
+      if (rows.some((row) => Date.parse(row.saved_at) >= end)) {
+        server.calls.push({ kind: "answers", at: Date.now(), size: rows.length });
+        throw new ServiceError("forbidden", "new row violates row-level security policy", 403);
+      }
+      return upsert(rows);
+    };
+    const [q1, q2, q3] = [QUESTION_IDS[0] ?? "", QUESTION_IDS[1] ?? "", QUESTION_IDS[2] ?? ""];
+    await outbox.saveAnswer(SESSION_ID, q1, "a", new Date(end - 120_000).toISOString());
+    await outbox.saveAnswer(SESSION_ID, q2, "b", new Date(end - 60_000).toISOString());
+    await outbox.saveAnswer(SESSION_ID, q3, "c", new Date(end + 60_000).toISOString());
+    startLoop();
+    await flushIo(200);
+    await advance(2_000);
+    expect(server.answers.get(`${SESSION_ID}/${q1}`)?.choice_id).toBe("a");
+    expect(server.answers.get(`${SESSION_ID}/${q2}`)?.choice_id).toBe("b");
+    expect(server.answers.has(`${SESSION_ID}/${q3}`)).toBe(false);
+    const rows = await outbox.answers(SESSION_ID);
+    const synced = rows.filter((row) => row.syncedAt !== null).map((row) => row.questionId);
+    expect(synced.sort()).toEqual([q1, q2].sort());
+    expect(rows.filter((row) => row.rejectedAt !== null).map((row) => row.questionId)).toEqual([q3]);
+    // The loop goes on: the refused row is not a reason to stop syncing.
+    expect(loop?.isStarted).toBe(true);
+  });
 });
 
 describe("idempotent resend", () => {
@@ -337,5 +366,58 @@ describe("stills", () => {
     await advance(25_000, 1000);
     expect(await outbox.event(row.id)).toBeUndefined();
     expect(await outbox.isEmpty(SESSION_ID)).toBe(true);
+  });
+
+  it("confirms a still whose upload went through unseen: the URL answers already exists, nothing is replaced", async () => {
+    const row = await outbox.enqueueEvent(SESSION_ID, (seq) =>
+      envelopeFor("phone.detected", seq, { frame_count: 1 }),
+    );
+    await outbox.addStill({
+      sessionId: SESSION_ID,
+      eventId: row.id,
+      index: 0,
+      at: Date.now(),
+      bytes: jpegBytes(),
+    });
+    server.dropUploadReplies = 1;
+    startLoop();
+    await flushIo(300);
+    expect(server.objects.size).toBe(1);
+    expect(server.frames.size).toBe(0);
+    await advance(4_000);
+    // The retry with the same URL is refused ("already exists"), and frames confirms the first upload.
+    expect(server.calls.filter((call) => call.kind === "upload")).toHaveLength(2);
+    expect(server.frames.size).toBe(1);
+    expect(await outbox.sessionStills(SESSION_ID)).toHaveLength(0);
+    expect(await outbox.event(row.id)).toBeUndefined();
+  });
+
+  it("drops a still the server already holds once a restart lost its URL, without uploading it again", async () => {
+    const row = await outbox.enqueueEvent(SESSION_ID, (seq) =>
+      envelopeFor("phone.detected", seq, { frame_count: 1 }),
+    );
+    await outbox.addStill({
+      sessionId: SESSION_ID,
+      eventId: row.id,
+      index: 0,
+      at: Date.now(),
+      bytes: jpegBytes(),
+    });
+    server.dropUploadReplies = 1;
+    startLoop();
+    await flushIo(300);
+    loop?.stop();
+    // The app restarts before it tries again: its URL is gone and the still still waits on the laptop.
+    expect(server.objects.size).toBe(1);
+    expect((await outbox.sessionStills(SESSION_ID)).map((still) => still.state)).toEqual(["pending"]);
+    const uploads = server.calls.filter((call) => call.kind === "upload").length;
+    startLoop();
+    await flushIo(300);
+    await advance(2_000);
+    // The resent event gets no URL for it: ingest confirmed the object that was there.
+    expect(server.frames.size).toBe(1);
+    expect(server.calls.filter((call) => call.kind === "upload")).toHaveLength(uploads);
+    expect(await outbox.sessionStills(SESSION_ID)).toHaveLength(0);
+    expect(await outbox.event(row.id)).toBeUndefined();
   });
 });

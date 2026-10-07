@@ -11,6 +11,7 @@ import {
   type JoinExamOutput,
   type Question,
   type ReleaseReason,
+  retryDelayMs,
 } from "@uki/contracts";
 import { assign, emit, enqueueActions, fromPromise, setup } from "xstate";
 import {
@@ -39,6 +40,8 @@ const CODE_FORMAT = /^[A-Z0-9]+(?:-[A-Z0-9]+)*$/;
 const STUDENT_NUMBER_FORMAT = /^\d{8}$/;
 /** The session log keeps this many lines. */
 export const LOG_CAP = 50;
+/** After the question load failed: the offline queue's longest retry step (2, 4, 8, 16, then 30 s). */
+export const QUESTIONS_RETRY_MS = retryDelayMs(Number.MAX_SAFE_INTEGER);
 
 export function normalizeCode(code: string): string {
   return code.trim().toUpperCase();
@@ -137,7 +140,7 @@ export const studentFlowMachine = setup({
         return { notice: { ...notice, message } };
       }
       if (command.type === "add_time" && context.timer) {
-        const timer = addTime(context.timer, command.payload.minutes, command.issuedAt);
+        const timer = addTime(context.timer, command.id, command.payload.minutes, command.issuedAt);
         const endsAt = effectiveEndsAt(timer);
         const minutes = (notice.timeAdded?.minutes ?? 0) + command.payload.minutes;
         return {
@@ -173,6 +176,31 @@ export const studentFlowMachine = setup({
       enqueue.assign({ identity: { ...context.identity, helpRequestedAt: context.now } });
       enqueue.emit(event("student.help_requested", { topic: "identity" }));
     }),
+    /** 2.1c opens: the proctor's pause stops the timer until the resume command. */
+    assignProctorPause: assign(({ context, event: e }) => {
+      if (e.type !== "COMMAND" || e.command.type !== "pause") return {};
+      const since = Math.min(e.command.issuedAt, context.now);
+      const proctorName = e.command.byName ?? context.joined?.proctor_name ?? null;
+      return {
+        proctorPause: { since, byName: proctorName, text: e.command.payload.text ?? null },
+        timer: context.timer ? startPause(context.timer, since, "proctor") : null,
+        log: logLine(context, { id: logId(), at: since, kind: "proctor_paused", proctorName }),
+      };
+    }),
+    /** Browser exams: Üki Lock reported lock.started, so the exam starts (exam.started). */
+    startBrowserExam: enqueueActions(({ context, event: e, enqueue }) => {
+      const tabsClosed = e.type === "LOCK_STARTED" ? e.tabsClosed : (context.exam.tabsClosed ?? 0);
+      enqueue.emit(event("exam.started"));
+      enqueue.assign({
+        exam: { ...context.exam, startedSent: true, tabsClosed },
+        log: (
+          [
+            { id: logId(), at: context.now, kind: "exam_started", tabsClosed },
+            ...context.log,
+          ] satisfies LogEntry[]
+        ).slice(0, LOG_CAP),
+      });
+    }),
   },
   guards: {
     validJoinInput: ({ event: e }) => e.type === "JOIN" && isValidJoinInput(e.code, e.studentNumber),
@@ -193,6 +221,7 @@ export const studentFlowMachine = setup({
       context.timer !== null &&
       (context.startRequested || context.now >= context.timer.startsAt),
     browserAwaitingLock: ({ context }) => mode(context) === "browser" && !context.exam.startedSent,
+    lockAlreadyStarted: ({ context }) => context.exam.tabsClosed !== null,
     hasQuestions: ({ context }) => mode(context) === "browser" || (context.questions?.length ?? 0) > 0,
     timeUp: ({ context, event: e }) =>
       e.type === "TICK" && context.timer !== null && isTimeUp(context.timer, e.now),
@@ -516,6 +545,12 @@ export const studentFlowMachine = setup({
           always: { guard: "canStart", target: "#flow.exam" },
           on: {
             SET_AGREED: { actions: assign({ agreed: ({ event: e }) => e.agreed }) },
+            // A Lock that locked before the box was ticked: the browser exam starts as soon as it is.
+            LOCK_STARTED: {
+              actions: assign({
+                exam: ({ context, event: e }) => ({ ...context.exam, tabsClosed: e.tabsClosed }),
+              }),
+            },
           },
         },
       },
@@ -609,25 +644,9 @@ export const studentFlowMachine = setup({
             },
             /** Browser exams: the window is in the tray until Üki Lock reports lock.started. */
             waitingLock: {
+              always: { guard: "lockAlreadyStarted", target: "writing", actions: "startBrowserExam" },
               on: {
-                LOCK_STARTED: {
-                  target: "writing",
-                  actions: [
-                    emit(event("exam.started")),
-                    assign(({ context, event: e }) => ({
-                      exam: { ...context.exam, startedSent: true, tabsClosed: e.tabsClosed },
-                      log: [
-                        {
-                          id: logId(),
-                          at: context.now,
-                          kind: "exam_started" as const,
-                          tabsClosed: e.tabsClosed,
-                        },
-                        ...context.log,
-                      ].slice(0, LOG_CAP),
-                    })),
-                  ],
-                },
+                LOCK_STARTED: { target: "writing", actions: "startBrowserExam" },
               },
             },
             writing: {
@@ -682,24 +701,7 @@ export const studentFlowMachine = setup({
                 COMMAND: {
                   guard: { type: "isCommand", params: { type: "pause" } },
                   target: "proctorPaused",
-                  actions: assign(({ context, event: e }) => {
-                    if (e.type !== "COMMAND" || e.command.type !== "pause") return {};
-                    const since = Math.min(e.command.issuedAt, context.now);
-                    return {
-                      proctorPause: {
-                        since,
-                        byName: e.command.byName ?? context.joined?.proctor_name ?? null,
-                        text: e.command.payload.text ?? null,
-                      },
-                      timer: context.timer ? startPause(context.timer, since, "proctor") : null,
-                      log: logLine(context, {
-                        id: logId(),
-                        at: since,
-                        kind: "proctor_paused",
-                        proctorName: e.command.byName ?? context.joined?.proctor_name ?? null,
-                      }),
-                    };
-                  }),
+                  actions: "assignProctorPause",
                 },
               },
             },
@@ -714,13 +716,24 @@ export const studentFlowMachine = setup({
                   log: logLine(context, { id: logId(), at: since, kind: "no_face" }),
                 };
               }),
-              exit: assign(({ context }) => ({
-                selfPause: null,
-                timer: context.timer ? endPause(context.timer, context.now) : null,
-              })),
+              exit: assign(({ context, event: e }) => {
+                // A proctor pause that takes over ends the self-pause where it begins.
+                const at =
+                  e.type === "COMMAND" && e.command.type === "pause"
+                    ? Math.min(e.command.issuedAt, context.now)
+                    : context.now;
+                return { selfPause: null, timer: context.timer ? endPause(context.timer, at) : null };
+              }),
               on: {
                 IM_HERE: { actions: emit({ type: "effect.resume" }) },
                 CUE_PAUSED: { guard: "selfPauseOff", target: "writing" },
+                // The proctor paused too (the app was offline, or the server never saw session.paused):
+                // 2.1c, which only the resume command ends. I'm here must not end the proctor's pause.
+                COMMAND: {
+                  guard: { type: "isCommand", params: { type: "pause" } },
+                  target: "proctorPaused",
+                  actions: "assignProctorPause",
+                },
               },
             },
             /** 2.1c: the proctor paused the session; only the resume command ends it. */
@@ -755,9 +768,11 @@ export const studentFlowMachine = setup({
                     exam: ({ context }) => ({ ...context.exam, questionsLoading: false }),
                   }),
                 },
-                onError: { target: "check" },
+                onError: { target: "retry" },
               },
             },
+            /** The load failed: wait before join_exam again (it allows ten tries a minute). */
+            retry: { after: { [QUESTIONS_RETRY_MS]: { target: "check" } } },
             ready: {},
           },
         },

@@ -3,7 +3,7 @@ import { BCP47, formats, LOCALES, type Locale, loadMessages, TIME_ZONE } from "@
 import type { ReactNode } from "react";
 import { IntlProvider } from "use-intl";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import type { ExamModel, FlowUiEvent, Frame, ScreenModel } from "../flow/view-model.ts";
+import type { ExamModel, FlowUiEvent, Frame, JoinModel, ScreenModel } from "../flow/view-model.ts";
 import { FRAMES, fixture } from "./fixtures.ts";
 import { StudentScreen } from "./student-screen.tsx";
 
@@ -89,6 +89,26 @@ describe("every frame in every language", () => {
   });
 });
 
+describe("title bar", () => {
+  it("names the app alone before a join (1.1)", () => {
+    for (const locale of LOCALES) {
+      const { container } = renderFrame("1.1", locale);
+      expect(within(container).getByText(messages(locale).app.name)).toBeTruthy();
+      cleanup();
+    }
+  });
+
+  it("says browser locked while offline only when Üki Lock locked the browser (2.1a)", () => {
+    const locked = fixture("2.1a", "en") as ExamModel;
+    renderFrame("2.1a", "en", locked);
+    expect(screen.getByText(/ · browser locked · offline$/)).toBeTruthy();
+    cleanup();
+    renderFrame("2.1a", "en", { ...locked, browserLocked: null });
+    expect(screen.queryByText(/browser locked/)).toBeNull();
+    expect(screen.getByText(/^Üki · .+ · offline$/)).toBeTruthy();
+  });
+});
+
 describe("Ask proctor", () => {
   it("shows only on 1.3 in Phase 0", () => {
     for (const frame of FRAMES) {
@@ -131,6 +151,28 @@ describe("callbacks", () => {
     const code = screen.getByLabelText(en.join.code.label);
     expect(code.getAttribute("aria-invalid")).toBe("true");
     expect(screen.getByText(en.join.error.body)).toBeTruthy();
+  });
+
+  it.each([
+    ["lobby_closed", "code"],
+    ["rate_limited", "code"],
+    ["network", "code"],
+    ["already_joined", "student ID"],
+  ] as const)("1.1 shows %s from join_exam on the %s field", (error, field) => {
+    renderFrame("1.1", "en", { ...(fixture("1.1", "en") as JoinModel), error });
+    const label = field === "code" ? en.join.code.label : en.join.student_id.label;
+    expect(screen.getByLabelText(label).getAttribute("aria-invalid")).toBe("true");
+    expect(screen.getByText(en.join.error[error])).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(en.join.title);
+  });
+
+  it("1.4 opens the video question to its answer (1.4a)", () => {
+    const kk = messages("kk");
+    renderFrame("1.4", "kk");
+    const answer = screen.getByText(kk.rules.faq.video.answer);
+    expect(answer.hidden).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: kk.rules.faq.video.question }));
+    expect(answer.hidden).toBe(false);
   });
 
   it("the language switch sends SET_LOCALE", () => {

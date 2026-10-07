@@ -38,9 +38,12 @@ import { CAMERA_UNAVAILABLE, cameraRow, SystemCheck } from "../services/system-c
 import {
   type DetectionWant,
   type FlowSnapshot,
+  type FlowStage,
   ingestStatus,
   lockExamState,
+  stageOf,
   wantsDetection,
+  wantsExamWatch,
   wantsHidden,
   wantsIdentity,
   wantsLockdown,
@@ -60,6 +63,8 @@ export const TICK_MS = 500;
 export const SUBMIT_FLUSH_MS = 10_000;
 /** After the receipt, the outbox is checked this often until it is empty, then cleared. */
 export const DRAIN_POLL_MS = 2_000;
+/** retryDelayMs at this attempt (and every later one) is the longest step, 30 s. */
+const LAST_RETRY_STEP = 4;
 
 export function parseSavedJoin(value: unknown): SavedJoin | null {
   if (typeof value !== "object" || value === null) return null;
@@ -141,17 +146,26 @@ export class FlowRuntime {
   private draining = false;
   private restoredSelfPauseSince: number | null = null;
   private rulesPaused = false;
+  private lastStage: FlowStage | null = null;
   private lastDetectionState = "";
   private lastCameraRow = "";
   private lastStatusKey = "";
   private unsubscribePairCode: (() => void) | null = null;
   private readonly applied: {
     lockdown: boolean;
+    watch: boolean;
     hidden: boolean;
     detection: DetectionWant;
     systemCheck: boolean;
     identity: boolean;
-  } = { lockdown: false, hidden: false, detection: "off", systemCheck: false, identity: false };
+  } = {
+    lockdown: false,
+    watch: false,
+    hidden: false,
+    detection: "off",
+    systemCheck: false,
+    identity: false,
+  };
   private readonly onOnline = () => this.sync?.nudge();
   private readonly onOffline = () => this.sync?.probe();
 
@@ -173,6 +187,8 @@ export class FlowRuntime {
       onSubmitted: () => this.send({ type: "LOCK_SUBMITTED" }),
       onEvent: (event) => void this.queueLockEvent(event),
       onDisconnected: () => void this.queueEvent("lock.app_disconnected", { side: "lock" }),
+      // The Lock reads the exam's server times through it (its deadline and countdowns).
+      clockOffsetMs: () => this.clock.offsetMs,
     });
     const machine = studentFlowMachine.provide({
       actors: {
@@ -285,21 +301,25 @@ export class FlowRuntime {
     return output;
   }
 
-  /** join_exam again until the questions come (the exam has started on the server). */
+  /**
+   * join_exam again until the questions come (the exam has started on the server). Every try waits
+   * 2, 4, 8, 16, then 30 s after the last, because join_exam allows ten tries a minute and counts the
+   * refused ones too; a refusal that will not pass soon (the exam was cancelled or closed, another
+   * device holds the session) goes straight to every 30 s.
+   */
   private async loadQuestions(input: SavedJoin): Promise<Question[]> {
     let attempt = 0;
     while (!this.stopped) {
       try {
         const output = await this.joinOnce(input);
         if (output.questions && output.questions.length > 0) return output.questions;
-        attempt = 0;
-        await this.sleep(retryDelayMs(0));
       } catch (error) {
-        const failure = toServiceError(error);
-        if (error instanceof JoinFailure || !failure.retryable) throw error;
-        await this.sleep(retryDelayMs(attempt));
-        attempt += 1;
+        const transient =
+          error instanceof JoinFailure ? error.code === "rate_limited" : toServiceError(error).retryable;
+        if (!transient) attempt = Math.max(attempt, LAST_RETRY_STEP);
       }
+      await this.sleep(retryDelayMs(attempt));
+      attempt += 1;
     }
     throw new Error("stopped");
   }
@@ -409,6 +429,9 @@ export class FlowRuntime {
       onReply: ({ response, sentAt, receivedAt }) => {
         this.clock.update(response.server_time, sentAt, receivedAt);
         this.send({ type: "SESSION_SYNC", session: response.session, serverTime: response.server_time });
+        // The heartbeat's fallback for a lost broadcast: unacked commands apply once by id.
+        const pending = response.pending_commands ?? [];
+        if (pending.length > 0) void this.commands?.deliver(pending).catch(() => {});
       },
       onConnectivity: (state) =>
         this.send({
@@ -491,28 +514,8 @@ export class FlowRuntime {
         })),
       });
     }
-    if (output.session.state === "paused") {
-      const commands = await this.deps.outbox.commands(sessionId).catch(() => []);
-      const last = commands
-        .filter((row) => row.type === "pause" || row.type === "resume")
-        .sort((a, b) => a.issuedAt - b.issuedAt)
-        .at(-1);
-      if (last?.type === "pause") {
-        this.send({
-          type: "COMMAND",
-          command: {
-            id: last.id,
-            type: "pause",
-            payload: (last.payload ?? {}) as { text?: string },
-            issuedAt: last.issuedAt,
-            byName: last.byName,
-          } as FlowCommand,
-        });
-      } else {
-        this.restoredSelfPauseSince = this.serverNow();
-        this.send({ type: "CUE_PAUSED", on: true, reason: "face_missing", at: this.restoredSelfPauseSince });
-      }
-    }
+    // The pause may wait for the server's command list; the Lock's state does not wait for it.
+    const pause = output.session.state === "paused" ? this.restorePause(sessionId) : null;
     const wasLocked = await this.deps.outbox
       .getMeta(metaLocked(sessionId), (v) => (v === true ? true : null))
       .catch(() => null);
@@ -520,6 +523,43 @@ export class FlowRuntime {
       this.lockLink.markLocked();
       await this.queueEvent("lock.app_disconnected", { side: "app" });
     }
+    await pause;
+  }
+
+  /**
+   * The session was paused when the app restarted. A pause command this laptop applied, or one the
+   * server still lists unacked, is the proctor's: 2.1c until the resume command. Only when the server's
+   * list has been read and holds none is it the student's own pause (2.3, I'm here); deciding sooner
+   * would let I'm here end the proctor's pause.
+   */
+  private async restorePause(sessionId: string): Promise<void> {
+    const rows = await this.deps.outbox.commands(sessionId).catch(() => []);
+    const last = rows
+      .filter((row) => row.type === "pause" || row.type === "resume")
+      .sort((a, b) => a.issuedAt - b.issuedAt)
+      .at(-1);
+    if (last?.type === "pause") {
+      this.send({
+        type: "COMMAND",
+        command: {
+          id: last.id,
+          type: "pause",
+          payload: (last.payload ?? {}) as { text?: string },
+          issuedAt: last.issuedAt,
+          byName: last.byName,
+        } as FlowCommand,
+      });
+      return;
+    }
+    // The read retries until it works; a pause among the unacked commands opens 2.1c as it applies.
+    for (let attempt = 0; !(await (this.commands?.catchUp() ?? Promise.resolve(true))); attempt += 1) {
+      if (this.stopped || this.session?.id !== sessionId) return;
+      await this.sleep(retryDelayMs(attempt));
+    }
+    if (this.stopped || this.session?.id !== sessionId) return;
+    if (stageOf(this.actor.getSnapshot()) !== "writing") return;
+    this.restoredSelfPauseSince = this.serverNow();
+    this.send({ type: "CUE_PAUSED", on: true, reason: "face_missing", at: this.restoredSelfPauseSince });
   }
 
   private cameraRow(row: ReturnType<typeof cameraRow>): void {
@@ -532,14 +572,17 @@ export class FlowRuntime {
   private async enqueue(
     build: (seq: number, sessionId: string) => ClientEventEnvelope | EventEnvelope,
     flush = true,
+    fromLock = false,
   ): Promise<void> {
     const session = this.session;
     if (!session) return;
     try {
-      const row = await this.deps.outbox.enqueueEvent(session.id, (seq) =>
-        ClientEventEnvelope.parse(build(seq, session.id)),
-      );
-      if (!flush) return;
+      const envelope = (seq: number) => ClientEventEnvelope.parse(build(seq, session.id));
+      const row = fromLock
+        ? await this.deps.outbox.enqueueLockEvent(session.id, envelope)
+        : await this.deps.outbox.enqueueEvent(session.id, envelope);
+      // A Lock event sent again on a new link was queued before.
+      if (!row || !flush) return;
       if (row.flag) this.sync?.flushNow();
       else this.sync?.kick();
     } catch (error) {
@@ -575,8 +618,11 @@ export class FlowRuntime {
   }
 
   private queueLockEvent(event: Exclude<LockEvent, { type: "exam.submitted" }>): Promise<void> {
-    return this.enqueue((seq, sessionId) =>
-      lockEventToEnvelope(event, { session_id: sessionId, seq, app_version: this.appVersion }),
+    return this.enqueue(
+      (seq, sessionId) =>
+        lockEventToEnvelope(event, { session_id: sessionId, seq, app_version: this.appVersion }),
+      true,
+      true,
     );
   }
 
@@ -606,11 +652,23 @@ export class FlowRuntime {
     const ok = (await this.detection?.resume().catch(() => false)) ?? false;
     if (ok || this.restoredSelfPauseSince === null || this.rulesPaused) return;
     const snapshot = this.actor.getSnapshot();
+    // Only the student's own pause: a proctor's pause that arrived meanwhile ends with resume alone.
+    if (stageOf(snapshot) !== "selfPaused") return;
     if ((snapshot.context.watch.faces ?? 0) < 1) return;
     const pausedMs = Math.max(0, Math.round(this.serverNow() - this.restoredSelfPauseSince));
     this.restoredSelfPauseSince = null;
     await this.queueEvent("session.resumed", { paused_ms: pausedMs, by: "student" });
     this.send({ type: "CUE_PAUSED", on: false, reason: null, at: this.serverNow() });
+  }
+
+  /**
+   * The proctor's resume ended a 2.1c that took over from 2.3: the worker is still paused. It resumes
+   * now (session.resumed, after the proctor's resume) when a face is in view, or 2.3 comes back.
+   */
+  private async resumeAfterProctor(): Promise<void> {
+    const ok = (await this.detection?.resume().catch(() => false)) ?? false;
+    if (ok || !this.rulesPaused || stageOf(this.actor.getSnapshot()) !== "writing") return;
+    this.send({ type: "CUE_PAUSED", on: true, reason: "face_missing", at: this.serverNow() });
   }
 
   /** 3.1 or 2.1d: release the Lock, stop guarding, and clear the outbox once the server has it all. */
@@ -642,12 +700,26 @@ export class FlowRuntime {
     if (this.stopped) return;
     const { bridge } = this.deps;
 
+    const stage = stageOf(snapshot);
+    const previousStage = this.lastStage;
+    this.lastStage = stage;
+    // The proctor's pause ends only with the resume command: no restored self-pause survives it.
+    if (stage === "proctorPaused") this.restoredSelfPauseSince = null;
+    if (previousStage === "proctorPaused" && stage === "writing" && this.rulesPaused) {
+      void this.resumeAfterProctor();
+    }
+
     const lockdown = wantsLockdown(snapshot);
     if (lockdown !== this.applied.lockdown) {
       this.applied.lockdown = lockdown;
       void bridge.exam.lockdown(lockdown).catch(() => {});
-      if (lockdown) this.guard.start();
-      else this.guard.stop();
+      this.guard.watchFocus(lockdown);
+    }
+
+    const watch = wantsExamWatch(snapshot);
+    if (watch !== this.applied.watch) {
+      this.applied.watch = watch;
+      this.guard.scan(watch);
     }
 
     const hidden = wantsHidden(snapshot);

@@ -1,8 +1,8 @@
-// What the app watches during an exam in the app ("Window states" and "System check on 1.2" in
-// docs/phase-0-plan.md): focus leaving the locked window sends tab.blocked with app null at most once
-// per 5 s, and a blocked app or screen-sharing tool that appears mid-exam sends tab.blocked with its
-// name. The main process runs the 15 s process scan (window.uki.checks.watch) and reports only apps
-// that appeared since its previous scan.
+// What the app watches during an exam ("Window states" and "System check on 1.2" in
+// docs/phase-0-plan.md). In both modes a blocked app or screen-sharing tool that appears mid-exam sends
+// tab.blocked with its name: the main process runs the 15 s process scan (window.uki.checks.watch) and
+// reports only apps that appeared since its previous scan. In app exams, focus leaving the locked
+// window also sends tab.blocked with app null, at most once per 5 s.
 import type { UkiBridge } from "@uki/contracts";
 
 /** At most one tab.blocked for a lost focus in this window. */
@@ -18,7 +18,8 @@ export interface ExamGuardOptions {
 export class ExamGuard {
   private readonly options: ExamGuardOptions;
   private readonly now: () => number;
-  private unsubscribers: Array<() => void> = [];
+  private unsubscribeScan: (() => void) | null = null;
+  private unsubscribeBlur: (() => void) | null = null;
   private lastBlurAt = Number.NEGATIVE_INFINITY;
 
   constructor(options: ExamGuardOptions) {
@@ -26,27 +27,45 @@ export class ExamGuard {
     this.now = options.now ?? Date.now;
   }
 
-  get active(): boolean {
-    return this.unsubscribers.length > 0;
+  /** The process scan runs (both modes, from the exam's start until 3.1 or 2.1d). */
+  get scanning(): boolean {
+    return this.unsubscribeScan !== null;
   }
 
-  start(): void {
-    if (this.active) return;
+  /** Lost focus counts (app exams, while locked down). */
+  get watchingFocus(): boolean {
+    return this.unsubscribeBlur !== null;
+  }
+
+  /** Starts or stops the 15 s process scan in the main process. */
+  scan(on: boolean): void {
     const { bridge } = this.options;
-    this.unsubscribers = [
-      bridge.exam.onBlur(() => this.blur()),
-      bridge.checks.onBlockedApps((apps) => {
+    if (on === this.scanning) return;
+    if (on) {
+      this.unsubscribeScan = bridge.checks.onBlockedApps((apps) => {
         for (const app of apps) this.options.onBlocked(app.name);
-      }),
-    ];
-    void bridge.checks.watch(true).catch(() => {});
+      });
+      void bridge.checks.watch(true).catch(() => {});
+    } else {
+      this.unsubscribeScan?.();
+      this.unsubscribeScan = null;
+      void bridge.checks.watch(false).catch(() => {});
+    }
+  }
+
+  /** Starts or stops counting lost focus of the locked window. */
+  watchFocus(on: boolean): void {
+    if (on === this.watchingFocus) return;
+    if (on) this.unsubscribeBlur = this.options.bridge.exam.onBlur(() => this.blur());
+    else {
+      this.unsubscribeBlur?.();
+      this.unsubscribeBlur = null;
+    }
   }
 
   stop(): void {
-    if (!this.active) return;
-    for (const unsubscribe of this.unsubscribers) unsubscribe();
-    this.unsubscribers = [];
-    void this.options.bridge.checks.watch(false).catch(() => {});
+    this.scan(false);
+    this.watchFocus(false);
   }
 
   blur(): void {

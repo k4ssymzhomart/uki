@@ -9,6 +9,8 @@ export const STILL_WAIT_MS = 20_000;
 
 const seqKey = (sessionId: string) => `seq:${sessionId}`;
 const flagsKey = (sessionId: string) => `flags:${sessionId}`;
+/** Ids of the Üki Lock events queued for the session. */
+const lockIdsKey = (sessionId: string) => `lock-ids:${sessionId}`;
 
 export class Outbox {
   constructor(
@@ -91,6 +93,25 @@ export class Outbox {
         });
       }
       return row;
+    });
+  }
+
+  /**
+   * Queues an event from Üki Lock, like enqueueEvent. The Lock sends its whole outbox again on every
+   * new link, with the same ids: an event this session already queued (and perhaps stored and deleted
+   * since) is not queued or counted again, and the result is null.
+   */
+  async enqueueLockEvent(
+    sessionId: string,
+    build: (seq: number) => ClientEventEnvelope,
+  ): Promise<EventRow | null> {
+    return this.db.transaction("rw", this.db.events, this.db.meta, async () => {
+      const { id } = build(await this.nextSeq(sessionId));
+      const seen = await this.db.meta.get(lockIdsKey(sessionId));
+      const ids: unknown[] = Array.isArray(seen?.value) ? seen.value : [];
+      if (ids.includes(id)) return null;
+      await this.db.meta.put({ key: lockIdsKey(sessionId), value: [...ids, id] });
+      return this.enqueueEvent(sessionId, build);
     });
   }
 
