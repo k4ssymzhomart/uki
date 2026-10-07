@@ -1,0 +1,6 @@
+# Only the manifest and the README are committed; every model, wasm and language file comes from
+# `pnpm --filter @uki/detection models` (scripts/fetch-models.ts).
+*
+!.gitignore
+!manifest.json
+!README.md

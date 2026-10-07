@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "files": [
+    {
+      "path": "efficientdet_lite0.tflite",
+      "bytes": 4602795,
+      "sha256": "0720bf247bd76e6594ea28fa9c6f7c5242be774818997dbbeffc4da460c723bb",
+      "source": "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/int8/1/efficientdet_lite0.tflite"
+    },
+    {
+      "path": "face_landmarker.task",
+      "bytes": 3758596,
+      "sha256": "64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff",
+      "source": "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task"
+    },
+    {
+      "path": "human/blazeface.bin",
+      "bytes": 538928,
+      "sha256": "dc9a97fdc50bc43216554bdd69aa3e7b9361a519ee7bdd996a2f69a98a6f9b72",
+      "source": "npm:@vladmandic/human/models/blazeface.bin"
+    },
+    {
+      "path": "human/blazeface.json",
+      "bytes": 79038,
+      "sha256": "cd7bbfc078270572beb39f9e5ae67aadbd50b5e67cff37e6d4f6b3ea39312e5f",
+      "source": "npm:@vladmandic/human/models/blazeface.json"
+    },
+    {
+      "path": "human/faceres.bin",
+      "bytes": 6978814,
+      "sha256": "2c7d2d62b76c97528b736527aa09d310ea71743c9e3e79fb6c62d4b2d73af79b",
+      "source": "npm:@vladmandic/human/models/faceres.bin"
+    },
+    {
+      "path": "human/faceres.json",
+      "bytes": 71432,
+      "sha256": "5b83d49c0385d2e68a05122441b94226313677cae9fcc40b9587ad50079eb4df",
+      "source": "npm:@vladmandic/human/models/faceres.json"
+    },
+    {
+      "path": "tesseract/core/tesseract-core-lstm.wasm.js",
+      "bytes": 3896484,
+      "sha256": "eef5f8b2f8e20e150680b20adaec4a60babafee3adbe8a94583c81fee46e8680",
+      "source": "npm:tesseract.js-core/tesseract-core-lstm.wasm.js"
+    },
+    {
+      "path": "tesseract/core/tesseract-core-relaxedsimd-lstm.wasm.js",
+      "bytes": 3905767,
+      "sha256": "861a536cf9ef8e63cb644d57bab39c388f37f7d6b6f60024b741c5f6b39a59b3",
+      "source": "npm:tesseract.js-core/tesseract-core-relaxedsimd-lstm.wasm.js"
+    },
+    {
+      "path": "tesseract/core/tesseract-core-simd-lstm.wasm.js",
+      "bytes": 3899472,
+      "sha256": "c58b46a4c796c0b8afccf77591d5b875b6896b45d402bbce8caa6f5362447b38",
+      "source": "npm:tesseract.js-core/tesseract-core-simd-lstm.wasm.js"
+    },
+    {
+      "path": "tesseract/lang/eng.traineddata",
+      "bytes": 4113088,
+      "sha256": "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2",
+      "source": "https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/main/eng.traineddata"
+    },
+    {
+      "path": "tesseract/worker.min.js",
+      "bytes": 111307,
+      "sha256": "576b7df7e3393e137e51849357c9adb53fe7ac1bb69bfa06cf3d61520f182c6d",
+      "source": "npm:tesseract.js/dist/worker.min.js"
+    },
+    {
+      "path": "wasm/vision_wasm_internal.js",
+      "bytes": 335393,
+      "sha256": "7c652617b5bef832f42878ce8c5f752b0724bca6054e4bc1013a37d4b1949723",
+      "source": "npm:@mediapipe/tasks-vision/wasm/vision_wasm_internal.js"
+    },
+    {
+      "path": "wasm/vision_wasm_internal.wasm",
+      "bytes": 12997248,
+      "sha256": "782eda3ec1f414fdb4f1d66a8b59093eb4d5ab437e06117796abf05962d68eef",
+      "source": "npm:@mediapipe/tasks-vision/wasm/vision_wasm_internal.wasm"
+    },
+    {
+      "path": "wasm/vision_wasm_module_internal.js",
+      "bytes": 335431,
+      "sha256": "70eff3956521b7de058d7173a4935c95e4a223c26ea624b9f5a936d3a043dcb0",
+      "source": "npm:@mediapipe/tasks-vision/wasm/vision_wasm_module_internal.js"
+    },
+    {
+      "path": "wasm/vision_wasm_module_internal.wasm",
+      "bytes": 12997272,
+      "sha256": "ee03b14a878e6c3c053a1bfa62e166dc45244be54dc0bbe61c578f710b771f6a",
+      "source": "npm:@mediapipe/tasks-vision/wasm/vision_wasm_module_internal.wasm"
+    }
+  ]
+}

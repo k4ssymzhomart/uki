@@ -1,0 +1,31 @@
+{
+  "name": "@uki/detection",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./worker": "./src/worker.ts",
+    "./identity": "./src/identity.ts",
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p .",
+    "test": "vitest run",
+    "models": "tsx ../../scripts/fetch-models.ts",
+    "models:verify": "tsx ../../scripts/fetch-models.ts --verify"
+  },
+  "dependencies": {
+    "@mediapipe/tasks-vision": "^1.1.0",
+    "@uki/contracts": "workspace:*",
+    "@vladmandic/human": "^3.3.6",
+    "tesseract.js": "^7.0.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.1",
+    "@uki/config": "workspace:*",
+    "typescript": "~5.9.3",
+    "vitest": "^5.0.3"
+  }
+}
