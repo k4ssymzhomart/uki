@@ -106,3 +106,296 @@ The title bar's ҚАЗ, РУС and ENG switch (frame 2.1, App/Title bar 150:1335
 - `NSCameraUsageDescription` uses the catalog's `join.privacy` English text; a test keeps them equal.
 - WXT's dev server runs on 5183 (3000 is the dashboard); `pnpm dev` opens no browser.
 - Next.js telemetry is disabled (`NEXT_TELEMETRY_DISABLED=1`), as CLAUDE.md allows no third-party analytics.
+
+## 2026-10-07 · Desktop main process and packaging
+
+Decided by the WP 0.6 agents and the hardening run.
+
+- The `window.uki` bridge, which the plan prints word for word, has five more members: `checks.cameraAccess()`, `checks.watch(on)`, `checks.onBlockedApps(cb)`, `lock.onStatus(cb)` and `lock.onPairCode(cb)`. The plan's bridge had no way to ask for the camera, start or stop the 15 s exam-time scan, push newly opened blocked apps, or show the relay's status and pairing code on the app's card. Zod still checks every call at the IPC boundary.
+- The packaged app is named "Uki" in ASCII: bundle, executable, helpers, `/Applications/Uki.app` and installers `Uki-<version>-<arch>.<ext>`. With `productName: Üki` the macOS app died at launch with SIGTRAP ("Unable to find helper app"): the helper bundles were written with a decomposed Ü, while Electron looks them up with the precomposed `CFBundleName`. An ASCII rebuild runs. People still see Üki: `CFBundleDisplayName`, the NSIS `shortcutName` and `uninstallDisplayName`, and `app.name` (from `package.json`), which keeps the userData folder named Üki.
+- macOS lockdown calls `app.focus({ steal: true })` first and passes `skipTransformProcessType: true` to `setVisibleOnAllWorkspaces`. If the window is not full screen 1.5 s later, it enters kiosk again, at most twice. Before this, kiosk failed in 1 of 3 live rounds; after it, 4 of 4 passed.
+- Close and quit are refused in lockdown, in tray mode, and while the exam's process scan runs, so 2.1c, 2.1e and an offline submit are covered too. In tray mode, closing the window hides it. Tray mode alone was not enough: it turns off on those screens, and the review found a student could quit mid-exam. The development escape (Cmd/Ctrl+Shift+Q) also stops the scan.
+- Lockdown blocks more shortcuts than the plan lists: hide, minimise, new window, the full-screen toggle, Cmd/Ctrl+Shift+Q, Ctrl+F4 and Alt+F4. It also resets Ctrl+wheel zoom.
+- Packaged builds refuse to start with `--remote-debugging-*`, `--inspect*`, `--use-fake-device-for-media-stream` or `--use-file-for-fake-video-capture`. A debug port would let another program call `exam.lockdown(false)`, and a fake camera would feed recorded video to detection. No fuse covers these switches.
+- Packaged builds have their own menus: on macOS only the app, Edit and Window menus (no reload, DevTools or zoom), and on Windows none.
+- The main process inserts the receipt's print style around `printToPDF`. The renderer only marks the card with `data-uki-print="receipt"` and `data-uki-receipt-id` (used for the file name).
+- Development-only switches for a shared Mac: `UKI_USER_DATA_DIR`, `UKI_DEV_IGNORE_APPS` (skips the blocked-app scan) and `UKI_DEV_NO_KIOSK` (quit stays blocked, the screen stays free). Packaged builds ignore them.
+- Fuses stay in the `afterPack` hook, not in electron-builder's `electronFuses` option. In app-builder-lib 26.15.3 both run at the same point and give the same fuse wire on Electron 44. The hook uses the app's own `@electron/fuses` 2.1.3 and resets the ad hoc signature on macOS only.
+- The built CSP stays exactly the plan's, with no `style-src`. A production build logged no style violations on any of the 14 frames in kk, ru or en. Only the UI kit's Dialog, Select and modal menus need inline styles, and `src/shared/csp.test.ts` fails if the student window imports one of them before the policy changes.
+
+## 2026-10-07 · Desktop flow
+
+Decided by the WP 0.6 agents and the review repairs.
+
+- The app never sends `exam.submitted` or `exam.time_up`; the server writes both (see Database). When the Lock reports `exam.submitted`, the app calls `submit_session` and `lock.release`. It accepts that event only for its own session, only while a browser-mode lock is held, and only once per event id.
+- Three fixed numbers moved into `THRESHOLDS` in contracts, so detection and the app share them: `phone.warningClearMs` 2000, `performance.lowFpsInput` 480 × 360 and `systemCheck.uniformMaxStd` 6.
+- Pauses:
+  - Detection goes idle during a proctor pause (2.1c), so a self-pause cannot end the proctor's.
+  - A pause command that arrives during 2.3 opens 2.1c, and the self-pause ends there.
+  - After a restart into a paused session, the app first reads the server's unacked commands and shows 2.3 only if none of them is a pause.
+  - `session.resumed` is sent only from 2.3.
+- Commands come over `session:{id}`, with the ingest reply as a fallback (see "Session commands and status detail"). Each is applied once by id and acked.
+- Added minutes are counted per command id. The end uses whichever is larger: the server's `extra_min`, or the join's value plus the applied commands. So a late reply cannot take minutes back.
+- A message or add_time that arrives before 2.1 is kept and shown as 2.1e when 2.1 opens.
+- The language switch works on every frame, as Figma draws it in every title bar. The choice is kept in localStorage and in the saved join.
+- 2.1a shows 5 s after the first failed or unanswered call. The window's offline event starts a probe at once, so 2.1a appears after about 5.3 s instead of at the next 10 s heartbeat, and `net.offline.offline_ms` covers the whole cut.
+- Outbox rules the plan left open:
+  - When the server refuses a batch of answers, they are resent one at a time and only the refused ones are set aside.
+  - A 400 on an event batch narrows to one event and sets that one aside.
+  - A still that was never captured is given up 20 s after its time.
+  - Submit waits at most 10 s for the outbox, then calls `submit_session` with the 2/4/8/16/30 s backoff.
+- Üki Lock link:
+  - On 1.4 the Lock is told `lobby` until the exam can really start, so Lock and start stays off until the box is ticked.
+  - `lock.start` is resent on every Lock hello, and whenever a Lock becomes paired, until `lock.started` comes back.
+  - Lock event ids are remembered per session (outbox meta `lock-ids:<session>`), so a resent event is neither queued nor counted twice.
+  - While the browser is locked, the link counts as up only when the paired install that sent `lock.started` is connected. An unpaired Lock counts as down. After an app restart, when the app does not know which install locked the browser, any paired Lock counts.
+- The 15 s process scan runs in both exam modes, from the start until 3.1 or 2.1d; in browser exams the start is `lock.started`. Lost focus (`tab.blocked {app: null}`) is still reported in app exams only.
+- Question loading backs off 2, 4, 8 and 16 s, then retries every 30 s. A permanent failure (`invalid_code`, `lobby_closed`, `already_joined`, other 4xx) keeps the spinner up and retries every 30 s, because no frame or key exists for that error.
+- A detection worker that fails to start (for example, missing models) shows as a failed 1.2 camera row. The catalog has no line for it.
+
+## 2026-10-07 · Desktop screens
+
+Decided by the WP 0.6 screens agent and the hardening run. Design to draw the three states without a frame (last bullet).
+
+- The catalog wins over frame text in five places: the 1.3 face row (`identity.face.ok`), the 1.3a hint pill (`identity.help.hint`), the 1.3a banner body (`identity.help.privacy`), the 2.1c log detail (`event.proctor_paused.detail`) and the 3.1 flags line (`done.flags.value`).
+- Ask proctor shows on 1.3 only, as the plan says for Phase 0; Figma draws it in every exam footer.
+- 1.3 Continue stays disabled until the card matches. Figma draws it enabled while the card row still says Checking.
+- The 1.2 and 1.3 face frame is eight placed lime dashes, because a CSS dashed border cannot draw Figma's long gaps.
+- Under 1280 px the camera preview shrinks to 400 × 323 (no frame shows that size). At 1024 × 700 the right column of 1.2 to 1.4 scrolls when Kazakh or Russian copy wraps.
+- The question bar fills n / total, and the timer bar fills time left / exam length. Figma's fixed bar lengths match no field.
+- The proctor appears as first name and initial ("Aigerim S.") on 2.1c, 2.1d and 2.1e, as Figma writes it. `shortName` in `@uki/ui` makes the short form and keeps digraphs such as "Zh".
+- The E.3 pairing card floats over the lower left of 1.1 to 1.4 rather than opening a second window, so it has no title bar. Its radius is the 16 px token, because Figma's 14 px has no token.
+- 1.1's title bar reads "Üki" (`app.name`), and the 1.4 FAQ shows its own answer (`rules.faq.video.answer`).
+- No frame exists for three states: join errors (`already_joined` under the student ID; `lobby_closed`, `rate_limited` and `network` under the exam code, as in 1.1a), the offline title for exams without the Lock (`app.title.offline_unlocked`; "browser locked" only when the Lock has locked it), and the pairing card for an exam on another day (`pair.card.when.date`).
+
+## 2026-10-07 · Üki Lock
+
+Decided by the WP 0.8 agent and the review repairs.
+
+- The redirect rule's `regexFilter` is `^https?://([^/:?#]+).*$`. Chrome replaces only the matched part of the address, so the plan's filter produced `blocked.html?host=127.0.0.1:5181/physics-1/...`; the smoke test caught it.
+- The manifest adds an `icons` key. The toolbar icon switches between off, ready and locked images drawn from Figma 89:2491.
+- Content-script fonts are inlined, so `blocked.html` stays the only web-accessible resource.
+- Popup states with no frame reuse existing keys:
+  - the app is absent (`lock.pair.open_app.*`);
+  - paired and idle, which is also the view for app exams, because E.4 is for browser exams;
+  - locked: time left and the allowed host. E.8's list is Phase 1.
+- The popup header is `lock.name`. The device line is `lock.pair.device` with `os.macos` or `os.windows`; it has no OS version, because the app's hello carries none.
+- E.4: the Üki app row and the Screen sharing row always pass, because the Lock cannot see either and the app's 1.2 already checked them. Other extensions is hidden (Phase 2).
+- Copy guard:
+  - E.6 shows on every cancelled attempt; the event goes out once per kind per 10 s.
+  - A context-menu attempt shows the toast but sends no event, because CopyKind has no context-menu kind.
+  - `window.print()` cannot be cancelled from the isolated world, so a print style blanks the page and the beforeprint event is logged as print.
+- Rules 3 to 5 (copy guard, full screen, focus) apply to browser exams only. A full-screen exit counts only after the window has been seen in full screen. A browser that never grants full screen is asked 3 times, and nothing is logged.
+- During a browser lock:
+  - file://, chrome:// and data: pages in any tab go to the block page and are logged as `tab.blocked {host: null}`. The redirect rule cannot see these pages.
+  - Lock and start also closes tabs in popup, app and incognito windows. Popup and app tabs come back as normal windows at release; incognito addresses are never saved.
+  - Focus on another window whose page is not allowed counts as leaving the browser.
+- The release at end + 2 min is now only a fallback for when the app is gone:
+  - It runs on server time: the app sends `clock_offset_ms` with every `exam.state`.
+  - It is skipped while the paired app reports the locked session as ready, writing or paused.
+  - `lock.released` carries a `trigger` (done_path, app, exam_done or deadline).
+  - A deadline release while the app still holds the lock is logged as `lock.app_disconnected {side: "lock"}`.
+  - The bar and popup receive times converted to the laptop clock, so their countdowns are right.
+- The Lock's outbox is scoped to the locked exam. `lock.event` carries `session_id`. Events go only to an app whose `exam.state` names that exam, and other exams' events are dropped. Before this, exam A's stored `exam.submitted` could submit exam B.
+- Relay:
+  - One Lock at a time, with one exception: while the connected Lock has said hello and is not paired, a second may connect and wait. If the second is the paired install, it takes the slot.
+  - While an exam holds the browser, pairing requests get `pair.fail "no_code"`.
+  - A wrong code is used up.
+  - `extension://<id>` is also accepted for the same id, in case Edge reports that origin.
+- New optional fields in the Lock messages: `exam.state.clock_offset_ms`, `lock.event.session_id` and `lock.released.trigger`.
+- The mock portal has 5 questions; Figma draws 10. Its English and Russian copy lives in its own messages file and is rendered through `t(key)`, outside the Üki catalog, so the GritQL i18n rule still covers it.
+- Local only: allowed hosts ignore ports, as declarativeNetRequest domains do. Allowing localhost:5180 in a local browser exam also allows the dashboard on localhost:3000.
+
+## 2026-10-07 · Dashboard shell: sign-in, overview and lobby
+
+Decided by the WP 0.7 agent and the review repairs.
+
+- "Keep me signed in for 12 hours" is checked by default, as Figma draws it. @supabase/ssr always writes a 400-day cookie, so the server client, the proxy and the browser client rewrite every auth cookie's lifetime from a non-secret `uki-auth-lifetime` cookie: 12 hours from sign-in when checked, a session cookie otherwise.
+- Only staff can sign in. The action looks for a `staff` row under RLS and signs anyone else out again.
+- 0.1 has a Live filter tab: Figma draws All, Upcoming, Live and Done, while the plan lists three. The search field and the bell are hidden on every page, because nothing backs them.
+- About 40 dashboard keys have no Figma source: sign-in errors, labels, empty tables, lobby steps and chips, and start errors. A few generalise Figma strings, for example "Card unreadable · retry {attempt} of {max}".
+- Lobby:
+  - Ready means state rules or ready.
+  - Need help means a check-in state (joined, checking or identity) with a `status.detail`; `student.help_requested` is not counted.
+  - Details without a Figma string (Lock, network, storage, other camera problems) show Need help with no detail line, and raw detail text is never shown.
+  - `card:help:<n>` reuses the "retry 3 of 3" string, where 1.5b draws "3 of 3 tries".
+- The 1.5 device column shows "<OS> · Üki <version>". The app collects neither the OS version nor the network type (Figma: "macOS 14 · Wi-Fi").
+- The lobby's minutes-left line and the Start exam gate use server-corrected time (see "Live wall").
+- The A.0 background is WebP q96 at 1536 × 1024 (1.92 MB to 168 KB). It keeps the film grain, which the Next.js optimizer's q75 output had turned into visible blocks.
+- The i18n build's emoji check allows ©, ® and ™. Before, `\p{Extended_Pictographic}` matched ©, so Figma's footer failed the build.
+
+## 2026-10-07 · Live wall and timeline drawer
+
+Decided by the WP 0.7 agents, the hardening run and the review repairs.
+
+- 2.4a: a click anywhere on the tile opens the menu. The ⋯ button replaces the status dot on hover, focus and while the menu is open, and the menu opens 12 px in from the tile, as Figma draws it. Watch camera and Mark reviewed stay hidden.
+- 2.4c adds time for everyone only, because add_time is a group command, so Figma's single-student option is left out. The new end is the exam end plus the smallest `extra_min` among sessions that a group command reaches (rules, ready, writing, paused). A student still checking in no longer hides the extension.
+- 2.5:
+  - The student's three presets are tabs in the student's language, with Russian and English below; Figma shows one preset in three languages.
+  - "Q 7 of 20" works for proctors too, through `exam_question_count`.
+  - The evidence card says "Held for 6 s". Figma's "put away after the warning" has no data behind it.
+- Event wording follows 2.4 and 2.5 where they show the event, and the Event names card (212:2039) otherwise.
+- Gendered copy ("Keep him writing", "sent in her language") is an ICU select on a pronoun guessed from the surname ending: -ova, -eva, -ina and -kyzy give she; -ov, -ev, -in and -uly give he. Any other surname gets them/their, which Figma does not show; Design to confirm.
+- A Done tile uses the ok look with the final state in its line. No signal uses the paused look.
+- A group command writes one proctor event per student. The feed shows it once, grouped by `data.group_id`, so a group command cannot push flags out of the 100-row cap.
+- The drawer is a custom `role=dialog`, because apps/web has no Radix dependency. Stills use `<img>`, so their signed 5-minute URLs never pass through the Next.js image cache.
+- Loading:
+  - The first render loads 60 minutes of flags and log events, plus every older `phone.detected` and `face.second`, so an old flag still marks its tile Flagged.
+  - The cap of 300 events per session never drops phone, second-face or pause events.
+  - Besides the catch-up on subscribe and focus, the wall re-reads events and sessions every 20 s, looking back 60 s. Realtime lost broadcasts while its replication restarted, and the channel stayed SUBSCRIBED, so no catch-up ran.
+  - A catch-up read does not overwrite a session that a `session` message changed while the read was in flight; the lobby does the same.
+- Clock:
+  - The dashboard reads the `Date` header of two HEAD requests to `<supabase>/rest/v1/` with the publishable key. It keeps the faster reply and drops round trips over 2 s.
+  - It applies the offset only when the gap is over 2 s. Without a usable reply it keeps the browser's clock.
+  - This replaces the page's render time, which counted page-load time as clock skew.
+
+## 2026-10-07 · Scripts and CI
+
+Decided by the infra agent and the hardening run.
+
+- `demo:simulate` creates no auth users. It inserts sessions with the secret key, each bound to a random `auth_uid`, and drives them through the service-only `ingest_batch`. Submit copies `submit_session` in two writes. Reasons: the cloud allows 30 anonymous sign-ins an hour per IP, and this leaves nothing to clean up.
+- Simulated flags carry no stills, because fake images would be fake evidence. Every simulated session has `device.simulated = true`.
+- `demo:reset` also restores the two demo durations (90 and 40 minutes) and, when `SEED_LMS_URL` is set, Physics 1's `lms_url`. It keeps audit rows and anonymous users.
+- Root scripts beyond the plan: `guards`, `typecheck:scripts`, `test:scripts`, `typecheck:e2e`, `env:local`, `models`, `models:verify`, `e2e:load` and `test:integration:desktop`. `pnpm check` also runs the guards, the scripts and e2e type checks, and the scripts tests.
+- The desktop stack test is a separate script. Appended to `test:integration`, it would receive the `--project functions-unit` argument meant for Vitest.
+- Guards and Biome:
+  - The colour guard ignores `sizes=` and `media=` values (responsive-image hints).
+  - The GritQL plugin uses absolute-path globs (`**/apps/*/src/**/*.tsx`), because Biome 2.5 matches plugin includes against absolute paths.
+  - The plugin's messages are plain ASCII, because Grit garbles text after an escape or a non-ASCII character.
+  - `biome.json` now uses `preset: "recommended"`.
+- CI:
+  - The stack job starts Supabase without vector, logflare, imgproxy, edge-runtime and studio. The CLI matches image names, so "analytics" would exclude nothing.
+  - It then runs `functions serve`, `seed:staff`, the integration tests, the desktop stack test and `pnpm e2e`.
+  - The build job also builds Üki Lock and runs its smoke test headless.
+  - `deploy-supabase.yml` runs in a GitHub environment named `cloud`, reads `UKI_ALLOWED_ORIGINS` from a repository variable and honours `DEPLOY_FREEZE`.
+  - `desktop-dist.yml` builds both macOS architectures in one job.
+  - gitleaks-action needs `GITLEAKS_LICENSE` on an organisation account.
+- Both Vercel projects install with a filter (`web...` and `lms-mock...`), so Electron and WXT are never downloaded.
+- The i18n build's turbo inputs are `dashboard*.json`, so editing `dashboard-wall.json` is not served from the cache.
+- The README clone steps drop `cp .env.example` and `db:reset`: `pnpm env:local` writes `.env`, and the first `supabase start` loads the seed.
+- `scripts/lib/perf/ingest-load.ts` is a load tool for the local stack only. It sends N students through the function or straight to the RPC and reports p50, p95 and p99, event-to-broadcast time, worker retirements and Server-Timing phases.
+
+## 2026-10-07 · End-to-end tests
+
+Decided by the e2e and desktop agents.
+
+- `pnpm e2e` covers more than the plan's list. It also checks who sees which exam: the exam office sees all of them, a proctor sees only assigned ones, and another exam's proctor is refused by the pages, by RLS on 9 tables and by Realtime.
+- The wall-under-load run has its own config (`pnpm e2e:load`, with `UKI_E2E_LOAD_SECONDS` and `UKI_E2E_START=1`). It runs for minutes and writes 120 sessions to Mathematics 2. Its 1 s budgets are soft, so a single run reports every leg that misses.
+- Latency is measured on the host clock: the event's `at`, Realtime frames stamped in the page, and DOM changes. The Docker VM clock ran 0.3 to 1.9 s behind the host, so `received_at` is not used for timing.
+- The desktop e2e (`pnpm --filter desktop e2e`):
+  - It makes its own fixture exam in a `desktop-e2e-*` workspace, copying Mathematics 2's title, its 20 questions and Madina at seat 23. The seeded exam was already live, so `start_exam` would refuse it.
+  - Its camera is a canvas stream drawn from the brand evidence pictures, with a student card on 1.3. This code is compiled only into development and `--mode e2e` builds; the production build was checked and contains none of it.
+  - A stand-in Lock pairs on the app's socket.
+  - `UKI_E2E_OFFLINE_S` sets the length of the network cut (default 20 s; criterion 8 needs 120), and `UKI_E2E_KIOSK=1` runs real kiosk mode.
+- On the loaded shared stack the tests retry the way a person would: Check again on 1.2, Continue after a network error, a command re-sent after a 5xx, sign-in again after an Auth 504, and a new Realtime join. Each retry is recorded, and latency is timed from the attempt that worked.
+
+## 2026-10-07 · Catalog: 13 keys added (225 to 238), six renames
+
+Added by the hardening run; a Kazakh and a Russian speaker must review them (native review needed).
+
+- New keys:
+  - `app.name` ("Üki") and `lock.name` ("Üki Lock");
+  - `os.macos`, `os.windows` and `lock.pair.device`;
+  - `app.title.offline_unlocked`;
+  - `pair.card.when.today` and `pair.card.when.date`;
+  - `join.error.already_joined`, `join.error.lobby_closed`, `join.error.rate_limited` and `join.error.network`;
+  - `rules.faq.video.answer`.
+- Source `added` means a frame shows the text, and `added-not-in-figma` means it does not. The seven keys with source `added` are `app.name` (1.1, E.3 95:9379), `lock.name` (popup header 92:2533), `os.macos`, `os.windows` and `lock.pair.device` (E.3 95:9192), `pair.card.when.today` (E.3 95:9394) and `rules.faq.video.answer` (1.4a 87:8156). The other six are `added-not-in-figma`.
+- Kazakh and Russian are first-pass translations, and every note says a native speaker must review them.
+- `rules.faq.video` becomes `rules.faq.video.question` in code, so the answer can be `rules.faq.video.answer`. That makes six renames; the plan's Localization section says five, and 222 keys.
+- Still without keys:
+  - a label for an "Open camera settings" button on 1.2;
+  - 2.3 copy for a lost camera;
+  - 1.2 camera failure details per problem;
+  - a 1.3 line for models that failed to load;
+  - "Your timer is stopped." on its own;
+  - a generic proctor noun for when no name is known.
+
+## 2026-10-07 · Kazakh number and date formatting
+
+Decided by the hardening run.
+
+- Electron 44 (Chrome 152, ICU 78.2) and Chromium accept `kk-KZ` but format with root data: 0.94 stays "0.94", and a date reads "M10 9, Fri". Node has full ICU, so the unit tests did not see this.
+- `@uki/i18n/polyfill` is the first import in the desktop renderer and in every Lock entry (popup, block page, content script).
+  - It tests what the runtime actually prints: a decimal comma, a Kazakh month name and the Kazakh plural "one". Checking `resolvedOptions().locale` is not enough.
+  - Where a test fails, Kazakh number and date formatting, `toLocale*String` included, goes to FormatJS with Kazakh-only data and Asia/Almaty.
+  - Russian and English stay native, and Node is untouched. Plurals are already right natively, so the plural polyfill loads only if its test fails.
+- A generator writes the data (`pnpm --filter @uki/i18n kk-intl-data`), and a unit test fails when the data falls out of date.
+- The data is trimmed to save about 100 KB: time-zone names for Asia/Almaty and UTC only, and only the fallback pattern for date ranges. A Kazakh date in any other zone stays native: the time is right, but the names are not Kazakh.
+- The bundle is 243,669 bytes, of which 75 KB is Kazakh data, against a 280 KB budget. `@formatjs/intl-getcanonicallocales`, `@formatjs/intl-locale` and `@formatjs/intl-relativetimeformat` are not added: Electron 44 and Chrome 127+ have the first two natively, and nothing uses relative time.
+
+## 2026-10-07 · Session commands and status detail
+
+Decided by the hardening run (migration `20261007200000_command_followups.sql`).
+
+- `session_commands` gains `by_name`, `group_id` and `request_id` (unique per session). `issue_command` fills `by_name`, and a trigger fills it for `start_exam`'s rows. Students cannot read staff names, so 2.1c, 2.1d and 2.1e can now name the proctor after a reconnect.
+- `issue_command` takes `p_request_id`, a UUIDv7; the command function makes one when the dashboard sends none.
+  - A repeated id returns the first call's ids and writes nothing.
+  - Reuse by another staff member, or for another command type, is 409.
+  - This makes a single retry after 502, 503 or 504 safe. It replaces "`issue_command` is not retried" in the Edge Functions entry.
+- One group call shares one `group_id` across its rows, the data of every `proctor.time_added` and `proctor.message` event, and the audit row.
+- Command fallback in ingest: every reply carries up to 20 unacked commands (`pending_commands`, oldest first, in the CommandBroadcast shape). A command whose Realtime broadcast was lost therefore reaches the app with the next heartbeat, within about 10 s. A row that fails the schema is dropped and logged and never fails the reply.
+- `exam_question_count(exam_id)` is security definer: exam staff get the count and everyone else gets null. `exam_overview` gains `question_count`.
+- `sessions.status.detail` has one vocabulary, in `packages/contracts/src/status-detail.ts`:
+  - `app:<name>` for blocked and screen-sharing apps;
+  - `camera:busy`, `camera:no_face`, `camera:many_faces`, `camera:dark` and `camera:covered`;
+  - `card:retry:<n>` and `card:help:<n>`;
+  - `lock:not_paired`, `network:slow`, `network:offline` and `storage:low`.
+  Ingest answers 400 to any other text; reads stay lenient. The app sends `camera:busy` when there is no camera picture, and `card:retry:<n>` after each failed card try, so the lobby shows Need help from the first failed try, as 1.5 draws it. The simulator writes the same strings.
+
+## 2026-10-07 · Ingest performance
+
+Decided by the hardening run (migrations `20261007210000_ingest_performance.sql` and `20261007221100_ingest_last_seen_every_call.sql`).
+
+- `ingest_batch` takes `p_owner` and checks the session owner itself (not_found, or 42501 forbidden). So one ingest call is one PostgREST request and one transaction. `frames` keeps its own owner check.
+- A quiet call writes nothing: no lock, no WAL, no `session` broadcast. Quiet means no events, the same status, no step forward, and a stored `last_seen_at` less than 10 s old. Every other call writes `last_seen_at`, while the plan says every call does.
+  - The desktop app sends empty calls 10 s or more after its last reply, so all of its calls write.
+  - Only the simulator and the load tool (calls 8 to 12 s apart) skip writes. Their `last_seen_at` lags by up to 10 s, so their No signal can show up to 10 s early.
+- On the local stack, a quiet heartbeat went from 1 row version, 1 broadcast row, 2 transaction ids and about 0.75 KB of WAL to none of these. A 3-event batch went from about 5.4 to 4.2 KB of WAL.
+- The session row is locked `FOR NO KEY UPDATE`, so answer and event inserts no longer wait behind heartbeats.
+- The ingest limit of 10 calls a second is kept per session and caller, so a stranger cannot use up the owner's allowance.
+- Every Edge Function reply has a `Server-Timing` header. It holds durations only: auth, body, handle and the handler's own calls, reply, total, and boot on a fresh isolate.
+- `retryOnGateway` no longer retries PostgREST's PGRST003 pool timeout (504). A second try only doubled the wait; the caller now gets a 500, and the app's outbox backs off.
+- The 1 s wall budget is still missed on this shared laptop (see the exit evidence). The long tails come from the local edge runtime (worker retirements, cold boots, out-of-memory kills) and the overloaded host. Judge the budget on a quiet machine or on the cloud project.
+
+## 2026-10-07 · Review fixes: pause credit, answers after the end, still uploads
+
+Decided by the review repairs (migrations `20261007213000_pause_credit_server_only.sql` and `20261007221000_answers_until_real_end.sql`).
+
+- Pause credit:
+  - A client's `session.paused` accepts only `face_missing` or `camera_lost` (`ClientPauseReason`), and ingest answers 400 to `proctor`.
+  - Only the server's `proctor.paused` counts as a proctor pause in `events_broadcast` and `pending_pause_s`. Every other pause is capped as a self-pause.
+  - The plan's Event data lists `proctor` as a `session.paused` reason, but its Session states section says a forged event cannot add time, and that wins. Before the fix, a client pause with reason `proctor` gave back a whole hour.
+- Answers RLS: for a session a proctor ended, or the student submitted, an answer must be saved before `ended_at` or `submitted_at` and must arrive within 10 minutes after it. Writing, paused and time_up sessions keep the scheduled end plus 10 minutes.
+- Still uploads:
+  - Upload URLs are signed without upsert, so a URL cannot replace a confirmed still.
+  - Storage also refuses to sign a path that already holds an object (400 with statusCode "409"), so ingest confirms such a still itself and offers no URL for it.
+  - The plan says ingest returns URLs for every flag event whose stills are not all confirmed. Now it returns URLs only for stills not yet in Storage.
+  - The app treats "already exists" as uploaded. Ship the desktop build and the ingest function together, or an older app keeps resending the event to get a URL.
+
+## 2026-10-07 · UI kit polish
+
+Decided by the hardening run. Design to sign off the three icon changes.
+
+- The Dialog scrim is `bg-inverse/40` in both themes, because Figma 2.4e draws a light paper wash over the dark wall.
+- StudentTile has a `trailing` slot for the ⋯ button, and ActionMenu passes `sideOffset` and `alignOffset` through.
+- TabGroup has two variants: `outlined` (the default, used by the title-bar language switch) and `plain`. Plain is used on 0.1, 1.5, the 2.4 toolbar, the 2.5 presets and SegmentChoice, where Figma draws no stroke.
+- A TableHeaderCell is now 38 px tall (component 149:2763). 0.1 and 1.5 keep the 36 px and 33 px rows their frames draw.
+- LiveWidget has an `offline` state (2.1a). The gap between its text and dot is Figma's 36 px, so every widget is 14 px wider than before. Its text wraps when space is short, where Figma clips a single line.
+- Icons:
+  - `phone-off` is Lucide VibrateOff, the only Lucide phone with Figma's top-left to bottom-right slash; it adds vibration marks.
+  - `gaze` is Disc at 0.85; this replaces CircleDot in the UI kit entry.
+  - `square` and `stop` are Square scaled to 14/24 and 12/24 by a new `inset()` helper, which keeps the stroke at 2 px.
+- The 1.1 desk scene is WebP q92 at 1040 × 693, twice its display width (1.29 MB to 45 KB).
+
+## 2026-10-07 · Detection thresholds: evidence so far
+
+Recorded by the hardening run; you tune both on the demo laptops.
+
+- Phone: EfficientDet-Lite0 int8 scored a clearly held phone (the brand kit's evidence picture through the e2e's synthetic camera) at 0.77 on every check, below the 0.85 default. With the defaults, no `phone.detected` fires. The desktop e2e lowers its exam's `phone_score` to 0.7 so that the 2.2 path runs.
+  - Tune on real phones on both laptops.
+  - Put the chosen value into the `exams.checks` defaults: `DEFAULT_EXAM_CHECKS.phone_score` in contracts, plus the column default in a new migration. Code constants stay unchanged.
+  - Record the value here.
+- Identity: in the e2e, a card made from the student's own enrolment photo matched at 0.93 on the first try. Earlier, a different person's low-resolution photo passed the 0.5 threshold at 0.53. Neither run used a real camera and a printed card.
+  - Tune `THRESHOLDS.identity.minSimilarity` on the two printed cards; about 0.6 may be needed.
+  - Record the value here.

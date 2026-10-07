@@ -17,6 +17,7 @@ Create `.env` in the repository root with the cloud project's **public** values 
 VITE_SUPABASE_URL=https://<project-ref>.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 VITE_LOCK_EXTENSION_ID=<the fixed Üki Lock id from LOCK_DEV_PUBLIC_KEY>
+VITE_EXAM_OFFICE_EMAIL=<the exam office address for 2.1d Exam ended; exams@kru.test in .env.example>
 UKI_ALLOW_CAPTURE=0
 ```
 
@@ -24,8 +25,8 @@ Then fetch the models, verify them and build:
 
 ```sh
 pnpm models && pnpm models:verify      # 59 MB; refuses any file whose SHA-256 differs from the manifest
-pnpm --filter desktop dist             # macOS: one dmg per architecture (arm64, x64) in apps/desktop/release/
-                                       # Windows: apps/desktop/release/Üki Setup <version>.exe
+pnpm --filter desktop dist             # macOS: Uki-<version>-arm64.dmg and Uki-<version>-x64.dmg in apps/desktop/release/
+                                       # Windows: apps/desktop/release/Uki-<version>-x64.exe
 ```
 
 The installers are unsigned in Phase 0. `UKI_ALLOW_CAPTURE=1` only affects development runs (`pnpm dev`); packaged builds always keep content protection on.
@@ -36,7 +37,7 @@ The installers are unsigned in Phase 0. `UKI_ALLOW_CAPTURE=1` only affects devel
 2. If the app came from somewhere else (the CI artifact or the draft release from `desktop-dist.yml`), macOS has quarantined it. Remove the flag once:
 
    ```sh
-   xattr -dr com.apple.quarantine "/Applications/Üki.app"
+   xattr -dr com.apple.quarantine "/Applications/Uki.app"
    ```
 
    Without this, macOS says the app "is damaged and can't be opened". If it says the developer cannot be verified instead, Control-click the app, choose Open, then Open again.
@@ -45,7 +46,7 @@ The installers are unsigned in Phase 0. `UKI_ALLOW_CAPTURE=1` only affects devel
 
 ## 3. Install on Windows
 
-1. Run `Üki Setup <version>.exe`.
+1. Run `Uki-<version>-x64.exe`.
 2. SmartScreen shows "Windows protected your PC" for the unsigned installer: choose **More info**, then **Run anyway**.
 3. Settings > Privacy & security > Camera: turn on "Camera access" and "Let desktop apps access your camera".
 4. Check as on macOS.
@@ -80,7 +81,7 @@ The venue network may block websockets or drop. In order of preference:
 
 1. **Phone hotspot.** Put all three laptops on one hotspot. Check `https://<project-ref>.supabase.co/auth/v1/health` answers (1.2 shows the round trip). Laptops on one hotspot share one public IP, so they share the cloud project's limit of 30 anonymous sign-ins an hour: if a join fails with a rate limit, raise it under Authentication > Rate limits in the Supabase dashboard.
 2. **Short drops are fine.** The app's outbox keeps answers and events through minutes offline; 2.1a shows and everything syncs on reconnect without duplicates.
-3. **Last resort: the local stack over the LAN.** If Frankfurt is unreachable, run `supabase start` and `pnpm dev` on the dashboard laptop, then rebuild the two student apps with `VITE_SUPABASE_URL=http://<dashboard-laptop-LAN-IP>:54721` and the local publishable key (`supabase status -o env`), all on one Wi-Fi or hotspot. The app's content security policy allows exactly that URL over http and ws. Run `pnpm db:reset && pnpm seed:staff` there first. This loses the "runs on Supabase Cloud" story, so say so.
+3. **Last resort: the local stack over the LAN.** If Frankfurt is unreachable, run `supabase start -x vector,logflare,imgproxy,edge-runtime`, `pnpm env:local`, `pnpm seed:staff` and `pnpm demo:reset` on the dashboard laptop, then `pnpm dev` (it serves the Edge Functions). Rebuild the two student apps with `VITE_SUPABASE_URL=http://<dashboard-laptop-LAN-IP>:54721` and the local publishable key (`SUPABASE_PUBLISHABLE_KEY` in the dashboard laptop's `.env`), all on one Wi-Fi or hotspot. The app's content security policy allows exactly that URL over http and ws. This loses the "runs on Supabase Cloud" story, so say so.
 
 ## 7. Hand checks owned by these laptops
 
