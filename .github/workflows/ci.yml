@@ -2,9 +2,11 @@
 #   check     pnpm check (Biome with the i18n GritQL plugin, the guards, type check, unit tests) and
 #             generated files up to date (i18n messages, tokens)
 #   gitleaks  secret scan with .gitleaks.toml
-#   stack     supabase start; pgTAP; Edge Functions with the integration tests; the dashboard smoke
-#             test; the demo scripts against the real schema
-#   build     web, the mock portal and Üki Lock (Chrome and Edge zips)
+#   stack     supabase start without the edge runtime, then supabase functions serve; pgTAP; the
+#             functions' integration tests and the desktop flow against the stack; the dashboard smoke
+#             test (Playwright Chromium); the demo scripts against the real schema
+#   build     web, the mock portal and Üki Lock (Chrome and Edge zips), then the Üki Lock smoke test in
+#             headless Chrome for Testing
 #   desktop   unsigned installers on macOS (dmg arm64 and x64) and Windows (NSIS x64)
 name: CI
 
@@ -66,7 +68,7 @@ jobs:
           GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
 
   stack:
-    name: Database, functions, dashboard smoke test, demo scripts
+    name: Database, functions, desktop flow, dashboard smoke test, demo scripts
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -77,6 +79,8 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Playwright Chromium for the dashboard smoke test
+        run: pnpm exec playwright install --with-deps chromium
       - uses: supabase/setup-cli@v1
         with:
           version: 2.107.0
@@ -88,12 +92,12 @@ jobs:
         run: supabase test db
       - name: Staff accounts
         run: pnpm seed:staff
-      - name: Serve the Edge Functions
+      - name: Serve the Edge Functions (as pnpm dev does)
         run: nohup pnpm functions:serve > functions-serve.log 2>&1 &
       - name: Functions and realtime integration tests
         run: pnpm test:integration
-      - name: Playwright browser
-        run: pnpm exec playwright install --with-deps chromium
+      - name: Desktop flow against the stack (join, ingest, frames, commands, submit)
+        run: pnpm test:integration:desktop
       - name: Dashboard smoke test
         run: pnpm e2e
       - name: Demo scripts against the schema
@@ -142,6 +146,22 @@ jobs:
           name: uki-lock
           path: apps/lock/.output/*.zip
           retention-days: 14
+      - name: Playwright Chrome for Testing for the Üki Lock smoke test
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Üki Lock smoke test (pairing, lock, blocked tab and site, copy, release; headless)
+        run: |
+          pnpm --filter lock build
+          PW_CHROMIUM="$(node --input-type=module -e "import { chromium } from '@playwright/test'; console.log(chromium.executablePath())")"
+          export PW_CHROMIUM
+          SMOKE_SHOTS="$RUNNER_TEMP/lock-smoke" pnpm --filter lock smoke
+      - name: Üki Lock smoke screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lock-smoke
+          path: ${{ runner.temp }}/lock-smoke
+          if-no-files-found: ignore
+          retention-days: 7
 
   desktop:
     name: Desktop installer (${{ matrix.os }})

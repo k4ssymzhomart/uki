@@ -79,11 +79,13 @@ In https://vercel.com/new import the GitHub repository twice.
 | Project name | `uki-web` (for example) | `uki-lms` |
 | Root Directory | `apps/web` | `apps/lms-mock` |
 | Framework | Next.js (from `apps/web/vercel.json`) | Vite (from `apps/lms-mock/vercel.json`) |
-| Install Command | from `vercel.json`: `pnpm install --frozen-lockfile --filter web...` | override in Settings > Build and Deployment: `pnpm install --frozen-lockfile --filter lms-mock...` |
+| Install Command | from `vercel.json`: `pnpm install --frozen-lockfile --filter web...` | from `vercel.json`: `pnpm install --frozen-lockfile --filter lms-mock...` |
+| Build Command | from `vercel.json`: `pnpm --filter web build` | from `vercel.json`: `pnpm --filter lms-mock build` |
+| Output Directory | Next.js default | `dist` (from `vercel.json`) |
 | Node.js Version | 24.x | 24.x |
-| Environment variables (Production and Preview) | `NEXT_PUBLIC_SUPABASE_URL=https://<ref>.supabase.co`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_…`, `NEXT_TELEMETRY_DISABLED=1` | `ELECTRON_SKIP_BINARY_DOWNLOAD=1` |
+| Environment variables (Production and Preview) | `NEXT_PUBLIC_SUPABASE_URL=https://<ref>.supabase.co`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_…`, `NEXT_TELEMETRY_DISABLED=1` | none |
 
-Keep "Include files outside the root directory in the Build Step" on (the default): the apps build from the workspace packages. Vercel deploys previews for branches and production for `main`.
+Leave the install and build commands in Settings > Build and Deployment on their defaults so `vercel.json` decides. The `--filter <app>...` install takes only that app and the workspace packages it uses, so Vercel never downloads Electron or the desktop toolchain. Keep "Include files outside the root directory in the Build Step" on (the default): the apps build from the workspace packages. Vercel deploys previews for branches and production for `main`.
 
 Then put the two production URLs back into the other steps: `UKI_ALLOWED_ORIGINS` (step 2), `SEED_LMS_URL` (step 4, then run `pnpm demo:reset --env-file .env.cloud` again).
 
