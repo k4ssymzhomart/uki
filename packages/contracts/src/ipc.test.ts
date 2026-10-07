@@ -18,6 +18,9 @@ describe("IPC channels", () => {
       { type: "lock.release", reason: "time_up" },
     ]);
     expect(() => parseIpcArgs(IPC_CHANNELS.lockSend, [{ type: "lock.event" }])).toThrow();
+    expect(parseIpcArgs(IPC_CHANNELS.checksWatch, [false])).toEqual([false]);
+    expect(() => parseIpcArgs(IPC_CHANNELS.checksWatch, [])).toThrow();
+    expect(() => parseIpcArgs(IPC_CHANNELS.checksCameraAccess, ["camera"])).toThrow();
   });
 
   it("checks results", () => {
@@ -37,6 +40,8 @@ describe("IPC channels", () => {
     expect(() => parseIpcResult(IPC_CHANNELS.lockStatus, "lost")).toThrow();
     expect(parseIpcResult(IPC_CHANNELS.receiptSavePdf, null)).toBeNull();
     expect(parseIpcResult(IPC_CHANNELS.examLockdown, undefined)).toBeUndefined();
+    expect(parseIpcResult(IPC_CHANNELS.checksCameraAccess, true)).toBe(true);
+    expect(() => parseIpcResult(IPC_CHANNELS.checksCameraAccess, "granted")).toThrow();
   });
 
   it("checks main-to-renderer events", () => {
@@ -45,5 +50,14 @@ describe("IPC channels", () => {
       { type: "pair.request" },
     ]);
     expect(() => parseIpcEvent(IPC_CHANNELS.lockMessage, [{ type: "pair.code" }])).toThrow();
+    const telegram = { id: "telegram", name: "Telegram", kind: "app" };
+    expect(parseIpcEvent(IPC_CHANNELS.checksBlockedApps, [[telegram]])).toEqual([[telegram]]);
+    expect(() => parseIpcEvent(IPC_CHANNELS.checksBlockedApps, [[]])).toThrow();
+    expect(parseIpcEvent(IPC_CHANNELS.lockStatusChanged, ["paired"])).toEqual(["paired"]);
+    expect(() => parseIpcEvent(IPC_CHANNELS.lockStatusChanged, ["lost"])).toThrow();
+    const code = { code: "042917", expires_at: "2026-10-07T10:02:00.000Z" };
+    expect(parseIpcEvent(IPC_CHANNELS.lockPairCode, [code])).toEqual([code]);
+    expect(parseIpcEvent(IPC_CHANNELS.lockPairCode, [null])).toEqual([null]);
+    expect(() => parseIpcEvent(IPC_CHANNELS.lockPairCode, [{ ...code, code: "42917" }])).toThrow();
   });
 });

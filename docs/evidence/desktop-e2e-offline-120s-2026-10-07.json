@@ -1,0 +1,80 @@
+{
+  "date": "2026-10-07T15:41:30.711Z",
+  "offlineSeconds": 120,
+  "kiosk": false,
+  "latencyMs": {
+    "start": 694
+  },
+  "functionMs": {},
+  "commandRetries": {},
+  "checkAgainPresses": 0,
+  "offline": {
+    "cutSeconds": 120,
+    "bannerAfterMs": 5328,
+    "queuedAnswers": 5,
+    "recoveredAfterMs": 6323,
+    "syncedAfterMs": 7582,
+    "answersLocal": 9,
+    "answersServer": 9,
+    "answersWaitingAtReconnect": 5,
+    "eventsWaitingAtReconnect": 6,
+    "appEventsServer": 14,
+    "seqRange": [
+      0,
+      13
+    ],
+    "duplicates": 0,
+    "netOffline": {
+      "queued": 11,
+      "offline_ms": 126122
+    },
+    "netOfflineEvents": [
+      {
+        "queued": 1,
+        "offline_ms": 27100
+      },
+      {
+        "queued": 11,
+        "offline_ms": 126122
+      }
+    ],
+    "framesDuringCut": [
+      "1s 2.1",
+      "5s 2.1a"
+    ],
+    "requestsThroughDuringCut": []
+  },
+  "identity": {
+    "matchedAfterMs": 2809,
+    "event": {
+      "score": 0.93,
+      "tries": 1
+    }
+  },
+  "phone": {},
+  "receipt": {},
+  "frames": [
+    "1.1-kk",
+    "1.1-ru",
+    "1.1-en",
+    "1.1a-en",
+    "1.1a-kk",
+    "1.1a-ru",
+    "1.2-en",
+    "1.2-kk",
+    "1.2-ru",
+    "1.3-checking-en",
+    "1.3-en",
+    "1.3-kk",
+    "1.3-ru",
+    "1.4-en",
+    "1.4-kk",
+    "1.4-ru",
+    "2.1-en",
+    "2.1-kk",
+    "2.1-ru",
+    "2.1a-en",
+    "2.1a-kk",
+    "2.1a-ru"
+  ]
+}

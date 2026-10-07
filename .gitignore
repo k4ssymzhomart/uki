@@ -25,3 +25,6 @@ playwright-report/
 test-results/
 e2e/.auth/
 .figma-cache/
+.claude/
+apps/desktop/test/results/
+shots/

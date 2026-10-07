@@ -154,10 +154,10 @@ export function sideLook(s: FaceSignals): { left: number; right: number } {
 // ---------------------------------------------------------------------------------------------------
 
 /**
- * A frame whose luma standard deviation is below this is uniform: a covered lens or a blank picture.
- * Not in the plan's tables; tune it on the demo laptops.
+ * A frame whose luma standard deviation is below this is uniform: a covered lens or a blank picture
+ * (THRESHOLDS.systemCheck.uniformMaxStd).
  */
-export const UNIFORM_MAX_STD = 6;
+export const UNIFORM_MAX_STD: number = THRESHOLDS.systemCheck.uniformMaxStd;
 
 export interface LumaStats {
   /** Mean luma of the whole frame, 0 to 255. */

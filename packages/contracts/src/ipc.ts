@@ -2,7 +2,8 @@
 // The preload exposes one `window.uki` of type UkiBridge; each method maps to one IPC channel below.
 import { z } from "zod";
 import { BlockedApp } from "./blocked-apps.ts";
-import { AppToLock, LockToApp } from "./lock.ts";
+import { AppToLock, LockToApp, PairCode } from "./lock.ts";
+import { UtcTimestamp } from "./primitives.ts";
 import { DesktopOs } from "./session.ts";
 
 export type { BlockedApp } from "./blocked-apps.ts";
@@ -21,9 +22,19 @@ export type ScanResult = z.infer<typeof ScanResult>;
 export const LockStatus = z.enum(["absent", "connected", "paired"]);
 export type LockStatus = z.infer<typeof LockStatus>;
 
+/** The code on the app's pairing card (E.3) while a Lock pairs; null once it is used, expired or the Lock left. */
+export const LockPairCode = z.object({ code: PairCode, expires_at: UtcTimestamp });
+export type LockPairCode = z.infer<typeof LockPairCode>;
+
 export interface UkiBridge {
   app: { info(): Promise<{ version: string; os: "macos" | "windows"; arch: string }>; quit(): Promise<void> };
-  checks: { scan(): Promise<{ apps: BlockedApp[]; screenShare: BlockedApp[]; freeMb: number }> };
+  checks: {
+    scan(): Promise<{ apps: BlockedApp[]; screenShare: BlockedApp[]; freeMb: number }>;
+    // Added in WP 0.6 (docs/decisions.md): the plan's bridge has no call for these three.
+    cameraAccess(): Promise<boolean>; // macOS asks with systemPreferences.askForMediaAccess("camera"); true when granted
+    watch(on: boolean): Promise<void>; // the 15 s process scan during the exam
+    onBlockedApps(cb: (apps: BlockedApp[]) => void): () => void; // blocked apps that appeared since the previous scan
+  };
   exam: {
     lockdown(on: boolean): Promise<void>; // kiosk, always on top, close and quit blocked
     hideToTray(on: boolean): Promise<void>; // browser exams
@@ -33,6 +44,9 @@ export interface UkiBridge {
     status(): Promise<"absent" | "connected" | "paired">;
     send(msg: AppToLock): Promise<void>;
     onMessage(cb: (msg: LockToApp) => void): () => void;
+    // Added in WP 0.6 (docs/decisions.md): the relay's status changes and the pairing card's code.
+    onStatus(cb: (status: "absent" | "connected" | "paired") => void): () => void;
+    onPairCode(cb: (code: LockPairCode | null) => void): () => void;
   };
   receipt: { savePdf(): Promise<string | null> }; // printToPDF of the receipt card, then a save dialog
   system: { openCameraSettings(): Promise<void> };
@@ -43,12 +57,17 @@ export const IPC_CHANNELS = {
   appInfo: "uki:app:info",
   appQuit: "uki:app:quit",
   checksScan: "uki:checks:scan",
+  checksCameraAccess: "uki:checks:camera-access",
+  checksWatch: "uki:checks:watch",
+  checksBlockedApps: "uki:checks:blocked-apps",
   examLockdown: "uki:exam:lockdown",
   examHideToTray: "uki:exam:hide-to-tray",
   examBlur: "uki:exam:blur",
   lockStatus: "uki:lock:status",
   lockSend: "uki:lock:send",
   lockMessage: "uki:lock:message",
+  lockStatusChanged: "uki:lock:status-changed",
+  lockPairCode: "uki:lock:pair-code",
   receiptSavePdf: "uki:receipt:save-pdf",
   systemOpenCameraSettings: "uki:system:open-camera-settings",
 } as const;
@@ -59,6 +78,8 @@ export const IPC_INVOKE = {
   [IPC_CHANNELS.appInfo]: { args: z.tuple([]), result: AppInfo },
   [IPC_CHANNELS.appQuit]: { args: z.tuple([]), result: z.void() },
   [IPC_CHANNELS.checksScan]: { args: z.tuple([]), result: ScanResult },
+  [IPC_CHANNELS.checksCameraAccess]: { args: z.tuple([]), result: z.boolean() },
+  [IPC_CHANNELS.checksWatch]: { args: z.tuple([z.boolean()]), result: z.void() },
   [IPC_CHANNELS.examLockdown]: { args: z.tuple([z.boolean()]), result: z.void() },
   [IPC_CHANNELS.examHideToTray]: { args: z.tuple([z.boolean()]), result: z.void() },
   [IPC_CHANNELS.lockStatus]: { args: z.tuple([]), result: LockStatus },
@@ -73,7 +94,11 @@ export type IpcResult<C extends IpcInvokeChannel> = z.infer<(typeof IPC_INVOKE)[
 /** Payload (as a tuple of listener arguments) of every main-to-renderer event channel. */
 export const IPC_EVENTS = {
   [IPC_CHANNELS.examBlur]: z.tuple([]),
+  /** While watching: the blocked apps that appeared since the previous scan, at least one. */
+  [IPC_CHANNELS.checksBlockedApps]: z.tuple([z.array(BlockedApp).min(1)]),
   [IPC_CHANNELS.lockMessage]: z.tuple([LockToApp]),
+  [IPC_CHANNELS.lockStatusChanged]: z.tuple([LockStatus]),
+  [IPC_CHANNELS.lockPairCode]: z.tuple([LockPairCode.nullable()]),
 } as const;
 export type IpcEventChannel = keyof typeof IPC_EVENTS;
 export type IpcEventArgs<C extends IpcEventChannel> = z.infer<(typeof IPC_EVENTS)[C]>;
