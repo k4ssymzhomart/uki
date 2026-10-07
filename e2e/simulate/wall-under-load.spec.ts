@@ -20,6 +20,7 @@
 import { type ChildProcess, spawn } from "node:child_process";
 import { createWriteStream, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { expect, type Page, test } from "@playwright/test";
+import { DEFAULT_EXAM_CHECKS, THRESHOLDS } from "../../packages/contracts/src/index.ts";
 import { parseServerTiming } from "../../scripts/lib/perf/stats.ts";
 import { NAMED_PARTS } from "../../scripts/lib/sim/cast.ts";
 import { examRow, pageStatus, signIn, waitForWallSubscribed } from "../support/dashboard.ts";
@@ -222,6 +223,24 @@ interface DbEvent {
   type: string;
   at: string;
   received_at: string;
+  data: unknown;
+}
+
+/**
+ * When the laptop could first send an event. A look is stamped at its 2 s crossing but sent when it
+ * ends (300 ms back on screen), and two faces at their 1 s crossing but sent when the episode ends, so
+ * their latency to the wall starts there, not at `at`.
+ */
+function sendableAtMs(event: DbEvent): number {
+  const atMs = Date.parse(event.at);
+  const duration = (event.data as { duration_ms?: unknown } | null)?.duration_ms;
+  if (typeof duration !== "number") return atMs;
+  if (event.type === "gaze.off_screen" || event.type === "gaze.down") {
+    return atMs + Math.max(0, duration - DEFAULT_EXAM_CHECKS.gaze_s * 1000) + THRESHOLDS.gaze.onScreenEndMs;
+  }
+  // Two faces are stamped at their 1 s crossing and sent when the episode ends.
+  if (event.type === "face.second") return atMs + Math.max(0, duration - THRESHOLDS.face.secondFaceMs);
+  return atMs;
 }
 
 async function flagAndLogEvents(fromMs: number, toMs: number): Promise<DbEvent[]> {
@@ -230,7 +249,7 @@ async function flagAndLogEvents(fromMs: number, toMs: number): Promise<DbEvent[]
     const page = () =>
       adminClient()
         .from("events")
-        .select("id, session_id, type, at, received_at")
+        .select("id, session_id, type, at, received_at, data")
         .eq("exam_id", EXAMS.math2.id)
         .in("review", ["flag", "log"])
         .gte("received_at", new Date(fromMs).toISOString())
@@ -502,10 +521,11 @@ test("the wall follows 120 simulated students within 1 s, and another exam's pro
         notShown.push(event);
         continue;
       }
-      (probeSessions.has(event.session_id) ? feed.probe : feed.sim).push(shownAt - atMs);
+      const sentMs = sendableAtMs(event);
+      (probeSessions.has(event.session_id) ? feed.probe : feed.sim).push(shownAt - sentMs);
       const frame = frames[event.id];
       if (frame !== undefined) {
-        feed.server.push(frame - atMs);
+        feed.server.push(frame - sentMs);
         feed.dashboard.push(shownAt - frame);
       } else {
         recovered += 1;
@@ -621,13 +641,12 @@ test("the wall follows 120 simulated students within 1 s, and another exam's pro
     expect(probeMisses).toEqual([]);
     expect.soft(ingestFailures, "ingest calls that failed after retries").toEqual([]);
     expect(notShown.map((event) => `${event.type} ${event.at}`)).toEqual([]);
-    // Each leg against the 1 s bar; soft, so one run reports every leg that misses it.
-    for (const key of [
-      "dashboardProbeTile",
-      "dashboardFeedRow",
-      "endToEndProbeTile",
-      "endToEndSimulatedFeed",
-    ] as const) {
+    // Each leg against the 1 s bar; soft, so one run reports every leg that misses it. The simulated
+    // events' end to end is reported, not asserted: the simulator stamps `at` on the server-corrected
+    // clock (the Docker VM's, which drifts from the host's by hundreds of ms), while the page measures on
+    // the host clock. The probes time the same path on one clock, and the simulator's own --watch client
+    // times send to broadcast on one clock.
+    for (const key of ["dashboardProbeTile", "dashboardFeedRow", "endToEndProbeTile"] as const) {
       expect.soft(summaries[key].p95, `p95 of ${labels[key]}`).toBeLessThan(BUDGET_MS);
     }
   } finally {

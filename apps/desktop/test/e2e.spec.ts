@@ -360,15 +360,24 @@ test("2.1a: a network cut loses nothing and duplicates nothing", async () => {
   const context = app.context();
   // Every network request that still completed during the cut (there should be none), and the
   // frame on screen each second, for the evidence.
+  // Only requests that start after the cut count: one already in flight may still finish.
   const leaked: string[] = [];
   const frames: string[] = [];
-  let cutting = true;
+  const startedDuringCut = new WeakSet<object>();
+  let cutting = false;
+  const onRequest = (request: object) => {
+    if (cutting) startedDuringCut.add(request);
+  };
   const onFinished = (request: { url(): string }) => {
     const url = request.url();
-    if (cutting && /^https?:/.test(url)) leaked.push(`${Date.now() - cutAt} ${url}`);
+    if (cutting && startedDuringCut.has(request) && /^https?:/.test(url)) {
+      leaked.push(`${Date.now() - cutAt} ${url}`);
+    }
   };
+  page.on("request", onRequest);
   page.on("requestfinished", onFinished);
   const cutAt = Date.now();
+  cutting = true;
   await context.setOffline(true);
   const sampler = setInterval(() => {
     void currentFrame(page).then((frame) => {
@@ -395,6 +404,7 @@ test("2.1a: a network cut loses nothing and duplicates nothing", async () => {
   expect(waitingEvents.length).toBeGreaterThan(0);
   cutting = false;
   clearInterval(sampler);
+  page.off("request", onRequest);
   page.off("requestfinished", onFinished);
   const backAt = Date.now();
   await context.setOffline(false);

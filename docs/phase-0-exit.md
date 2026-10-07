@@ -104,3 +104,25 @@ Every criterion stays pending until it runs on the demo laptops against the clou
 - [ ] Have a Kazakh and a Russian speaker review the first-pass kk and ru strings, including the 13 keys added on 2026-10-07.
 - [ ] On both laptops, tune `phone_score` with real phones and the identity similarity with the printed cards, then record both values in `docs/decisions.md`.
 - [ ] Run the pending hand checks above and fill in their rows.
+
+## Quiet-host run, 2026-10-08
+
+The earlier end-to-end runs shared this laptop with four other Supabase stacks (Docker at 450 to 700 % CPU, the edge runtime killed for memory). With those stacks stopped, every automated gate was run again in sequence on the same Apple M4. These are local numbers; the cloud project and the demo laptops are still pending.
+
+| Gate | Result |
+| --- | --- |
+| `pnpm check` | pass |
+| `supabase test db` | pass, 8 files, 404 tests |
+| `pnpm test:integration` | pass, 15 files, 83 tests |
+| `pnpm test:integration:desktop` | pass, 3 tests |
+| `pnpm e2e` (dashboard) | pass, 4 tests; event `at` to tile p50 11 ms, p95 14 ms (n=6) |
+| `pnpm --filter desktop e2e` | pass, 12 tests; evidence in `docs/evidence/desktop-e2e-2026-10-08.json` |
+| `pnpm --filter lock smoke` | pass: paired by code, tabs closed, full screen, copy blocked, new tab closed, block page, tabs restored |
+| `pnpm e2e:load` (120 simulated students) | pass, 1 test (5.7 min) |
+
+- **Criterion 7 (commands within 1 s):** start 42 ms, pause 56 ms (2.1c), resume 81 ms, message 15 ms (2.1e), add time 30 ms, end 41 ms (2.1d).
+- **Criterion 8 (network cut):** a 20 s cut showed 2.1a after 5.3 s; 5 answers and 6 events waited on the laptop; after reconnect 9 answers on the laptop and 9 on the server, app events seq 0 to 12, 0 duplicates, one `net.offline` of 20,029 ms. The 120 s run from 2026-10-07 is in `docs/evidence/desktop-e2e-offline-120s-2026-10-07.json`.
+- **Card match:** a card made from the student's own photo matched at 0.93 on the first try.
+- **Phone:** the e2e flag uploaded 3 confirmed stills with `phone_score` set to 0.7, because EfficientDet-Lite0 int8 scored the held phone 0.77. Tune on a real phone before Demo Day.
+- **Load, 120 simulated students on the wall (WP 0.7, criterion 4's wall leg):** the probe event's `at` to tile p50 52 ms, p95 79 ms (n=120, one clock); simulated flag and log events to their Live events row p50 47 ms, p95 95 ms (n=14); ingest call p95 39 ms; the simulator's 449 events reached its own Realtime client with send to broadcast p95 20 ms, 0 missed, 0 failed; Realtime frame to tile p95 44 ms. Another exam's proctor got 404 on the lobby and the wall, a refused `exam:` channel and 0 rows in every table.
+- **Two test fixes in this run:** the network-cut test now counts only requests that start during the cut (one ingest call already in flight finished 2 ms after the cut began), and the load test measures look-aways and second faces from when the app can send them (they are stamped at their threshold crossing and sent when the episode ends) and asserts the 1 s budget only on legs timed on one clock.

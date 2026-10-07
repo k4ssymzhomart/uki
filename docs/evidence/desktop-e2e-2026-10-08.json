@@ -1,0 +1,168 @@
+{
+  "date": "2026-10-07T23:28:29.720Z",
+  "offlineSeconds": 20,
+  "kiosk": false,
+  "latencyMs": {
+    "start": 42,
+    "pause": 56,
+    "resume": 81,
+    "message": 15,
+    "add_time": 30,
+    "end": 41
+  },
+  "functionMs": {
+    "pause": 58,
+    "resume": 84,
+    "message": 15,
+    "add_time": 29
+  },
+  "commandRetries": {},
+  "checkAgainPresses": 0,
+  "pairing": {
+    "code": "6 digits",
+    "helloStudent": "Madina Tulegenova",
+    "paired": true
+  },
+  "offline": {
+    "cutSeconds": 20,
+    "bannerAfterMs": 5323,
+    "queuedAnswers": 5,
+    "recoveredAfterMs": 26,
+    "syncedAfterMs": 337,
+    "answersLocal": 9,
+    "answersServer": 9,
+    "answersWaitingAtReconnect": 5,
+    "eventsWaitingAtReconnect": 6,
+    "appEventsServer": 13,
+    "seqRange": [
+      0,
+      12
+    ],
+    "duplicates": 0,
+    "netOffline": {
+      "queued": 11,
+      "offline_ms": 20029
+    },
+    "netOfflineEvents": [
+      {
+        "queued": 11,
+        "offline_ms": 20029
+      }
+    ],
+    "framesDuringCut": [
+      "1s 2.1",
+      "5s 2.1a"
+    ],
+    "requestsThroughDuringCut": []
+  },
+  "identity": {
+    "matchedAfterMs": 2824,
+    "event": {
+      "score": 0.93,
+      "tries": 1
+    }
+  },
+  "phone": {
+    "stillsConfirmed": 3,
+    "examPhoneScore": 0.7,
+    "scores": [
+      0,
+      0,
+      0.76953125,
+      0.76953125,
+      0.76953125,
+      0.76953125,
+      0.76953125,
+      0.76953125
+    ],
+    "phoneMs": [
+      61,
+      61,
+      57.7,
+      64.9,
+      65.8,
+      62.6,
+      56.6,
+      62.2
+    ],
+    "phoneChecksPerS": [
+      2,
+      2,
+      2.5,
+      2.5,
+      2.5,
+      2,
+      2.5,
+      2.5
+    ],
+    "fps": [
+      14,
+      14,
+      13,
+      11,
+      13,
+      14,
+      14,
+      13
+    ],
+    "rulesPaused": false,
+    "warningAfterMs": 573,
+    "review": "flag",
+    "data": {
+      "score": 0.77,
+      "held_ms": 401
+    },
+    "frameCount": 3
+  },
+  "receipt": {
+    "receiptId": "UKI-204-3940-MT",
+    "pdfBytes": 27529,
+    "timeUsedS": 44
+  },
+  "frames": [
+    "1.1-kk",
+    "1.1-ru",
+    "1.1-en",
+    "1.1a-en",
+    "1.1a-kk",
+    "1.1a-ru",
+    "1.2-en",
+    "1.2-kk",
+    "1.2-ru",
+    "E.3-app-en",
+    "E.3-app-kk",
+    "E.3-app-ru",
+    "1.3-checking-en",
+    "1.3-en",
+    "1.3-kk",
+    "1.3-ru",
+    "1.4-en",
+    "1.4-kk",
+    "1.4-ru",
+    "2.1-en",
+    "2.1-kk",
+    "2.1-ru",
+    "2.1a-en",
+    "2.1a-kk",
+    "2.1a-ru",
+    "2.1c-en",
+    "2.1c-kk",
+    "2.1c-ru",
+    "2.1e-en",
+    "2.1e-kk",
+    "2.1e-ru",
+    "2.1e-time-en",
+    "2.2-en",
+    "2.2-kk",
+    "2.2-ru",
+    "2.3-en",
+    "2.3-kk",
+    "2.3-ru",
+    "3.1-en",
+    "3.1-kk",
+    "3.1-ru",
+    "2.1d-en",
+    "2.1d-kk",
+    "2.1d-ru"
+  ]
+}
