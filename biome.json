@@ -23,6 +23,22 @@
       "!**/*.svg"
     ]
   },
+  "plugins": [
+    {
+      "path": "./biome-plugins/no-jsx-literal-text.grit",
+      "includes": [
+        "**/apps/*/src/**/*.tsx",
+        "**/packages/ui/src/**/*.tsx",
+        "!**/*.gallery.tsx",
+        "!**/gallery.tsx",
+        "!**/gallery/**",
+        "!**/*.test.tsx",
+        "!**/dev-overlay/**",
+        "!**/dev-overlay.tsx",
+        "!**/*.dev.tsx"
+      ]
+    }
+  ],
   "formatter": {
     "enabled": true,
     "indentStyle": "space",

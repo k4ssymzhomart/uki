@@ -1,0 +1,53 @@
+// No user-facing string in code: every string is an i18n key (CLAUDE.md; docs/phase-0-plan.md, Gates on
+// every merge to main). Registered in biome.json for .tsx files under apps/*/src and packages/ui/src,
+// except galleries, tests and the development-only overlay (dev-overlay/, *.dev.tsx).
+//
+// Rejects, when the text holds a letter in any script:
+// - JSX text between tags: <p>Start exam</p>
+// - a string or template literal as a JSX child: {"Start exam"}, {`Question ${n}`}
+// - a literal in an attribute people read: aria-label, aria-description, aria-placeholder,
+//   aria-roledescription, aria-valuetext, alt, title, placeholder
+// Allows punctuation, digits and entities ({"·"}, <i>42</i>, &nbsp;), alt="", t("key") calls, templates
+// whose text is only interpolation ({`${t("a.b")} ${n}`}), and key-shaped attribute values
+// (title="exam.title") that a component translates itself.
+// Diagnostic messages stay ASCII with no escaped quotes: Biome 2.5 garbles a Grit string after them.
+language js
+
+or {
+  JsxText() as $text where {
+    $text <: r"(?s).*\p{L}.*",
+    not $text <: r"(?s)(?:\s|&[a-zA-Z]+;|&#[0-9]+;|&#x[0-9a-fA-F]+;|[^\p{L}])*",
+    register_diagnostic(span=$text, message="JSX text must come from an i18n key: render t(key) from the catalog (CLAUDE.md: no user-facing string in code)", severity="error")
+  },
+  JsxExpressionChild(expression=$expr) where {
+    or {
+      $expr <: JsStringLiteralExpression() as $literal where { $literal <: r"(?s).*\p{L}.*" },
+      $expr <: JsTemplateExpression(elements=$parts) where {
+        $parts <: some JsTemplateChunkElement() as $chunk where { $chunk <: r"(?s).*\p{L}.*" }
+      }
+    },
+    register_diagnostic(span=$expr, message="A string literal rendered as JSX must come from an i18n key: use t(key) (CLAUDE.md: no user-facing string in code)", severity="error")
+  },
+  JsxAttribute(name=$name, initializer=$init) where {
+    $name <: r"(?:aria-label|aria-description|aria-placeholder|aria-roledescription|aria-valuetext|alt|title|placeholder)",
+    $init <: JsxAttributeInitializerClause(value=$value),
+    or {
+      $value <: JsxString() as $literal where {
+        $literal <: r"(?s).*\p{L}.*",
+        not $literal <: r"[\"'][a-z][a-z0-9_]*(?:\.[a-zA-Z0-9_]+)+[\"']"
+      },
+      $value <: JsxExpressionAttributeValue(expression=$inner) where {
+        or {
+          $inner <: JsStringLiteralExpression() as $literal where {
+            $literal <: r"(?s).*\p{L}.*",
+            not $literal <: r"[\"'][a-z][a-z0-9_]*(?:\.[a-zA-Z0-9_]+)+[\"']"
+          },
+          $inner <: JsTemplateExpression(elements=$parts) where {
+            $parts <: some JsTemplateChunkElement() as $chunk where { $chunk <: r"(?s).*\p{L}.*" }
+          }
+        }
+      }
+    },
+    register_diagnostic(span=$value, message="People read this attribute (label, alt, title, placeholder): its text must come from an i18n key (CLAUDE.md)", severity="error")
+  }
+}

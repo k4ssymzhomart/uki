@@ -1,0 +1,46 @@
+# gitleaks configuration for Üki, used by the `gitleaks` job in .github/workflows/ci.yml on every push
+# and pull request (docs/phase-0-plan.md, Controls in Phase 0). The default rules stay on; the rules
+# below add Supabase's new API keys. Run locally with:
+#   gitleaks git --config .gitleaks.toml --redact      (whole history)
+#   gitleaks dir --config .gitleaks.toml --redact .    (working tree)
+
+title = "Üki"
+
+[extend]
+useDefault = true
+
+# The secret key (sb_secret_…) belongs only in a local .env and in GitHub secrets. Test fixtures use
+# short fakes such as sb_secret_test, which this rule's length floor leaves alone.
+[[rules]]
+id = "supabase-secret-key"
+description = "Supabase secret API key (sb_secret_…)"
+regex = '''\bsb_secret_[A-Za-z0-9_-]{20,}'''
+keywords = ["sb_secret_"]
+
+# Legacy service_role JWTs are never used (CLAUDE.md); catch one that slips in under a Supabase name.
+[[rules]]
+id = "supabase-legacy-service-role"
+description = "Supabase legacy service_role key"
+regex = '''(?i)service_?role[^\n]{0,40}?\beyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}'''
+keywords = ["service_role", "servicerole", "service-role"]
+
+# Personal access tokens for the Supabase management API (SUPABASE_ACCESS_TOKEN lives in GitHub secrets).
+[[rules]]
+id = "supabase-access-token"
+description = "Supabase personal access token (sbp_…)"
+regex = '''\bsbp_[a-f0-9]{40}\b'''
+keywords = ["sbp_"]
+
+[[allowlists]]
+description = "Placeholders, lock files and hashes that are not secrets"
+paths = [
+  '''(^|/)\.env\.example$''',
+  '''(^|/)pnpm-lock\.yaml$''',
+  '''^apps/desktop/resources/models/manifest\.json$''',
+  '''^packages/tokens/figma-variables\.json$''',
+]
+# Publishable keys ship in the apps by design; "sb_secret_..." is the .env.example placeholder.
+regexes = [
+  '''sb_publishable_[A-Za-z0-9_-]+''',
+  '''sb_secret_\.\.\.''',
+]

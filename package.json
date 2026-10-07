@@ -9,10 +9,11 @@
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "build": "turbo run build",
-    "check": "biome check . && turbo run typecheck test && pnpm typecheck:functions && vitest run -c vitest.integration.config.ts --project functions-unit",
+    "check": "biome check . && pnpm guards && turbo run typecheck test && pnpm typecheck:functions && pnpm typecheck:scripts && vitest run -c vitest.integration.config.ts --project functions-unit && pnpm test:scripts",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "lint": "biome check .",
+    "guards": "tsx scripts/guards/index.ts",
     "format": "biome check --write .",
     "tokens": "pnpm --filter @uki/tokens build",
     "i18n:build": "pnpm --filter @uki/i18n build",
@@ -28,7 +29,12 @@
     "seed:staff": "tsx scripts/seed-staff.ts",
     "demo:reset": "tsx scripts/demo-reset.ts",
     "demo:simulate": "tsx scripts/demo-simulate.ts",
-    "typecheck:functions": "tsc --noEmit -p supabase/functions/tsconfig.json && tsc --noEmit -p test/integration/tsconfig.json"
+    "typecheck:functions": "tsc --noEmit -p supabase/functions/tsconfig.json && tsc --noEmit -p test/integration/tsconfig.json",
+    "typecheck:scripts": "tsc --noEmit -p scripts/lib/tsconfig.json",
+    "test:scripts": "vitest run -c scripts/lib/vitest.config.ts",
+    "env:local": "tsx scripts/lib/local-env.ts",
+    "models": "pnpm --filter @uki/detection models",
+    "models:verify": "pnpm --filter @uki/detection models:verify"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
