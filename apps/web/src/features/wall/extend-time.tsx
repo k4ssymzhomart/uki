@@ -5,12 +5,9 @@ import { formatTime } from "@uki/i18n";
 import { ExtendTimePopover } from "@uki/ui";
 import { useTranslations } from "next-intl";
 import { type ReactElement, useState } from "react";
-import { examEndsAt } from "./exam-end.ts";
+import { examEndsAt, GROUP_STATES } from "./exam-end.ts";
 import { useCommand } from "./use-command.ts";
 import { useWall } from "./wall-store-context.tsx";
-
-/** Sessions a group command reaches: rules, ready, writing or paused (plan, API). */
-const GROUP_STATES = new Set(["rules", "ready", "writing", "paused"]);
 
 /** 2.4c Extend time (Figma 85:6750): 5, 10 or 15 minutes for everyone, with the new end shown first. */
 export function ExtendTime({ examId, trigger }: { examId: string; trigger: ReactElement }) {

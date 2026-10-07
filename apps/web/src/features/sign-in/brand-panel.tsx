@@ -3,7 +3,7 @@ import { Icon } from "@uki/ui/icon";
 import type { IconName } from "@uki/ui/icons";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import mossNight from "../../assets/uki-bg-moss-night.png";
+import mossNight from "../../assets/uki-bg-moss-night.webp";
 
 const FACTS = [
   { id: "video", icon: "eye-off" },
@@ -19,7 +19,7 @@ export function BrandPanel() {
   const t = useTranslations("dashboard.signIn.brand");
   return (
     <section className="relative flex h-full w-2/5 shrink-0 flex-col overflow-clip p-14 pb-27 xl:w-160">
-      {/* Unoptimized: re-encoding turns the brand kit's film grain into blocks. */}
+      {/* Unoptimized: Next's default re-encoding turns the film grain into blocks; this WebP keeps it (q96). */}
       <Image src={mossNight} alt="" fill preload unoptimized className="object-cover" />
       <Logo variant="wordmark-paper" className="relative h-10 w-auto self-start" />
       <span aria-hidden="true" className="max-h-38 min-h-8 flex-1" />

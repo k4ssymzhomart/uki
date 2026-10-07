@@ -1,7 +1,9 @@
+import type { CompactEvent } from "@uki/contracts";
 import { describe, expect, it } from "vitest";
 import { EXAM_ID, event, initialData, iso, NOW, sessionId, sessionRow } from "./test-helpers.tsx";
 import {
   collapseGroupEvents,
+  groupKey,
   isGroupEvent,
   selectCounts,
   selectFeed,
@@ -10,6 +12,8 @@ import {
   tileLine,
 } from "./tiles.ts";
 import { applyEvent, initialWallState } from "./wall-store.ts";
+
+const STAFF = "a5000000-0000-4000-8000-000000000001";
 
 describe("tile status lines", () => {
   it("writes each Live wall rule as a dashboard.wall.tile key", () => {
@@ -189,5 +193,28 @@ describe("wall selectors", () => {
     expect(isGroupEvent(single)).toBe(false);
     const state = perStudent.reduce(applyEvent, wall());
     expect(selectFeed(state).filter((e) => e.type === "proctor.time_added")).toHaveLength(1);
+  });
+
+  it("collapses a group command by its group_id, exactly", () => {
+    const at = iso(-2_000);
+    const groupA = "a6000000-0000-4000-8000-00000000000a";
+    const groupB = "a6000000-0000-4000-8000-00000000000b";
+    const message = (n: number, group: string) =>
+      event(
+        n,
+        "proctor.message",
+        { preset: "message.preset.time_15", scope: "group", staff_id: STAFF, group_id: group },
+        { review: "log", source: "proctor", at, received_at: at },
+      );
+    // Two group commands with the same text in the same second stay two rows.
+    const a = [1, 2, 3].map((n) => message(n, groupA));
+    const b = [1, 2, 3].map((n) => message(n, groupB));
+    expect(collapseGroupEvents([...a, ...b])).toEqual([a[0], b[0]]);
+    // One command's events stay one row even if their times differ.
+    const late = { ...message(4, groupA), at: iso(-1_500), received_at: iso(-1_400) };
+    expect(collapseGroupEvents([...a, late])).toEqual([a[0]]);
+    expect(groupKey(late)).toBe(groupKey(a[0] as CompactEvent));
+    const state = [...a, ...b].reduce(applyEvent, wall());
+    expect(selectFeed(state).filter((e) => e.type === "proctor.message")).toHaveLength(2);
   });
 });

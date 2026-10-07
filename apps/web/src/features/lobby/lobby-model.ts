@@ -1,9 +1,11 @@
 import {
   Device,
   ExamStatus,
+  parseStatusDetail,
   SessionState,
   SessionStatus,
   type SessionTileMessage,
+  type StatusDetail,
   THRESHOLDS,
   Timestamp,
   toMs,
@@ -17,12 +19,14 @@ import { z } from "zod";
  * the tabs, the client-side filters and search, and how a realtime `session` message changes a row.
  * Unit-tested in lobby-model.test.ts.
  *
- * `sessions.status.detail` (set by the app through ingest) says what is wrong at a check step; a
- * session at a check step with a detail needs help. The app sends:
- * - `camera_blocked`: the camera is used by another app (1.2);
- * - `card_retry:<n>`: the card match failed n times (1.3);
- * - `app:<Name>` or just the app's name at the system check: a blocked app is open (1.2).
- * Any other text is shown as it is.
+ * `sessions.status.detail` (set by the app through ingest) says what holds a student at a check step,
+ * in the vocabulary of packages/contracts/src/status-detail.ts; a session at a check step with a
+ * detail needs help. 1.5 draws three of them, each with its dashboard.lobby.detail.* string:
+ * - `app:<name>`: "Telegram is open";
+ * - `camera:busy`: "Camera blocked by another app";
+ * - `card:retry:<n>` (and `card:help:<n>` on 1.3a): "Card unreadable · retry 2 of 3".
+ * The other details (lock, network, storage, other camera problems) have no string in Figma yet: the row
+ * shows its step and Needs help without a detail line. Text outside the vocabulary is never shown.
  */
 
 // ---------------------------------------------------------------------------------------------------
@@ -76,14 +80,13 @@ export type LobbyCategory = "needHelp" | "notJoined" | "checking" | "ready" | "w
 /** dashboard.lobby.step.* */
 export type StepKey = "notJoined" | "joined" | "checking" | "identity" | "rules" | "writing" | "finished";
 
-/** dashboard.lobby.detail.*, or the app's text as it is. */
+/** dashboard.lobby.detail.* with its values. */
 export type StepDetail =
   | { key: "waiting" }
   | { key: "bounced" }
   | { key: "cameraBlocked" }
   | { key: "appOpen"; app: string }
-  | { key: "cardRetry"; attempt: number; max: number }
-  | { key: "text"; text: string };
+  | { key: "cardRetry"; attempt: number; max: number };
 
 /** dashboard.lobby.chip.* */
 export type ChipKey = "needsHelp" | "notJoined" | "checking" | "ready" | "writing" | "paused" | "done";
@@ -116,20 +119,28 @@ const STEP_OF_STATE: Record<SessionState, StepKey> = {
   ended: "finished",
 };
 
-function problemDetail(state: SessionState, detail: string): StepDetail {
-  if (detail === "camera_blocked") return { key: "cameraBlocked" };
-  const retry = /^card_retry:(\d{1,2})$/.exec(detail);
-  if (retry) return { key: "cardRetry", attempt: Number(retry[1]), max: THRESHOLDS.identity.maxTries };
-  const app = /^app:(.+)$/.exec(detail);
-  if (app?.[1]) return { key: "appOpen", app: app[1].trim() };
-  if (state === "checking") return { key: "appOpen", app: detail };
-  return { key: "text", text: detail };
+/** The 1.5 line for a status detail; null for one Figma draws no string for. */
+export function problemDetail(detail: StatusDetail): StepDetail | null {
+  switch (detail.kind) {
+    case "app":
+      return { key: "appOpen", app: detail.name };
+    case "camera":
+      return detail.problem === "busy" ? { key: "cameraBlocked" } : null;
+    case "card":
+      return { key: "cardRetry", attempt: detail.tries, max: THRESHOLDS.identity.maxTries };
+    default:
+      return null;
+  }
+}
+
+/** The session's status detail while it is at a check step, or null. */
+function checkProblem(session: LobbySession): StatusDetail | null {
+  return CHECK_STATES.includes(session.state) ? parseStatusDetail(session.status.detail) : null;
 }
 
 export function categoryOf(session: LobbySession | null): LobbyCategory {
   if (!session) return "notJoined";
-  const detail = session.status.detail?.trim();
-  if (CHECK_STATES.includes(session.state)) return detail ? "needHelp" : "checking";
+  if (CHECK_STATES.includes(session.state)) return checkProblem(session) ? "needHelp" : "checking";
   if (session.state === "rules" || session.state === "ready") return "ready";
   if (session.state === "writing" || session.state === "paused") return "writing";
   return "done";
@@ -172,17 +183,11 @@ export function lobbyRow(entry: RosterEntry, session: LobbySession | null): Lobb
       device: null,
     };
   }
-  const detail = session.status.detail?.trim();
+  const problem = checkProblem(session);
   return {
     ...base,
     step: STEP_OF_STATE[session.state],
-    detail: detail
-      ? CHECK_STATES.includes(session.state)
-        ? problemDetail(session.state, detail)
-        : { key: "text", text: detail }
-      : session.state === "ready"
-        ? { key: "waiting" }
-        : null,
+    detail: problem ? problemDetail(problem) : session.state === "ready" ? { key: "waiting" } : null,
     device: session.device ? { os: session.device.os, version: session.device.app_version } : null,
   };
 }
@@ -297,12 +302,20 @@ export function applySessionUpdate(
   return { sessions: found ? next : [...sessions], unknown: !found };
 }
 
-/** Adds or replaces sessions read from the database, keyed by session id. */
+/**
+ * Adds or replaces sessions read from the database, keyed by session id. Sessions in `keep` that the
+ * list already holds stay as they are: a `session` message updated them while the read was in flight,
+ * so the read's row may be older.
+ */
 export function mergeSessions(
   sessions: readonly LobbySession[],
   fresh: readonly LobbySession[],
+  keep: ReadonlySet<string> = new Set(),
 ): LobbySession[] {
   const byId = new Map(sessions.map((session) => [session.id, session]));
-  for (const session of fresh) byId.set(session.id, session);
+  for (const session of fresh) {
+    if (keep.has(session.id) && byId.has(session.id)) continue;
+    byId.set(session.id, session);
+  }
   return [...byId.values()];
 }

@@ -41,6 +41,9 @@ export function useExamChannel({
   const store = useWallStoreApi();
   const onStatusRef = useRef(onStatus);
   onStatusRef.current = onStatus;
+  // The catch-up reads the offset when it runs, so a new offset never re-joins the channel.
+  const offsetRef = useRef(offsetMs);
+  offsetRef.current = offsetMs;
 
   // One 1-second ticker drives every clock on the wall.
   useEffect(() => {
@@ -54,23 +57,35 @@ export function useExamChannel({
     let cancelled = false;
     let inFlight = false;
     let lastCatchUp = 0;
+    // Sessions a `session` message updated while the catch-up's read was in flight. The read may have
+    // run before those changes committed, so its rows must not roll them back.
+    let updatedDuringCatchUp: Set<string> | null = null;
     const { actions } = store.getState();
 
     const catchUp = async (overlapMs?: number) => {
       if (inFlight || cancelled) return;
       inFlight = true;
       lastCatchUp = Date.now();
+      const updated = new Set<string>();
+      updatedDuringCatchUp = updated;
       try {
         const [events, sessions] = await Promise.all([
-          fetchEventsAfter(client, examId, store.getState().lastReceivedAt, Date.now() + offsetMs, overlapMs),
+          fetchEventsAfter(
+            client,
+            examId,
+            store.getState().lastReceivedAt,
+            Date.now() + offsetRef.current,
+            overlapMs,
+          ),
           fetchSessions(client, examId),
         ]);
         if (cancelled) return;
         actions.mergeEvents(events);
-        actions.mergeSessions(sessions);
+        actions.mergeSessions(sessions, updated);
       } catch {
         // Nothing is lost: the next resubscribe or focus asks again from the same point.
       } finally {
+        updatedDuringCatchUp = null;
         inFlight = false;
       }
     };
@@ -83,7 +98,9 @@ export function useExamChannel({
       })
       .on("broadcast", { event: EXAM_BROADCAST.session }, ({ payload }) => {
         const parsed = SessionMessageWithStudent.safeParse(payload);
-        if (parsed.success) actions.applySession(parsed.data);
+        if (!parsed.success) return;
+        updatedDuringCatchUp?.add(parsed.data.id);
+        actions.applySession(parsed.data);
       })
       .on("broadcast", { event: EXAM_BROADCAST.frame }, ({ payload }) => {
         const parsed = parseExamMessage(EXAM_BROADCAST.frame, payload);
@@ -134,5 +151,5 @@ export function useExamChannel({
       document.removeEventListener("visibilitychange", onFocus);
       void client.removeChannel(channel);
     };
-  }, [client, examId, offsetMs, store]);
+  }, [client, examId, store]);
 }

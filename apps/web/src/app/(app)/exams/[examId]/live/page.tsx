@@ -14,9 +14,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
 /**
  * 2.4 Live wall (Figma 51:2080) with 2.4a, 2.4b, 2.4c, 2.4e and the 2.5 drawer at ?session=<id>, for
- * proctors of the exam and the exam office. Rendered on the server with the exam's sessions and its
- * flag and log events from the last 60 minutes under RLS; an exam the staff member may not see is a
- * 404. Realtime takes over in the browser.
+ * proctors of the exam and the exam office. Rendered on the server with the exam's sessions, its
+ * flag and log events from the last 60 minutes and its older phone and second-face flags under RLS;
+ * an exam the staff member may not see is a 404. Realtime takes over in the browser.
  */
 export default async function LiveWallPage({ params }: PageProps<"/exams/[examId]/live">) {
   await requireStaff();

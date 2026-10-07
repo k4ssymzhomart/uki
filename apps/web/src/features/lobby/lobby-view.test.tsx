@@ -44,15 +44,19 @@ const session = (n: number, state: string, detail: string | null, os = "windows"
   device: { os, app_version: "0.1.0" },
 });
 const sessions = parseRows(LobbySession, [
-  session(1, "identity", "card_retry:2"),
-  session(2, "checking", "Telegram", "macos"),
-  session(3, "checking", "camera_blocked"),
+  session(1, "identity", "card:retry:2"),
+  session(2, "checking", "app:Telegram", "macos"),
+  session(3, "checking", "camera:busy"),
   session(5, "ready", null, "macos"),
 ]);
+
+/** No server answer: the browser's clock stands. */
+const noMeasurement = async () => null;
 
 function renderLobby(
   who: { role: "exam_office" | "proctor" | "admin"; isLead: boolean },
   startAction = vi.fn(),
+  measureOffset: () => Promise<number | null> = noMeasurement,
 ) {
   return renderWithIntl(
     <LobbyView
@@ -62,6 +66,7 @@ function renderLobby(
       who={who}
       nowMs={now}
       startAction={startAction}
+      measureOffset={measureOffset}
     />,
     DANA,
   );
@@ -118,6 +123,24 @@ describe("1.5 Lobby", () => {
 
   it("enables Start exam for the lead proctor and the exam office only", () => {
     renderLobby({ role: "proctor", isLead: false });
+    expect(screen.getByRole("button", { name: "Start exam" }).hasAttribute("disabled")).toBe(true);
+  });
+
+  it("runs the banner and the Start exam gate on the server's clock, not the browser's", async () => {
+    // The lead's laptop runs 5 minutes fast: 10:01 on the laptop, 09:56 on the server.
+    vi.setSystemTime(now + 5 * 60_000);
+    const fast = async () => -5 * 60_000;
+    renderLobby({ role: "proctor", isLead: true }, vi.fn(), fast);
+    expect(await screen.findByText("Starts at 10:00 · in 4 min")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Start exam" }).hasAttribute("disabled")).toBe(false);
+  });
+
+  it("closes Start exam at the server's start even when the browser's clock is slow", async () => {
+    // 09:58 on the laptop, 10:01 on the server: start_exam would answer already_started.
+    vi.setSystemTime(now + 2 * 60_000);
+    const slow = async () => 3 * 60_000;
+    renderLobby({ role: "proctor", isLead: true }, vi.fn(), slow);
+    expect(await screen.findByText("Started at 10:00")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Start exam" }).hasAttribute("disabled")).toBe(true);
   });
 

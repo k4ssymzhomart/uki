@@ -21,7 +21,7 @@ import { useState, useTransition } from "react";
 import stopwatchArt from "../../assets/uki-3d-stopwatch.png";
 import { DASHBOARD_LOCALE } from "../../i18n/locale.ts";
 import { formatGroupCodes, minutesUntil, timeOf } from "../../lib/format.ts";
-import { useNow } from "../../lib/use-now.ts";
+import { useNow, useServerOffset } from "../../lib/use-now.ts";
 import { PageHeader } from "../shell/page-header.tsx";
 import { shortName } from "../wall/names.ts";
 import { QuickMessage } from "../wall/quick-message.tsx";
@@ -56,6 +56,8 @@ export type LobbyViewProps = {
   /** The server's clock when the page rendered. */
   nowMs: number;
   startAction: StartExamAction;
+  /** Server clock minus this browser's (lib/use-now.ts); tests pass a fake. Must be stable. */
+  measureOffset?: () => Promise<number | null>;
 };
 
 const CLOCK_TICK_MS = 15_000;
@@ -72,10 +74,12 @@ export function LobbyView({
   who,
   nowMs,
   startAction,
+  measureOffset,
 }: LobbyViewProps) {
   const t = useTranslations("dashboard");
   const toast = useToast();
-  const now = useNow(nowMs, CLOCK_TICK_MS);
+  // The banner and the Start exam gate run on the server's clock, like start_exam.
+  const now = useNow(nowMs, CLOCK_TICK_MS, useServerOffset(measureOffset));
   const sessions = useLobbySessions(exam.id, initialSessions);
   const rows = lobbyRows(roster, sessions);
   const counts = lobbyCounts(rows, roster);
@@ -106,8 +110,6 @@ export function LobbyView({
         return t("lobby.detail.appOpen", { app: detail.app });
       case "cardRetry":
         return t("lobby.detail.cardRetry", { attempt: detail.attempt, max: detail.max });
-      case "text":
-        return detail.text;
       default:
         return t(`lobby.detail.${detail.key}`);
     }
@@ -192,7 +194,7 @@ export function LobbyView({
               value={filter}
               onValueChange={(value) => setFilter(value as LobbyFilter)}
               aria-label={t("lobby.table.filterLabel")}
-              className="inset-ring-0"
+              variant="plain"
             >
               {LOBBY_FILTERS.map((id) => (
                 <Tab key={id} value={id}>

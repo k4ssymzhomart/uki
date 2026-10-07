@@ -97,7 +97,8 @@ function DrawerMessage({
           const preset = presets.find((p) => p === next);
           if (preset !== undefined) setChosen(preset);
         }}
-        className="flex w-full flex-wrap gap-1.5 overflow-visible bg-transparent p-0 inset-ring-0"
+        variant="plain"
+        className="flex w-full flex-wrap gap-1.5 overflow-visible bg-transparent p-0"
       >
         {presets.map((preset) => (
           <Tab key={preset} value={preset} lang={locale}>

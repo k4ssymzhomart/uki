@@ -1,14 +1,9 @@
 // The server render's data for /exams/[examId]/live (plan, Live wall data flow step 1): the exam, its
-// roster and sessions, and its flag and log events from the last 60 minutes, all under the caller's RLS.
+// roster and sessions, its flag and log events from the last 60 minutes and every older phone or
+// second-face flag (the Flagged tile has no time limit), all under the caller's RLS.
 
-import {
-  type AnyClient,
-  fetchRecentEvents,
-  fetchSessions,
-  initialEventsSince,
-  readPages,
-} from "./queries.ts";
-import { ExamGroupRow, ExamRow, parseRows, RosterRow, StaffRow } from "./rows.ts";
+import { type AnyClient, fetchInitialEvents, fetchSessions, readPages } from "./queries.ts";
+import { ExamGroupRow, ExamRow, parseQuestionCount, parseRows, RosterRow, StaffRow } from "./rows.ts";
 import type { WallInitialData, WallStudent } from "./wall-store.ts";
 
 /** Null when the exam does not exist or the caller may not see it. */
@@ -36,7 +31,7 @@ export async function loadWall(
         .range(from, to),
     ),
     fetchSessions(client, examId),
-    fetchRecentEvents(client, examId, initialEventsSince(nowMs)),
+    fetchInitialEvents(client, examId, nowMs),
     readPages((from, to) =>
       client
         .from("staff")
@@ -45,7 +40,7 @@ export async function loadWall(
         .order("id")
         .range(from, to),
     ),
-    client.from("exam_questions").select("question_id", { count: "exact", head: true }).eq("exam_id", examId),
+    client.rpc("exam_question_count", { exam_id: examId }),
   ]);
 
   const groups = parseRows(ExamGroupRow, groupsResult.data)
@@ -59,11 +54,8 @@ export async function loadWall(
     seat: row.seat,
   }));
   const staff = parseRows(StaffRow, staffRows);
-  // A proctor cannot read exam_questions, so the count is 0 for them: treat that as unknown.
-  const questionCount =
-    questionsResult.error === null && typeof questionsResult.count === "number" && questionsResult.count > 0
-      ? questionsResult.count
-      : null;
+  // exam_question_count answers exam staff (proctors cannot read exam_questions); null is unknown.
+  const questionCount = questionsResult.error === null ? parseQuestionCount(questionsResult.data) : null;
 
   return {
     exam: {

@@ -1,7 +1,7 @@
 "use client";
 
 import { isFinalState } from "@uki/contracts";
-import { ActionMenu, type MenuAction, StudentTile } from "@uki/ui";
+import { ActionMenu, type MenuAction, StudentTile, StudentTileMore } from "@uki/ui";
 import { useTranslations } from "next-intl";
 import { memo, useState } from "react";
 import { EndSessionDialog } from "./end-session-dialog.tsx";
@@ -110,6 +110,7 @@ export const WallTile = memo(function WallTile({ sessionId, onOpenTimeline }: Wa
       stateLabel={t("tile.state", { state: view.state })}
       data-session-id={sessionId}
       data-wall-state={view.state}
+      trailing={<StudentTileMore />}
       className="w-full"
     />
   );
@@ -124,6 +125,7 @@ export const WallTile = memo(function WallTile({ sessionId, onOpenTimeline }: Wa
         groups={messaging ? message.groups : actions}
         note={messaging ? message.note : undefined}
         open={open}
+        alignOffset={12}
         onOpenChange={(next) => {
           setOpen(next);
           if (!next && messaging) afterMenuCloses(() => setMode("actions"));

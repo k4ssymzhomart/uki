@@ -2,12 +2,40 @@
 // render, the exam:{exam_id} channel and the refetch after a reconnect. The reducers are pure and
 // exported for tests; the Zustand store only applies them.
 import type { CompactEvent, FrameMessage, SessionTileMessage } from "@uki/contracts";
-import { toMs } from "@uki/contracts";
+import { FLAG_TILE_EVENT_TYPES, PAUSE_EVENT_TYPES, toMs } from "@uki/contracts";
 import { createStore } from "zustand/vanilla";
 import type { SessionDevice, SessionRow } from "./rows.ts";
 
-/** Most events kept per session; the oldest go first. The drawer reads the full timeline itself. */
+/**
+ * Most events kept per session; the oldest go first, except phone, second-face and pause events (see
+ * capEvents). The drawer reads the full timeline itself.
+ */
 export const MAX_EVENTS_PER_SESSION = 300;
+
+/**
+ * Events the cap never drops: the Flagged tile reads any unreviewed phone.detected or face.second
+ * whatever its age, and the Paused tile reads the pause that started it.
+ */
+const PINNED_EVENT_TYPES: ReadonlySet<string> = new Set([...FLAG_TILE_EVENT_TYPES, ...PAUSE_EVENT_TYPES]);
+
+/**
+ * A session's list (oldest first) cut to MAX_EVENTS_PER_SESSION by dropping its oldest other events;
+ * pinned events always stay.
+ */
+function capEvents(list: CompactEvent[]): CompactEvent[] {
+  if (list.length <= MAX_EVENTS_PER_SESSION) return list;
+  const pinned = list.filter((event) => PINNED_EVENT_TYPES.has(event.type)).length;
+  let drop = list.length - Math.max(MAX_EVENTS_PER_SESSION, pinned);
+  const kept: CompactEvent[] = [];
+  for (const event of list) {
+    if (drop > 0 && !PINNED_EVENT_TYPES.has(event.type)) {
+      drop -= 1;
+      continue;
+    }
+    kept.push(event);
+  }
+  return kept;
+}
 
 export interface WallStudent {
   id: string;
@@ -66,7 +94,10 @@ export interface WallInitialData {
   sessions: SessionRow[];
   events: CompactEvent[];
   staff: { id: string; fullName: string }[];
-  /** Server time when the page rendered; the client derives its clock offset from it. */
+  /**
+   * Server time when the page rendered: the clock of the first render, so it matches the server HTML.
+   * The ticker then runs on the offset lib/use-now.ts measures.
+   */
   serverNowMs: number;
 }
 
@@ -113,8 +144,8 @@ export function initialWallState(data: WallInitialData, nowMs: number): WallStat
 
 /**
  * Adds events, dropping ids already held, keeping each session's list ordered by `received_at` and
- * capped at MAX_EVENTS_PER_SESSION. Events of other exams are ignored. Returns `state` unchanged
- * when nothing is new, so subscribers do not re-render.
+ * capped at MAX_EVENTS_PER_SESSION (capEvents). Events of other exams are ignored. Returns `state`
+ * unchanged when nothing is new, so subscribers do not re-render.
  */
 export function mergeEvents(state: WallState, incoming: readonly CompactEvent[]): WallState {
   let events: Record<string, CompactEvent[]> | null = null;
@@ -132,8 +163,7 @@ export function mergeEvents(state: WallState, incoming: readonly CompactEvent[])
   }
   if (events === null) return state;
   for (const sessionId of touched) {
-    const list = (events[sessionId] ?? []).sort(byReceived);
-    events[sessionId] = list.length > MAX_EVENTS_PER_SESSION ? list.slice(-MAX_EVENTS_PER_SESSION) : list;
+    events[sessionId] = capEvents((events[sessionId] ?? []).sort(byReceived));
   }
   return { ...state, events, lastReceivedAt };
 }
@@ -185,11 +215,22 @@ export function applySession(
   return { ...state, sessions: { ...state.sessions, [message.id]: next } };
 }
 
-/** Rows from a refetch replace what the store holds for those sessions; others stay. */
-export function mergeSessions(state: WallState, rows: readonly SessionRow[]): WallState {
+/**
+ * Rows from a refetch replace what the store holds for those sessions; others stay. Sessions in `keep`
+ * that the store holds stay as they are: a `session` message updated them while the refetch was in
+ * flight, so its row may be older than what the store shows.
+ */
+export function mergeSessions(
+  state: WallState,
+  rows: readonly SessionRow[],
+  keep: ReadonlySet<string> = new Set(),
+): WallState {
   if (rows.length === 0) return state.unknownSessions ? { ...state, unknownSessions: false } : state;
   const sessions = { ...state.sessions };
-  for (const row of rows) sessions[row.id] = sessionFromRow(row);
+  for (const row of rows) {
+    if (keep.has(row.id) && state.sessions[row.id] !== undefined) continue;
+    sessions[row.id] = sessionFromRow(row);
+  }
   return { ...state, sessions, unknownSessions: false };
 }
 
@@ -209,7 +250,7 @@ export interface WallActions {
   applyEvent: (event: CompactEvent) => void;
   mergeEvents: (events: readonly CompactEvent[]) => void;
   applySession: (message: SessionTileMessage & { student_id?: string | undefined }) => void;
-  mergeSessions: (rows: readonly SessionRow[]) => void;
+  mergeSessions: (rows: readonly SessionRow[], keep?: ReadonlySet<string>) => void;
   applyFrame: (frame: FrameMessage) => void;
   tick: (nowMs: number) => void;
 }
@@ -230,7 +271,7 @@ export function createWallStore(data: WallInitialData, nowMs: number) {
         applyEvent: (event) => apply((s) => applyEvent(s, event)),
         mergeEvents: (events) => apply((s) => mergeEvents(s, events)),
         applySession: (message) => apply((s) => applySession(s, message)),
-        mergeSessions: (rows) => apply((s) => mergeSessions(s, rows)),
+        mergeSessions: (rows, keep) => apply((s) => mergeSessions(s, rows, keep)),
         applyFrame: (frame) => apply((s) => applyFrame(s, frame)),
         tick: (now) => apply((s) => tick(s, now)),
       },

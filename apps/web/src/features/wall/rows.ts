@@ -76,3 +76,12 @@ export function parseRows<T>(schema: z.ZodType<T>, rows: unknown): T[] {
 
 export const parseEvents = (rows: unknown): CompactEvent[] => parseRows(CompactEvent, rows);
 export const parseSessions = (rows: unknown): SessionRow[] => parseRows(SessionRow, rows);
+
+/** `exam_question_count(exam_id)`: the exam's questions for its staff, null for anyone else. */
+export const QuestionCount = z.number().int().nonnegative().nullable();
+
+/** The count for "Q 9 of 20" in 2.5; null (unknown) when it is missing, unreadable or 0. */
+export function parseQuestionCount(value: unknown): number | null {
+  const parsed = QuestionCount.safeParse(value);
+  return parsed.success && parsed.data !== null && parsed.data > 0 ? parsed.data : null;
+}

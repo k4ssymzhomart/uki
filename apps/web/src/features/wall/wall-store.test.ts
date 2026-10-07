@@ -1,3 +1,4 @@
+import { tileState } from "@uki/contracts";
 import { describe, expect, it } from "vitest";
 import { EXAM_ID, event, initialData, iso, NOW, sessionId, sessionRow, studentId } from "./test-helpers.tsx";
 import {
@@ -59,6 +60,53 @@ describe("wall store reducers", () => {
     expect(kept[0]?.id).toBe(many[5]?.id);
   });
 
+  it("never lets the cap drop a phone flag or the current pause, so the tile keeps them", () => {
+    const phone = event(
+      1,
+      "phone.detected",
+      { score: 0.94 },
+      { at: iso(-3_000_000), received_at: iso(-2_999_000) },
+    );
+    const pause = event(
+      2,
+      "session.paused",
+      { reason: "face_missing" },
+      { review: "log", received_at: iso(-2_999_000) },
+    );
+    const noise = (n: number) =>
+      Array.from({ length: MAX_EVENTS_PER_SESSION }, (_, i) =>
+        event(
+          n,
+          i % 2 === 0 ? "gaze.on_screen" : "answer.saved",
+          {},
+          {
+            review: "none",
+            at: iso(-2_000_000 + i * 10),
+            received_at: iso(-2_000_000 + i * 10),
+          },
+        ),
+      );
+    let state = mergeEvents(initialWallState(initialData(), NOW), [phone, pause]);
+    state = mergeEvents(state, [...noise(1), ...noise(2)]);
+
+    const one = state.events[sessionId(1)] ?? [];
+    expect(one).toHaveLength(MAX_EVENTS_PER_SESSION);
+    expect(one[0]?.id).toBe(phone.id);
+    const tile = tileState(
+      { session: { id: sessionId(1), state: "writing", last_seen_at: iso(-5_000) }, events: one },
+      NOW,
+    );
+    expect(tile.state).toBe("flagged");
+
+    const two = state.events[sessionId(2)] ?? [];
+    expect(two.map((e) => e.id)).toContain(pause.id);
+    const paused = tileState(
+      { session: { id: sessionId(2), state: "paused", last_seen_at: iso(-5_000) }, events: two },
+      NOW,
+    );
+    expect(paused.line).toEqual({ kind: "paused", reason: "face_missing", sinceMs: 60_000 });
+  });
+
   it("applies a session message to its tile fields", () => {
     const state = initialWallState(initialData(), NOW);
     const next = applySession(state, {
@@ -111,6 +159,27 @@ describe("wall store reducers", () => {
     const refetched = mergeSessions(stranger, [sessionRow(9)]);
     expect(refetched.sessions[sessionId(9)]?.state).toBe("writing");
     expect(refetched.unknownSessions).toBe(false);
+  });
+
+  it("keeps a session a message updated while the refetch was in flight", () => {
+    const state = initialWallState(initialData([sessionRow(1), sessionRow(2)]), NOW);
+    const ended = applySession(state, {
+      id: sessionId(1),
+      exam_id: EXAM_ID,
+      state: "ended",
+      status: { question: 1 },
+      last_seen_at: iso(0),
+      extra_min: 0,
+      paused_s: 0,
+    });
+    // The refetch read session 1 before the End committed; session 2 and the new session 9 are fresh.
+    const rows = [sessionRow(1), sessionRow(2, { state: "paused" }), sessionRow(9)];
+    const merged = mergeSessions(ended, rows, new Set([sessionId(1), sessionId(9)]));
+    expect(merged.sessions[sessionId(1)]?.state).toBe("ended");
+    expect(merged.sessions[sessionId(2)]?.state).toBe("paused");
+    expect(merged.sessions[sessionId(9)]?.state).toBe("writing");
+    // Without the in-flight ids, a refetch replaces what the store holds.
+    expect(mergeSessions(ended, rows).sessions[sessionId(1)]?.state).toBe("writing");
   });
 
   it("records each confirmed still once", () => {
