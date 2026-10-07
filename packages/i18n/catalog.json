@@ -1,0 +1,2012 @@
+{
+  "about": "Üki student app and Üki Lock strings for Phase 0. 135 keys come from Figma sheets S.1 (171:15780) and S.2 (172:15868); 87 keys are added by the Phase 0 plan; 3 keys (language.*) are the ҚАЗ, РУС and ENG switch labels from the title bar in Figma. Kazakh and Russian are first-pass translations; a Kazakh and a Russian speaker read them before Demo Day. Plural messages use ICU syntax. Build with `pnpm i18n:build` into packages/i18n/messages/{en,kk,ru}.json.",
+  "file": "packages/i18n/catalog.json",
+  "figma_file": "9RB9aBz6lzS6XHpf5do5Gh",
+  "renames": {
+    "app.title": "app.title.default",
+    "event.phone": "event.phone.title",
+    "done.submitted": "done.submitted.label",
+    "done.time_used": "done.time_used.label",
+    "done.flags": "done.flags.label"
+  },
+  "keys": [
+    {
+      "key": "app.title",
+      "group": "Shared",
+      "source": "figma",
+      "en": "Üki · {course} · {examType}",
+      "kk": "Üki · {course} · {examType}",
+      "ru": "Üki · {course} · {examType}",
+      "notes": "Value. Course name comes from the exam. Exam type is its own key."
+    },
+    {
+      "key": "app.title.locked",
+      "group": "Shared",
+      "source": "figma",
+      "en": "Üki · {course} · {examType} · browser locked",
+      "kk": "Üki · {course} · {examType} · браузер құлыпталған",
+      "ru": "Üki · {course} · {examType} · браузер заблокирован",
+      "notes": "Value"
+    },
+    {
+      "key": "app.title.submitted",
+      "group": "Shared",
+      "source": "figma",
+      "en": "Üki · {course} · {examType} · submitted",
+      "kk": "Üki · {course} · {examType} · тапсырылды",
+      "ru": "Üki · {course} · {examType} · сдано",
+      "notes": "Value"
+    },
+    {
+      "key": "exam.type.midterm",
+      "group": "Shared",
+      "source": "figma",
+      "en": "Midterm",
+      "kk": "Аралық бақылау",
+      "ru": "Рубежный контроль",
+      "notes": "+143% RU"
+    },
+    {
+      "key": "stepper.join",
+      "group": "Shared",
+      "source": "figma",
+      "en": "Join",
+      "kk": "Кіру",
+      "ru": "Вход",
+      "notes": ""
+    },
+    {
+      "key": "stepper.check",
+      "group": "Shared",
+      "source": "figma",
+      "en": "System check",
+      "kk": "Тексеру",
+      "ru": "Проверка",
+      "notes": "Short form. The heading uses check.title."
+    },
+    {
+      "key": "stepper.identity",
+      "group": "Shared",
+      "source": "figma",
+      "en": "Identity",
+      "kk": "Тұлға",
+      "ru": "Личность",
+      "notes": ""
+    },
+    {
+      "key": "stepper.rules",
+      "group": "Shared",
+      "source": "figma",
+      "en": "Rules",
+      "kk": "Ережелер",
+      "ru": "Правила",
+      "notes": "+60% KZ"
+    },
+    {
+      "key": "action.continue",
+      "group": "Shared",
+      "source": "figma",
+      "en": "Continue",
+      "kk": "Жалғастыру",
+      "ru": "Продолжить",
+      "notes": ""
+    },
+    {
+      "key": "action.ask_proctor",
+      "group": "Shared",
+      "source": "figma",
+      "en": "Ask proctor",
+      "kk": "Проктордан сұрау",
+      "ru": "Спросить проктора",
+      "notes": "+55% RU. Used on 1.3 and 2.1 to 2.3."
+    },
+    {
+      "key": "action.cancel",
+      "group": "Shared",
+      "source": "figma",
+      "en": "Cancel",
+      "kk": "Болдырмау",
+      "ru": "Отмена",
+      "notes": "+50% KZ"
+    },
+    {
+      "key": "status.ready",
+      "group": "Shared",
+      "source": "figma",
+      "en": "Ready",
+      "kk": "Дайын",
+      "ru": "Готово",
+      "notes": ""
+    },
+    {
+      "key": "status.checking",
+      "group": "Shared",
+      "source": "figma",
+      "en": "Checking",
+      "kk": "Тексерілуде",
+      "ru": "Проверка",
+      "notes": "+38% KZ"
+    },
+    {
+      "key": "status.fix",
+      "group": "Shared",
+      "source": "figma",
+      "en": "Fix this",
+      "kk": "Түзету",
+      "ru": "Исправить",
+      "notes": ""
+    },
+    {
+      "key": "status.needs_help",
+      "group": "Shared",
+      "source": "figma",
+      "en": "Needs help",
+      "kk": "Көмек керек",
+      "ru": "Нужна помощь",
+      "notes": ""
+    },
+    {
+      "key": "join.step",
+      "group": "1.1 Join",
+      "source": "figma",
+      "en": "Step {n} of {total}",
+      "kk": "Қадам {n} / {total}",
+      "ru": "Шаг {n} из {total}",
+      "notes": "Value"
+    },
+    {
+      "key": "join.title",
+      "group": "1.1 Join",
+      "source": "figma",
+      "en": "Join your exam.",
+      "kk": "Емтиханға кіріңіз.",
+      "ru": "Войдите на экзамен.",
+      "notes": ""
+    },
+    {
+      "key": "join.body",
+      "group": "1.1 Join",
+      "source": "figma",
+      "en": "Enter the exam code from your invitation email and your student ID. Üki checks your laptop next.",
+      "kk": "Шақыру хатындағы емтихан кодын және студенттік ID-ді енгізіңіз. Кейін Üki ноутбугыңызды тексереді.",
+      "ru": "Введите код экзамена из письма-приглашения и ID студента. Затем Üki проверит ваш ноутбук.",
+      "notes": ""
+    },
+    {
+      "key": "join.code.label",
+      "group": "1.1 Join",
+      "source": "figma",
+      "en": "Exam code",
+      "kk": "Емтихан коды",
+      "ru": "Код экзамена",
+      "notes": "+33% KZ"
+    },
+    {
+      "key": "join.code.helper",
+      "group": "1.1 Join",
+      "source": "figma",
+      "en": "Not case sensitive. Ask your proctor if you lost it.",
+      "kk": "Әріп өлшемі маңызды емес. Код жоқ болса, проктордан сұраңыз.",
+      "ru": "Регистр не важен. Потеряли код — спросите проктора.",
+      "notes": "+33% KZ"
+    },
+    {
+      "key": "join.student_id.label",
+      "group": "1.1 Join",
+      "source": "figma",
+      "en": "Student ID",
+      "kk": "Студенттік ID",
+      "ru": "ID студента",
+      "notes": "+30% KZ"
+    },
+    {
+      "key": "join.student_id.helper",
+      "group": "1.1 Join",
+      "source": "figma",
+      "en": "8 digits, printed on your student card.",
+      "kk": "8 сан, студенттік билетіңізде жазылған.",
+      "ru": "8 цифр, указаны на студенческом билете.",
+      "notes": ""
+    },
+    {
+      "key": "join.privacy",
+      "group": "1.1 Join",
+      "source": "figma",
+      "en": "Your camera stays on this laptop. Only events and flagged frames are sent.",
+      "kk": "Камера осы ноутбукта қалады. Тек оқиғалар мен белгіленген кадрлар жіберіледі.",
+      "ru": "Камера остаётся на этом ноутбуке. Передаются только события и отмеченные кадры.",
+      "notes": ""
+    },
+    {
+      "key": "join.error.title",
+      "group": "1.1 Join",
+      "source": "figma",
+      "en": "Check the code.",
+      "kk": "Кодты тексеріңіз.",
+      "ru": "Проверьте код.",
+      "notes": "Frame 1.1a."
+    },
+    {
+      "key": "join.error.body",
+      "group": "1.1 Join",
+      "source": "figma",
+      "en": "No exam has this code. Copy it from your invitation email.",
+      "kk": "Бұл кодпен емтихан жоқ. Оны шақыру хатынан көшіріп алыңыз.",
+      "ru": "Экзамена с таким кодом нет. Скопируйте его из письма-приглашения.",
+      "notes": "Frame 1.1a."
+    },
+    {
+      "key": "join.code.format",
+      "group": "1.1 Join",
+      "source": "figma",
+      "en": "Codes have three parts: course, group and day, like MATH2-204-FRI.",
+      "kk": "Код үш бөліктен тұрады: курс, топ және күн, мысалы MATH2-204-FRI.",
+      "ru": "Код состоит из трёх частей: курс, группа и день, например MATH2-204-FRI.",
+      "notes": "Frame 1.1a."
+    },
+    {
+      "key": "check.title",
+      "group": "1.2 System check",
+      "source": "figma",
+      "en": "System check",
+      "kk": "Жүйені тексеру",
+      "ru": "Проверка системы",
+      "notes": "+33% RU"
+    },
+    {
+      "key": "check.subtitle",
+      "group": "1.2 System check",
+      "source": "figma",
+      "en": "Fix anything red, then check again.",
+      "kk": "Қызылмен белгіленгенді түзетіп, қайта тексеріңіз.",
+      "ru": "Исправьте всё красное и проверьте снова.",
+      "notes": "+40% KZ"
+    },
+    {
+      "key": "check.preview.badge",
+      "group": "1.2 System check",
+      "source": "figma",
+      "en": "LIVE · LOCAL",
+      "kk": "КАМЕРА · ЖЕРГІЛІКТІ",
+      "ru": "КАМЕРА · ЛОКАЛЬНО",
+      "notes": "+58% KZ. KZ and RU say “camera”: “live” reads as broadcasting."
+    },
+    {
+      "key": "check.preview.status",
+      "group": "1.2 System check",
+      "source": "figma",
+      "en": "{count, plural, one {# face} other {# faces}} · good light",
+      "kk": "{count} бет · жарық жақсы",
+      "ru": "{count, plural, one {# лицо} few {# лица} many {# лиц} other {# лица}} · свет хороший",
+      "notes": "Value. ICU plural. Figma: {count} face · good light."
+    },
+    {
+      "key": "check.preview.caption",
+      "group": "1.2 System check",
+      "source": "figma",
+      "en": "This preview never leaves your laptop.",
+      "kk": "Бұл көрініс ноутбугыңыздан шықпайды.",
+      "ru": "Это изображение не покидает ваш ноутбук.",
+      "notes": ""
+    },
+    {
+      "key": "check.camera.title",
+      "group": "1.2 System check",
+      "source": "figma",
+      "en": "Camera",
+      "kk": "Камера",
+      "ru": "Камера",
+      "notes": ""
+    },
+    {
+      "key": "check.camera.ok",
+      "group": "1.2 System check",
+      "source": "figma",
+      "en": "One face, good light, lens not covered.",
+      "kk": "Бір бет, жарық жақсы, объектив ашық.",
+      "ru": "Одно лицо, хороший свет, объектив открыт.",
+      "notes": ""
+    },
+    {
+      "key": "check.browser.title",
+      "group": "1.2 System check",
+      "source": "figma",
+      "en": "Browser lock",
+      "kk": "Браузер құлпы",
+      "ru": "Блокировка браузера",
+      "notes": "+58% RU"
+    },
+    {
+      "key": "check.browser.ok",
+      "group": "1.2 System check",
+      "source": "figma",
+      "en": "Üki can close other tabs during the exam.",
+      "kk": "Емтихан кезінде Üki басқа беттерді жаба алады.",
+      "ru": "Во время экзамена Üki может закрыть другие вкладки.",
+      "notes": ""
+    },
+    {
+      "key": "check.apps.title",
+      "group": "1.2 System check",
+      "source": "figma",
+      "en": "Other apps",
+      "kk": "Басқа қолданбалар",
+      "ru": "Другие приложения",
+      "notes": "+70% KZ"
+    },
+    {
+      "key": "check.apps.fail",
+      "group": "1.2 System check",
+      "source": "figma",
+      "en": "{app} is open. Close it to continue.",
+      "kk": "{app} ашық. Жалғастыру үшін оны жабыңыз.",
+      "ru": "Открыт {app}. Закройте его, чтобы продолжить.",
+      "notes": "Value. {app} is the process name, like Telegram."
+    },
+    {
+      "key": "check.screen.title",
+      "group": "1.2 System check",
+      "source": "figma",
+      "en": "Screen sharing",
+      "kk": "Экранды бөлісу",
+      "ru": "Демонстрация экрана",
+      "notes": "+36% RU. Also the row title in E.4."
+    },
+    {
+      "key": "check.screen.ok",
+      "group": "1.2 System check",
+      "source": "figma",
+      "en": "No screen sharing or remote desktop running.",
+      "kk": "Экранды бөлісу мен қашықтан басқару қосылмаған.",
+      "ru": "Демонстрация экрана и удалённый доступ не запущены.",
+      "notes": ""
+    },
+    {
+      "key": "check.storage.title",
+      "group": "1.2 System check",
+      "source": "figma",
+      "en": "Storage",
+      "kk": "Диск",
+      "ru": "Диск",
+      "notes": ""
+    },
+    {
+      "key": "check.storage.running",
+      "group": "1.2 System check",
+      "source": "figma",
+      "en": "Checking free space for local evidence…",
+      "kk": "Дискідегі бос орын тексерілуде…",
+      "ru": "Проверяем свободное место на диске…",
+      "notes": ""
+    },
+    {
+      "key": "check.network.title",
+      "group": "1.2 System check",
+      "source": "figma",
+      "en": "Network",
+      "kk": "Желі",
+      "ru": "Сеть",
+      "notes": ""
+    },
+    {
+      "key": "check.network.ok",
+      "group": "1.2 System check",
+      "source": "figma",
+      "en": "Exam server replies in {ms} ms.",
+      "kk": "Емтихан сервері {ms} мс ішінде жауап береді.",
+      "ru": "Сервер экзамена отвечает за {ms} мс.",
+      "notes": "Value. +42% KZ"
+    },
+    {
+      "key": "check.version.title",
+      "group": "1.2 System check",
+      "source": "figma",
+      "en": "Üki version",
+      "kk": "Üki нұсқасы",
+      "ru": "Версия Üki",
+      "notes": ""
+    },
+    {
+      "key": "check.version.ok",
+      "group": "1.2 System check",
+      "source": "figma",
+      "en": "{version} is the latest. No update needed.",
+      "kk": "{version} — соңғы нұсқа. Жаңарту керек емес.",
+      "ru": "{version} — последняя версия. Обновлять не нужно.",
+      "notes": "Value"
+    },
+    {
+      "key": "check.again",
+      "group": "1.2 System check",
+      "source": "figma",
+      "en": "Check again",
+      "kk": "Қайта тексеру",
+      "ru": "Проверить снова",
+      "notes": "+36% RU"
+    },
+    {
+      "key": "identity.title",
+      "group": "1.3 Identity",
+      "source": "figma",
+      "en": "Show your student card.",
+      "kk": "Студенттік билетті көрсетіңіз.",
+      "ru": "Покажите студенческий билет.",
+      "notes": "+30% KZ"
+    },
+    {
+      "key": "identity.subtitle",
+      "group": "1.3 Identity",
+      "source": "figma",
+      "en": "Once, before the start. Üki checks that the card and your face match.",
+      "kk": "Бір рет, басталар алдында. Üki билет пен бетіңіздің сәйкестігін тексереді.",
+      "ru": "Один раз, перед началом. Üki сверит билет с вашим лицом.",
+      "notes": ""
+    },
+    {
+      "key": "identity.hint",
+      "group": "1.3 Identity",
+      "source": "figma",
+      "en": "Hold your student card inside the lime frame",
+      "kk": "Студенттік билетті жасыл жиек ішінде ұстаңыз",
+      "ru": "Держите студенческий билет в зелёной рамке",
+      "notes": ""
+    },
+    {
+      "key": "identity.caption",
+      "group": "1.3 Identity",
+      "source": "figma",
+      "en": "The card and your face are compared on this laptop. Nothing is uploaded.",
+      "kk": "Билет пен бетіңіз осы ноутбукта салыстырылады. Ештеңе жүктелмейді.",
+      "ru": "Билет и лицо сравниваются на этом ноутбуке. Ничего не загружается.",
+      "notes": ""
+    },
+    {
+      "key": "identity.face.title",
+      "group": "1.3 Identity",
+      "source": "figma",
+      "en": "Face",
+      "kk": "Бет",
+      "ru": "Лицо",
+      "notes": ""
+    },
+    {
+      "key": "identity.face.ok",
+      "group": "1.3 Identity",
+      "source": "figma",
+      "en": "Matches the photo on your card.",
+      "kk": "Билеттегі фотоға сәйкес.",
+      "ru": "Совпадает с фото на билете.",
+      "notes": "Figma says “Matches your enrolment photo.”; the face is matched to the card photo, so the catalog wins."
+    },
+    {
+      "key": "identity.card.title",
+      "group": "1.3 Identity",
+      "source": "figma",
+      "en": "Student card",
+      "kk": "Студенттік билет",
+      "ru": "Студенческий билет",
+      "notes": "+50% RU"
+    },
+    {
+      "key": "identity.card.running",
+      "group": "1.3 Identity",
+      "source": "figma",
+      "en": "Reading the card… keep it still.",
+      "kk": "Билет оқылуда… қозғалтпаңыз.",
+      "ru": "Читаем билет… не двигайте его.",
+      "notes": ""
+    },
+    {
+      "key": "identity.person.title",
+      "group": "1.3 Identity",
+      "source": "figma",
+      "en": "One person",
+      "kk": "Бір адам",
+      "ru": "Один человек",
+      "notes": ""
+    },
+    {
+      "key": "identity.person.ok",
+      "group": "1.3 Identity",
+      "source": "figma",
+      "en": "Only you are in the frame.",
+      "kk": "Кадрда тек сіз барсыз.",
+      "ru": "В кадре только вы.",
+      "notes": ""
+    },
+    {
+      "key": "identity.privacy",
+      "group": "1.3 Identity",
+      "source": "figma",
+      "en": "Your proctor only sees “matched” or “needs help”, never the photo.",
+      "kk": "Проктор фотоны көрмейді, тек «сәйкес» немесе «көмек керек» деп көреді.",
+      "ru": "Проктор видит только «совпало» или «нужна помощь», но не фото.",
+      "notes": ""
+    },
+    {
+      "key": "identity.help.title",
+      "group": "1.3 Identity",
+      "source": "figma",
+      "en": "Your proctor will help.",
+      "kk": "Проктор көмектеседі.",
+      "ru": "Проктор поможет.",
+      "notes": "Frame 1.3a."
+    },
+    {
+      "key": "identity.help.body",
+      "group": "1.3 Identity",
+      "source": "figma",
+      "en": "Üki couldn’t read the card after {tries, plural, one {# try} other {# tries}}. Your proctor is joining this check.",
+      "kk": "Üki билетті {tries} әрекеттен кейін оқи алмады. Проктор тексеруге қосылуда.",
+      "ru": "Üki не смог прочитать билет за {tries, plural, one {# попытку} few {# попытки} many {# попыток} other {# попытки}}. Проктор подключается к проверке.",
+      "notes": "Value. ICU plural. Frame 1.3a."
+    },
+    {
+      "key": "identity.card.failed",
+      "group": "1.3 Identity",
+      "source": "figma",
+      "en": "Couldn’t read the card · {n} of {total} tries",
+      "kk": "Билет оқылмады · {n} / {total} әрекет",
+      "ru": "Билет не прочитан · попытка {n} из {total}",
+      "notes": "Value. Frame 1.3a."
+    },
+    {
+      "key": "identity.help.requested",
+      "group": "1.3 Identity",
+      "source": "figma",
+      "en": "Help requested at {time}",
+      "kk": "Көмек сұралды: {time}",
+      "ru": "Помощь запрошена в {time}",
+      "notes": "Value. Frame 1.3a."
+    },
+    {
+      "key": "identity.help.privacy",
+      "group": "1.3 Identity",
+      "source": "figma",
+      "en": "{proctor} sees your step and device, never the photo. Stay in front of the camera.",
+      "kk": "{proctor} фотоны көрмейді, тек қадамыңыз бен құрылғыңызды көреді. Камера алдында қалыңыз.",
+      "ru": "{proctor} видит ваш шаг и устройство, но не фото. Оставайтесь перед камерой.",
+      "notes": "Value. Frame 1.3a. The frame itself says “Üki tries again while she helps.”; the catalog wins."
+    },
+    {
+      "key": "identity.help.waiting",
+      "group": "1.3 Identity",
+      "source": "figma",
+      "en": "Waiting for {proctor}",
+      "kk": "{proctor} күтілуде",
+      "ru": "Ожидание: {proctor}",
+      "notes": "Value. Russian avoids declining the name. Also used on 2.1c."
+    },
+    {
+      "key": "identity.help.hint",
+      "group": "1.3 Identity",
+      "source": "figma",
+      "en": "Hold still for your proctor",
+      "kk": "Проктор үшін қозғалмаңыз",
+      "ru": "Не двигайтесь, проктор проверяет",
+      "notes": "Frame 1.3a."
+    },
+    {
+      "key": "rules.title",
+      "group": "1.4 Rules and lobby",
+      "source": "figma",
+      "en": "Exam rules",
+      "kk": "Емтихан ережелері",
+      "ru": "Правила экзамена",
+      "notes": "+70% KZ"
+    },
+    {
+      "key": "rules.window.title",
+      "group": "1.4 Rules and lobby",
+      "source": "figma",
+      "en": "Only this window",
+      "kk": "Тек осы терезе",
+      "ru": "Только это окно",
+      "notes": ""
+    },
+    {
+      "key": "rules.window.body",
+      "group": "1.4 Rules and lobby",
+      "source": "figma",
+      "en": "Other tabs and apps stay closed during the exam.",
+      "kk": "Емтихан кезінде басқа беттер мен қолданбалар жабық болады.",
+      "ru": "Во время экзамена другие вкладки и приложения закрыты.",
+      "notes": ""
+    },
+    {
+      "key": "rules.eyes.title",
+      "group": "1.4 Rules and lobby",
+      "source": "figma",
+      "en": "Eyes on the screen",
+      "kk": "Көзіңіз экранда",
+      "ru": "Взгляд на экран",
+      "notes": ""
+    },
+    {
+      "key": "rules.eyes.body",
+      "group": "1.4 Rules and lobby",
+      "source": "figma",
+      "en": "Look away for more than {seconds} s and Üki notes it.",
+      "kk": "Экраннан {seconds} секундтан артық көз алсаңыз, Üki белгілеп қояды.",
+      "ru": "Если отвести взгляд дольше {seconds, plural, one {# секунды} few {# секунд} many {# секунд} other {# секунды}}, Üki это отметит.",
+      "notes": "Value. ICU plural (Russian)."
+    },
+    {
+      "key": "rules.phone.title",
+      "group": "1.4 Rules and lobby",
+      "source": "figma",
+      "en": "No phone",
+      "kk": "Телефонсыз",
+      "ru": "Без телефона",
+      "notes": "+50% RU"
+    },
+    {
+      "key": "rules.phone.body",
+      "group": "1.4 Rules and lobby",
+      "source": "figma",
+      "en": "Keep your phone out of the camera’s view.",
+      "kk": "Телефон камераның көру аясында болмауы керек.",
+      "ru": "Телефона не должно быть в кадре.",
+      "notes": ""
+    },
+    {
+      "key": "rules.video.title",
+      "group": "1.4 Rules and lobby",
+      "source": "figma",
+      "en": "Video stays on this laptop",
+      "kk": "Бейне осы ноутбукта қалады",
+      "ru": "Видео остаётся на ноутбуке",
+      "notes": ""
+    },
+    {
+      "key": "rules.video.body",
+      "group": "1.4 Rules and lobby",
+      "source": "figma",
+      "en": "Only events and flagged frames are sent.",
+      "kk": "Тек оқиғалар мен белгіленген кадрлар жіберіледі.",
+      "ru": "Передаются только события и отмеченные кадры.",
+      "notes": ""
+    },
+    {
+      "key": "rules.agree",
+      "group": "1.4 Rules and lobby",
+      "source": "figma",
+      "en": "I have read the rules and agree.",
+      "kk": "Ережелермен таныстым және келісемін.",
+      "ru": "С правилами ознакомлен(а) и согласен(на).",
+      "notes": "Gender form"
+    },
+    {
+      "key": "rules.faq.video",
+      "group": "1.4 Rules and lobby",
+      "source": "figma",
+      "en": "Where is the video?",
+      "kk": "Бейне қайда сақталады?",
+      "ru": "Где хранится видео?",
+      "notes": ""
+    },
+    {
+      "key": "lobby.countdown.label",
+      "group": "1.4 Rules and lobby",
+      "source": "figma",
+      "en": "Until the start",
+      "kk": "Емтихан басталғанша",
+      "ru": "До начала экзамена",
+      "notes": ""
+    },
+    {
+      "key": "lobby.countdown.body",
+      "group": "1.4 Rules and lobby",
+      "source": "figma",
+      "en": "When the exam starts, Üki sits next to this window.",
+      "kk": "Басталғанда Üki осы терезенің жанында болады.",
+      "ru": "Когда экзамен начнётся, Üki будет рядом с этим окном.",
+      "notes": ""
+    },
+    {
+      "key": "lobby.waiting",
+      "group": "1.4 Rules and lobby",
+      "source": "figma",
+      "en": "Waiting for the start",
+      "kk": "Басталуын күтеміз",
+      "ru": "Ждём начала",
+      "notes": ""
+    },
+    {
+      "key": "exam.counter",
+      "group": "2.1 Exam",
+      "source": "figma",
+      "en": "Question {n} of {total}",
+      "kk": "Сұрақ {n} / {total}",
+      "ru": "Вопрос {n} из {total}",
+      "notes": "Value"
+    },
+    {
+      "key": "exam.option",
+      "group": "2.1 Exam",
+      "source": "figma",
+      "en": "Option {letter}",
+      "kk": "{letter} нұсқасы",
+      "ru": "Вариант {letter}",
+      "notes": "Value"
+    },
+    {
+      "key": "exam.saved",
+      "group": "2.1 Exam",
+      "source": "figma",
+      "en": "Saved on this laptop · {time}",
+      "kk": "Осы ноутбукта сақталды · {time}",
+      "ru": "Сохранено на ноутбуке · {time}",
+      "notes": "Value"
+    },
+    {
+      "key": "exam.back",
+      "group": "2.1 Exam",
+      "source": "figma",
+      "en": "Back",
+      "kk": "Артқа",
+      "ru": "Назад",
+      "notes": ""
+    },
+    {
+      "key": "exam.next",
+      "group": "2.1 Exam",
+      "source": "figma",
+      "en": "Next question",
+      "kk": "Келесі сұрақ",
+      "ru": "Следующий вопрос",
+      "notes": ""
+    },
+    {
+      "key": "exam.watch.title",
+      "group": "2.1 Exam",
+      "source": "figma",
+      "en": "Watching",
+      "kk": "Бақылауда",
+      "ru": "Наблюдение",
+      "notes": ""
+    },
+    {
+      "key": "exam.watch.status",
+      "group": "2.1 Exam",
+      "source": "figma",
+      "en": "eyes on screen · {elapsed}",
+      "kk": "көз экранда · {elapsed}",
+      "ru": "взгляд на экране · {elapsed}",
+      "notes": "Value"
+    },
+    {
+      "key": "exam.camera.faces",
+      "group": "2.1 Exam",
+      "source": "figma",
+      "en": "{count, plural, one {# face} other {# faces}}",
+      "kk": "{count} бет",
+      "ru": "{count, plural, one {# лицо} few {# лица} many {# лиц} other {# лица}}",
+      "notes": "Value. ICU plural. Figma: {count} face."
+    },
+    {
+      "key": "exam.timer.left",
+      "group": "2.1 Exam",
+      "source": "figma",
+      "en": "left",
+      "kk": "қалды",
+      "ru": "осталось",
+      "notes": "+100% RU. Follows the timer: 42:17 left."
+    },
+    {
+      "key": "exam.log.title",
+      "group": "2.1 Exam",
+      "source": "figma",
+      "en": "This session",
+      "kk": "Бұл сессия",
+      "ru": "Эта сессия",
+      "notes": ""
+    },
+    {
+      "key": "event.exam_started",
+      "group": "2.1 Exam",
+      "source": "figma",
+      "en": "Exam started",
+      "kk": "Емтихан басталды",
+      "ru": "Экзамен начался",
+      "notes": "+33% KZ"
+    },
+    {
+      "key": "event.browser_locked",
+      "group": "2.1 Exam",
+      "source": "figma",
+      "en": "Browser locked · {count, plural, one {# tab} other {# tabs}} closed",
+      "kk": "Браузер құлыпталды · {count} бет жабылды",
+      "ru": "Браузер заблокирован · {count, plural, one {закрыта # вкладка} few {закрыто # вкладки} many {закрыто # вкладок} other {закрыто # вкладки}}",
+      "notes": "Value. ICU plural."
+    },
+    {
+      "key": "event.on_screen",
+      "group": "2.1 Exam",
+      "source": "figma",
+      "en": "On screen",
+      "kk": "Экранда",
+      "ru": "На экране",
+      "notes": ""
+    },
+    {
+      "key": "event.face_matched",
+      "group": "2.1 Exam",
+      "source": "figma",
+      "en": "Face matched at check-in",
+      "kk": "Кіру кезінде бет сәйкестендірілді",
+      "ru": "Лицо сверено при входе",
+      "notes": "+38% KZ"
+    },
+    {
+      "key": "event.question_saved",
+      "group": "2.1 Exam",
+      "source": "figma",
+      "en": "Question {n} saved",
+      "kk": "{n}-сұрақ сақталды",
+      "ru": "Вопрос {n} сохранён",
+      "notes": "Value"
+    },
+    {
+      "key": "event.stored_locally",
+      "group": "2.1 Exam",
+      "source": "figma",
+      "en": "Stored on this laptop",
+      "kk": "Осы ноутбукта сақталған",
+      "ru": "Хранится на ноутбуке",
+      "notes": ""
+    },
+    {
+      "key": "exam.phone.title",
+      "group": "2.2 Phone warning and 2.3 Paused",
+      "source": "figma",
+      "en": "Phone found",
+      "kk": "Телефон табылды",
+      "ru": "Телефон обнаружен",
+      "notes": "+55% RU"
+    },
+    {
+      "key": "exam.phone.status",
+      "group": "2.2 Phone warning and 2.3 Paused",
+      "source": "figma",
+      "en": "phone in frame · {confidence, number, ::.00}",
+      "kk": "кадрда телефон · {confidence, number, ::.00}",
+      "ru": "телефон в кадре · {confidence, number, ::.00}",
+      "notes": "Value. KZ and RU write decimals with a comma: 0,94. The number skeleton does that per locale."
+    },
+    {
+      "key": "event.phone",
+      "group": "2.2 Phone warning and 2.3 Paused",
+      "source": "figma",
+      "en": "Phone in frame",
+      "kk": "Кадрда телефон",
+      "ru": "Телефон в кадре",
+      "notes": "Renamed to event.phone.title in code."
+    },
+    {
+      "key": "event.phone.detail",
+      "group": "2.2 Phone warning and 2.3 Paused",
+      "source": "figma",
+      "en": "Confidence {confidence, number, ::.00} · frame kept as evidence",
+      "kk": "Сенімділік {confidence, number, ::.00} · кадр сақталды",
+      "ru": "Уверенность {confidence, number, ::.00} · кадр сохранён",
+      "notes": "Value. KZ and RU write decimals with a comma: 0,94."
+    },
+    {
+      "key": "exam.phone.toast",
+      "group": "2.2 Phone warning and 2.3 Paused",
+      "source": "figma",
+      "en": "Phone in frame. Put it away.",
+      "kk": "Кадрда телефон бар. Оны алып қойыңыз.",
+      "ru": "Телефон в кадре. Уберите его.",
+      "notes": "+32% KZ"
+    },
+    {
+      "key": "exam.toast.flag",
+      "group": "2.2 Phone warning and 2.3 Paused",
+      "source": "figma",
+      "en": "flag",
+      "kk": "белгі",
+      "ru": "отметка",
+      "notes": "+75% RU"
+    },
+    {
+      "key": "exam.paused.status_title",
+      "group": "2.2 Phone warning and 2.3 Paused",
+      "source": "figma",
+      "en": "Paused",
+      "kk": "Үзіліс",
+      "ru": "Пауза",
+      "notes": ""
+    },
+    {
+      "key": "exam.paused.status",
+      "group": "2.2 Phone warning and 2.3 Paused",
+      "source": "figma",
+      "en": "no face in frame",
+      "kk": "кадрда бет жоқ",
+      "ru": "нет лица в кадре",
+      "notes": ""
+    },
+    {
+      "key": "exam.camera.no_face",
+      "group": "2.2 Phone warning and 2.3 Paused",
+      "source": "figma",
+      "en": "no face",
+      "kk": "бет жоқ",
+      "ru": "нет лица",
+      "notes": ""
+    },
+    {
+      "key": "event.no_face",
+      "group": "2.2 Phone warning and 2.3 Paused",
+      "source": "figma",
+      "en": "No face in frame",
+      "kk": "Кадрда бет жоқ",
+      "ru": "Нет лица в кадре",
+      "notes": ""
+    },
+    {
+      "key": "event.paused.detail",
+      "group": "2.2 Phone warning and 2.3 Paused",
+      "source": "figma",
+      "en": "Session paused · timer stopped",
+      "kk": "Сессия тоқтады · таймер тоқтатылды",
+      "ru": "Сессия на паузе · таймер остановлен",
+      "notes": ""
+    },
+    {
+      "key": "exam.paused.title",
+      "group": "2.2 Phone warning and 2.3 Paused",
+      "source": "figma",
+      "en": "Paused.",
+      "kk": "Үзіліс.",
+      "ru": "Пауза.",
+      "notes": ""
+    },
+    {
+      "key": "exam.paused.body",
+      "group": "2.2 Phone warning and 2.3 Paused",
+      "source": "figma",
+      "en": "No face in the frame. Come back to the camera and your time continues.",
+      "kk": "Кадрда бет жоқ. Камераға оралыңыз, уақыт әрі қарай жүреді.",
+      "ru": "Лица нет в кадре. Вернитесь к камере, и время пойдёт дальше.",
+      "notes": ""
+    },
+    {
+      "key": "exam.paused.timer",
+      "group": "2.2 Phone warning and 2.3 Paused",
+      "source": "figma",
+      "en": "Paused for {duration}",
+      "kk": "Үзіліс: {duration}",
+      "ru": "Пауза: {duration}",
+      "notes": "Value"
+    },
+    {
+      "key": "exam.paused.resume",
+      "group": "2.2 Phone warning and 2.3 Paused",
+      "source": "figma",
+      "en": "I’m here",
+      "kk": "Мен осындамын",
+      "ru": "Я здесь",
+      "notes": "+63% KZ"
+    },
+    {
+      "key": "lock.badge",
+      "group": "Üki Lock",
+      "source": "figma",
+      "en": "LOCKED",
+      "kk": "ҚҰЛЫПТАУЛЫ",
+      "ru": "ЗАБЛОКИРОВАНО",
+      "notes": "+117% RU"
+    },
+    {
+      "key": "lock.tab.portal",
+      "group": "Üki Lock",
+      "source": "figma",
+      "en": "Exam portal",
+      "kk": "Емтихан порталы",
+      "ru": "Портал экзамена",
+      "notes": "+36% KZ"
+    },
+    {
+      "key": "lock.tab.calculator",
+      "group": "Üki Lock",
+      "source": "figma",
+      "en": "Calculator",
+      "kk": "Калькулятор",
+      "ru": "Калькулятор",
+      "notes": "Phase 1"
+    },
+    {
+      "key": "lock.watching",
+      "group": "Üki Lock",
+      "source": "figma",
+      "en": "Üki watching",
+      "kk": "Üki бақылауда",
+      "ru": "Üki наблюдает",
+      "notes": "Also the tray tooltip."
+    },
+    {
+      "key": "lock.ask.title",
+      "group": "Üki Lock",
+      "source": "figma",
+      "en": "Ask your proctor",
+      "kk": "Проктордан сұраңыз",
+      "ru": "Спросите проктора",
+      "notes": "Phase 1"
+    },
+    {
+      "key": "lock.ask.body",
+      "group": "Üki Lock",
+      "source": "figma",
+      "en": "Your proctor sees this on the live wall. Your time keeps running.",
+      "kk": "Проктор мұны бақылау экранында көреді. Уақыт жүре береді.",
+      "ru": "Проктор увидит это на экране наблюдения. Время продолжает идти.",
+      "notes": "Phase 1"
+    },
+    {
+      "key": "lock.ask.reason.unclear",
+      "group": "Üki Lock",
+      "source": "figma",
+      "en": "Question is unclear",
+      "kk": "Сұрақ түсініксіз",
+      "ru": "Вопрос непонятен",
+      "notes": "Phase 1"
+    },
+    {
+      "key": "lock.ask.reason.technical",
+      "group": "Üki Lock",
+      "source": "figma",
+      "en": "Technical problem",
+      "kk": "Техникалық ақау",
+      "ru": "Техническая проблема",
+      "notes": "Phase 1"
+    },
+    {
+      "key": "lock.ask.reason.break",
+      "group": "Üki Lock",
+      "source": "figma",
+      "en": "I need a break",
+      "kk": "Маған үзіліс керек",
+      "ru": "Мне нужен перерыв",
+      "notes": "Phase 1"
+    },
+    {
+      "key": "lock.ask.reason.other",
+      "group": "Üki Lock",
+      "source": "figma",
+      "en": "Something else",
+      "kk": "Басқа себеп",
+      "ru": "Другое",
+      "notes": "Phase 1"
+    },
+    {
+      "key": "lock.ask.note.label",
+      "group": "Üki Lock",
+      "source": "figma",
+      "en": "Note (optional)",
+      "kk": "Ескертпе (міндетті емес)",
+      "ru": "Комментарий (необязательно)",
+      "notes": "+80% RU. Phase 1"
+    },
+    {
+      "key": "lock.ask.note.helper",
+      "group": "Üki Lock",
+      "source": "figma",
+      "en": "Only your proctor sees this · {count}/{max}",
+      "kk": "Мұны тек проктор көреді · {count}/{max}",
+      "ru": "Это видит только проктор · {count}/{max}",
+      "notes": "Value. Phase 1"
+    },
+    {
+      "key": "lock.ask.send",
+      "group": "Üki Lock",
+      "source": "figma",
+      "en": "Send to proctor",
+      "kk": "Прокторға жіберу",
+      "ru": "Отправить проктору",
+      "notes": "Phase 1"
+    },
+    {
+      "key": "lock.calc.title",
+      "group": "Üki Lock",
+      "source": "figma",
+      "en": "Calculator · built into Üki Lock",
+      "kk": "Калькулятор · Üki Lock ішінде",
+      "ru": "Калькулятор · встроен в Üki Lock",
+      "notes": "Phase 1"
+    },
+    {
+      "key": "lock.calc.note",
+      "group": "Üki Lock",
+      "source": "figma",
+      "en": "Works offline. Keeps no history after you submit.",
+      "kk": "Желісіз жұмыс істейді. Тапсырғаннан кейін тарих сақталмайды.",
+      "ru": "Работает офлайн. После сдачи история не сохраняется.",
+      "notes": "Phase 1"
+    },
+    {
+      "key": "done.title",
+      "group": "3.1 Submitted",
+      "source": "figma",
+      "en": "Submitted.",
+      "kk": "Тапсырылды.",
+      "ru": "Сдано.",
+      "notes": ""
+    },
+    {
+      "key": "done.body",
+      "group": "3.1 Submitted",
+      "source": "figma",
+      "en": "Your answers are in.",
+      "kk": "Жауаптарыңыз қабылданды.",
+      "ru": "Ваши ответы приняты.",
+      "notes": ""
+    },
+    {
+      "key": "done.receipt",
+      "group": "3.1 Submitted",
+      "source": "figma",
+      "en": "Receipt",
+      "kk": "Түбіртек",
+      "ru": "Квитанция",
+      "notes": "The eyebrow shows it in caps."
+    },
+    {
+      "key": "done.submitted",
+      "group": "3.1 Submitted",
+      "source": "figma",
+      "en": "Submitted",
+      "kk": "Тапсырылды",
+      "ru": "Сдано",
+      "notes": "Renamed to done.submitted.label in code."
+    },
+    {
+      "key": "done.submitted.value",
+      "group": "3.1 Submitted",
+      "source": "figma",
+      "en": "{time} · {date}",
+      "kk": "{time} · {date}",
+      "ru": "{time} · {date}",
+      "notes": "Value. Locale date: Fri 9 Oct · жм, 9 қаз · пт, 9 окт"
+    },
+    {
+      "key": "done.time_used",
+      "group": "3.1 Submitted",
+      "source": "figma",
+      "en": "Time used",
+      "kk": "Жұмсалған уақыт",
+      "ru": "Затрачено",
+      "notes": "+67% KZ. Renamed to done.time_used.label in code."
+    },
+    {
+      "key": "done.time_used.value",
+      "group": "3.1 Submitted",
+      "source": "figma",
+      "en": "{used} of {total} min",
+      "kk": "{used} / {total} мин",
+      "ru": "{used} из {total} мин",
+      "notes": "Value"
+    },
+    {
+      "key": "done.flags",
+      "group": "3.1 Submitted",
+      "source": "figma",
+      "en": "Flags",
+      "kk": "Белгілер",
+      "ru": "Отметки",
+      "notes": "+60% KZ. Renamed to done.flags.label in code."
+    },
+    {
+      "key": "done.flags.value",
+      "group": "3.1 Submitted",
+      "source": "figma",
+      "en": "{count} · a person will review {count, plural, one {it} other {them}}",
+      "kk": "{count} · {count, plural, one {оны адам қарап шығады} other {оларды адам қарап шығады}}",
+      "ru": "{count} · {count, plural, one {её проверит человек} other {их проверит человек}}",
+      "notes": "Value. ICU plural. More than one: “them”, “оларды”, “их”."
+    },
+    {
+      "key": "done.save",
+      "group": "3.1 Submitted",
+      "source": "figma",
+      "en": "Save receipt",
+      "kk": "Түбіртекті сақтау",
+      "ru": "Сохранить квитанцию",
+      "notes": "+58% RU"
+    },
+    {
+      "key": "done.close",
+      "group": "3.1 Submitted",
+      "source": "figma",
+      "en": "Close Üki",
+      "kk": "Üki-ді жабу",
+      "ru": "Закрыть Üki",
+      "notes": ""
+    },
+    {
+      "key": "app.title.offline",
+      "group": "2.1a Offline",
+      "source": "added",
+      "en": "Üki · {course} · {examType} · browser locked · offline",
+      "kk": "Üki · {course} · {examType} · браузер құлыпталған · желі жоқ",
+      "ru": "Üki · {course} · {examType} · браузер заблокирован · нет сети",
+      "notes": "Value. From frame 2.1a."
+    },
+    {
+      "key": "offline.title",
+      "group": "2.1a Offline",
+      "source": "added",
+      "en": "You’re offline. Keep writing.",
+      "kk": "Желі жоқ. Жаза беріңіз.",
+      "ru": "Нет сети. Продолжайте писать.",
+      "notes": "From frame 2.1a."
+    },
+    {
+      "key": "offline.body",
+      "group": "2.1a Offline",
+      "source": "added",
+      "en": "Answers save on this laptop and sync when the network is back. Your timer keeps running.",
+      "kk": "Жауаптар осы ноутбукта сақталады және желі қайта қосылғанда жіберіледі. Таймер жүре береді.",
+      "ru": "Ответы сохраняются на ноутбуке и отправятся, когда появится сеть. Таймер продолжает идти.",
+      "notes": "From frame 2.1a."
+    },
+    {
+      "key": "exam.saved_offline",
+      "group": "2.1a Offline",
+      "source": "added",
+      "en": "Saved on this laptop · {time} · syncs when online",
+      "kk": "Осы ноутбукта сақталды · {time} · желі пайда болғанда жіберіледі",
+      "ru": "Сохранено на ноутбуке · {time} · отправится при подключении",
+      "notes": "Value. From frame 2.1a."
+    },
+    {
+      "key": "exam.offline.status_title",
+      "group": "2.1a Offline",
+      "source": "added",
+      "en": "Offline",
+      "kk": "Желі жоқ",
+      "ru": "Нет сети",
+      "notes": "From frame 2.1a."
+    },
+    {
+      "key": "exam.offline.status",
+      "group": "2.1a Offline",
+      "source": "added",
+      "en": "saving on this laptop · {elapsed}",
+      "kk": "осы ноутбукта сақталуда · {elapsed}",
+      "ru": "сохраняется на ноутбуке · {elapsed}",
+      "notes": "Value. From frame 2.1a."
+    },
+    {
+      "key": "event.network_lost.title",
+      "group": "2.1a Offline",
+      "source": "added",
+      "en": "Network lost",
+      "kk": "Желі үзілді",
+      "ru": "Сеть потеряна",
+      "notes": "From frame 2.1a."
+    },
+    {
+      "key": "event.network_lost.detail",
+      "group": "2.1a Offline",
+      "source": "added",
+      "en": "Answers and events wait on this laptop",
+      "kk": "Жауаптар мен оқиғалар осы ноутбукта күтіп тұр",
+      "ru": "Ответы и события ждут на ноутбуке",
+      "notes": "From frame 2.1a."
+    },
+    {
+      "key": "app.title.proctor_paused",
+      "group": "2.1c Paused by proctor",
+      "source": "added",
+      "en": "Üki · {course} · {examType} · paused by proctor",
+      "kk": "Üki · {course} · {examType} · проктор тоқтатты",
+      "ru": "Üki · {course} · {examType} · пауза от проктора",
+      "notes": "Value. From frame 2.1c."
+    },
+    {
+      "key": "exam.proctor_paused.status_title",
+      "group": "2.1c Paused by proctor",
+      "source": "added",
+      "en": "Paused by proctor",
+      "kk": "Проктор тоқтатты",
+      "ru": "Пауза от проктора",
+      "notes": "From frame 2.1c."
+    },
+    {
+      "key": "exam.proctor_paused.status",
+      "group": "2.1c Paused by proctor",
+      "source": "added",
+      "en": "timer stopped · {elapsed}",
+      "kk": "таймер тоқтады · {elapsed}",
+      "ru": "таймер остановлен · {elapsed}",
+      "notes": "Value. From frame 2.1c."
+    },
+    {
+      "key": "event.proctor_paused.title",
+      "group": "2.1c Paused by proctor",
+      "source": "added",
+      "en": "Paused by {proctor}",
+      "kk": "{proctor} тоқтатты",
+      "ru": "Пауза: {proctor}",
+      "notes": "Value. From frame 2.1c."
+    },
+    {
+      "key": "event.proctor_paused.detail",
+      "group": "2.1c Paused by proctor",
+      "source": "added-not-in-figma",
+      "en": "Timer stopped until your proctor resumes",
+      "kk": "Проктор жалғастырғанша таймер тоқтатулы",
+      "ru": "Таймер остановлен, пока проктор не продолжит",
+      "notes": "Frame 2.1c says “until she resumes”; reworded so it fits any proctor."
+    },
+    {
+      "key": "proctor_paused.title",
+      "group": "2.1c Paused by proctor",
+      "source": "added",
+      "en": "Your proctor paused the exam.",
+      "kk": "Проктор емтиханды тоқтатты.",
+      "ru": "Проктор приостановил экзамен.",
+      "notes": "From frame 2.1c."
+    },
+    {
+      "key": "proctor_paused.body",
+      "group": "2.1c Paused by proctor",
+      "source": "added",
+      "en": "{proctor}: “{message}” Your timer is stopped.",
+      "kk": "{proctor}: «{message}» Таймеріңіз тоқтатулы.",
+      "ru": "{proctor}: «{message}» Таймер остановлен.",
+      "notes": "Value. From frame 2.1c. Without a message, show only the last sentence."
+    },
+    {
+      "key": "proctor_paused.timer",
+      "group": "2.1c Paused by proctor",
+      "source": "added",
+      "en": "Paused for {duration} · you can’t resume yourself",
+      "kk": "Үзіліс: {duration} · өзіңіз жалғастыра алмайсыз",
+      "ru": "Пауза: {duration} · продолжить самостоятельно нельзя",
+      "notes": "Value. From frame 2.1c."
+    },
+    {
+      "key": "app.title.ended",
+      "group": "2.1d Ended by proctor",
+      "source": "added",
+      "en": "Üki · {course} · {examType} · ended by proctor",
+      "kk": "Üki · {course} · {examType} · проктор аяқтады",
+      "ru": "Üki · {course} · {examType} · завершено проктором",
+      "notes": "Value. From frame 2.1d."
+    },
+    {
+      "key": "ended.title",
+      "group": "2.1d Ended by proctor",
+      "source": "added",
+      "en": "Your exam was ended.",
+      "kk": "Емтиханыңыз аяқталды.",
+      "ru": "Ваш экзамен завершён.",
+      "notes": "From frame 2.1d."
+    },
+    {
+      "key": "ended.body",
+      "group": "2.1d Ended by proctor",
+      "source": "added",
+      "en": "{proctor} ended your session at {time}. Answers up to then are saved. The exam office reviews what happened.",
+      "kk": "{proctor} сессияңызды {time} кезінде аяқтады. Осы уақытқа дейінгі жауаптар сақталды. Емтихан бөлімі не болғанын қарайды.",
+      "ru": "{proctor} завершил(а) вашу сессию в {time}. Ответы до этого момента сохранены. Экзаменационный отдел рассмотрит ситуацию.",
+      "notes": "Value. From frame 2.1d."
+    },
+    {
+      "key": "ended.label",
+      "group": "2.1d Ended by proctor",
+      "source": "added",
+      "en": "Ended",
+      "kk": "Аяқталды",
+      "ru": "Завершено",
+      "notes": "Receipt row. From frame 2.1d."
+    },
+    {
+      "key": "ended.answered.title",
+      "group": "2.1d Ended by proctor",
+      "source": "added",
+      "en": "Answered",
+      "kk": "Жауап берілді",
+      "ru": "Отвечено",
+      "notes": "From frame 2.1d."
+    },
+    {
+      "key": "ended.answered.value",
+      "group": "2.1d Ended by proctor",
+      "source": "added",
+      "en": "{answered} of {total, plural, one {# question} other {# questions}}",
+      "kk": "{answered} / {total} сұрақ",
+      "ru": "{answered} {total, plural, one {из # вопроса} other {из # вопросов}}",
+      "notes": "Value. ICU plural. From frame 2.1d."
+    },
+    {
+      "key": "ended.reason.title",
+      "group": "2.1d Ended by proctor",
+      "source": "added",
+      "en": "Reason",
+      "kk": "Себебі",
+      "ru": "Причина",
+      "notes": "From frame 2.1d."
+    },
+    {
+      "key": "ended.reason.proctor",
+      "group": "2.1d Ended by proctor",
+      "source": "added",
+      "en": "Ended by proctor",
+      "kk": "Проктор аяқтады",
+      "ru": "Завершено проктором",
+      "notes": "From frame 2.1d."
+    },
+    {
+      "key": "ended.contact",
+      "group": "2.1d Ended by proctor",
+      "source": "added",
+      "en": "Think this is a mistake? Write to the exam office at {email}.",
+      "kk": "Қате деп ойлайсыз ба? Емтихан бөліміне жазыңыз: {email}.",
+      "ru": "Считаете, что это ошибка? Напишите в экзаменационный отдел: {email}.",
+      "notes": "Value. From frame 2.1d. The email comes from the workspace."
+    },
+    {
+      "key": "message.title",
+      "group": "2.1e Message and new end time",
+      "source": "added",
+      "en": "Message from {proctor} · {time}",
+      "kk": "{proctor} хабарламасы · {time}",
+      "ru": "Сообщение: {proctor} · {time}",
+      "notes": "Value. From frame 2.1e."
+    },
+    {
+      "key": "message.body",
+      "group": "2.1e Message and new end time",
+      "source": "added",
+      "en": "“{text}”",
+      "kk": "«{text}»",
+      "ru": "«{text}»",
+      "notes": "Value. The proctor’s own words, or a preset below."
+    },
+    {
+      "key": "message.ack",
+      "group": "2.1e Message and new end time",
+      "source": "added",
+      "en": "Got it",
+      "kk": "Түсіндім",
+      "ru": "Понятно",
+      "notes": "From frame 2.1e."
+    },
+    {
+      "key": "exam.timer.added",
+      "group": "2.1e Message and new end time",
+      "source": "added",
+      "en": "left · +{minutes} min",
+      "kk": "қалды · +{minutes} мин",
+      "ru": "осталось · +{minutes} мин",
+      "notes": "Value. From frame 2.1e."
+    },
+    {
+      "key": "event.time_added.title",
+      "group": "2.1e Message and new end time",
+      "source": "added",
+      "en": "Time added · +{minutes} min",
+      "kk": "Уақыт қосылды · +{minutes} мин",
+      "ru": "Добавлено время · +{minutes} мин",
+      "notes": "Value. From frame 2.1e."
+    },
+    {
+      "key": "event.time_added.detail",
+      "group": "2.1e Message and new end time",
+      "source": "added",
+      "en": "By {proctor} · ends {time}",
+      "kk": "{proctor} · аяқталуы {time}",
+      "ru": "{proctor} · окончание в {time}",
+      "notes": "Value. From frame 2.1e."
+    },
+    {
+      "key": "message.preset.time_15",
+      "group": "2.1e Message and new end time",
+      "source": "added",
+      "en": "15 minutes left",
+      "kk": "15 минут қалды",
+      "ru": "Осталось 15 минут",
+      "notes": "Preset from frame 2.4b."
+    },
+    {
+      "key": "message.preset.phones_away",
+      "group": "2.1e Message and new end time",
+      "source": "added",
+      "en": "Phones away, please",
+      "kk": "Телефондарды алып қойыңыз",
+      "ru": "Уберите телефоны, пожалуйста",
+      "notes": "Preset from frame 2.4b."
+    },
+    {
+      "key": "message.preset.camera_view",
+      "group": "2.1e Message and new end time",
+      "source": "added",
+      "en": "Stay in camera view",
+      "kk": "Камера алдында болыңыз",
+      "ru": "Оставайтесь в кадре",
+      "notes": "Preset from frame 2.4b."
+    },
+    {
+      "key": "message.preset.phone_away",
+      "group": "2.1e Message and new end time",
+      "source": "added",
+      "en": "Put the phone away",
+      "kk": "Телефонды алып қойыңыз",
+      "ru": "Уберите телефон",
+      "notes": "Preset from frame 2.5, which shows all three languages."
+    },
+    {
+      "key": "exam.submit",
+      "group": "2.1 Exam additions",
+      "source": "added-not-in-figma",
+      "en": "Submit",
+      "kk": "Тапсыру",
+      "ru": "Сдать",
+      "notes": "Replaces Next question on the last question. No frame shows it yet."
+    },
+    {
+      "key": "check.camera.fail",
+      "group": "Check failures",
+      "source": "added-not-in-figma",
+      "en": "No camera picture. Close other apps that use the camera.",
+      "kk": "Камерадан сурет жоқ. Камераны пайдаланатын басқа қолданбаларды жабыңыз.",
+      "ru": "Нет изображения с камеры. Закройте приложения, которые её используют.",
+      "notes": "1.2 has no failure frame for this row."
+    },
+    {
+      "key": "check.network.fail",
+      "group": "Check failures",
+      "source": "added-not-in-figma",
+      "en": "The exam server does not reply.",
+      "kk": "Емтихан сервері жауап бермейді.",
+      "ru": "Сервер экзамена не отвечает.",
+      "notes": "1.2 has no failure frame for this row."
+    },
+    {
+      "key": "check.browser.fail",
+      "group": "Check failures",
+      "source": "added-not-in-figma",
+      "en": "Pair Üki Lock to continue.",
+      "kk": "Жалғастыру үшін Üki Lock-ты жұптастырыңыз.",
+      "ru": "Чтобы продолжить, подключите Üki Lock.",
+      "notes": "1.2 has no failure frame for this row."
+    },
+    {
+      "key": "check.screen.fail",
+      "group": "Check failures",
+      "source": "added-not-in-figma",
+      "en": "{app} is running. Close it to continue.",
+      "kk": "{app} іске қосулы. Жалғастыру үшін оны жабыңыз.",
+      "ru": "Запущен {app}. Закройте его, чтобы продолжить.",
+      "notes": "Value. 1.2 has no failure frame for this row."
+    },
+    {
+      "key": "check.storage.ok",
+      "group": "Check failures",
+      "source": "added-not-in-figma",
+      "en": "{free} GB free.",
+      "kk": "{free} ГБ бос.",
+      "ru": "Свободно {free} ГБ.",
+      "notes": "Value. 1.2 shows only the running state."
+    },
+    {
+      "key": "check.storage.fail",
+      "group": "Check failures",
+      "source": "added-not-in-figma",
+      "en": "Free at least 1 GB to continue.",
+      "kk": "Жалғастыру үшін кемінде 1 ГБ орын босатыңыз.",
+      "ru": "Освободите не менее 1 ГБ, чтобы продолжить.",
+      "notes": "1.2 has no failure frame for this row."
+    },
+    {
+      "key": "identity.face.fail",
+      "group": "Check failures",
+      "source": "added-not-in-figma",
+      "en": "Doesn’t match the photo on your card yet.",
+      "kk": "Билеттегі фотоға әзірге сәйкес келмейді.",
+      "ru": "Пока не совпадает с фото на билете.",
+      "notes": "1.3 has no failure frame for this row. The face is matched to the card photo."
+    },
+    {
+      "key": "identity.person.fail",
+      "group": "Check failures",
+      "source": "added-not-in-figma",
+      "en": "More than one person in the frame.",
+      "kk": "Кадрда бірнеше адам бар.",
+      "ru": "В кадре больше одного человека.",
+      "notes": "1.3 has no failure frame for this row."
+    },
+    {
+      "key": "pair.card.title",
+      "group": "E.3 Pairing",
+      "source": "added",
+      "en": "Pair Üki Lock",
+      "kk": "Üki Lock-ты жұптастыру",
+      "ru": "Подключите Üki Lock",
+      "notes": "App side of E.3."
+    },
+    {
+      "key": "pair.card.body",
+      "group": "E.3 Pairing",
+      "source": "added",
+      "en": "Confirm this code in your browser.",
+      "kk": "Бұл кодты браузерде растаңыз.",
+      "ru": "Подтвердите этот код в браузере.",
+      "notes": "App side of E.3."
+    },
+    {
+      "key": "pair.card.next",
+      "group": "E.3 Pairing",
+      "source": "added",
+      "en": "Next: {exam} · {when}",
+      "kk": "Келесі: {exam} · {when}",
+      "ru": "Далее: {exam} · {when}",
+      "notes": "Value. App side of E.3."
+    },
+    {
+      "key": "lock.pair.badge",
+      "group": "E.3 Pairing",
+      "source": "added",
+      "en": "NOT PAIRED",
+      "kk": "ЖҰПТАСТЫРЫЛМАҒАН",
+      "ru": "НЕ ПОДКЛЮЧЁН",
+      "notes": "Popup in E.3."
+    },
+    {
+      "key": "lock.pair.title",
+      "group": "E.3 Pairing",
+      "source": "added",
+      "en": "Pair with the Üki app",
+      "kk": "Üki қолданбасымен жұптастыру",
+      "ru": "Подключение к приложению Üki",
+      "notes": "Popup in E.3."
+    },
+    {
+      "key": "lock.pair.body",
+      "group": "E.3 Pairing",
+      "source": "added",
+      "en": "Both should show the same code.",
+      "kk": "Екеуінде бірдей код көрсетілуі керек.",
+      "ru": "В обоих окнах должен быть один и тот же код.",
+      "notes": "Popup in E.3."
+    },
+    {
+      "key": "lock.pair.found",
+      "group": "E.3 Pairing",
+      "source": "added",
+      "en": "Üki app found",
+      "kk": "Üki қолданбасы табылды",
+      "ru": "Приложение Üki найдено",
+      "notes": "Popup in E.3. The line under it is {os} · {student}."
+    },
+    {
+      "key": "lock.pair.action",
+      "group": "E.3 Pairing",
+      "source": "added",
+      "en": "Pair",
+      "kk": "Жұптастыру",
+      "ru": "Подключить",
+      "notes": "Popup in E.3."
+    },
+    {
+      "key": "lock.pair.mismatch",
+      "group": "E.3 Pairing",
+      "source": "added",
+      "en": "Different code? Close this and restart the Üki app.",
+      "kk": "Код басқа ма? Мұны жауып, Üki қолданбасын қайта іске қосыңыз.",
+      "ru": "Код другой? Закройте это окно и перезапустите приложение Üki.",
+      "notes": "Popup in E.3."
+    },
+    {
+      "key": "lock.pair.open_app.title",
+      "group": "E.3 Pairing",
+      "source": "added",
+      "en": "Open the Üki app",
+      "kk": "Üki қолданбасын ашыңыз",
+      "ru": "Откройте приложение Üki",
+      "notes": "Step 03 in E.3; also the popup when the app is absent."
+    },
+    {
+      "key": "lock.pair.open_app.body",
+      "group": "E.3 Pairing",
+      "source": "added",
+      "en": "It pairs on its own.",
+      "kk": "Ол өзі жұптасады.",
+      "ru": "Подключение произойдёт само.",
+      "notes": "Step 03 in E.3."
+    },
+    {
+      "key": "lock.app.found",
+      "group": "E.3 Pairing",
+      "source": "added",
+      "en": "Üki app · found on this laptop",
+      "kk": "Üki қолданбасы · осы ноутбукта табылды",
+      "ru": "Приложение Üki · найдено на этом ноутбуке",
+      "notes": "Popup footer in E.3."
+    },
+    {
+      "key": "lock.ready.badge",
+      "group": "E.4 Ready to lock",
+      "source": "added",
+      "en": "READY",
+      "kk": "ДАЙЫН",
+      "ru": "ГОТОВО",
+      "notes": "Popup in E.4."
+    },
+    {
+      "key": "lock.ready.next",
+      "group": "E.4 Ready to lock",
+      "source": "added",
+      "en": "NEXT EXAM",
+      "kk": "КЕЛЕСІ ЕМТИХАН",
+      "ru": "СЛЕДУЮЩИЙ ЭКЗАМЕН",
+      "notes": "Popup in E.4."
+    },
+    {
+      "key": "lock.ready.when",
+      "group": "E.4 Ready to lock",
+      "source": "added",
+      "en": "Starts {time} · {minutes} min · {host}",
+      "kk": "Басталуы {time} · {minutes} мин · {host}",
+      "ru": "Начало в {time} · {minutes} мин · {host}",
+      "notes": "Value. Popup in E.4."
+    },
+    {
+      "key": "lock.ready.app.title",
+      "group": "E.4 Ready to lock",
+      "source": "added",
+      "en": "Üki app",
+      "kk": "Üki қолданбасы",
+      "ru": "Приложение Üki",
+      "notes": "Popup in E.4."
+    },
+    {
+      "key": "lock.ready.app.ok",
+      "group": "E.4 Ready to lock",
+      "source": "added",
+      "en": "Connected · camera on",
+      "kk": "Қосылған · камера қосулы",
+      "ru": "Подключено · камера включена",
+      "notes": "Popup in E.4."
+    },
+    {
+      "key": "lock.ready.tabs.title",
+      "group": "E.4 Ready to lock",
+      "source": "added",
+      "en": "Other tabs",
+      "kk": "Басқа беттер",
+      "ru": "Другие вкладки",
+      "notes": "Popup in E.4."
+    },
+    {
+      "key": "lock.ready.tabs.body",
+      "group": "E.4 Ready to lock",
+      "source": "added",
+      "en": "{count} open. They close at the start and come back after you submit.",
+      "kk": "{count} ашық. Басталғанда жабылады, тапсырғаннан кейін қайтады.",
+      "ru": "Открыто: {count}. Они закроются при старте и вернутся после сдачи.",
+      "notes": "Value. Popup in E.4."
+    },
+    {
+      "key": "lock.ready.screen.off",
+      "group": "E.4 Ready to lock",
+      "source": "added",
+      "en": "Off",
+      "kk": "Өшірулі",
+      "ru": "Выключено",
+      "notes": "Popup in E.4; the row title is check.screen.title."
+    },
+    {
+      "key": "lock.ready.start",
+      "group": "E.4 Ready to lock",
+      "source": "added",
+      "en": "Lock and start",
+      "kk": "Құлыптау және бастау",
+      "ru": "Заблокировать и начать",
+      "notes": "Popup in E.4."
+    },
+    {
+      "key": "lock.ready.note.full",
+      "group": "E.4 Ready to lock",
+      "source": "added",
+      "en": "Only the exam portal and the calculator stay open.",
+      "kk": "Тек емтихан порталы мен калькулятор ашық қалады.",
+      "ru": "Открытыми останутся только портал экзамена и калькулятор.",
+      "notes": "Popup in E.4. Used once the calculator ships in Phase 1."
+    },
+    {
+      "key": "lock.ready.note.portal_only",
+      "group": "E.4 Ready to lock",
+      "source": "added-not-in-figma",
+      "en": "Only the exam portal stays open.",
+      "kk": "Тек емтихан порталы ашық қалады.",
+      "ru": "Открытым останется только портал экзамена.",
+      "notes": "Phase 0 has no calculator."
+    },
+    {
+      "key": "lock.app.connected",
+      "group": "E.4 Ready to lock",
+      "source": "added",
+      "en": "Üki app · connected · camera on",
+      "kk": "Üki қолданбасы · қосылған · камера қосулы",
+      "ru": "Приложение Üki · подключено · камера включена",
+      "notes": "Popup footer in E.4."
+    },
+    {
+      "key": "lock.copy.toast",
+      "group": "E.6 and E.7",
+      "source": "added",
+      "en": "Copy is off during the exam.",
+      "kk": "Емтихан кезінде көшіру өшірулі.",
+      "ru": "Во время экзамена копирование отключено.",
+      "notes": "Frame E.6."
+    },
+    {
+      "key": "lock.copy.noted",
+      "group": "E.6 and E.7",
+      "source": "added",
+      "en": "{time} · noted",
+      "kk": "{time} · белгіленді",
+      "ru": "{time} · отмечено",
+      "notes": "Value. Frame E.6."
+    },
+    {
+      "key": "lock.blocked.title",
+      "group": "E.6 and E.7",
+      "source": "added",
+      "en": "This site is closed during the exam.",
+      "kk": "Емтихан кезінде бұл сайт жабық.",
+      "ru": "Во время экзамена этот сайт закрыт.",
+      "notes": "Frame E.7. In exams inside the app, the block page shows only this line."
+    },
+    {
+      "key": "lock.blocked.body.full",
+      "group": "E.6 and E.7",
+      "source": "added",
+      "en": "Only the exam portal and the calculator are open. This attempt is in your exam log.",
+      "kk": "Тек емтихан порталы мен калькулятор ашық. Бұл әрекет емтихан журналында сақталды.",
+      "ru": "Открыты только портал экзамена и калькулятор. Эта попытка записана в журнал экзамена.",
+      "notes": "Frame E.7. Used once the calculator ships in Phase 1."
+    },
+    {
+      "key": "lock.blocked.body.portal_only",
+      "group": "E.6 and E.7",
+      "source": "added-not-in-figma",
+      "en": "Only the exam portal is open. This attempt is in your exam log.",
+      "kk": "Тек емтихан порталы ашық. Бұл әрекет емтихан журналында сақталды.",
+      "ru": "Открыт только портал экзамена. Эта попытка записана в журнал экзамена.",
+      "notes": "Phase 0 has no calculator."
+    },
+    {
+      "key": "lock.blocked.meta",
+      "group": "E.6 and E.7",
+      "source": "added",
+      "en": "{host} · {time}",
+      "kk": "{host} · {time}",
+      "ru": "{host} · {time}",
+      "notes": "Value. Frame E.7."
+    },
+    {
+      "key": "lock.blocked.back",
+      "group": "E.6 and E.7",
+      "source": "added",
+      "en": "Back to the exam",
+      "kk": "Емтиханға оралу",
+      "ru": "Вернуться к экзамену",
+      "notes": "Frame E.7."
+    },
+    {
+      "key": "lock.done.badge",
+      "group": "E.9 Released",
+      "source": "added",
+      "en": "DONE",
+      "kk": "АЯҚТАЛДЫ",
+      "ru": "ЗАВЕРШЕНО",
+      "notes": "Popup in E.9."
+    },
+    {
+      "key": "lock.done.title",
+      "group": "E.9 Released",
+      "source": "added",
+      "en": "Lock released",
+      "kk": "Құлып ашылды",
+      "ru": "Блокировка снята",
+      "notes": "Popup in E.9."
+    },
+    {
+      "key": "lock.done.body",
+      "group": "E.9 Released",
+      "source": "added",
+      "en": "Submitted at {time}. {count, plural, one {Your tab is back.} other {Your # tabs are back.}}",
+      "kk": "{time} кезінде тапсырылды. {count} бетіңіз қайтарылды.",
+      "ru": "Сдано в {time}. {count, plural, one {# вкладка вернулась.} few {# вкладки вернулись.} many {# вкладок вернулись.} other {# вкладки вернулись.}}",
+      "notes": "Value. ICU plural. Popup in E.9."
+    },
+    {
+      "key": "lock.done.locked_for.title",
+      "group": "E.9 Released",
+      "source": "added",
+      "en": "Locked for",
+      "kk": "Құлыпталған уақыт",
+      "ru": "Время блокировки",
+      "notes": "Popup in E.9."
+    },
+    {
+      "key": "lock.done.locked_for.value",
+      "group": "E.9 Released",
+      "source": "added",
+      "en": "{minutes} min",
+      "kk": "{minutes} мин",
+      "ru": "{minutes} мин",
+      "notes": "Value. Popup in E.9."
+    },
+    {
+      "key": "lock.done.blocked.title",
+      "group": "E.9 Released",
+      "source": "added",
+      "en": "Blocked attempts",
+      "kk": "Бұғатталған әрекеттер",
+      "ru": "Заблокированные попытки",
+      "notes": "Popup in E.9."
+    },
+    {
+      "key": "lock.done.blocked.value",
+      "group": "E.9 Released",
+      "source": "added",
+      "en": "{count} · in your exam log",
+      "kk": "{count} · емтихан журналында",
+      "ru": "{count} · в журнале экзамена",
+      "notes": "Value. Popup in E.9."
+    },
+    {
+      "key": "lock.done.sent.title",
+      "group": "E.9 Released",
+      "source": "added",
+      "en": "Sent to the proctor",
+      "kk": "Прокторға жіберілді",
+      "ru": "Отправлено проктору",
+      "notes": "Popup in E.9."
+    },
+    {
+      "key": "lock.done.sent.value",
+      "group": "E.9 Released",
+      "source": "added",
+      "en": "Events only",
+      "kk": "Тек оқиғалар",
+      "ru": "Только события",
+      "notes": "Popup in E.9."
+    },
+    {
+      "key": "lock.done.close",
+      "group": "E.9 Released",
+      "source": "added",
+      "en": "Close",
+      "kk": "Жабу",
+      "ru": "Закрыть",
+      "notes": "Popup in E.9."
+    },
+    {
+      "key": "lock.app.idle",
+      "group": "E.9 Released",
+      "source": "added",
+      "en": "Üki app · idle",
+      "kk": "Üki қолданбасы · күту режимінде",
+      "ru": "Приложение Üki · ожидание",
+      "notes": "Popup footer in E.9."
+    },
+    {
+      "key": "tray.open",
+      "group": "Tray",
+      "source": "added-not-in-figma",
+      "en": "Open Üki",
+      "kk": "Üki-ді ашу",
+      "ru": "Открыть Üki",
+      "notes": "Tray menu during exams in the browser."
+    }
+  ]
+}
