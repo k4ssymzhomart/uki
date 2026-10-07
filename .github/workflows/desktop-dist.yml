@@ -1,0 +1,105 @@
+# Manual: unsigned installers for macOS arm64 and x64 (dmg) and Windows x64 (NSIS), attached to a draft
+# GitHub release (docs/phase-0-plan.md, Pipelines). The demo installers are normally built on the demo
+# laptops themselves; a CI build copied to a Mac needs the quarantine flag removed and Windows needs
+# SmartScreen's "Run anyway" (docs/runbooks/demo-laptops.md).
+#
+# Variables (Settings > Secrets and variables > Actions > Variables): VITE_SUPABASE_URL and
+# VITE_SUPABASE_PUBLISHABLE_KEY of the cloud project, VITE_LOCK_EXTENSION_ID. Only the publishable key
+# goes into an app.
+name: Desktop installers
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag, for example desktop-2026-10-16
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+  TURBO_TELEMETRY_DISABLED: "1"
+  DO_NOT_TRACK: "1"
+  ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+  CSC_IDENTITY_AUTO_DISCOVERY: "false"
+  VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+  VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+  VITE_LOCK_EXTENSION_ID: ${{ vars.VITE_LOCK_EXTENSION_ID }}
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # electron-builder.yml builds both macOS architectures (dmg arm64 and x64) in one run.
+          - name: macOS arm64 and x64
+            os: macos-latest
+          - name: Windows x64
+            os: windows-latest
+    steps:
+      - name: Cloud build values are set
+        shell: bash
+        run: |
+          case "$VITE_SUPABASE_URL" in https://*) ;; *) echo "::error::set the VITE_SUPABASE_URL variable to the cloud project"; exit 1;; esac
+          case "$VITE_SUPABASE_PUBLISHABLE_KEY" in sb_publishable_*) ;; *) echo "::error::set VITE_SUPABASE_PUBLISHABLE_KEY (sb_publishable_…)"; exit 1;; esac
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Model files cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            apps/desktop/resources/models
+            !apps/desktop/resources/models/manifest.json
+          key: models-${{ hashFiles('apps/desktop/resources/models/manifest.json') }}
+      - name: Models from the SHA-256 manifest
+        run: |
+          pnpm models
+          pnpm models:verify
+      - name: Build the installer
+        run: pnpm --filter desktop run dist --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installer-${{ matrix.os }}-${{ strategy.job-index }}
+          path: |
+            apps/desktop/release/*.dmg
+            apps/desktop/release/*.exe
+          if-no-files-found: error
+          retention-days: 14
+
+  release:
+    name: Draft release
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ inputs.tag }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: installers
+          merge-multiple: true
+      - name: Create or update the draft release
+        run: |
+          ls -l installers
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release upload "$TAG" installers/* --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$TAG" installers/* --draft --target "$GITHUB_SHA" --repo "$GITHUB_REPOSITORY" \
+              --title "Üki desktop $TAG (unsigned)" \
+              --notes "Unsigned Phase 0 installers: macOS arm64 and x64 (dmg), Windows x64 (NSIS). See docs/runbooks/demo-laptops.md for the quarantine and SmartScreen steps."
+          fi

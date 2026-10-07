@@ -1,0 +1,188 @@
+# Every push and pull request (docs/phase-0-plan.md, Pipelines and Gates on every merge to main):
+#   check     pnpm check (Biome with the i18n GritQL plugin, the guards, type check, unit tests) and
+#             generated files up to date (i18n messages, tokens)
+#   gitleaks  secret scan with .gitleaks.toml
+#   stack     supabase start; pgTAP; Edge Functions with the integration tests; the dashboard smoke
+#             test; the demo scripts against the real schema
+#   build     web, the mock portal and Üki Lock (Chrome and Edge zips)
+#   desktop   unsigned installers on macOS (dmg arm64 and x64) and Windows (NSIS x64)
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # No third-party telemetry from the toolchain (CLAUDE.md).
+  NEXT_TELEMETRY_DISABLED: "1"
+  TURBO_TELEMETRY_DISABLED: "1"
+  DO_NOT_TRACK: "1"
+  # Only the desktop packaging needs Electron's own download, and electron-builder fetches that itself.
+  ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+
+jobs:
+  check:
+    name: Lint, guards, types and unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: i18n messages are built from the catalog
+        run: |
+          pnpm i18n:build
+          git diff --exit-code -- packages/i18n/messages
+      - name: Tokens are built from figma-variables.json
+        run: pnpm --filter @uki/tokens build:check
+      - name: pnpm check
+        run: pnpm check
+
+  gitleaks:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
+          # Needed only if the repository moves to an organization account.
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+  stack:
+    name: Database, functions, dashboard smoke test, demo scripts
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.107.0
+      - name: Start the local stack (the edge runtime runs under functions serve)
+        run: supabase start -x vector,logflare,imgproxy,edge-runtime,studio
+      - name: Write .env from the local stack
+        run: pnpm env:local
+      - name: pgTAP (RLS for every role, RPCs, triggers)
+        run: supabase test db
+      - name: Staff accounts
+        run: pnpm seed:staff
+      - name: Serve the Edge Functions
+        run: nohup pnpm functions:serve > functions-serve.log 2>&1 &
+      - name: Functions and realtime integration tests
+        run: pnpm test:integration
+      - name: Playwright browser
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Dashboard smoke test
+        run: pnpm e2e
+      - name: Demo scripts against the schema
+        run: |
+          pnpm demo:reset
+          pnpm demo:simulate --sessions 20 --speed 4 --start-after 15 --seconds 50 --watch
+          pnpm demo:reset
+      - name: Logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stack-logs
+          path: |
+            functions-serve.log
+            playwright-report/
+            e2e/playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  build:
+    name: Web, mock portal and Üki Lock builds
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # Public build values: repository variables when set, otherwise the local stack's address.
+      NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54721' }}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_ci_placeholder' }}
+      LOCK_DEV_PUBLIC_KEY: ${{ vars.LOCK_DEV_PUBLIC_KEY }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Web dashboard
+        run: pnpm --filter web build
+      - name: Mock exam portal
+        run: pnpm --filter lms-mock build
+      - name: Üki Lock (Chrome and Edge)
+        run: pnpm --filter lock zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: uki-lock
+          path: apps/lock/.output/*.zip
+          retention-days: 14
+
+  desktop:
+    name: Desktop installer (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    env:
+      # Unsigned in Phase 0 (Builds); electron-builder must not look for a certificate.
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || 'http://127.0.0.1:54721' }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_ci_placeholder' }}
+      VITE_LOCK_EXTENSION_ID: ${{ vars.VITE_LOCK_EXTENSION_ID }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Model files cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            apps/desktop/resources/models
+            !apps/desktop/resources/models/manifest.json
+          key: models-${{ hashFiles('apps/desktop/resources/models/manifest.json') }}
+      - name: Models from the SHA-256 manifest
+        run: |
+          pnpm models
+          pnpm models:verify
+      - name: Build the installer
+        run: pnpm --filter desktop run dist --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: uki-desktop-${{ runner.os }}
+          path: |
+            apps/desktop/release/*.dmg
+            apps/desktop/release/*.exe
+          if-no-files-found: error
+          retention-days: 7

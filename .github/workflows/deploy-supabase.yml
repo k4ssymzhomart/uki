@@ -1,0 +1,68 @@
+# Deploys migrations and Edge Functions to the cloud project (Frankfurt) after CI passes on main
+# (docs/phase-0-plan.md, Pipelines). Vercel deploys the two web apps itself.
+#
+# Secrets: SUPABASE_ACCESS_TOKEN (a personal access token), SUPABASE_DB_PASSWORD, SUPABASE_PROJECT_REF.
+# Variables: UKI_ALLOWED_ORIGINS (optional; the Vercel origins the functions accept, set as a function
+# secret on every deploy), DEPLOY_FREEZE (set to "true" from the demo tag until Demo Day ends).
+# Runbook: docs/runbooks/cloud-setup.md.
+name: Deploy Supabase
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-supabase
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: supabase db push and functions deploy
+    if: >-
+      vars.DEPLOY_FREEZE != 'true' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: cloud
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # The commit CI tested, not whatever main points at now.
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - name: Secrets are set
+        run: |
+          for name in SUPABASE_ACCESS_TOKEN SUPABASE_DB_PASSWORD SUPABASE_PROJECT_REF; do
+            if [ -z "${!name}" ]; then echo "::error::GitHub secret $name is not set"; exit 1; fi
+          done
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.107.0
+      - name: supabase link
+        run: supabase link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+      - name: Copy the contracts into the functions
+        run: pnpm functions:sync
+      - name: supabase db push
+        run: supabase db push --linked --password "$SUPABASE_DB_PASSWORD" --yes
+      - name: CORS origins for the functions
+        if: vars.UKI_ALLOWED_ORIGINS != ''
+        run: supabase secrets set --project-ref "$SUPABASE_PROJECT_REF" UKI_ALLOWED_ORIGINS="${{ vars.UKI_ALLOWED_ORIGINS }}"
+      - name: supabase functions deploy
+        run: supabase functions deploy --project-ref "$SUPABASE_PROJECT_REF" --use-api --yes
