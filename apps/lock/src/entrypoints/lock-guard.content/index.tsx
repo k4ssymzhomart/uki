@@ -1,0 +1,119 @@
+// The content script on allowed exam hosts. The service worker registers it at lock time with
+// chrome.scripting.registerContentScripts (document_start, not persisted across sessions) and injects it
+// into the exam tab that is already open. It marks the page locked, cancels copy and print, and draws the
+// Lock bar and the E.6 toast in a shadow root, so page styles and Üki styles never mix. It talks only to
+// the service worker; the bar's data comes from chrome.storage.local.
+import { isLocale } from "@uki/i18n";
+import { createRoot, type Root } from "react-dom/client";
+import { browser } from "wxt/browser";
+import type { ContentScriptContext } from "wxt/utils/content-script-context";
+import { createShadowRootUi, type ShadowRootContentScriptUi } from "wxt/utils/content-script-ui/shadow-root";
+import { defineContentScript } from "wxt/utils/define-content-script";
+import { type GuardHit, installGuard, markLocked } from "../../content/guard.ts";
+import { LockOverlay, type ToastRequest } from "../../content/lock-overlay.tsx";
+import { LockIntlProvider } from "../../lib/intl.tsx";
+import type { RuntimeRequest } from "../../lib/messages.ts";
+import { BarState, readStored, STORAGE_KEYS } from "../../lib/state.ts";
+import css from "../../styles.css?inline";
+
+/** Tokens are declared on :root; inside the shadow root they belong on :host. */
+const shadowCss = css.replaceAll(":root", ":host");
+
+async function readBar(): Promise<BarState | null> {
+  const items = await browser.storage.local.get(STORAGE_KEYS.bar);
+  return readStored(BarState.nullable(), items[STORAGE_KEYS.bar], null);
+}
+
+function domReady(): Promise<void> {
+  if (document.readyState !== "loading") return Promise.resolve();
+  return new Promise((resolve) =>
+    document.addEventListener("DOMContentLoaded", () => resolve(), { once: true }),
+  );
+}
+
+async function run(ctx: ContentScriptContext): Promise<void> {
+  let bar = await readBar();
+  let toast: ToastRequest | null = null;
+  let unmark: (() => void) | null = null;
+  let ui: ShadowRootContentScriptUi<Root> | null = null;
+  let guarded = false;
+
+  const render = () => {
+    const root = ui?.mounted;
+    if (!root || !bar) return;
+    const locale = isLocale(bar.locale) ? bar.locale : "kk";
+    root.render(
+      <LockIntlProvider locale={locale}>
+        <LockOverlay bar={bar} toast={toast} locale={locale} />
+      </LockIntlProvider>,
+    );
+  };
+
+  const onBlocked = (hit: GuardHit) => {
+    toast = { id: (toast?.id ?? 0) + 1, at: Date.now() };
+    render();
+    if (hit === null) return;
+    const request: RuntimeRequest = { type: "content.blocked", kind: hit };
+    void browser.runtime.sendMessage(request).catch(() => {});
+  };
+
+  const activate = async () => {
+    unmark ??= markLocked(document);
+    if (!guarded) {
+      guarded = true;
+      installGuard(window, {
+        listen: (target, type, listener) =>
+          ctx.addEventListener(target as Window, type as keyof WindowEventMap, listener, { capture: true }),
+        onBlocked: (hit) => {
+          if (bar) onBlocked(hit);
+        },
+      });
+    }
+    if (!ui) {
+      await domReady();
+      if (ctx.isInvalid || !bar) return;
+      ui = await createShadowRootUi(ctx, {
+        name: "uki-lock-bar",
+        position: "inline",
+        anchor: "body",
+        append: "first",
+        css: shadowCss,
+        onMount: (container) => createRoot(container),
+        onRemove: (root) => root?.unmount(),
+      });
+      ui.mount();
+    }
+    render();
+  };
+
+  const deactivate = () => {
+    unmark?.();
+    unmark = null;
+    ui?.remove();
+    ui = null;
+  };
+
+  const onChanged = (changes: Record<string, { newValue?: unknown }>, area: string) => {
+    const change = changes[STORAGE_KEYS.bar];
+    if (area !== "local" || !change) return;
+    bar = readStored(BarState.nullable(), change.newValue, null);
+    if (bar?.mode === "browser") void activate();
+    else deactivate();
+  };
+  browser.storage.onChanged.addListener(onChanged);
+  ctx.onInvalidated(() => {
+    browser.storage.onChanged.removeListener(onChanged);
+    deactivate();
+  });
+
+  if (bar?.mode === "browser") await activate();
+}
+
+export default defineContentScript({
+  registration: "runtime",
+  runAt: "document_start",
+  cssInjectionMode: "manual",
+  main(ctx) {
+    void run(ctx);
+  },
+});
