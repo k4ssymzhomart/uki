@@ -5,11 +5,13 @@
     "continue": "Continue"
   },
   "app": {
+    "name": "Üki",
     "title": {
       "default": "Üki · {course} · {examType}",
       "ended": "Üki · {course} · {examType} · ended by proctor",
       "locked": "Üki · {course} · {examType} · browser locked",
       "offline": "Üki · {course} · {examType} · browser locked · offline",
+      "offline_unlocked": "Üki · {course} · {examType} · offline",
       "proctor_paused": "Üki · {course} · {examType} · paused by proctor",
       "submitted": "Üki · {course} · {examType} · submitted"
     }
@@ -662,7 +664,11 @@
       "label": "Exam code"
     },
     "error": {
+      "already_joined": "This student ID is already in this exam on another laptop. Ask your proctor.",
       "body": "No exam has this code. Copy it from your invitation email.",
+      "lobby_closed": "This exam is not open to join now. Check the time in your invitation email.",
+      "network": "The exam server does not reply. Check your connection and try again.",
+      "rate_limited": "Too many tries. Wait a minute and try again.",
       "title": "Check the code."
     },
     "privacy": "Your camera stays on this laptop. Only events and flagged frames are sent.",
@@ -742,10 +748,12 @@
       },
       "title": "Lock released"
     },
+    "name": "Üki Lock",
     "pair": {
       "action": "Pair",
       "badge": "NOT PAIRED",
       "body": "Both should show the same code.",
+      "device": "{os} · {student}",
       "found": "Üki app found",
       "mismatch": "Different code? Close this and restart the Üki app.",
       "open_app": {
@@ -796,11 +804,19 @@
     "body": "Answers save on this laptop and sync when the network is back. Your timer keeps running.",
     "title": "You’re offline. Keep writing."
   },
+  "os": {
+    "macos": "macOS",
+    "windows": "Windows"
+  },
   "pair": {
     "card": {
       "body": "Confirm this code in your browser.",
       "next": "Next: {exam} · {when}",
-      "title": "Pair Üki Lock"
+      "title": "Pair Üki Lock",
+      "when": {
+        "date": "{date}, {time}",
+        "today": "today {time}"
+      }
     }
   },
   "proctor_paused": {
@@ -815,7 +831,10 @@
       "title": "Eyes on the screen"
     },
     "faq": {
-      "video": "Where is the video?"
+      "video": {
+        "answer": "It isn’t uploaded anywhere. Üki checks the video on this laptop. Only events and flagged frames are sent.",
+        "question": "Where is the video?"
+      }
     },
     "phone": {
       "body": "Keep your phone out of the camera’s view.",

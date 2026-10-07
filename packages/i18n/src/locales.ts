@@ -7,8 +7,8 @@ export type Locale = (typeof LOCALES)[number];
 /** Students see Kazakh until they switch. */
 export const DEFAULT_LOCALE: Locale = "kk";
 
-/** The workspace time zone for KRU. Every time and date on screen is shown in it. */
-export const TIME_ZONE = "Asia/Almaty";
+// Kept in its own zod-free module so the Intl polyfill can import it without zod.
+export { TIME_ZONE } from "./time-zone.ts";
 
 /**
  * BCP 47 tags for Intl and use-intl. English is en-GB: Figma writes "Fri 9 Oct" and 24-hour times
