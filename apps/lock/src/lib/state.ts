@@ -3,6 +3,7 @@
 // popup and the block page, `bar` for the content script on the exam portal. Every read goes through Zod;
 // anything that fails parses as missing.
 import {
+  ClockOffsetMs,
   DesktopOs,
   ExamMode,
   ExamStatePhase,
@@ -35,6 +36,7 @@ export const ExamStateMessage = z.object({
   watch: WatchLabel,
   locale: Locale,
   exam: LockExam.nullable(),
+  clock_offset_ms: ClockOffsetMs.optional(),
 });
 export type ExamStateMessage = z.infer<typeof ExamStateMessage>;
 
@@ -51,6 +53,8 @@ export const LockRecord = z.object({
   tabs_closed: Count,
   fullscreen_exits: Count,
   blocked_count: Count,
+  /** Server time minus the laptop's clock, from the app's latest exam.state for this exam. */
+  clock_offset_ms: ClockOffsetMs.default(0),
 });
 export type LockRecord = z.infer<typeof LockRecord>;
 
@@ -68,8 +72,11 @@ export const ReleasedSummary = z.object({
 });
 export type ReleasedSummary = z.infer<typeof ReleasedSummary>;
 
-/** Lock events wait here until a paired app takes them; resends are safe because the app keys them by id. */
-export const OutboxEntry = z.object({ event: LockEvent, queued_at: z.number() });
+/**
+ * Lock events wait here until a paired app takes them; resends are safe because the app keys them by id.
+ * Each entry belongs to the exam the Lock was locked to, and goes only to an app on that exam.
+ */
+export const OutboxEntry = z.object({ event: LockEvent, queued_at: z.number(), session_id: Uuid });
 export type OutboxEntry = z.infer<typeof OutboxEntry>;
 export const Outbox = z.array(OutboxEntry);
 
@@ -77,7 +84,10 @@ export const LINK_STATES = ["absent", "connected", "paired"] as const;
 export const LinkState = z.enum(LINK_STATES);
 export type LinkState = z.infer<typeof LinkState>;
 
-/** The popup's and the block page's view of the service worker. */
+/**
+ * The popup's and the block page's view of the service worker. `locked.exam` carries its times on the
+ * laptop's clock (shifted by the app's clock offset), so countdowns that read Date.now() are right.
+ */
 export const LockView = z.object({
   link: LinkState,
   app: z.object({ os: DesktopOs, student_name: z.string().nullable(), app_version: z.string() }).nullable(),
@@ -99,7 +109,10 @@ export const EMPTY_VIEW: LockView = {
   released: null,
 };
 
-/** What the content script on the exam portal needs for the bar, the guards and the toast. */
+/**
+ * What the content script on the exam portal needs for the bar, the guards and the toast. `starts_at` and
+ * `ends_at` are on the laptop's clock, like `locked.exam` in LockView.
+ */
 export const BarState = z.object({
   mode: ExamMode,
   title: z.string(),

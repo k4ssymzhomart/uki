@@ -1,19 +1,10 @@
 import type { DesktopOs } from "@uki/contracts";
 
-/**
- * Operating system names for the E.3 line "{os} · {student}". Trade names read the same in Kazakh, Russian
- * and English, and the catalog has no key for them yet (docs: open issue for the i18n owner).
- */
-const OS_NAMES: Record<DesktopOs, string> = { macos: "macOS", windows: "Windows" };
-
-export function osName(os: DesktopOs): string {
-  return OS_NAMES[os];
-}
-
-/** "Windows · Aliya S." as on E.3, or the OS alone before the student joins. */
-export function deviceLine(os: DesktopOs, studentName: string | null): string {
-  return studentName ? `${osName(os)} · ${studentName}` : osName(os);
-}
+/** The catalog key of each operating system, for the E.3 line lock.pair.device ("{os} · {student}"). */
+export const OS_KEYS = { macos: "os.macos", windows: "os.windows" } as const satisfies Record<
+  DesktopOs,
+  string
+>;
 
 /** "482 913": the code in two groups, as E.3 draws it. */
 export function groupCode(code: string): string {

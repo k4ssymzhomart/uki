@@ -12,7 +12,7 @@ export interface GuardTarget {
 }
 
 export interface GuardOptions {
-  /** Where listeners go; WXT's ctx.addEventListener removes them when the script is invalidated. */
+  /** Where listeners go; the content script adds them with a signal that removes them all at release. */
   listen: (target: GuardTarget, type: string, listener: (event: Event) => void) => void;
   onBlocked: (hit: GuardHit) => void;
 }

@@ -5,6 +5,11 @@ import type { TabSnapshot, WindowSnapshot } from "../lib/tab-plan.ts";
 
 export type WindowState = "normal" | "minimized" | "maximized" | "fullscreen" | "locked-fullscreen";
 
+/** chrome.windows.WindowType values the Lock asks for. */
+export type WindowKind = "normal" | "popup" | "app";
+/** Every window a student can read a page in: normal, popup (window.open) and app (installed sites). */
+export const LOCK_WINDOW_TYPES: WindowKind[] = ["normal", "popup", "app"];
+
 export interface TabInfo extends TabSnapshot {
   id?: number;
   title?: string;
@@ -43,9 +48,9 @@ export interface LockApi {
     remove(tabIds: number | number[]): Promise<void>;
   };
   windows: {
-    getAll(query: { populate: boolean; windowTypes: ["normal"] }): Promise<WindowInfo[]>;
+    getAll(query: { populate: boolean; windowTypes: WindowKind[] }): Promise<WindowInfo[]>;
     get(windowId: number): Promise<WindowInfo>;
-    getLastFocused(): Promise<WindowInfo>;
+    getLastFocused(query?: { populate: boolean; windowTypes: WindowKind[] }): Promise<WindowInfo>;
     create(properties: {
       url?: string | string[];
       focused?: boolean;

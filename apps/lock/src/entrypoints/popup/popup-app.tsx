@@ -7,7 +7,7 @@ import {
   LockPopupReleased,
 } from "@uki/ui";
 import { useTranslations } from "use-intl";
-import { deviceLine, groupCode } from "../../lib/os-name.ts";
+import { groupCode, OS_KEYS } from "../../lib/os-name.ts";
 import type { LockView } from "../../lib/state.ts";
 import { elapsedShare, formatTimeLeft, timeLeftMs, wholeMinutes } from "../../lib/time-left.ts";
 
@@ -24,8 +24,6 @@ export interface PopupActions {
 
 export interface PopupAppProps {
   view: LockView;
-  /** The product name in the header, from the manifest ("Üki Lock"). */
-  productName: string;
   /** Tabs that close at the start, for E.4. */
   otherTabs: number;
   nowMs: number;
@@ -59,14 +57,17 @@ function hostOf(url: string | null, fallback: string | undefined): string {
 }
 
 /** The 360 px toolbar popup: one Ext/Popup state per screen, every string from the catalog. */
-export function PopupApp({ view, productName, otherTabs, nowMs, locale, actions }: PopupAppProps) {
+export function PopupApp({ view, otherTabs, nowMs, locale, actions }: PopupAppProps) {
   const t = useTranslations();
   const screen = popupScreen(view);
-  const frame = { headerTitle: productName, framed: false } as const;
+  const frame = { headerTitle: t("lock.name"), framed: false } as const;
+  // E.3: "Windows · Aliya S.", or the OS alone before the student joins.
+  const device = (app: NonNullable<LockView["app"]>) => {
+    const os = t(OS_KEYS[app.os]);
+    return app.student_name ? t("lock.pair.device", { os, student: app.student_name }) : os;
+  };
   const appCheck = (title: string): LockPopupCheck | undefined =>
-    view.app
-      ? { id: "app", status: "pass", title, detail: deviceLine(view.app.os, view.app.student_name) }
-      : undefined;
+    view.app ? { id: "app", status: "pass", title, detail: device(view.app) } : undefined;
 
   switch (screen) {
     case "open_app":
