@@ -10,8 +10,11 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("submit") };
 }
 
-/** A.0 Sign in (Figma 177:15946). Signed-in staff go straight to the overview. */
+/**
+ * A.0 Sign in (Figma 177:15946). Signed-in staff go straight to the overview. When the lookup failed,
+ * the form still shows, so signing in again is always a way forward.
+ */
 export default async function SignInPage() {
-  if (await getStaffMember()) redirect("/overview");
+  if ((await getStaffMember()).status === "staff") redirect("/overview");
   return <SignInScreen action={signIn} />;
 }

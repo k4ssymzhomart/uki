@@ -131,6 +131,7 @@ function examModel(snapshot: FlowSnapshot): ExamModel {
     mode: context.joined?.exam.mode ?? "app",
     question: q,
     questionsLoading: context.exam.questionsLoading,
+    questionsFailed: context.exam.questionsFailed,
     answeredCount: Object.keys(context.exam.answers).length,
     savedAt: context.exam.lastSavedAt,
     savedOffline: context.offline !== null && context.exam.lastSavedAt !== null,

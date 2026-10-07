@@ -8,15 +8,18 @@ import {
 } from "../../features/overview/overview-model.ts";
 import { AppShell } from "../../features/shell/app-shell.tsx";
 import { liveHref } from "../../features/shell/shell-model.ts";
+import { StaffLookupFailed } from "../../features/shell/staff-lookup-failed.tsx";
 import { requireStaff } from "../../lib/auth.ts";
 
 /**
  * The signed-in dashboard shell: App/Sidebar 256 wide at 1280 and up, an icon rail 72 wide from 1024 to
  * 1279. Only staff get here; every page under it still checks the staff member itself. The nav counts
- * and the Live link come from exam_overview under RLS.
+ * and the Live link come from exam_overview under RLS. When the staff lookup failed twice there is no
+ * one to draw the shell for, so the layout shows the full-screen error with Try again instead.
  */
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const staff = await requireStaff();
+  if (!staff) return <StaffLookupFailed standalone />;
   const rows = await loadOverviewRows();
   const stats = overviewStats(rows);
   const now = Date.now();

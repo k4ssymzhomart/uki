@@ -199,6 +199,79 @@ describe("backoff", () => {
   });
 });
 
+describe("546 WORKER_LIMIT and gateway 502, 503, 504", () => {
+  const statuses = [546, 502, 503, 504];
+
+  it.each(statuses)(
+    "%i: backs off 2, 4, 8, 16, 30 s, sets nothing aside, then sends everything once",
+    async (status) => {
+      const fatal = vi.fn();
+      server.failStatus.answers = status;
+      server.failStatus.ingest = status;
+      await outbox.saveAnswer(SESSION_ID, QUESTION_IDS[0] ?? "", "a", new Date().toISOString());
+      for (let i = 0; i < 3; i += 1)
+        await outbox.enqueueEvent(SESSION_ID, (seq) => envelopeFor("gaze.on_screen", seq));
+      const start = Date.now();
+      startLoop({ onFatal: fatal });
+      await flushIo(100);
+      await advance(31_000, 500);
+      expect(server.calls.map((call) => Math.round((call.at - start) / 1000))).toEqual([0, 2, 6, 14, 30]);
+      // The answers pass; ingest still answers the status: the same backoff, nothing set aside.
+      delete server.failStatus.answers;
+      await advance(60_000, 500);
+      const ingests = server.calls.filter((call) => call.kind === "ingest");
+      expect(ingests.map((call) => Math.round((call.at - start) / 1000))).toEqual([60, 90]);
+      expect(fatal).not.toHaveBeenCalled();
+      expect(loop?.isStarted).toBe(true);
+      expect(await outbox.unsentEvents(SESSION_ID)).toHaveLength(3);
+      expect((await outbox.answers(SESSION_ID)).every((row) => row.rejectedAt === null)).toBe(true);
+
+      delete server.failStatus.ingest;
+      await advance(31_000, 500);
+      expect(server.answers.size).toBe(1);
+      expect(server.events.size).toBe(3);
+      expect(await outbox.isEmpty(SESSION_ID)).toBe(true);
+    },
+  );
+
+  it.each(statuses)(
+    "%i: keeps a still's URL and retries the upload and frames, without resending the event",
+    async (status) => {
+      const row = await outbox.enqueueEvent(SESSION_ID, (seq) =>
+        envelopeFor("phone.detected", seq, { frame_count: 1 }),
+      );
+      await outbox.addStill({
+        sessionId: SESSION_ID,
+        eventId: row.id,
+        index: 0,
+        at: Date.now(),
+        bytes: jpegBytes(),
+      });
+      server.failStatus.upload = status;
+      startLoop();
+      await flushIo(300);
+      await advance(7_000, 500);
+      expect(server.calls.filter((call) => call.kind === "upload").length).toBeGreaterThanOrEqual(2);
+      expect(server.objects.size).toBe(0);
+      expect((await outbox.sessionStills(SESSION_ID)).map((still) => still.state)).toEqual(["pending"]);
+
+      delete server.failStatus.upload;
+      server.failStatus.frames = status;
+      await advance(9_000, 500);
+      expect(server.objects.size).toBe(1);
+      expect(server.frames.size).toBe(0);
+      expect((await outbox.sessionStills(SESSION_ID)).map((still) => still.state)).toEqual(["uploaded"]);
+
+      delete server.failStatus.frames;
+      await advance(17_000, 500);
+      expect(server.frames.size).toBe(1);
+      expect(await outbox.event(row.id)).toBeUndefined();
+      // One URL served every try: the event went up once, never again for a fresh URL.
+      expect(server.calls.filter((call) => call.kind === "ingest" && call.size > 0)).toHaveLength(1);
+    },
+  );
+});
+
 describe("the OS reports the cut", () => {
   it("calls at once on probe(), so offline shows 5 s after the cut rather than at the next heartbeat", async () => {
     const changes: Connectivity[] = [];

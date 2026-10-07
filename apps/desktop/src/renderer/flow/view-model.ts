@@ -293,7 +293,10 @@ export interface ExamModel extends ModelBase {
   mode: ExamMode;
   /** The question on screen; null while the questions load and in browser exams. */
   question: QuestionModel | null;
+  /** A question load runs: the spinner, or Check again's loading state while `questionsFailed`. */
   questionsLoading: boolean;
+  /** The questions did not load: the Error banner exam.questions.failed with Check again (check.again). */
+  questionsFailed: boolean;
   /** Questions with a saved answer, of `question.total`. */
   answeredCount: number;
   /** exam.saved {time}, or exam.saved_offline {time} when `savedOffline`. Null before any answer. */
@@ -417,6 +420,8 @@ export type FlowUiEvent =
   | { type: "IM_HERE" }
   /** 2.1e Got it. */
   | { type: "ACK_NOTICE" }
+  /** 2.1 Check again on the exam.questions.failed banner: load the questions now. */
+  | { type: "RETRY_QUESTIONS" }
   /** 3.1 / 2.1d Save receipt. */
   | { type: "SAVE_RECEIPT" }
   /** 3.1 / 2.1d Close Üki. */

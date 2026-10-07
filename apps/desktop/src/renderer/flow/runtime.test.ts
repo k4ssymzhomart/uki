@@ -2,6 +2,7 @@ import { type CommandMessage, type SessionCommandRow, uuidv7 } from "@uki/contra
 import type { RulesState } from "@uki/detection";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Outbox } from "../outbox/outbox.ts";
+import { ServiceError } from "../services/errors.ts";
 import { JoinFailure } from "../services/student-api.ts";
 import { FakeBridge, FakeDetection, FakeIdentity, FakeStudentApi } from "../test/fakes.ts";
 import { joinOutput } from "../test/flow-fixtures.ts";
@@ -505,5 +506,68 @@ describe("the flow runtime", () => {
     api.questionsAfterStart = true;
     await advance(31_000, 1000);
     expect(screen()).toMatchObject({ frame: "2.1", question: { n: 1 } });
+  });
+
+  it("shows the questions error after the retries, tries every 30 s, and Check again tries at once", async () => {
+    api.questionsAfterStart = false;
+    let down = false;
+    const joins: number[] = [];
+    const joinExam = api.joinExam.bind(api);
+    api.joinExam = async () => {
+      joins.push(Date.now());
+      if (down) throw new ServiceError("network", "HTTP 546", 546);
+      return joinExam();
+    };
+    await restoredExam("writing", 60_000);
+    await advance(3000);
+    expect(screen()).toMatchObject({ frame: "2.1", questionsLoading: true, questionsFailed: false });
+    down = true;
+    // The first load tries at once and after 2, 4, 8 and 16 s, then gives up: the banner shows.
+    await advance(28_000, 1000);
+    expect(screen()).toMatchObject({
+      frame: "2.1",
+      question: null,
+      questionsFailed: true,
+      questionsLoading: false,
+    });
+
+    // Check again: one join_exam at once, then the banner again.
+    let before = joins.length;
+    runtime.send({ type: "RETRY_QUESTIONS" });
+    await advance(500);
+    expect(joins.length - before).toBe(1);
+    expect(screen()).toMatchObject({ questionsFailed: true, questionsLoading: false });
+
+    // On its own it tries once every 30 s, never a ladder again.
+    before = joins.length;
+    await advance(61_000, 1000);
+    expect(joins.length - before).toBe(2);
+    expect(screen()).toMatchObject({ questionsFailed: true });
+
+    down = false;
+    api.questionsAfterStart = true;
+    runtime.send({ type: "RETRY_QUESTIONS" });
+    await advance(500);
+    expect(screen()).toMatchObject({ frame: "2.1", question: { n: 1 }, questionsFailed: false });
+  });
+
+  it("shows the questions error at once when join_exam refuses for good, and recovers on its own", async () => {
+    api.questionsAfterStart = false;
+    let refuse = false;
+    const joinExam = api.joinExam.bind(api);
+    api.joinExam = async () => {
+      if (refuse) throw new JoinFailure("lobby_closed");
+      return joinExam();
+    };
+    await restoredExam("writing", 60_000);
+    await advance(1000);
+    refuse = true;
+    // The ladder's next try (2 s) is refused for good: no more ladder.
+    await advance(2500);
+    expect(screen()).toMatchObject({ frame: "2.1", question: null, questionsFailed: true });
+    refuse = false;
+    api.questionsAfterStart = true;
+    await advance(31_000, 1000);
+    expect(screen()).toMatchObject({ frame: "2.1", question: { n: 1 }, questionsFailed: false });
   });
 });

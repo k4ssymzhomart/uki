@@ -6,13 +6,14 @@
 //   pnpm --filter lock build && pnpm --filter lms-mock build
 //   pnpm exec tsx apps/lock/scripts/smoke.ts            (from the repository root)
 //
-// Env: PW_CHROMIUM (browser binary; default Playwright's cached Chrome for Testing 1234), SMOKE_PORT (portal,
-// default 5181), SMOKE_SHOTS, SMOKE_QUIET_S (seconds of quiet at the end, default 0), SMOKE_HEADED=1.
+// Env: PW_CHROMIUM (browser binary; default the Chrome for Testing of the installed Playwright, from
+// `pnpm exec playwright install chromium`; see scripts/chromium.ts), SMOKE_PORT (portal, default 5181),
+// SMOKE_SHOTS, SMOKE_QUIET_S (seconds of quiet at the end, default 0), SMOKE_HEADED=1.
 // This is not the hand check: real Chrome and Edge on the demo laptops are still run by a person.
 import assert from "node:assert/strict";
 import { existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
 import { createServer, type Server } from "node:http";
-import { homedir, tmpdir } from "node:os";
+import { tmpdir } from "node:os";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { type BrowserContext, chromium, type Page, type Worker } from "@playwright/test";
@@ -22,6 +23,7 @@ import {
   createMemoryPairingStore,
   type PairCode,
 } from "../../desktop/src/main/lock-relay.ts";
+import { chromiumExecutable } from "./chromium.ts";
 
 const LOCK_DIR = fileURLToPath(new URL("..", import.meta.url));
 const EXTENSION = join(LOCK_DIR, ".output/chrome-mv3");
@@ -29,12 +31,7 @@ const PORTAL_DIST = join(LOCK_DIR, "../lms-mock/dist");
 const PORT = Number(process.env.SMOKE_PORT ?? 5181);
 const SHOTS = process.env.SMOKE_SHOTS ?? join(tmpdir(), "uki-lock-smoke");
 const QUIET_S = Number(process.env.SMOKE_QUIET_S ?? 0);
-const CHROMIUM =
-  process.env.PW_CHROMIUM ??
-  join(
-    homedir(),
-    "Library/Caches/ms-playwright/chromium-1234/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
-  );
+const CHROMIUM = chromiumExecutable();
 const PORTAL = `http://localhost:${PORT}/physics-1/quiz-3`;
 /** Another host for the same files: not allowed, so the rule closes it. */
 const OTHER = `http://127.0.0.1:${PORT}/physics-1/quiz-3`;
@@ -108,7 +105,12 @@ async function main(): Promise<void> {
     existsSync(join(PORTAL_DIST, "index.html")),
     "build the portal first: pnpm --filter lms-mock build",
   );
+  assert.ok(
+    existsSync(CHROMIUM),
+    `no browser at ${CHROMIUM}: run pnpm exec playwright install chromium, or set PW_CHROMIUM`,
+  );
   mkdirSync(SHOTS, { recursive: true });
+  log(`browser ${CHROMIUM}`);
 
   const server = await servePortal();
   let context: BrowserContext | null = null;

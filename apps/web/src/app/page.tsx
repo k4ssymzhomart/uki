@@ -1,7 +1,10 @@
 import { redirect } from "next/navigation";
 import { getStaffMember } from "../lib/auth.ts";
 
-/** `/` sends signed-in staff to the overview and everyone else to sign-in. */
+/**
+ * `/` sends everyone without a staff session to sign-in and everyone else to the overview, including a
+ * failed lookup: the overview looks again and shows Try again rather than bouncing a signed-in proctor.
+ */
 export default async function HomePage() {
-  redirect((await getStaffMember()) ? "/overview" : "/sign-in");
+  redirect((await getStaffMember()).status === "none" ? "/sign-in" : "/overview");
 }

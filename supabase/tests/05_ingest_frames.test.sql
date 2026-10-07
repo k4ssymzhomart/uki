@@ -96,8 +96,12 @@ create function t.ev(p_session uuid, p_type text, p_review text default 'none', 
     'app_version', '0.1.0')
 $$;
 
-create function t.messages(p_topic text, p_event text) returns bigint language sql stable as $$
-  select count(*) from realtime.messages m where m.topic = p_topic and m.event = p_event and m.private
+-- Messages on p_topic of kind p_event whose payload contains p_payload. Demo and simulator runs leave
+-- messages on the seeded exams' topics, so a count on exam:{id} names this file's own ids in p_payload.
+create function t.messages(p_topic text, p_event text, p_payload jsonb default '{}') returns bigint
+language sql stable as $$
+  select count(*) from realtime.messages m
+  where m.topic = p_topic and m.event = p_event and m.private and m.payload @> p_payload
 $$;
 
 create function t.state(p_session uuid) returns text language sql stable as $$
@@ -146,7 +150,8 @@ select is((select status ->> 'question' from public.sessions where id = t.id('s'
 select ok((select (r -> 'session' ->> 'ends_at')::timestamptz is not null and r -> 'session' ->> 'state' = 'writing' from t.r1),
   'the reply carries the session timing');
 select ok((select (r ->> 'server_time')::timestamptz is not null from t.r1), 'the reply carries server_time');
-select is(t.messages('exam:' || t.id('math2'), 'event'), 3::bigint, 'each new event is broadcast once');
+select is(t.messages('exam:' || t.id('math2'), 'event', jsonb_build_object('session_id', t.id('s'))), 3::bigint,
+  'each new event is broadcast once');
 
 -- ---------------------------------------------------------------------------
 -- Uploads for flag events with stills, new or duplicate
@@ -163,7 +168,8 @@ select is(public.confirm_frames(t.id('phone'), array[t.id('math2') || '/' || t.i
 select is((select count(*) from public.frames where event_id = t.id('phone')), 1::bigint, 'one frames row per path');
 select is((select captured_at from public.frames where event_id = t.id('phone')), (select at from public.events where id = t.id('phone')),
   'still 0 is captured at the event');
-select is(t.messages('exam:' || t.id('math2'), 'frame'), 1::bigint, 'a confirmed still is broadcast once');
+select is(t.messages('exam:' || t.id('math2'), 'frame', jsonb_build_object('event_id', t.id('phone'))), 1::bigint,
+  'a confirmed still is broadcast once');
 
 create table t.r3 as select public.ingest_batch(t.id('s'), (select b from t.batch), null) as r;
 select is((select r -> 'uploads' -> 0 -> 'missing' from t.r3), '[1]'::jsonb, 'only the unconfirmed still is asked for again');

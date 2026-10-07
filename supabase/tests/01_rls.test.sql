@@ -96,8 +96,12 @@ create function t.ev(p_session uuid, p_type text, p_review text default 'none', 
     'app_version', '0.1.0')
 $$;
 
-create function t.messages(p_topic text, p_event text) returns bigint language sql stable as $$
-  select count(*) from realtime.messages m where m.topic = p_topic and m.event = p_event and m.private
+-- Messages on p_topic of kind p_event whose payload contains p_payload. Demo and simulator runs leave
+-- messages on the seeded exams' topics, so a count on exam:{id} names this file's own ids in p_payload.
+create function t.messages(p_topic text, p_event text, p_payload jsonb default '{}') returns bigint
+language sql stable as $$
+  select count(*) from realtime.messages m
+  where m.topic = p_topic and m.event = p_event and m.private and m.payload @> p_payload
 $$;
 
 create function t.state(p_session uuid) returns text language sql stable as $$

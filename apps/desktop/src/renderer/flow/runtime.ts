@@ -51,7 +51,7 @@ import {
 } from "./derive.ts";
 import { studentFlowMachine } from "./machine.ts";
 import { cameraCardRect } from "./select.ts";
-import type { FlowEffect, FlowEvent, SavedJoin, SubmitResult } from "./types.ts";
+import type { FlowEffect, FlowEvent, QuestionsLoad, SavedJoin, SubmitResult } from "./types.ts";
 
 /** Outbox meta keys. */
 export const META_JOIN = "join";
@@ -65,6 +65,14 @@ export const SUBMIT_FLUSH_MS = 10_000;
 export const DRAIN_POLL_MS = 2_000;
 /** retryDelayMs at this attempt (and every later one) is the longest step, 30 s. */
 const LAST_RETRY_STEP = 4;
+
+/** The questions did not come: after the retries, or join_exam refused for good (`cause`). */
+export class QuestionsUnavailable extends Error {
+  override readonly name = "QuestionsUnavailable";
+  constructor(cause: unknown) {
+    super("the questions did not load", { cause });
+  }
+}
 
 export function parseSavedJoin(value: unknown): SavedJoin | null {
   if (typeof value !== "object" || value === null) return null;
@@ -194,7 +202,7 @@ export class FlowRuntime {
       actors: {
         restore: fromPromise(() => this.restore()),
         joinExam: fromPromise(({ input }: { input: SavedJoin }) => this.join(input)),
-        loadQuestions: fromPromise(({ input }: { input: SavedJoin }) => this.loadQuestions(input)),
+        loadQuestions: fromPromise(({ input }: { input: QuestionsLoad }) => this.loadQuestions(input)),
         submit: fromPromise(({ input }: { input: { sessionId: string; reason: ReleaseReason } }) =>
           this.submit(input.sessionId),
         ),
@@ -302,26 +310,28 @@ export class FlowRuntime {
   }
 
   /**
-   * join_exam again until the questions come (the exam has started on the server). Every try waits
-   * 2, 4, 8, 16, then 30 s after the last, because join_exam allows ten tries a minute and counts the
-   * refused ones too; a refusal that will not pass soon (the exam was cancelled or closed, another
-   * device holds the session) goes straight to every 30 s.
+   * join_exam again until the questions come (the exam has started on the server). With `ladder` it
+   * tries at once and after 2, 4, 8 and 16 s, because join_exam allows ten tries a minute and counts the
+   * refused ones too; otherwise it tries once. It throws QuestionsUnavailable when the questions did not
+   * come, at once for a refusal that will not pass soon (the exam was cancelled or closed, another device
+   * holds the session): 2.1 then shows exam.questions.failed, and the machine tries once more every 30 s
+   * or on Check again.
    */
-  private async loadQuestions(input: SavedJoin): Promise<Question[]> {
-    let attempt = 0;
-    while (!this.stopped) {
+  private async loadQuestions(input: QuestionsLoad): Promise<Question[]> {
+    const tries = input.ladder ? LAST_RETRY_STEP + 1 : 1;
+    for (let attempt = 0; attempt < tries; attempt += 1) {
+      if (attempt > 0) await this.sleep(retryDelayMs(attempt - 1));
+      if (this.stopped) throw new Error("stopped");
       try {
         const output = await this.joinOnce(input);
         if (output.questions && output.questions.length > 0) return output.questions;
       } catch (error) {
         const transient =
           error instanceof JoinFailure ? error.code === "rate_limited" : toServiceError(error).retryable;
-        if (!transient) attempt = Math.max(attempt, LAST_RETRY_STEP);
+        if (!transient) throw new QuestionsUnavailable(error);
       }
-      await this.sleep(retryDelayMs(attempt));
-      attempt += 1;
     }
-    throw new Error("stopped");
+    throw new QuestionsUnavailable(null);
   }
 
   /** Flushes the outbox (briefly), then submit_session until it answers. */

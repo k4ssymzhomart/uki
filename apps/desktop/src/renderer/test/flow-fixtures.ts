@@ -3,7 +3,7 @@
 import type { JoinExamOutput, Question, ReleaseReason, SessionState } from "@uki/contracts";
 import { createActor, fromPromise } from "xstate";
 import { studentFlowMachine } from "../flow/machine.ts";
-import type { FlowEffect, SavedJoin, SubmitResult } from "../flow/types.ts";
+import type { FlowEffect, QuestionsLoad, SavedJoin, SubmitResult } from "../flow/types.ts";
 import { EXAM_ID, QUESTION_IDS, SESSION_ID } from "./harness.ts";
 
 export const START = Date.parse("2026-10-09T10:00:00.000Z");
@@ -76,6 +76,8 @@ export function joinOutput(
 
 export interface FlowHarnessOptions {
   join?: (input: SavedJoin) => Promise<JoinExamOutput>;
+  /** The question load after the exam starts; default: the 20 questions at once. */
+  loadQuestions?: (input: QuestionsLoad) => Promise<Question[]>;
   saved?: SavedJoin | null;
   submit?: (input: { sessionId: string; reason: ReleaseReason }) => Promise<SubmitResult>;
   now?: number;
@@ -93,7 +95,9 @@ export function startFlow(options: FlowHarnessOptions = {}) {
         joins.push(input);
         return options.join ? options.join(input) : joinOutput();
       }),
-      loadQuestions: fromPromise(async () => questions()),
+      loadQuestions: fromPromise(async ({ input }: { input: QuestionsLoad }) =>
+        options.loadQuestions ? options.loadQuestions(input) : questions(),
+      ),
       submit: fromPromise(
         async ({ input }: { input: { sessionId: string; reason: ReleaseReason } }): Promise<SubmitResult> => {
           submits.push(input.reason);

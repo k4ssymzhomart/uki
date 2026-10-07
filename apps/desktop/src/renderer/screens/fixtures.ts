@@ -109,6 +109,7 @@ function exam(locale: Locale): ExamModel {
     mode: "app",
     question: question(locale),
     questionsLoading: false,
+    questionsFailed: false,
     answeredCount: 6,
     savedAt: almaty("10:47:02"),
     savedOffline: false,

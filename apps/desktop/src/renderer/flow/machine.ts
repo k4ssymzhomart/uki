@@ -30,6 +30,7 @@ import {
   type FlowInput,
   INITIAL_CHECK_ROWS,
   INITIAL_IDENTITY,
+  type QuestionsLoad,
   type SavedJoin,
   type SubmitResult,
 } from "./types.ts";
@@ -40,7 +41,10 @@ const CODE_FORMAT = /^[A-Z0-9]+(?:-[A-Z0-9]+)*$/;
 const STUDENT_NUMBER_FORMAT = /^\d{8}$/;
 /** The session log keeps this many lines. */
 export const LOG_CAP = 50;
-/** After the question load failed: the offline queue's longest retry step (2, 4, 8, 16, then 30 s). */
+/**
+ * After the question load failed for good: one more try this often (the offline queue's longest step
+ * after 2, 4, 8, 16 s), or at once on Check again.
+ */
 export const QUESTIONS_RETRY_MS = retryDelayMs(Number.MAX_SAFE_INTEGER);
 
 export function normalizeCode(code: string): string {
@@ -97,8 +101,11 @@ export const studentFlowMachine = setup({
     joinExam: fromPromise<JoinExamOutput, SavedJoin>(async () => {
       throw new Error("joinExam is provided by the runtime");
     }),
-    /** join_exam again once the exam has started, until it returns the questions. */
-    loadQuestions: fromPromise<Question[], SavedJoin>(async () => []),
+    /**
+     * join_exam again once the exam has started, until it returns the questions; `ladder` retries after
+     * 2, 4, 8 and 16 s first, otherwise it is one try. Rejects when the questions did not come.
+     */
+    loadQuestions: fromPromise<Question[], QuestionsLoad>(async () => []),
     /** Flush the outbox, then submit_session (idempotent), retrying while offline. */
     submit: fromPromise<SubmitResult, { sessionId: string; reason: ReleaseReason }>(async () => {
       throw new Error("submit is provided by the runtime");
@@ -252,6 +259,7 @@ export const studentFlowMachine = setup({
       answers: {},
       lastSavedAt: null,
       questionsLoading: false,
+      questionsFailed: false,
       tabsClosed: null,
       startedSent: false,
     },
@@ -760,19 +768,40 @@ export const studentFlowMachine = setup({
                   code: context.form.code,
                   studentNumber: context.form.studentNumber,
                   locale: context.locale,
+                  // After the error shows, every try (each 30 s, or Check again) is a single join_exam.
+                  ladder: !context.exam.questionsFailed,
                 }),
                 onDone: {
                   target: "ready",
                   actions: assign({
                     questions: ({ event: e }) => [...e.output].sort((a, b) => a.position - b.position),
-                    exam: ({ context }) => ({ ...context.exam, questionsLoading: false }),
+                    exam: ({ context }) => ({
+                      ...context.exam,
+                      questionsLoading: false,
+                      questionsFailed: false,
+                    }),
                   }),
                 },
-                onError: { target: "retry" },
+                onError: {
+                  target: "failed",
+                  actions: assign({
+                    exam: ({ context }) => ({
+                      ...context.exam,
+                      questionsLoading: false,
+                      questionsFailed: true,
+                    }),
+                  }),
+                },
               },
             },
-            /** The load failed: wait before join_exam again (it allows ten tries a minute). */
-            retry: { after: { [QUESTIONS_RETRY_MS]: { target: "check" } } },
+            /**
+             * The questions did not come: 2.1 shows exam.questions.failed with Check again. join_exam again
+             * in 30 s (it allows ten tries a minute and counts refused ones), or at once on Check again.
+             */
+            failed: {
+              after: { [QUESTIONS_RETRY_MS]: { target: "check" } },
+              on: { RETRY_QUESTIONS: { target: "check" } },
+            },
             ready: {},
           },
         },

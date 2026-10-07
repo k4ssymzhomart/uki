@@ -1,5 +1,5 @@
 import { formatTime, type Locale } from "@uki/i18n";
-import { Button, RadioGroup, RadioOption, Spinner } from "@uki/ui";
+import { Banner, Button, RadioGroup, RadioOption, Spinner } from "@uki/ui";
 import { useId } from "react";
 import { useTranslations } from "use-intl";
 import type { ExamModel } from "../../flow/view-model.ts";
@@ -16,11 +16,15 @@ export type QuestionPaneProps = {
   onBack: () => void;
   onSubmit: () => void;
   onGotIt: () => void;
+  /** Check again on the questions error banner. */
+  onRetryQuestions: () => void;
 };
 
 /**
  * The question column of 2.1 (Figma 51:2074): banners, "Question 7 of 20" with its progress, the
- * question, its choices as Radio options and the footer. Ask proctor stays hidden in Phase 0.
+ * question, its choices as Radio options and the footer. Ask proctor stays hidden in Phase 0. When the
+ * questions do not load, the Error banner (Banner 145:2753, which carries the retry action) joins the
+ * 2.1a and 2.1e banners in place of the spinner; no frame draws this state.
  */
 export function QuestionPane({
   model,
@@ -31,6 +35,7 @@ export function QuestionPane({
   onBack,
   onSubmit,
   onGotIt,
+  onRetryQuestions,
 }: QuestionPaneProps) {
   const t = useTranslations();
   const headingId = useId();
@@ -48,8 +53,20 @@ export function QuestionPane({
       className="flex h-full min-w-0 flex-1 flex-col gap-4 overflow-y-auto pt-12 pr-14 pb-9 pl-16"
     >
       <NoticeBanners notice={model.notice} offline={model.offline} locale={locale} onGotIt={onGotIt} />
+      {question === null && model.questionsFailed ? (
+        <Banner
+          kind="error"
+          title={t("exam.questions.failed")}
+          className="shrink-0"
+          action={
+            <Button variant="secondary" loading={model.questionsLoading} onClick={onRetryQuestions}>
+              {t("check.again")}
+            </Button>
+          }
+        />
+      ) : null}
       {question === null ? (
-        model.questionsLoading ? (
+        model.questionsLoading && !model.questionsFailed ? (
           <div className="flex flex-1 items-center justify-center">
             <Spinner />
           </div>

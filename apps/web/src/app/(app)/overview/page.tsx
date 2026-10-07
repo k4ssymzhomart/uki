@@ -7,6 +7,7 @@ import {
 } from "../../../features/overview/overview-data.ts";
 import { overviewStats } from "../../../features/overview/overview-model.ts";
 import { OverviewView } from "../../../features/overview/overview-view.tsx";
+import { StaffLookupFailed } from "../../../features/shell/staff-lookup-failed.tsx";
 import { requireStaff } from "../../../lib/auth.ts";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -19,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
  * sees its workspace's exams, a proctor only the exams assigned to it.
  */
 export default async function OverviewPage() {
-  await requireStaff();
+  if (!(await requireStaff())) return <StaffLookupFailed />;
   const [rows, groupCount] = await Promise.all([loadOverviewRows(), loadGroupCount()]);
   const next = overviewStats(rows).upcoming.next;
   const bounced = next ? await loadBouncedInvites(next.id) : 0;

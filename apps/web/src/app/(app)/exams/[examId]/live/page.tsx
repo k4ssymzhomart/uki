@@ -2,6 +2,7 @@ import { Uuid } from "@uki/contracts";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { StaffLookupFailed } from "../../../../../features/shell/staff-lookup-failed.tsx";
 import { LiveWall } from "../../../../../features/wall/live-wall.tsx";
 import { loadWall } from "../../../../../features/wall/load-wall.ts";
 import { requireStaff } from "../../../../../lib/auth.ts";
@@ -19,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
  * an exam the staff member may not see is a 404. Realtime takes over in the browser.
  */
 export default async function LiveWallPage({ params }: PageProps<"/exams/[examId]/live">) {
-  await requireStaff();
+  if (!(await requireStaff())) return <StaffLookupFailed />;
   const { examId } = await params;
   if (!Uuid.safeParse(examId).success) notFound();
   const supabase = await createSupabaseServerClient();

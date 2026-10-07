@@ -399,3 +399,14 @@ Recorded by the hardening run; you tune both on the demo laptops.
 - Identity: in the e2e, a card made from the student's own enrolment photo matched at 0.93 on the first try. Earlier, a different person's low-resolution photo passed the 0.5 threshold at 0.53. Neither run used a real camera and a printed card.
   - Tune `THRESHOLDS.identity.minSimilarity` on the two printed cards; about 0.6 may be needed.
   - Record the value here.
+
+## 2026-10-08 · Review follow-ups
+
+- **Only the proctor ends a proctor pause.** The plan's Session states table lets `session.resumed` or `proctor.resumed` move a paused session back to writing. A student's app sends `session.resumed` through ingest, so a modified app could end a proctor's pause at once. While the open pause was started by `proctor.paused`, the server now stores and broadcasts a `session.resumed` (the wall's timeline shows the attempt) but changes no state and credits no time; only `proctor.resumed` ends it. Self pauses are unchanged. Migration `20261008090000_proctor_pause_ends_by_proctor.sql`; `nextState` mirrors it with a `pause: "self" | "proctor"` field on the cause.
+- **pgTAP tests count only their own rows**, so leftover demo or simulator data no longer fails them.
+- **Zod runs jitless in the desktop renderer and the detection worker.** Zod 4 probes `new Function("")`, which the plan's CSP (no `'unsafe-eval'`) reports as a violation; `z.config({ jitless: true })` is the first import of both entries.
+- **One more fuse:** `GrantFileProtocolExtraPrivileges` is off, beside the plan's five, because the app never loads from `file://`.
+- **HTTP 546 (the edge runtime's WORKER_LIMIT) is retryable** like 502, 503 and 504, in the outbox, Edge Function calls and still uploads.
+- **2.1 has an error state for questions that fail to load for good:** after tries at 0, 2, 6, 14 and 30 s, `exam.questions.failed` shows in Figma's error Banner (145:2753) with Check again, and the app retries every 30 s. New catalog key (239 keys), first-pass Kazakh and Russian for native review.
+- **The dashboard tells "no session" from "lookup failed".** A network error, a 5xx or a failed staff-row read is retried once, then the page shows `dashboard.shell.lookupFailed.*` with Try again, instead of sending a signed-in proctor to sign-in. Sign-in reports "unavailable" rather than "not staff" in that case.
+- The Lock smoke and icon scripts use Playwright's `chromium.executablePath()` by default (`PW_CHROMIUM` still overrides).

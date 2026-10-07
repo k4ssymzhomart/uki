@@ -96,8 +96,12 @@ create function t.ev(p_session uuid, p_type text, p_review text default 'none', 
     'app_version', '0.1.0')
 $$;
 
-create function t.messages(p_topic text, p_event text) returns bigint language sql stable as $$
-  select count(*) from realtime.messages m where m.topic = p_topic and m.event = p_event and m.private
+-- Messages on p_topic of kind p_event whose payload contains p_payload. Demo and simulator runs leave
+-- messages on the seeded exams' topics, so a count on exam:{id} names this file's own ids in p_payload.
+create function t.messages(p_topic text, p_event text, p_payload jsonb default '{}') returns bigint
+language sql stable as $$
+  select count(*) from realtime.messages m
+  where m.topic = p_topic and m.event = p_event and m.private and m.payload @> p_payload
 $$;
 
 create function t.state(p_session uuid) returns text language sql stable as $$
@@ -148,7 +152,9 @@ select is((select auth_uid from public.sessions where id = (select (v -> 'sessio
 select is((select device ->> 'os' from public.sessions where auth_uid = t.id('madina')), 'macos', 'join_exam stores the device');
 select is((select locale::text from public.sessions where auth_uid = t.id('madina')), 'kk', 'join_exam stores the locale');
 select ok((select joined_at is not null from public.sessions where auth_uid = t.id('madina')), 'join_exam sets joined_at');
-select is(t.messages('exam:' || t.id('math2'), 'session'), 1::bigint, 'a join broadcasts the new session to the exam channel');
+select is(t.messages('exam:' || t.id('math2'), 'session',
+  jsonb_build_object('id', (select v -> 'session' ->> 'id' from t.r where k = 'first'))), 1::bigint,
+  'a join broadcasts the new session to the exam channel');
 
 -- The same user joins again, with another case and spaces: the same session.
 select t.login(t.id('madina'));

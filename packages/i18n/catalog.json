@@ -1,5 +1,5 @@
 {
-  "about": "Üki student app and Üki Lock strings for Phase 0. 135 keys come from Figma sheets S.1 (171:15780) and S.2 (172:15868); 87 keys are added by the Phase 0 plan; 3 keys (language.*) are the ҚАЗ, РУС and ENG switch labels from the title bar in Figma; 13 keys were added after the plan for lines the screens need (app.name, lock.name, os.*, lock.pair.device, pair.card.when.*, app.title.offline_unlocked, join.error.* for the other join errors, rules.faq.video.answer), with source added when a frame shows the text and added-not-in-figma otherwise. Kazakh and Russian are first-pass translations; a Kazakh and a Russian speaker read them before Demo Day. Plural messages use ICU syntax. Build with `pnpm i18n:build` into packages/i18n/messages/{en,kk,ru}.json.",
+  "about": "Üki student app and Üki Lock strings for Phase 0. 135 keys come from Figma sheets S.1 (171:15780) and S.2 (172:15868); 87 keys are added by the Phase 0 plan; 3 keys (language.*) are the ҚАЗ, РУС and ENG switch labels from the title bar in Figma; 14 keys were added after the plan for lines the screens need (app.name, lock.name, os.*, lock.pair.device, pair.card.when.*, app.title.offline_unlocked, join.error.* for the other join errors, rules.faq.video.answer, exam.questions.failed), with source added when a frame shows the text and added-not-in-figma otherwise. Kazakh and Russian are first-pass translations; a Kazakh and a Russian speaker read them before Demo Day. Plural messages use ICU syntax. Build with `pnpm i18n:build` into packages/i18n/messages/{en,kk,ru}.json.",
   "file": "packages/i18n/catalog.json",
   "figma_file": "9RB9aBz6lzS6XHpf5do5Gh",
   "renames": {
@@ -1648,6 +1648,15 @@
       "kk": "Тапсыру",
       "ru": "Сдать",
       "notes": "Replaces Next question on the last question. No frame shows it yet."
+    },
+    {
+      "key": "exam.questions.failed",
+      "group": "2.1 Exam additions",
+      "source": "added-not-in-figma",
+      "en": "The questions did not load. Check your connection or ask your proctor.",
+      "kk": "Сұрақтар жүктелмеді. Желіні тексеріңіз немесе проктордан сұраңыз.",
+      "ru": "Вопросы не загрузились. Проверьте подключение или спросите проктора.",
+      "notes": "Title of the Error banner above the question on 2.1 when join_exam has not returned the questions after its retries (2, 4, 8 and 16 s) or refused in a way that will not pass soon. Its action is Check again (check.again); the app also tries again every 30 s. No frame shows it. Kazakh and Russian are a first pass: a native speaker must review them."
     },
     {
       "key": "check.camera.fail",

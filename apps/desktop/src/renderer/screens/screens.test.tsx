@@ -215,6 +215,38 @@ describe("callbacks", () => {
     expect(second.send).toHaveBeenCalledWith({ type: "SUBMIT" });
   });
 
+  it("2.1 says when the questions did not load, in every language, and Check again retries", () => {
+    const failed = (locale: Locale, loading = false): ExamModel => ({
+      ...(fixture("2.1", locale) as ExamModel),
+      question: null,
+      questionsFailed: true,
+      questionsLoading: loading,
+    });
+    for (const locale of LOCALES) {
+      const { send, errors, container } = renderFrame("2.1", locale, failed(locale));
+      expect(errors).toEqual([]);
+      const banner = screen.getByRole("alert");
+      expect(banner.getAttribute("data-kind")).toBe("error");
+      expect(banner.textContent).toContain(messages(locale).exam.questions.failed);
+      fireEvent.click(within(banner).getByRole("button", { name: messages(locale).check.again }));
+      expect(send).toHaveBeenCalledWith({ type: "RETRY_QUESTIONS" });
+      // The banner replaces the pane's spinner.
+      expect(container.querySelector('[data-slot="spinner"]')).toBeNull();
+      cleanup();
+    }
+    // While that try runs, Check again shows its spinner and ignores clicks.
+    const { send } = renderFrame("2.1", "en", failed("en", true));
+    const button = within(screen.getByRole("alert")).getByRole("button", { name: en.check.again });
+    expect(button.getAttribute("aria-busy")).toBe("true");
+    fireEvent.click(button);
+    expect(send).not.toHaveBeenCalled();
+    cleanup();
+    // Loading for the first time: the spinner alone, no banner.
+    const first = renderFrame("2.1", "en", { ...failed("en", true), questionsFailed: false });
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(first.container.querySelector('[data-slot="spinner"]')).not.toBeNull();
+  });
+
   it("2.1e Got it acknowledges the message", () => {
     const { send } = renderFrame("2.1e");
     fireEvent.click(screen.getByRole("button", { name: en.message.ack }));

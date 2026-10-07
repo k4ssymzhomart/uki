@@ -2,7 +2,7 @@ import { IngestStatus } from "@uki/contracts";
 import { describe, expect, it } from "vitest";
 import type { FlowCommand } from "../services/commands.ts";
 import { JoinFailure } from "../services/student-api.ts";
-import { joinOutput, MIN, READY_ROWS, START, settle, startFlow } from "../test/flow-fixtures.ts";
+import { joinOutput, MIN, questions, READY_ROWS, START, settle, startFlow } from "../test/flow-fixtures.ts";
 import { QUESTION_IDS, SESSION_ID } from "../test/harness.ts";
 import {
   ingestStatus,
@@ -14,7 +14,7 @@ import {
   wantsLockdown,
 } from "./derive.ts";
 import { selectScreen } from "./select.ts";
-import type { CheckRows, FlowEffect } from "./types.ts";
+import type { CheckRows, FlowEffect, QuestionsLoad } from "./types.ts";
 
 type Flow = ReturnType<typeof startFlow>;
 
@@ -377,6 +377,44 @@ describe("2.1 Exam and its states", () => {
       canGoBack: false,
     });
     expect(lockExamState(snapshot)).toMatchObject({ phase: "writing", watch: "watching", locale: "kk" });
+  });
+
+  it("shows the questions error when the load gives up, and Check again loads once more", async () => {
+    const loads: QuestionsLoad[] = [];
+    let fail = true;
+    const flow = startFlow({
+      loadQuestions: async (input) => {
+        loads.push(input);
+        if (fail) throw new Error("the questions did not load");
+        return questions();
+      },
+    });
+    await settle();
+    await toExam(flow);
+    expect(selectScreen(flow.actor.getSnapshot())).toMatchObject({
+      frame: "2.1",
+      question: null,
+      questionsFailed: true,
+      questionsLoading: false,
+    });
+    // The first load retries on its own (the ladder); after the error every try is a single one.
+    expect(loads.map((load) => load.ladder)).toEqual([true]);
+    flow.actor.send({ type: "RETRY_QUESTIONS" });
+    await settle();
+    expect(loads.map((load) => load.ladder)).toEqual([true, false]);
+    expect(selectScreen(flow.actor.getSnapshot())).toMatchObject({ questionsFailed: true });
+    fail = false;
+    flow.actor.send({ type: "RETRY_QUESTIONS" });
+    await settle();
+    expect(selectScreen(flow.actor.getSnapshot())).toMatchObject({
+      question: { n: 1, total: 20 },
+      questionsFailed: false,
+      questionsLoading: false,
+    });
+    // Check again means nothing once the questions are there.
+    flow.actor.send({ type: "RETRY_QUESTIONS" });
+    await settle();
+    expect(loads).toHaveLength(3);
   });
 
   it("saves answers on the laptop and moves between questions", async () => {
