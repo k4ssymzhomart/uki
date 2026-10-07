@@ -1,0 +1,114 @@
+/* packages/tokens/src/tokens.css · generated from Figma variables, do not edit by hand */
+/* Source: figma-variables.json, Figma file 9RB9aBz6lzS6XHpf5do5Gh, exported 2026-10-07. Rebuild with pnpm tokens. */
+:root {
+  /* Primitives */
+  --uki-lime-200: #e6f5a8;
+  --uki-lime-300: #d3ee78;
+  --uki-lime-400: #bce33c;
+  --uki-lime-500: #a6cf2a;
+  --uki-moss-600: #8ab71a;
+  --uki-moss-700: #6b9112;
+  --uki-moss-800: #4a650c;
+  --uki-ink-950: #0e0e0d;
+  --uki-ink-900: #121310;
+  --uki-ink-800: #1c1d19;
+  --uki-ink-700: #2a2b26;
+  --uki-ink-600: #34352f;
+  --uki-paper-50: #f6f5f1;
+  --uki-paper-100: #eceae3;
+  --uki-paper-200: #e3e0d7;
+  --uki-white: #ffffff;
+  --uki-warn: #f5c945;
+  --uki-flag: #ea4e3d;
+  --uki-coral-600: #d2412f;
+  --uki-coral-700: #b23526;
+
+  /* Layout */
+  --uki-space-4: 4px;
+  --uki-space-8: 8px;
+  --uki-space-12: 12px;
+  --uki-space-16: 16px;
+  --uki-space-20: 20px;
+  --uki-space-24: 24px;
+  --uki-space-32: 32px;
+  --uki-space-48: 48px;
+  --uki-space-64: 64px;
+  --uki-space-96: 96px;
+  --uki-space-120: 120px;
+  --uki-space-128: 128px;
+  --uki-space-160: 160px;
+  --uki-radius-sm: 12px;
+  --uki-radius-md: 16px;
+  --uki-radius-card: 24px;
+  --uki-radius-xl: 32px;
+  --uki-radius-pill: 999px;
+
+  /* Effects */
+  --uki-shadow-float: 0 14px 36px -6px rgb(13 15 8 / 0.14), 0 2px 6px 0 rgb(13 15 8 / 0.08);
+  --uki-focus-ring: 0 0 0 4px var(--uki-border-focus-ring);
+
+  /* Colour · Light */
+  --uki-bg-canvas: var(--uki-paper-50);
+  --uki-bg-surface: var(--uki-white);
+  --uki-bg-subtle: var(--uki-paper-100);
+  --uki-bg-brand: var(--uki-lime-400);
+  --uki-bg-brand-subtle: var(--uki-lime-200);
+  --uki-bg-inverse: var(--uki-ink-900);
+  --uki-bg-hover: var(--uki-paper-100);
+  --uki-bg-pressed: var(--uki-paper-200);
+  --uki-bg-inverse-hover: var(--uki-ink-700);
+  --uki-bg-inverse-pressed: var(--uki-ink-950);
+  --uki-bg-brand-hover: var(--uki-lime-300);
+  --uki-bg-brand-pressed: var(--uki-lime-500);
+  --uki-bg-danger: var(--uki-flag);
+  --uki-bg-danger-hover: var(--uki-coral-600);
+  --uki-bg-danger-pressed: var(--uki-coral-700);
+  --uki-bg-glass: rgb(255 255 255 / 0.08);
+  --uki-text-primary: var(--uki-ink-950);
+  --uki-text-on-brand: var(--uki-ink-950);
+  --uki-text-accent: var(--uki-moss-800);
+  --uki-text-inverse: var(--uki-paper-50);
+  --uki-text-danger: var(--uki-coral-700);
+  --uki-border-default: var(--uki-paper-100);
+  --uki-border-strong: var(--uki-ink-950);
+  --uki-border-focus: var(--uki-moss-700);
+  --uki-border-focus-ring: var(--uki-lime-300);
+  --uki-border-glass: rgb(255 255 255 / 0.18);
+  --uki-icon-primary: var(--uki-ink-950);
+  --uki-icon-accent: var(--uki-moss-800);
+  --uki-status-ok: var(--uki-moss-600);
+  --uki-status-warn: var(--uki-warn);
+  --uki-status-flag: var(--uki-flag);
+  --uki-status-ok-subtle: #e3eaca;
+  --uki-status-flag-subtle: #f4ded8;
+  --uki-status-warn-subtle: #f6edd2;
+}
+
+[data-theme="dark"] {
+  /* Colour · Dark: only the tokens whose value changes */
+  --uki-bg-canvas: var(--uki-ink-900);
+  --uki-bg-surface: var(--uki-ink-800);
+  --uki-bg-subtle: var(--uki-ink-700);
+  --uki-bg-brand-subtle: var(--uki-moss-800);
+  --uki-bg-inverse: var(--uki-paper-50);
+  --uki-bg-hover: var(--uki-ink-700);
+  --uki-bg-pressed: var(--uki-ink-600);
+  --uki-bg-inverse-hover: var(--uki-paper-100);
+  --uki-bg-inverse-pressed: var(--uki-paper-200);
+  --uki-text-primary: var(--uki-paper-50);
+  --uki-text-accent: var(--uki-lime-400);
+  --uki-text-inverse: var(--uki-ink-950);
+  --uki-text-danger: var(--uki-flag);
+  --uki-border-default: var(--uki-ink-700);
+  --uki-border-strong: var(--uki-paper-50);
+  --uki-border-focus: var(--uki-lime-400);
+  --uki-border-focus-ring: var(--uki-moss-800);
+  --uki-icon-primary: var(--uki-paper-50);
+  --uki-icon-accent: var(--uki-lime-400);
+  --uki-status-ok-subtle: #303919;
+  --uki-status-flag-subtle: #39241e;
+  --uki-status-warn-subtle: #433c21;
+
+  /* Effects that use a themed colour: a custom property resolves var() where it is declared */
+  --uki-focus-ring: 0 0 0 4px var(--uki-border-focus-ring);
+}

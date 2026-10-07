@@ -1,0 +1,37 @@
+{
+  "name": "@uki/tokens",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./theme.css": "./src/theme.css",
+    "./tokens.css": "./src/tokens.css",
+    "./type.css": "./src/type.css",
+    "./fonts.css": "./src/fonts.css",
+    "./tokens.json": "./src/tokens.json"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p .",
+    "test": "vitest run",
+    "build": "tsx scripts/build.ts",
+    "build:check": "tsx scripts/build.ts --check",
+    "glyphs": "tsx scripts/glyph-check.ts"
+  },
+  "dependencies": {
+    "@fontsource-variable/geist": "^5.3.0",
+    "@fontsource-variable/geist-mono": "^5.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.1",
+    "@uki/config": "workspace:*",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.15",
+    "typescript": "~5.9.3",
+    "vitest": "^5.0.3",
+    "zod": "^4.6.5"
+  },
+  "peerDependencies": {
+    "tailwindcss": "^4.3.0"
+  }
+}
