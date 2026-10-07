@@ -1,0 +1,168 @@
+{
+  "date": "2026-10-07T16:16:06.623Z",
+  "offlineSeconds": 20,
+  "kiosk": false,
+  "latencyMs": {
+    "start": 169,
+    "pause": 132,
+    "resume": 636,
+    "message": 612,
+    "add_time": 190,
+    "end": 150
+  },
+  "functionMs": {
+    "pause": 141,
+    "resume": 653,
+    "message": 629,
+    "add_time": 160
+  },
+  "commandRetries": {},
+  "checkAgainPresses": 0,
+  "pairing": {
+    "code": "6 digits",
+    "helloStudent": "Madina Tulegenova",
+    "paired": true
+  },
+  "offline": {
+    "cutSeconds": 20,
+    "bannerAfterMs": 5315,
+    "queuedAnswers": 5,
+    "recoveredAfterMs": 800,
+    "syncedAfterMs": 1117,
+    "answersLocal": 9,
+    "answersServer": 9,
+    "answersWaitingAtReconnect": 5,
+    "eventsWaitingAtReconnect": 6,
+    "appEventsServer": 13,
+    "seqRange": [
+      0,
+      12
+    ],
+    "duplicates": 0,
+    "netOffline": {
+      "queued": 11,
+      "offline_ms": 20401
+    },
+    "netOfflineEvents": [
+      {
+        "queued": 11,
+        "offline_ms": 20401
+      }
+    ],
+    "framesDuringCut": [
+      "1s 2.1",
+      "5s 2.1a"
+    ],
+    "requestsThroughDuringCut": []
+  },
+  "identity": {
+    "matchedAfterMs": 3327,
+    "event": {
+      "score": 0.93,
+      "tries": 1
+    }
+  },
+  "phone": {
+    "stillsConfirmed": 3,
+    "examPhoneScore": 0.7,
+    "scores": [
+      0,
+      0.76953125,
+      0.76953125,
+      0.76953125,
+      0.76953125,
+      0.76953125,
+      0.76953125,
+      0.76953125
+    ],
+    "phoneMs": [
+      90.6,
+      89.6,
+      48.2,
+      75.2,
+      54.5,
+      54.5,
+      50.4,
+      51.1
+    ],
+    "phoneChecksPerS": [
+      2.5,
+      2,
+      2,
+      2,
+      2,
+      2,
+      2.5,
+      2.5
+    ],
+    "fps": [
+      12,
+      13,
+      14,
+      14,
+      13,
+      13,
+      13,
+      14
+    ],
+    "rulesPaused": false,
+    "warningAfterMs": 682,
+    "review": "flag",
+    "data": {
+      "score": 0.77,
+      "held_ms": 463
+    },
+    "frameCount": 3
+  },
+  "receipt": {
+    "receiptId": "UKI-204-9166-MT",
+    "pdfBytes": 28130,
+    "timeUsedS": 48
+  },
+  "frames": [
+    "1.1-kk",
+    "1.1-ru",
+    "1.1-en",
+    "1.1a-en",
+    "1.1a-kk",
+    "1.1a-ru",
+    "1.2-en",
+    "1.2-kk",
+    "1.2-ru",
+    "E.3-app-en",
+    "E.3-app-kk",
+    "E.3-app-ru",
+    "1.3-checking-en",
+    "1.3-en",
+    "1.3-kk",
+    "1.3-ru",
+    "1.4-en",
+    "1.4-kk",
+    "1.4-ru",
+    "2.1-en",
+    "2.1-kk",
+    "2.1-ru",
+    "2.1a-en",
+    "2.1a-kk",
+    "2.1a-ru",
+    "2.1c-en",
+    "2.1c-kk",
+    "2.1c-ru",
+    "2.1e-en",
+    "2.1e-kk",
+    "2.1e-ru",
+    "2.1e-time-en",
+    "2.2-en",
+    "2.2-kk",
+    "2.2-ru",
+    "2.3-en",
+    "2.3-kk",
+    "2.3-ru",
+    "3.1-en",
+    "3.1-kk",
+    "3.1-ru",
+    "2.1d-en",
+    "2.1d-kk",
+    "2.1d-ru"
+  ]
+}

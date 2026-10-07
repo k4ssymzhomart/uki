@@ -37,7 +37,7 @@ import type { z } from "zod";
 import { type FaceSignals, sideLook } from "./signals.ts";
 
 /** 2.2 closes after this long with no phone ("Student flow": 2.1 after 2 s with no phone). */
-export const PHONE_WARNING_CLEAR_MS = 2_000;
+export const PHONE_WARNING_CLEAR_MS: number = THRESHOLDS.phone.warningClearMs;
 
 export type FrameSignal = { kind: "frame" } & FaceSignals;
 /** One Object Detector check: the best "cell phone" score, 0 when none was found. */

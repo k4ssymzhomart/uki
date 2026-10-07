@@ -11,7 +11,7 @@ export interface InputSize {
 /** getUserMedia size and the size frames reach the worker at ("Pipeline" step 1). */
 export const FULL_INPUT: InputSize = { width: 640, height: 480 };
 /** The fallback input size ("Performance budget"). */
-export const DEGRADED_INPUT: InputSize = { width: 480, height: 360 };
+export const DEGRADED_INPUT: InputSize = THRESHOLDS.performance.lowFpsInput;
 
 /** fps is counted over this window. */
 const FPS_WINDOW_MS = 1_000;

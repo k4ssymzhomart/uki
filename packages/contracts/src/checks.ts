@@ -56,6 +56,8 @@ export const THRESHOLDS = {
     consecutiveHits: 2,
     /** The detector's own `scoreThreshold`. */
     detectorScore: 0.5,
+    /** 2.2 closes, and the rule re-arms, after this long with no phone ("Student flow": 2.1 after 2 s). */
+    warningClearMs: 2_000,
   },
   /** Flagged stills: JPEG, 640 × 360 centre-cropped, quality 0.7, at the crossing, 1 s and 2 s later. */
   stills: {
@@ -94,6 +96,8 @@ export const THRESHOLDS = {
     lowFps: 10,
     lowFpsWindowMs: 5_000,
     lowFpsPhoneIntervalMs: 1_000,
+    /** The fallback input size. */
+    lowFpsInput: { width: 480, height: 360 },
   },
   systemCheck: {
     /** Network row: `GET /auth/v1/health` must reply under 1,000 ms. */
@@ -104,6 +108,11 @@ export const THRESHOLDS = {
     minFaceBrightness: 70,
     /** Process scan interval during the exam. */
     scanIntervalMs: 15_000,
+    /**
+     * Camera row: a frame whose luma standard deviation is below this is uniform (a covered lens or a
+     * blank picture). Not in the plan's tables; tune it on the demo laptops.
+     */
+    uniformMaxStd: 6,
   },
   identity: {
     /** `human.match.similarity` of 0.5 or more is a match. */

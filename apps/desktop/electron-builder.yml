@@ -1,0 +1,54 @@
+# Unsigned Phase 0 installers ("Builds" in docs/phase-0-plan.md): dmg for macOS arm64 and x64, NSIS for
+# Windows x64. Build on the demo laptops themselves; runbook: docs/runbooks/demo-laptops.md.
+# One arch on this machine: pnpm --filter desktop dist --mac dmg --arm64 (or --win nsis --x64 on Windows).
+# Run `pnpm --filter @uki/detection models` and `models:verify` first: the model binaries are not in git.
+appId: kz.uki.app
+# The bundle, executable and helper names are ASCII. With "Üki" here the macOS helpers are written with a
+# decomposed Ü while Electron looks them up with the precomposed CFBundleName, and the packaged app dies
+# at launch ("Unable to find helper app"). People still see Üki: CFBundleDisplayName below, the Windows
+# shortcut, and app.name, which comes from package.json's productName (and names the userData folder).
+productName: Uki
+artifactName: Uki-${version}-${arch}.${ext}
+directories:
+  output: release
+  # The app icon comes from here: icon.icns (macOS) and icon.ico (Windows), the brand kit's exports of
+  # Figma "App icon" 6:37.
+  buildResources: build
+# electron-vite bundles main, preload and renderer into out/, so the app needs no node_modules.
+files:
+  - out/**/*
+  - package.json
+  - "!**/node_modules/**/*"
+asar: true
+npmRebuild: false
+# Models, wasm and language data, served as uki://app/resources/models/... (src/main/protocol.ts).
+extraResources:
+  - from: resources/models
+    to: resources/models
+    filter:
+      - "**/*"
+afterPack: build/after-pack.cjs
+mac:
+  target:
+    - target: dmg
+      arch:
+        - arm64
+        - x64
+  category: public.app-category.education
+  identity: null
+  extendInfo:
+    CFBundleDisplayName: Üki
+    # Catalog key join.privacy (en). Without this key macOS refuses the camera.
+    NSCameraUsageDescription: Your camera stays on this laptop. Only events and flagged frames are sent.
+dmg:
+  sign: false
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+nsis:
+  oneClick: false
+  perMachine: false
+  shortcutName: Üki
+  uninstallDisplayName: Üki ${version}
