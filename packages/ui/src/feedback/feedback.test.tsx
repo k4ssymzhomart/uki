@@ -74,6 +74,15 @@ describe("Dialog", () => {
     expect(screen.getByRole("button", { name: "Send link" }).dataset.variant).toBe("danger");
   });
 
+  it("draws a 40 % bg-inverse scrim in every theme: a paper wash on the dark wall (2.4e)", () => {
+    render(<Dialog open title="End the session?" cancelLabel="Cancel" confirmLabel="End session" />);
+    const scrim = [...document.body.querySelectorAll<HTMLElement>("[data-state=open]")].find(
+      (element) => element.getAttribute("role") !== "dialog" && element.className.includes("inset-0"),
+    );
+    expect(scrim?.className).toContain("bg-inverse/40");
+    expect(scrim?.className).not.toContain("dark:");
+  });
+
   it("disables and loads the confirm button, and renders a field", () => {
     render(
       <Dialog

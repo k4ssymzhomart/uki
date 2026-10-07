@@ -4,7 +4,7 @@ import { faceSrc } from "../art/faces.ts";
 import { CameraTile } from "./camera-tile.tsx";
 import { Hud } from "./hud.tsx";
 import { LiveWidget } from "./live-widget.tsx";
-import { StudentTile } from "./student-tile.tsx";
+import { StudentTile, StudentTileMore } from "./student-tile.tsx";
 import { Timer } from "./timer.tsx";
 
 afterEach(cleanup);
@@ -45,6 +45,20 @@ describe("StudentTile", () => {
     expect(getByRole("button").className).not.toContain("inset-ring-flag");
   });
 
+  it("shows the trailing slot in place of the dot on hover, focus and an open menu", () => {
+    const { getByRole, container, rerender } = render(<StudentTile name="A" detail="B" />);
+    expect(container.querySelector("[aria-hidden='true'] [data-icon=more]")).toBeNull();
+    rerender(<StudentTile name="A" detail="B" trailing={<StudentTileMore />} />);
+    const tile = getByRole("button");
+    expect(tile.className).toContain("group");
+    const more = container.querySelector("[data-icon=more]");
+    const slot = more?.closest("[aria-hidden='true']:not(svg)");
+    expect(slot?.className).toContain("hidden");
+    expect(slot?.className).toContain("group-data-[state=open]:flex");
+    expect(container.querySelector("[data-tone]")?.className).toContain("group-data-[state=open]:hidden");
+    expect(tile.textContent).toBe("AB");
+  });
+
   it("does not fire when disabled", () => {
     const onClick = vi.fn();
     const { getByRole } = render(<StudentTile name="A" detail="B" disabled onClick={onClick} />);
@@ -74,11 +88,19 @@ describe("LiveWidget", () => {
     ["phone", "flag", "flag"],
     ["paused", "sleeping", "idle"],
     ["submitted", "happy", "ok"],
+    ["offline", "oops", "warn"],
   ] as const)("%s shows the %s face and the %s dot", (state, face, tone) => {
     const { container, getByText } = render(<LiveWidget state={state} title="Title" detail="detail" />);
     expect(container.querySelector("img")?.getAttribute("src")).toBe(faceSrc(face));
     expect(container.querySelector("[data-tone]")?.getAttribute("data-tone")).toBe(tone);
     expect(getByText("Title").getAttribute("aria-live")).toBe("polite");
+  });
+
+  it("lets its text column shrink and wrap instead of pushing the dot out", () => {
+    const { getByText } = render(<LiveWidget state="offline" title="Offline" detail="saving · 00:00:16" />);
+    const column = getByText("Offline").parentElement;
+    expect(column?.className).toContain("min-w-0");
+    expect(column?.className).not.toContain("whitespace-nowrap");
   });
 });
 

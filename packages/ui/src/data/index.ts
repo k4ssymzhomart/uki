@@ -12,6 +12,7 @@ export * from "./row-action.tsx";
 export * from "./row-exam.tsx";
 export * from "./row-lobby.tsx";
 export * from "./row-session.tsx";
+export * from "./short-name.ts";
 export * from "./sort.ts";
 export * from "./stat-tile.tsx";
 export * from "./table.tsx";

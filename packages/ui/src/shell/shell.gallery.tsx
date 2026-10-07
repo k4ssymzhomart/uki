@@ -137,7 +137,7 @@ export default function ShellGallery() {
       <Specimen name="Tab · 40:2060" figma={figmaTab}>
         <div className="flex flex-wrap items-center gap-6 bg-canvas p-4">
           <LanguageSwitch />
-          <TabGroup aria-label="Filter" value="need-help">
+          <TabGroup aria-label="Filter" value="need-help" variant="plain">
             <Tab value="need-help">Need help · 3</Tab>
             <Tab value="not-joined" className="text-fg-primary">
               Hover

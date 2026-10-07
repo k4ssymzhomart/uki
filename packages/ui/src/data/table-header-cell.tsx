@@ -17,6 +17,8 @@ const SORT_ICON: Record<SortDirection, IconName> = { none: "sort", asc: "arrow-u
 /**
  * Sortable column header on a bg-subtle header row (Figma Table/Header cell 149:2763): a <th scope="col">
  * with aria-sort when sortable. Give it the row's column class from columns.ts so it lines up.
+ * The content is a block-level flex box, so no line box of the cell's inherited font adds height:
+ * the cell is its padding plus the 14 px icon (38 px, as in Figma) or the 13.2 px label.
  */
 export function TableHeaderCell({
   label,
@@ -47,12 +49,12 @@ export function TableHeaderCell({
         <button
           type="button"
           onClick={() => onSortChange(nextSort(sort))}
-          className="-m-1 inline-flex cursor-pointer items-center gap-1.5 rounded-sm p-1 outline-none focus-visible:shadow-focus"
+          className="-m-1 flex w-fit cursor-pointer items-center gap-1.5 rounded-sm p-1 outline-none focus-visible:shadow-focus"
         >
           {content}
         </button>
       ) : (
-        <span className="inline-flex items-center gap-1.5">{content}</span>
+        <span className="flex w-fit items-center gap-1.5">{content}</span>
       )}
     </th>
   );

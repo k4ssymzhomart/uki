@@ -124,15 +124,37 @@ describe("icons map", () => {
 
 describe("Icon", () => {
   it("renders 24 px with a 2 px stroke and is hidden from assistive technology by default", () => {
-    const { container } = render(<Icon name="gaze" />);
+    const { container } = render(<Icon name="camera" />);
     const svg = container.querySelector("svg");
     expect(svg?.getAttribute("width")).toBe("24");
     expect(svg?.getAttribute("height")).toBe("24");
     expect(svg?.getAttribute("stroke-width")).toBe("2");
+    expect(svg?.getAttribute("viewBox")).toBe("0 0 24 24");
     expect(svg?.getAttribute("aria-hidden")).toBe("true");
-    expect(svg?.getAttribute("data-icon")).toBe("gaze");
+    expect(svg?.getAttribute("data-icon")).toBe("camera");
     expect(svg?.getAttribute("class")).toContain("text-icon-primary");
   });
+
+  it.each([
+    ["square", 14 / 18],
+    ["stop", 12 / 18],
+    ["gaze", 8.5 / 10],
+  ] as const)(
+    "draws %s smaller in its 24 px box, as Figma does, with the same 2 px stroke",
+    (name, scale) => {
+      const { container } = render(<Icon name={name} />);
+      const svg = container.querySelector("svg");
+      const [x, y, width, height] = (svg?.getAttribute("viewBox") ?? "").split(" ").map(Number);
+      expect(width).toBeCloseTo(24 / scale);
+      expect(height).toBeCloseTo(24 / scale);
+      expect(x).toBeCloseTo((24 - 24 / scale) / 2);
+      expect(y).toBeCloseTo((24 - 24 / scale) / 2);
+      // Rendered stroke = attribute × 24 / viewBox width = 2 px.
+      expect(Number(svg?.getAttribute("stroke-width")) * (24 / (width ?? 1))).toBeCloseTo(2);
+      expect(svg?.getAttribute("width")).toBe("24");
+      expect(svg?.getAttribute("data-icon")).toBe(name);
+    },
+  );
 
   it("is an image with a name when labelled", () => {
     render(<Icon name="offline" label="Offline" />);
