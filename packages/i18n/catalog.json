@@ -146,6 +146,33 @@
       "notes": ""
     },
     {
+      "key": "language.kk",
+      "group": "Shared",
+      "source": "figma",
+      "en": "ҚАЗ",
+      "kk": "ҚАЗ",
+      "ru": "ҚАЗ",
+      "notes": "Language switch in the title bar on 1.1 and the student screens (App/Title bar 150:13352; frame 2.1 shows ҚАЗ, РУС, ENG). Every language shows the same three labels."
+    },
+    {
+      "key": "language.ru",
+      "group": "Shared",
+      "source": "figma",
+      "en": "РУС",
+      "kk": "РУС",
+      "ru": "РУС",
+      "notes": "Language switch in the title bar on 1.1 and the student screens (App/Title bar 150:13352; frame 2.1 shows ҚАЗ, РУС, ENG). Every language shows the same three labels."
+    },
+    {
+      "key": "language.en",
+      "group": "Shared",
+      "source": "figma",
+      "en": "ENG",
+      "kk": "ENG",
+      "ru": "ENG",
+      "notes": "Language switch in the title bar on 1.1 and the student screens (App/Title bar 150:13352; frame 2.1 shows ҚАЗ, РУС, ENG). Every language shows the same three labels."
+    },
+    {
       "key": "join.step",
       "group": "1.1 Join",
       "source": "figma",

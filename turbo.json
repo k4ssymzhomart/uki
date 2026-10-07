@@ -1,0 +1,40 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "stream",
+  "globalEnv": ["NODE_ENV"],
+  "globalPassThroughEnv": [
+    "SUPABASE_*",
+    "NEXT_PUBLIC_*",
+    "VITE_*",
+    "UKI_*",
+    "LOCK_*",
+    "SEED_*",
+    "CI",
+    "NEXT_TELEMETRY_DISABLED"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [
+        "dist/**",
+        ".next/**",
+        "!.next/cache/**",
+        "out/**",
+        ".output/**",
+        "messages/**",
+        "src/generated/**"
+      ]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    }
+  }
+}
