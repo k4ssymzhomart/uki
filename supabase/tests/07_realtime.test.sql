@@ -96,8 +96,12 @@ create function t.ev(p_session uuid, p_type text, p_review text default 'none', 
     'app_version', '0.1.0')
 $$;
 
-create function t.messages(p_topic text, p_event text) returns bigint language sql stable as $$
-  select count(*) from realtime.messages m where m.topic = p_topic and m.event = p_event and m.private
+-- Messages on p_topic of kind p_event whose payload contains p_payload. Demo and simulator runs leave
+-- messages on the seeded exams' topics, so a count on exam:{id} names this file's own ids in p_payload.
+create function t.messages(p_topic text, p_event text, p_payload jsonb default '{}') returns bigint
+language sql stable as $$
+  select count(*) from realtime.messages m
+  where m.topic = p_topic and m.event = p_event and m.private and m.payload @> p_payload
 $$;
 
 create function t.state(p_session uuid) returns text language sql stable as $$
@@ -127,16 +131,20 @@ select t.put('s_other', t.new_session(t.id('math2'), '20230912', 'writing'));
 -- events_broadcast
 -- ---------------------------------------------------------------------------
 select t.put('ev', t.event(t.id('s'), 'phone.detected', p_data => '{"score":0.94,"held_ms":1200}', p_review => 'flag', p_frames => 1));
-select is(t.messages('exam:' || t.id('math2'), 'event'), 1::bigint, 'an event is broadcast to exam:{exam_id} as event');
-select ok((select private from realtime.messages where topic = 'exam:' || t.id('math2') and event = 'event'), 'the message is private');
-select is((select payload - 'at' - 'received_at' from realtime.messages where topic = 'exam:' || t.id('math2') and event = 'event'),
+select is(t.messages('exam:' || t.id('math2'), 'event', jsonb_build_object('session_id', t.id('s'))), 1::bigint,
+  'an event is broadcast to exam:{exam_id} as event');
+-- Mathematics 2 is a seeded exam that demo and simulator runs share: read only this file's message.
+create function t.event_message() returns realtime.messages language sql stable as $$
+  select m.* from realtime.messages m
+  where m.topic = 'exam:' || t.id('math2') and m.event = 'event' and m.payload ->> 'id' = t.id('ev')::text
+$$;
+select ok((select private from t.event_message()), 'the message is private');
+select is((select payload - 'at' - 'received_at' from t.event_message()),
   jsonb_build_object('id', t.id('ev'), 'session_id', t.id('s'), 'exam_id', t.id('math2'), 'type', 'phone.detected',
     'source', 'app', 'review', 'flag', 'data', '{"score":0.94,"held_ms":1200}'::jsonb, 'frame_count', 1),
   'the payload is the compact event');
-select ok((select payload ? 'at' and payload ? 'received_at' from realtime.messages
-  where topic = 'exam:' || t.id('math2') and event = 'event'), 'the payload carries at and received_at');
-select is((select extension from realtime.messages where topic = 'exam:' || t.id('math2') and event = 'event'), 'broadcast',
-  'the message is a broadcast');
+select ok((select payload ? 'at' and payload ? 'received_at' from t.event_message()), 'the payload carries at and received_at');
+select is((select extension from t.event_message()), 'broadcast', 'the message is a broadcast');
 
 -- ---------------------------------------------------------------------------
 -- sessions_broadcast
@@ -173,16 +181,19 @@ select is((select payload - 'id' - 'issued_at' from realtime.messages where topi
   jsonb_build_object('session_id', t.id('s'), 'exam_id', t.id('math2'), 'type', 'message',
     'payload', '{"preset":"message.preset.phones_away","scope":"student"}'::jsonb, 'by_name', 'Aigerim Proctor'),
   'the command payload carries by_name');
-select is(t.messages('exam:' || t.id('math2'), 'command'), 0::bigint, 'commands never go to the exam channel');
+select is(t.messages('exam:' || t.id('math2'), 'command', jsonb_build_object('session_id', t.id('s'))), 0::bigint,
+  'commands never go to the exam channel');
 
 -- ---------------------------------------------------------------------------
 -- frames_broadcast
 -- ---------------------------------------------------------------------------
 insert into public.frames (id, event_id, session_id, exam_id, storage_path, captured_at)
 values (gen_random_uuid(), t.id('ev'), t.id('s'), t.id('math2'), t.id('math2') || '/' || t.id('s') || '/' || t.id('ev') || '-0.jpg', now());
-select is(t.messages('exam:' || t.id('math2'), 'frame'), 1::bigint, 'a frame is broadcast to exam:{exam_id} as frame');
+select is(t.messages('exam:' || t.id('math2'), 'frame', jsonb_build_object('session_id', t.id('s'))), 1::bigint,
+  'a frame is broadcast to exam:{exam_id} as frame');
 select ok((select payload ? 'frame_id' and payload ->> 'event_id' = t.id('ev')::text and payload ? 'captured_at'
-  from realtime.messages where topic = 'exam:' || t.id('math2') and event = 'frame'), 'the frame payload names the still');
+  from realtime.messages where topic = 'exam:' || t.id('math2') and event = 'frame' and payload ->> 'session_id' = t.id('s')::text),
+  'the frame payload names the still');
 
 -- Another session's insert is announced on the same channel.
 select is(t.tiles(t.id('s_other')), 1::bigint, 'every new session is broadcast');

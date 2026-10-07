@@ -38,15 +38,21 @@ describe("electron-builder.yml", () => {
     expect(value("artifactName")).toBe("Uki-${version}-${arch}.${ext}");
   });
 
-  it("flips the five fuses the plan names", () => {
-    for (const fuse of [
-      "RunAsNode]: false",
-      "EnableNodeOptionsEnvironmentVariable]: false",
-      "EnableNodeCliInspectArguments]: false",
-      "OnlyLoadAppFromAsar]: true",
-      "EnableEmbeddedAsarIntegrityValidation]: true",
-    ]) {
-      expect(afterPack).toContain(fuse);
-    }
+  it("flips the plan's five fuses and turns off file:// privileges, and no other fuse", () => {
+    const flipped = Object.fromEntries(
+      [...afterPack.matchAll(/\[FuseV1Options\.(\w+)\]:\s*(true|false)/g)].map(([, fuse, on]) => [
+        fuse,
+        on === "true",
+      ]),
+    );
+    expect(flipped).toEqual({
+      RunAsNode: false,
+      EnableNodeOptionsEnvironmentVariable: false,
+      EnableNodeCliInspectArguments: false,
+      OnlyLoadAppFromAsar: true,
+      EnableEmbeddedAsarIntegrityValidation: true,
+      // The renderer and the models load over uki:// (protocol.ts), never from file://.
+      GrantFileProtocolExtraPrivileges: false,
+    });
   });
 });

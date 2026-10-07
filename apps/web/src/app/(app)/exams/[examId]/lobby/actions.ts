@@ -11,10 +11,11 @@ export type StartExamError = "alreadyStarted" | "forbidden" | "failed";
 /**
  * 1.5 Start exam: `start_exam` as the signed-in staff member. The database allows only the lead proctor
  * and the exam office, only before the scheduled start; it sets the exam live and sends `start` to every
- * session in rules or ready. On success the proctor goes to the live wall (2.4).
+ * session in rules or ready. On success the proctor goes to the live wall (2.4). A staff lookup that
+ * failed twice is `failed`, so the proctor can try again without being sent to sign-in.
  */
 export async function startExam(input: unknown): Promise<{ error: StartExamError }> {
-  await requireStaff();
+  if (!(await requireStaff())) return { error: "failed" };
   const parsed = StartExamInput.safeParse(input);
   if (!parsed.success) return { error: "failed" };
   const supabase = await createSupabaseServerClient();

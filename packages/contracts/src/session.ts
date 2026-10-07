@@ -95,7 +95,11 @@ export type StateCause =
   | { type: "exam.started" }
   | { type: "session.paused" }
   | { type: "proctor.paused" }
-  | { type: "session.resumed" }
+  /**
+   * From the laptop. `pause` is the open pause: `proctor` when proctor.paused began it, otherwise
+   * `self`. It ends only a self pause; a proctor's pause waits for proctor.resumed.
+   */
+  | { type: "session.resumed"; pause: "self" | "proctor" }
   | { type: "proctor.resumed" }
   | { type: "proctor.ended" }
   /** `submit_session`; `pastEnd` is `now() >= session_ends_at(session)`. */
@@ -119,7 +123,7 @@ const RANK: Record<SessionState, number> = {
 /**
  * The state after `cause`, or `current` when the cause does not apply. Mirrors the Session states
  * table: states only move forward, except between `writing` and `paused`, and never out of a final
- * state.
+ * state. Like events_broadcast, a session.resumed leaves a proctor's pause alone.
  */
 export function nextState(current: SessionState, cause: StateCause): SessionState {
   if (isFinalState(current)) return current;
@@ -134,6 +138,7 @@ export function nextState(current: SessionState, cause: StateCause): SessionStat
     case "proctor.paused":
       return current === "writing" ? "paused" : current;
     case "session.resumed":
+      return current === "paused" && cause.pause === "self" ? "writing" : current;
     case "proctor.resumed":
       return current === "paused" ? "writing" : current;
     case "proctor.ended":

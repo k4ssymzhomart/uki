@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { loadLobby } from "../../../../../features/lobby/lobby-data.ts";
 import { LobbyView } from "../../../../../features/lobby/lobby-view.tsx";
+import { StaffLookupFailed } from "../../../../../features/shell/staff-lookup-failed.tsx";
 import { requireStaff } from "../../../../../lib/auth.ts";
 import { startExam } from "./actions.ts";
 
@@ -17,6 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
  */
 export default async function LobbyPage({ params }: PageProps<"/exams/[examId]/lobby">) {
   const staff = await requireStaff();
+  if (!staff) return <StaffLookupFailed />;
   const { examId } = await params;
   const lobby = await loadLobby(examId, staff);
   if (!lobby) notFound();

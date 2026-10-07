@@ -23,6 +23,8 @@ export type ExamScreenProps = {
   onImHere: () => void;
   /** 2.1e Got it. */
   onGotIt: () => void;
+  /** 2.1 Check again when the questions did not load. */
+  onRetryQuestions: () => void;
   onLanguage: (locale: Locale) => void;
   os?: DesktopOs;
 };
@@ -41,6 +43,7 @@ export function ExamScreen({
   onSubmit,
   onImHere,
   onGotIt,
+  onRetryQuestions,
   onLanguage,
   os,
 }: ExamScreenProps) {
@@ -67,6 +70,7 @@ export function ExamScreen({
           onBack={onBack}
           onSubmit={onSubmit}
           onGotIt={onGotIt}
+          onRetryQuestions={onRetryQuestions}
         />
         <PauseCard selfPause={model.selfPause} proctorPause={model.proctorPause} onImHere={onImHere} />
         {model.phone !== null && !paused ? (

@@ -96,8 +96,12 @@ create function t.ev(p_session uuid, p_type text, p_review text default 'none', 
     'app_version', '0.1.0')
 $$;
 
-create function t.messages(p_topic text, p_event text) returns bigint language sql stable as $$
-  select count(*) from realtime.messages m where m.topic = p_topic and m.event = p_event and m.private
+-- Messages on p_topic of kind p_event whose payload contains p_payload. Demo and simulator runs leave
+-- messages on the seeded exams' topics, so a count on exam:{id} names this file's own ids in p_payload.
+create function t.messages(p_topic text, p_event text, p_payload jsonb default '{}') returns bigint
+language sql stable as $$
+  select count(*) from realtime.messages m
+  where m.topic = p_topic and m.event = p_event and m.private and m.payload @> p_payload
 $$;
 
 create function t.state(p_session uuid) returns text language sql stable as $$
@@ -149,12 +153,14 @@ reset role;
 select ok((select (r ->> 'starts_at')::timestamptz = now() from t.started), 'start_exam returns the new starts_at');
 select is((select status::text from public.exams where id = t.id('math2')), 'live', 'the exam is live');
 select is((select starts_at from public.exams where id = t.id('math2')), now(), 'starts_at is now');
-select is((select count(*) from public.session_commands where exam_id = t.id('math2') and type = 'start'), 2::bigint,
+select is((select count(*) from public.session_commands where exam_id = t.id('math2') and type = 'start'
+  and session_id in (t.id('s_ready'), t.id('s_rules'), t.id('s_checking'))), 2::bigint,
   'a start command for every session in rules or ready');
 select is((select count(*) from public.session_commands where session_id = t.id('s_checking')), 0::bigint,
   'no start command for a session still checking');
 select is((select payload from public.session_commands where session_id = t.id('s_ready')), '{}'::jsonb, 'the start payload is {}');
-select is((select count(*) from public.audit_log where action = 'start_exam'), 1::bigint, 'start_exam writes an audit row');
+select is((select count(*) from public.audit_log where action = 'start_exam' and actor_id = t.id('lead')
+  and object_id = t.id('math2')::text), 1::bigint, 'start_exam writes an audit row');
 select is(t.messages('session:' || t.id('s_ready'), 'command'), 1::bigint, 'the start command is broadcast to the session');
 
 select t.login(t.id('lead'));

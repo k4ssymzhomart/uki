@@ -4,22 +4,17 @@
 //
 //   pnpm exec tsx apps/lock/scripts/make-icons.ts   (from the repository root; writes apps/lock/public)
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { homedir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "@playwright/test";
 import { colour } from "@uki/tokens";
+import { chromiumExecutable } from "./chromium.ts";
 
 const LOCK_DIR = fileURLToPath(new URL("..", import.meta.url));
 const FIGMA = join(LOCK_DIR, "../../.figma-cache/89-2491");
 const PUBLIC = join(LOCK_DIR, "public");
 const SIZES = [16, 32, 48, 128] as const;
-const CHROMIUM =
-  process.env.PW_CHROMIUM ??
-  join(
-    homedir(),
-    "Library/Caches/ms-playwright/chromium-1234/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
-  );
+const CHROMIUM = chromiumExecutable();
 
 function asset(name: string): string {
   return readFileSync(join(FIGMA, name), "utf8").replace(/ style="display: block;"/, "");

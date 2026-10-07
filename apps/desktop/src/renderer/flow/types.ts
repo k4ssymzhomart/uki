@@ -29,6 +29,11 @@ export interface SavedJoin {
   locale: Locale;
 }
 
+/** The question load's input: the join, and whether to retry after 2, 4, 8 and 16 s or try once. */
+export interface QuestionsLoad extends SavedJoin {
+  ladder: boolean;
+}
+
 export type LockLink = "absent" | "connected" | "paired";
 
 /** The 1.2 rows as the services report them. */
@@ -73,6 +78,11 @@ export interface ExamProgress {
   answers: Record<string, { choiceId: string; savedAt: number }>;
   lastSavedAt: number | null;
   questionsLoading: boolean;
+  /**
+   * The questions did not come after join_exam's retries, or join_exam refused for good: 2.1 shows
+   * exam.questions.failed until they come.
+   */
+  questionsFailed: boolean;
   /** Üki Lock reported lock.started (tabs it closed). */
   tabsClosed: number | null;
   /** exam.started was sent for this session (or the server already had it). */

@@ -75,9 +75,11 @@ describe("nextState: Session states table", () => {
     [s, { type: "proctor.paused" }, s === "writing" ? "paused" : s],
   ]);
 
-  // Row 5: session.resumed or proctor.resumed -> writing, from paused.
+  // Row 5: session.resumed or proctor.resumed -> writing, from paused; a proctor's pause ends only
+  // with proctor.resumed.
   const resumedRows: Row[] = ALL.flatMap((s): Row[] => [
-    [s, { type: "session.resumed" }, s === "paused" ? "writing" : s],
+    [s, { type: "session.resumed", pause: "self" }, s === "paused" ? "writing" : s],
+    [s, { type: "session.resumed", pause: "proctor" }, s],
     [s, { type: "proctor.resumed" }, s === "paused" ? "writing" : s],
   ]);
 
@@ -106,7 +108,24 @@ describe("nextState: Session states table", () => {
   });
 
   it("covers every state with every cause", () => {
-    expect(rows.length).toBe(ALL.length * (1 + STATUS_STEPS.length + 1 + 2 + 2 + 1 + 3));
+    expect(rows.length).toBe(ALL.length * (1 + STATUS_STEPS.length + 1 + 2 + 3 + 1 + 3));
+  });
+
+  it("ends a proctor's pause only with proctor.resumed", () => {
+    let s: SessionState = nextState("writing", { type: "proctor.paused" });
+    s = nextState(s, { type: "session.resumed", pause: "proctor" });
+    expect(s).toBe("paused");
+    s = nextState(s, { type: "proctor.resumed" });
+    expect(s).toBe("writing");
+  });
+
+  it("ends a self pause with either resume", () => {
+    let s: SessionState = nextState("writing", { type: "session.paused" });
+    s = nextState(s, { type: "session.resumed", pause: "self" });
+    expect(s).toBe("writing");
+    s = nextState(s, { type: "session.paused" });
+    s = nextState(s, { type: "proctor.resumed" });
+    expect(s).toBe("writing");
   });
 
   it("keeps ended on submit, as 2.1d needs", () => {

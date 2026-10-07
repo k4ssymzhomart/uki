@@ -96,8 +96,12 @@ create function t.ev(p_session uuid, p_type text, p_review text default 'none', 
     'app_version', '0.1.0')
 $$;
 
-create function t.messages(p_topic text, p_event text) returns bigint language sql stable as $$
-  select count(*) from realtime.messages m where m.topic = p_topic and m.event = p_event and m.private
+-- Messages on p_topic of kind p_event whose payload contains p_payload. Demo and simulator runs leave
+-- messages on the seeded exams' topics, so a count on exam:{id} names this file's own ids in p_payload.
+create function t.messages(p_topic text, p_event text, p_payload jsonb default '{}') returns bigint
+language sql stable as $$
+  select count(*) from realtime.messages m
+  where m.topic = p_topic and m.event = p_event and m.private and m.payload @> p_payload
 $$;
 
 create function t.state(p_session uuid) returns text language sql stable as $$
@@ -224,6 +228,52 @@ select t.event(t.id('forged'), 'session.paused', now() - interval '100 seconds',
   '{}', p_review => 'log');
 select t.event(t.id('forged'), 'session.resumed', now(), now(), '{"paused_ms":100000,"by":"student"}');
 select is((select paused_s from public.sessions where id = t.id('forged')), 300, 'a session.paused without a reason is capped');
+
+-- A proctor's pause ends only with proctor.resumed. A modified app sends session.resumed through ingest
+-- right after proctor.paused: the event is stored and broadcast, but the session stays paused and
+-- nothing is credited. These two sessions write Physics 1, so that session_tick below leaves them alone.
+select t.put('held', t.new_session(t.id('phys1'), '20251002', 'writing'));
+select t.put('held_pause', t.event(t.id('held'), 'proctor.paused', now() - interval '400 seconds',
+  now() - interval '400 seconds', jsonb_build_object('staff_id', t.id('lead')), 'proctor', 'log'));
+select t.put('held_resume', gen_random_uuid());
+create table t.held as select public.ingest_batch(t.id('held'), jsonb_build_array(t.ev(t.id('held'), 'session.resumed',
+  'none', 1, 0, t.id('held_resume'), '{"paused_ms":1000,"by":"student"}')), null) as r;
+select is((select r -> 'accepted' from t.held), jsonb_build_array(t.id('held_resume')),
+  'ingest accepts a session.resumed during a proctor pause');
+select is(t.state(t.id('held')), 'paused', 'a session.resumed does not end a proctor pause');
+select is((select r -> 'session' ->> 'state' from t.held), 'paused', 'the ingest reply says the session is still paused');
+select is((select array[paused_s, self_paused_s] from public.sessions where id = t.id('held')), array[0, 0],
+  'a session.resumed during a proctor pause credits nothing');
+select is((select pause_event_id from public.sessions where id = t.id('held')), t.id('held_pause'),
+  'the proctor pause stays open');
+select is((select type from public.events where id = t.id('held_resume')), 'session.resumed', 'the session.resumed is stored');
+select is(t.messages('exam:' || t.id('phys1'), 'event', jsonb_build_object('id', t.id('held_resume'))), 1::bigint,
+  'the session.resumed is broadcast to the wall');
+select is((select public.pending_pause_s(se) from public.sessions se where se.id = t.id('held')), 400,
+  'session_tick still counts the whole running proctor pause');
+-- A session.paused cannot turn the proctor pause into a self pause that session.resumed could end.
+select public.ingest_batch(t.id('held'), jsonb_build_array(
+  t.ev(t.id('held'), 'session.paused', 'log', 2, 0, null, '{"reason":"face_missing"}')), null);
+select public.ingest_batch(t.id('held'), jsonb_build_array(
+  t.ev(t.id('held'), 'session.resumed', 'none', 3, 0, null, '{"paused_ms":1000,"by":"student"}')), null);
+select is((select array[state::text, pause_event_id::text] from public.sessions where id = t.id('held')),
+  array['paused', t.id('held_pause')::text], 'a session.paused then session.resumed leave the proctor pause open');
+-- The proctor's resume ends it and gives back all of its time.
+select t.event(t.id('held'), 'proctor.resumed', now(), now(), jsonb_build_object('staff_id', t.id('lead')), 'proctor', 'log');
+select is(t.state(t.id('held')), 'writing', 'proctor.resumed ends the proctor pause');
+select is((select array[paused_s, self_paused_s] from public.sessions where id = t.id('held')), array[400, 0],
+  'the proctor pause gives back all of its time');
+
+-- A self pause still ends with session.resumed through ingest, with its credit under the cap.
+select t.put('self', t.new_session(t.id('phys1'), '20251003', 'writing'));
+select t.event(t.id('self'), 'session.paused', now() - interval '60 seconds', now() - interval '60 seconds',
+  '{"reason":"face_missing"}', p_review => 'log');
+create table t.self as select public.ingest_batch(t.id('self'), jsonb_build_array(t.ev(t.id('self'), 'session.resumed',
+  'none', 1, 0, null, '{"paused_ms":60000,"by":"student"}')), null) as r;
+select is(t.state(t.id('self')), 'writing', 'session.resumed through ingest ends a self pause');
+select is((select r -> 'session' ->> 'state' from t.self), 'writing', 'the ingest reply says writing');
+select is((select array[paused_s, self_paused_s] from public.sessions where id = t.id('self')), array[60, 60],
+  'the self pause gives back its time as a self pause');
 
 -- ---------------------------------------------------------------------------
 -- proctor.ended -> ended, ended_at, end_reason; nothing leaves a final state

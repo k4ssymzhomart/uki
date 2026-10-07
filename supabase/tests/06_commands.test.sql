@@ -96,8 +96,12 @@ create function t.ev(p_session uuid, p_type text, p_review text default 'none', 
     'app_version', '0.1.0')
 $$;
 
-create function t.messages(p_topic text, p_event text) returns bigint language sql stable as $$
-  select count(*) from realtime.messages m where m.topic = p_topic and m.event = p_event and m.private
+-- Messages on p_topic of kind p_event whose payload contains p_payload. Demo and simulator runs leave
+-- messages on the seeded exams' topics, so a count on exam:{id} names this file's own ids in p_payload.
+create function t.messages(p_topic text, p_event text, p_payload jsonb default '{}') returns bigint
+language sql stable as $$
+  select count(*) from realtime.messages m
+  where m.topic = p_topic and m.event = p_event and m.private and m.payload @> p_payload
 $$;
 
 create function t.state(p_session uuid) returns text language sql stable as $$
@@ -129,6 +133,12 @@ select t.put('paused', t.new_session(t.id('math2'), '20231302', 'writing'));
 select t.event(t.id('paused'), 'session.paused', p_data => '{"reason":"face_missing"}', p_review => 'log');
 select t.put('joined', t.new_session(t.id('math2'), '20230877', 'joined'));
 select t.put('done', t.new_session(t.id('math2'), '20235001', 'submitted'));
+
+-- The sessions this file made. Mathematics 2 is a seeded exam that demo and simulator runs share, so
+-- counts look only at these sessions' rows.
+create function t.own_sessions() returns setof uuid language sql stable as $$
+  select v from t.ids where k in ('w1', 'w2', 'ready', 'rules', 'paused', 'joined', 'done')
+$$;
 
 -- ---------------------------------------------------------------------------
 -- Rights
@@ -225,7 +235,8 @@ reset role;
 select is((select extra_min from public.sessions where id = t.id('w2')), 10, 'add_time raises extra_min');
 select is((select data - 'staff_id' from public.events where session_id = t.id('w2') and type = 'proctor.time_added'),
   '{"minutes":10,"scope":"student"}'::jsonb, 'proctor.time_added carries minutes and scope');
-select is(t.messages('exam:' || t.id('math2'), 'session') >= 1, true, 'the new extra_min is broadcast as a session tile');
+select is(t.messages('exam:' || t.id('math2'), 'session', jsonb_build_object('id', t.id('w2'), 'extra_min', 10)), 1::bigint,
+  'the new extra_min is broadcast as a session tile');
 
 -- ---------------------------------------------------------------------------
 -- Group scope
@@ -239,14 +250,19 @@ select throws_ok(format($$ select public.issue_command(null, %L, 'pause', '{}', 
 select throws_ok(format($$ select public.issue_command(%L, %L, 'message', '{"text":"x","scope":"group"}', 'group') $$,
   t.id('w1'), t.id('math2')), '22023', 'bad_request', 'a group command takes exam_id only');
 reset role;
-select is((select cardinality(ids) from t.group_msg), 5, 'a group command reaches every session in rules, ready, writing or paused');
+select is((select array_agg(session_id order by session_id) from public.session_commands
+  where id in (select unnest(ids) from t.group_msg) and session_id in (select t.own_sessions())),
+  (select array_agg(v order by v) from t.ids where k in ('w1', 'w2', 'ready', 'rules', 'paused')),
+  'a group command reaches every session in rules, ready, writing or paused, once each');
 select is((select count(*) from public.session_commands where id in (select unnest(ids) from t.group_msg)
   and session_id in (t.id('joined'), t.id('done'))), 0::bigint, 'joined and final sessions get no group command');
 select is((select extra_min from public.sessions where id = t.id('w2')), 15, 'group add_time adds to every session');
 select is((select extra_min from public.sessions where id = t.id('joined')), 0, 'group add_time skips sessions not yet in the lobby');
-select is((select count(*) from public.events where type = 'proctor.message' and data ->> 'scope' = 'group'), 5::bigint,
+select is((select count(*) from public.events where type = 'proctor.message' and data ->> 'scope' = 'group'
+  and session_id in (select t.own_sessions())), 5::bigint,
   'one proctor.message event per session of the group');
-select is((select count(*) from public.audit_log where action = 'command.message' and object_type = 'exam'), 1::bigint,
+select is((select count(*) from public.audit_log where action = 'command.message' and object_type = 'exam'
+  and actor_id = t.id('proctor')), 1::bigint,
   'one audit row for the group command');
 
 -- ---------------------------------------------------------------------------

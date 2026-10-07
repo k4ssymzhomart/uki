@@ -103,6 +103,7 @@ export function StudentScreen({ model, send, camera, cameraMirrored, os }: Stude
           onSubmit={() => send({ type: "SUBMIT" })}
           onImHere={() => send({ type: "IM_HERE" })}
           onGotIt={() => send({ type: "ACK_NOTICE" })}
+          onRetryQuestions={() => send({ type: "RETRY_QUESTIONS" })}
         />
       );
   }

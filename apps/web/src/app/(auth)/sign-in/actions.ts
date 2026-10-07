@@ -7,7 +7,7 @@ import {
   type SignInState,
   signInErrorFromAuth,
 } from "../../../features/sign-in/sign-in-form.ts";
-import { loadStaffMember, staffUserFromClaims } from "../../../lib/auth.ts";
+import { loadStaffMember, retryOnce, type StaffLookup, staffUserFromClaims } from "../../../lib/auth.ts";
 import {
   CLEAR_LIFETIME_COOKIE,
   LIFETIME_COOKIE,
@@ -19,7 +19,8 @@ import { createSupabaseServerClient } from "../../../lib/supabase/server.ts";
 /**
  * A.0 Sign in: signInWithPassword through @supabase/ssr, so the session lands in the auth cookies with
  * the lifetime the staff member chose. Only staff (a `staff` row readable under RLS) may stay signed in;
- * errors come back to show under the fields.
+ * errors come back to show under the fields. When the staff row cannot be read (twice), the user is
+ * signed out with "unavailable", not told the account cannot use the dashboard.
  */
 export async function signIn(_previous: SignInState, form: FormData): Promise<SignInState> {
   const parsed = parseSignInForm(form);
@@ -42,11 +43,16 @@ export async function signIn(_previous: SignInState, form: FormData): Promise<Si
     email: data.user.email,
     is_anonymous: data.user.is_anonymous,
   });
-  const staff = user ? await loadStaffMember(supabase, user) : null;
-  if (!staff) {
+  const lookup: StaffLookup = user
+    ? await retryOnce(() => loadStaffMember(supabase, user))
+    : { status: "none" };
+  if (lookup.status !== "staff") {
     await supabase.auth.signOut();
     cookieStore.set(LIFETIME_COOKIE, "", CLEAR_LIFETIME_COOKIE);
-    return { ...kept, errors: { email: "notStaff" } };
+    return {
+      ...kept,
+      errors: lookup.status === "failed" ? { password: "unavailable" } : { email: "notStaff" },
+    };
   }
 
   const marker = lifetimeCookie(lifetime, now);

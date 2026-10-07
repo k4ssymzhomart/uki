@@ -222,6 +222,11 @@
       "title": "Overview"
     },
     "shell": {
+      "lookupFailed": {
+        "body": "Your account did not load, so this page cannot open yet. Try again in a moment.",
+        "retry": "Try again",
+        "title": "Could not reach Üki"
+      },
       "nav": {
         "exams": "Exams",
         "live": "Live",
@@ -607,6 +612,9 @@
     "proctor_paused": {
       "status": "timer stopped · {elapsed}",
       "status_title": "Paused by proctor"
+    },
+    "questions": {
+      "failed": "The questions did not load. Check your connection or ask your proctor."
     },
     "saved": "Saved on this laptop · {time}",
     "saved_offline": "Saved on this laptop · {time} · syncs when online",

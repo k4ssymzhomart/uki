@@ -1,7 +1,8 @@
 // An in-memory stand-in for the server side the sync loop talks to: ingest (insert on conflict do
 // nothing, uploads for flag events with unconfirmed stills), the answers upsert (later saved_at wins),
-// Storage uploads and frames. `online = false` makes every call fail like a dropped network, and
-// `dropReplies` makes the server store a call but lose the reply.
+// Storage uploads and frames. `online = false` makes every call fail like a dropped network,
+// `dropReplies` makes the server store a call but lose the reply, and `failStatus` fails one kind of
+// call with an HTTP status the way services/student-api.ts reports it.
 import {
   type AnswerUpsert,
   type ClientEventEnvelope,
@@ -13,7 +14,28 @@ import {
   stillPath,
 } from "@uki/contracts";
 import type { StillGrant, SyncApi } from "../outbox/sync.ts";
-import { ServiceError } from "../services/errors.ts";
+import { fromHttpReply, fromPostgrestError, kindForStatus, ServiceError } from "../services/errors.ts";
+
+type CallKind = "answers" | "ingest" | "upload" | "frames";
+
+/** The Edge Runtime's body for 546 (Supabase "Edge Function Limits"). */
+export const WORKER_LIMIT_BODY = {
+  code: "WORKER_LIMIT",
+  message: "Function failed due to not having enough compute resources (please check logs)",
+};
+
+/**
+ * The error student-api.ts throws for a reply with this status: ingest and frames are Edge Functions
+ * (fromHttpReply), the answers upsert goes through PostgREST (fromPostgrestError), uploads to Storage
+ * (kindForStatus).
+ */
+export function replyError(kind: CallKind, status: number): ServiceError {
+  if (kind === "ingest" || kind === "frames") {
+    return fromHttpReply(status, status === 546 ? WORKER_LIMIT_BODY : null);
+  }
+  if (kind === "answers") return fromPostgrestError({ message: `HTTP ${status}` }, status);
+  return new ServiceError(kindForStatus(status), "upload refused", status);
+}
 
 export interface FakeServerOptions {
   examId: string;
@@ -27,8 +49,10 @@ export class FakeServer implements SyncApi {
   dropReplies = 0;
   /** Store the next N still uploads but fail them like a lost reply. */
   dropUploadReplies = 0;
+  /** Fail every call of a kind with this HTTP status (replyError), without storing anything. */
+  readonly failStatus: Partial<Record<CallKind, number>> = {};
   /** Every call in order, for ordering checks. */
-  readonly calls: Array<{ kind: "answers" | "ingest" | "upload" | "frames"; at: number; size: number }> = [];
+  readonly calls: Array<{ kind: CallKind; at: number; size: number }> = [];
   readonly events = new Map<string, ClientEventEnvelope>();
   readonly answers = new Map<string, AnswerUpsert>();
   readonly objects = new Map<string, number>();
@@ -43,9 +67,11 @@ export class FakeServer implements SyncApi {
     this.endsAt = options.endsAt ?? null;
   }
 
-  private check(kind: "answers" | "ingest" | "upload" | "frames", size: number): void {
+  private check(kind: CallKind, size: number): void {
     this.calls.push({ kind, at: this.options.now(), size });
     if (!this.online) throw new ServiceError("network", "offline");
+    const status = this.failStatus[kind];
+    if (status !== undefined) throw replyError(kind, status);
   }
 
   private lose(): void {

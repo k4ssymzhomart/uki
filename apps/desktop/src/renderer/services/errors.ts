@@ -3,7 +3,8 @@
 import { ApiError } from "@uki/contracts";
 
 /**
- * - `network`: no reply (offline, timeout, DNS, a gateway 502/503/504): retry with backoff.
+ * - `network`: no reply (offline, timeout, DNS), a gateway 502/503/504, or the Edge Runtime's 546
+ *   WORKER_LIMIT (the function never ran): retry with backoff.
  * - `rate_limited`: 429: retry with backoff.
  * - `auth`: 401: the session token is missing or expired; supabase-js refreshes it, retry.
  * - `bad_request`: 400: this request will never work as sent.
@@ -45,9 +46,16 @@ export function isServiceError(error: unknown): error is ServiceError {
   return error instanceof ServiceError;
 }
 
+/**
+ * Replies that say nothing about the request, only that nothing handled it this time: Kong's 502, 503
+ * and 504, and 546 WORKER_LIMIT, which the Edge Runtime sends when it has no worker or memory for the
+ * function. The outbox and every Edge Function call retry them with the backoff, never give up on them.
+ */
+export const GATEWAY_STATUSES: readonly number[] = [502, 503, 504, 546];
+
 /** The failure kind for an HTTP status. */
 export function kindForStatus(status: number): FailureKind {
-  if (status === 0 || status === 502 || status === 503 || status === 504) return "network";
+  if (status === 0 || GATEWAY_STATUSES.includes(status)) return "network";
   if (status === 429) return "rate_limited";
   if (status === 401) return "auth";
   if (status === 400 || status === 405 || status === 422) return "bad_request";

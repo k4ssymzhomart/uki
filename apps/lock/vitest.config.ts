@@ -10,7 +10,7 @@ export default mergeConfig(
     test: {
       environment: "jsdom",
       css: false,
-      include: ["src/**/*.test.ts", "src/**/*.test.tsx", "*.test.ts"],
+      include: ["src/**/*.test.ts", "src/**/*.test.tsx", "scripts/**/*.test.ts", "*.test.ts"],
     },
   }),
 );

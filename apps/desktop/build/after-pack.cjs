@@ -24,5 +24,8 @@ exports.default = async function afterPack(context) {
     [FuseV1Options.EnableNodeCliInspectArguments]: false,
     [FuseV1Options.OnlyLoadAppFromAsar]: true,
     [FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: true,
+    // The app never loads a page from file:// (renderer and models come over uki://, src/main/protocol.ts),
+    // so file:// pages need none of Electron's extra privileges.
+    [FuseV1Options.GrantFileProtocolExtraPrivileges]: false,
   });
 };
