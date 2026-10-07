@@ -1,0 +1,23 @@
+{
+  "name": "@uki/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.117.2"
+  },
+  "devDependencies": {
+    "@uki/config": "workspace:*",
+    "vitest": "^5.0.3",
+    "typescript": "~5.9.3",
+    "@types/node": "^24.19.1"
+  }
+}
