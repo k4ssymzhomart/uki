@@ -1,6 +1,7 @@
 // When the Lock lets go (E.9, "Two exam modes" in docs/phase-0-plan.md): the first of the exam tab reaching
 // exams.lms_done_path, lock.release from the app (submit, proctor end), the app reporting the exam done,
-// or the Üki end time plus 2 minutes.
+// or the Üki end time plus 2 minutes. The end time is server time: the controller compares it with the
+// server's clock (the app's clock offset), and only while no app holds the exam.
 import { type LockExam, RELEASE_AFTER_END_MS, toMs } from "@uki/contracts";
 
 export type ReleaseTrigger = "done_path" | "app" | "exam_done" | "deadline";

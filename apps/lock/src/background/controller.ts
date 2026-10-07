@@ -8,6 +8,10 @@
 // every other site to the block page. Release, on the first trigger in release.ts, undoes all of it and
 // puts the tabs back. State lives in chrome.storage.local, so a restarted worker or browser picks up a
 // running lock again.
+//
+// Time: the exam's times are server time. The app sends its clock offset with exam.state, and the deadline
+// and the countdowns read the server's clock through it, never the bare laptop clock. While the app is
+// here and says the exam runs, the app decides when it ends; the deadline is for an absent app.
 import {
   type AppToLock,
   type CopyKind,
@@ -15,8 +19,10 @@ import {
   LockEvent as LockEventSchema,
   type LockEventType,
   type LockExam,
+  type LockReleaseTrigger,
   type LockToApp,
   type ReleaseReason,
+  toMs,
   uuidv7,
 } from "@uki/contracts";
 import { eventHost, hostnameOf, isAllowedUrl, matchPatterns } from "../lib/hosts.ts";
@@ -42,10 +48,10 @@ import {
   readStored,
   STORAGE_KEYS,
 } from "../lib/state.ts";
-import { countRestoredTabs, createUrl, planLock, planRestore } from "../lib/tab-plan.ts";
+import { countRestoredTabs, createUrl, examWindows, planLock, planRestore } from "../lib/tab-plan.ts";
 import { createKindThrottle } from "../lib/throttle.ts";
 import { type AppLink, createAppLink, realTimers, type SocketLike, type Timers } from "./app-link.ts";
-import { type LockApi, WINDOW_ID_NONE, type WindowInfo } from "./lock-api.ts";
+import { LOCK_WINDOW_TYPES, type LockApi, WINDOW_ID_NONE, type WindowInfo } from "./lock-api.ts";
 
 /** The runtime-registered content script: copy guard, Lock bar and E.6 toast on allowed hosts. */
 export const CONTENT_SCRIPT_ID = "uki-lock-guard";
@@ -77,7 +83,9 @@ const BLOCKED_TYPES: ReadonlySet<LockEventType> = new Set(["tab.blocked", "site.
 
 type ExamState = Extract<AppToLock, { type: "exam.state" }>;
 type AppHello = Extract<AppToLock, { type: "hello" }>;
-type ReleaseTrigger = "done_path" | "app" | "exam_done" | "deadline";
+type ReleaseTrigger = LockReleaseTrigger;
+/** Phases in which the app holds the exam: it sends lock.release or phase done when the exam ends. */
+const HOLDING_PHASES: ReadonlySet<ExamState["phase"]> = new Set(["ready", "writing", "paused"]);
 
 export interface LockControllerDeps {
   api: LockApi;
@@ -132,6 +140,8 @@ export function createLockController(deps: LockControllerDeps): LockController {
   let pair: { code: string; expires_at: string } | null = null;
   let pairError: LockView["pair_error"] = null;
   let examState: ExamState | null = null;
+  /** The app's latest exam.state on the open link; null until it sends one after connecting. */
+  let linkState: ExamState | null = null;
   let lock: LockRecord | null = null;
   let released: ReleasedSummary | null = null;
   let outbox: OutboxEntry[] = [];
@@ -180,10 +190,33 @@ export function createLockController(deps: LockControllerDeps): LockController {
         link = "absent";
         app = null;
         pair = null;
+        linkState = null;
         sentThisLink.clear();
+        // The app is gone: the deadline is armed again.
+        scheduleDeadline();
         await publish();
       }),
   });
+
+  // ---- the server's clock ----
+
+  /** Server time minus the laptop's clock: the app's latest offset for the locked exam. */
+  function clockOffsetMs(): number {
+    return lock?.clock_offset_ms ?? examState?.clock_offset_ms ?? 0;
+  }
+
+  /** Server time now: the exam's times are server time, and the laptop clock may be wrong or moved. */
+  function serverNow(): number {
+    return now() + clockOffsetMs();
+  }
+
+  /** The locked exam with its times on the laptop's clock, for the bar's and popup's countdowns. */
+  function onLaptopClock(record: LockRecord): LockExam {
+    const offset = record.clock_offset_ms;
+    if (offset === 0) return record.exam;
+    const shift = (at: string) => new Date(toMs(at) - offset).toISOString();
+    return { ...record.exam, starts_at: shift(record.exam.starts_at), ends_at: shift(record.exam.ends_at) };
+  }
 
   // ---- storage and views ----
 
@@ -199,7 +232,7 @@ export function createLockController(deps: LockControllerDeps): LockController {
       pair_error: pairError,
       exam_state: examState,
       locked: lock
-        ? { mode: lock.mode, exam: lock.exam, started_at: lock.started_at, locale: currentLocale() }
+        ? { mode: lock.mode, exam: onLaptopClock(lock), started_at: lock.started_at, locale: currentLocale() }
         : null,
       released,
     };
@@ -208,11 +241,12 @@ export function createLockController(deps: LockControllerDeps): LockController {
   function buildBar(): BarState | null {
     if (!lock) return null;
     const sameExam = examState?.exam?.session_id === lock.exam.session_id;
+    const times = onLaptopClock(lock);
     return {
       mode: lock.mode,
       title: lock.exam.title,
-      starts_at: lock.exam.starts_at,
-      ends_at: lock.exam.ends_at,
+      starts_at: times.starts_at,
+      ends_at: times.ends_at,
       phase: sameExam && examState ? examState.phase : "writing",
       watch: sameExam && examState ? examState.watch : "watching",
       locale: currentLocale(),
@@ -270,15 +304,35 @@ export function createLockController(deps: LockControllerDeps): LockController {
     outbox = outbox.filter((entry) => entry.queued_at >= oldest).slice(-OUTBOX_MAX);
   }
 
+  /**
+   * Keeps only one exam's events. Once the app is on another exam, or another lock starts, the others can
+   * never reach their exam: the app files whatever it gets under the exam it is on.
+   */
+  function keepOutboxOf(sessionId: string): void {
+    outbox = outbox.filter((entry) => entry.session_id === sessionId);
+  }
+
+  /**
+   * Sends the events of the exam the app said it is on (its exam.state on this link), once per link: the
+   * app files every event under the exam on its screen, so an app on no exam or on another one gets none.
+   */
   function flush(): void {
     if (link !== "paired") return;
-    for (const { event } of outbox) {
-      if (sentThisLink.has(event.id)) continue;
-      if (appLink.send({ type: "lock.event", event })) sentThisLink.add(event.id);
+    trimOutbox();
+    const sessionId = linkState?.exam?.session_id;
+    if (!sessionId) return;
+    for (const { event, session_id } of outbox) {
+      if (session_id !== sessionId || sentThisLink.has(event.id)) continue;
+      if (appLink.send({ type: "lock.event", session_id, event })) sentThisLink.add(event.id);
     }
   }
 
   function emit(type: LockEventType, data: Record<string, unknown>): LockEvent | null {
+    const sessionId = lock?.exam.session_id;
+    if (!sessionId) {
+      log(`dropped a ${type} outside a lock`);
+      return null;
+    }
     const parsed = LockEventSchema.safeParse({
       id: uuidv7(now()),
       at: new Date(now()).toISOString(),
@@ -289,7 +343,7 @@ export function createLockController(deps: LockControllerDeps): LockController {
       log(`dropped an invalid ${type}: ${parsed.error.message.slice(0, 200)}`);
       return null;
     }
-    outbox.push({ event: parsed.data, queued_at: now() });
+    outbox.push({ event: parsed.data, queued_at: now(), session_id: sessionId });
     trimOutbox();
     if (lock && BLOCKED_TYPES.has(type)) lock.blocked_count += 1;
     flush();
@@ -311,6 +365,7 @@ export function createLockController(deps: LockControllerDeps): LockController {
         if (paired) pairError = null;
         sentThisLink.clear();
         flush();
+        scheduleDeadline();
         break;
       case "pair.code":
         pair = { code: message.code, expires_at: message.expires_at };
@@ -344,13 +399,17 @@ export function createLockController(deps: LockControllerDeps): LockController {
 
   async function applyExamState(message: ExamState): Promise<void> {
     examState = message;
+    linkState = message;
+    if (!lock && message.exam) keepOutboxOf(message.exam.session_id);
+    flush();
     if (!lock) return;
     if (message.exam && message.exam.session_id === lock.exam.session_id) {
       lock.exam = message.exam;
       lock.locale = message.locale;
-      scheduleDeadline();
+      if (message.clock_offset_ms !== undefined) lock.clock_offset_ms = message.clock_offset_ms;
     }
     if (isExamDone(message, lock.exam.session_id)) await release("exam_done");
+    else scheduleDeadline();
   }
 
   // ---- lock ----
@@ -452,7 +511,7 @@ export function createLockController(deps: LockControllerDeps): LockController {
     }
     const exam: LockExam = state.exam;
     const allowed = mode === "browser" ? exam.allowed_hosts : [];
-    const windows = await api.windows.getAll({ populate: true, windowTypes: ["normal"] });
+    const windows = await api.windows.getAll({ populate: true, windowTypes: LOCK_WINDOW_TYPES });
     const plan = planLock(windows, { mode, allowedHosts: allowed, preferredTabId, extensionId });
     const record: LockRecord = {
       mode,
@@ -464,9 +523,11 @@ export function createLockController(deps: LockControllerDeps): LockController {
       tabs_closed: plan.close.length,
       fullscreen_exits: 0,
       blocked_count: 0,
+      clock_offset_ms: state.clock_offset_ms ?? 0,
     };
     lock = record;
     released = null;
+    keepOutboxOf(exam.session_id);
     copyThrottle.reset();
     fullScreenSeen = false;
     fullScreenRetries = 0;
@@ -487,9 +548,11 @@ export function createLockController(deps: LockControllerDeps): LockController {
     }
 
     if (plan.close.length > 0)
-      await api.tabs
-        .remove(plan.close)
-        .catch((error: unknown) => log(`could not close tabs: ${String(error)}`));
+      await api.tabs.remove(plan.close).catch(async (error: unknown) => {
+        // One tab that is already gone fails the whole call; the others still have to close.
+        log(`could not close tabs together: ${String(error)}`);
+        for (const id of plan.close) await api.tabs.remove(id).catch(() => {});
+      });
     scheduleDeadline();
     await publish();
     sendToApp({ type: "lock.started", tabs_closed: record.tabs_closed });
@@ -573,7 +636,7 @@ export function createLockController(deps: LockControllerDeps): LockController {
       locale: record.locale,
     };
     await publish();
-    sendToApp({ type: "lock.released", tabs_restored: restored });
+    sendToApp({ type: "lock.released", tabs_restored: restored, trigger });
     // E.9 now; when Chrome refuses, the popup shows E.9 on its next open.
     await api.action.openPopup().catch((error: unknown) => log(`openPopup: ${String(error)}`));
   }
@@ -588,16 +651,31 @@ export function createLockController(deps: LockControllerDeps): LockController {
     focusAway = false;
   }
 
+  /**
+   * The app is here and says the locked exam runs. It sends lock.release or phase done when the exam ends,
+   * so the Lock never lets go on its own clock then: a moved laptop clock cannot end the lock.
+   */
+  function appHoldsExam(record: LockRecord): boolean {
+    return (
+      link === "paired" &&
+      linkState?.exam?.session_id === record.exam.session_id &&
+      HOLDING_PHASES.has(linkState.phase)
+    );
+  }
+
+  /** The end time plus 2 minutes on the server's clock, for an absent app. Runs again on every change. */
   function scheduleDeadline(): void {
     if (deadlineTimer !== null) timers.clearTimeout(deadlineTimer);
     deadlineTimer = null;
-    if (!lock) return;
-    const wait = Math.min(MAX_TIMER_MS, Math.max(0, releaseDeadlineMs(lock.exam) - now()));
+    const record = lock;
+    if (!record || appHoldsExam(record)) return;
+    const wait = Math.min(MAX_TIMER_MS, Math.max(0, releaseDeadlineMs(record.exam) - serverNow()));
     deadlineTimer = timers.setTimeout(() => {
       deadlineTimer = null;
       void serial(async () => {
-        if (!lock) return;
-        if (isPastDeadline(lock.exam, now())) await release("deadline");
+        const current = lock;
+        if (!current || appHoldsExam(current)) return;
+        if (isPastDeadline(current.exam, serverNow())) await release("deadline");
         else scheduleDeadline();
       });
     }, wait);
@@ -636,15 +714,16 @@ export function createLockController(deps: LockControllerDeps): LockController {
       await publish();
       return;
     }
-    if (record.mode !== "browser" || tabId !== record.keep?.tab_id) return;
-    if (isDoneUrl(url, record.exam)) {
+    if (record.mode !== "browser") return;
+    if (tabId === record.keep?.tab_id && isDoneUrl(url, record.exam)) {
       emit("exam.submitted", {});
       await release("done_path");
       return;
     }
     const isWeb = hostnameOf(url) !== null;
     if (!isWeb && !isBlockedPageUrl(url, extensionId) && url !== "about:blank") {
-      // chrome:// and other pages the redirect rule cannot see.
+      // chrome://, file://, data: and other pages the redirect rule cannot see, in the exam tab or in any
+      // other tab onTabCreated kept on an allowed host.
       await api.tabs.update(tabId, { url: blockedPageUrl() }).catch(() => {});
       emit("tab.blocked", { host: null });
       await publish();
@@ -695,26 +774,51 @@ export function createLockController(deps: LockControllerDeps): LockController {
     scheduleBoundsCheck(Math.max(BOUNDS_SETTLE_MS, ignoreBoundsUntil - now() + BOUNDS_SETTLE_MS));
   }
 
+  /** Whether focus is on the exam window, or on another browser window that holds only allowed pages. */
+  async function focusOnExam(record: LockRecord): Promise<boolean> {
+    const focused = await api.windows
+      .getLastFocused({ populate: true, windowTypes: LOCK_WINDOW_TYPES })
+      .catch(() => null);
+    if (!focused?.focused) return false;
+    if (focused.id === record.keep?.window_id) return true;
+    const tabs = focused.tabs ?? [];
+    return (
+      tabs.length > 0 &&
+      tabs.every((t) => {
+        const url = t.url || t.pendingUrl;
+        return isAllowedUrl(url, record.exam.allowed_hosts) || isBlockedPageUrl(url, extensionId);
+      })
+    );
+  }
+
+  /**
+   * Focus left the exam window: for every browser window (WINDOW_ID_NONE), or for another window, such as
+   * a popup or app window or an incognito window the Lock can see. Where focus is 2 s later decides.
+   */
   function onWindowFocusChanged(windowId: number): void {
-    if (lock?.mode !== "browser") return;
-    if (windowId !== WINDOW_ID_NONE) {
+    const record = lock;
+    if (record?.mode !== "browser") return;
+    if (windowId !== WINDOW_ID_NONE && windowId === record.keep?.window_id) {
       if (focusTimer !== null) timers.clearTimeout(focusTimer);
       focusTimer = null;
       focusAway = false;
       return;
     }
-    if (focusTimer !== null || focusAway) return;
+    if (focusTimer !== null) return;
     focusTimer = timers.setTimeout(() => {
       focusTimer = null;
       void serial(async () => {
-        const record = lock;
-        if (!record) return;
-        const focused = await api.windows.getLastFocused().catch(() => null);
-        if (focused?.focused) return;
+        const current = lock;
+        if (current?.mode !== "browser") return;
+        if (await focusOnExam(current)) {
+          focusAway = false;
+          return;
+        }
         // One event per time away; the exam window is asked to come back.
+        if (focusAway) return;
         focusAway = true;
         emit("tab.blocked", { host: null });
-        focusExam(record, { window: true });
+        focusExam(current, { window: true });
         await publish();
       });
     }, focusLossMs);
@@ -723,16 +827,19 @@ export function createLockController(deps: LockControllerDeps): LockController {
   // ---- after a worker or browser restart ----
 
   async function resume(record: LockRecord): Promise<void> {
-    if (isPastDeadline(record.exam, now())) {
+    if (isPastDeadline(record.exam, serverNow())) {
       await release("deadline");
       return;
     }
     await enforce(record);
-    const windows = await api.windows.getAll({ populate: true, windowTypes: ["normal"] });
+    const windows = await api.windows.getAll({ populate: true, windowTypes: LOCK_WINDOW_TYPES });
     const tabs = windows.flatMap((w) => w.tabs ?? []);
-    const kept = tabs.find((t) => t.id === record.keep?.tab_id);
+    // The exam tab stays in a normal window; tabs in popup, app or incognito windows are strays.
+    const examTabs = examWindows(windows).flatMap((w) => w.tabs ?? []);
+    const kept = examTabs.find((t) => t.id === record.keep?.tab_id);
     if (record.mode === "browser") {
-      const exam = kept ?? tabs.find((t) => isAllowedUrl(t.url || t.pendingUrl, record.exam.allowed_hosts));
+      const exam =
+        kept ?? examTabs.find((t) => isAllowedUrl(t.url || t.pendingUrl, record.exam.allowed_hosts));
       if (exam?.id !== undefined) {
         record.keep = { tab_id: exam.id, window_id: exam.windowId, url: record.keep?.url ?? null };
         const strays = tabs
@@ -746,7 +853,7 @@ export function createLockController(deps: LockControllerDeps): LockController {
         await reopenPortal(record);
       }
     } else if (!kept) {
-      const first = tabs.find((t) => t.id !== undefined);
+      const first = examTabs.find((t) => t.id !== undefined);
       if (first?.id !== undefined) {
         record.keep = { tab_id: first.id, window_id: first.windowId, url: record.keep?.url ?? null };
         await api.tabs.update(first.id, { url: blockedPageUrl() }).catch(() => {});

@@ -3,7 +3,14 @@
 import { type AppToLock, encodeLockMessage, type LockToApp, parseLockToApp } from "@uki/contracts";
 import type { RedirectRule, SessionRulesUpdate } from "../lib/rules.ts";
 import type { SocketLike } from "./app-link.ts";
-import type { ContentScriptRegistration, LockApi, TabInfo, WindowInfo, WindowState } from "./lock-api.ts";
+import type {
+  ContentScriptRegistration,
+  LockApi,
+  TabInfo,
+  WindowInfo,
+  WindowKind,
+  WindowState,
+} from "./lock-api.ts";
 
 export const TEST_EXTENSION_ID = "abcdefghijklmnopabcdefghijklmnop";
 
@@ -54,11 +61,15 @@ interface FakeWindow {
   id: number;
   focused: boolean;
   state: WindowState;
-  type: "normal";
-  incognito: false;
+  type: WindowKind;
+  incognito: boolean;
 }
 
-/** An in-memory browser: windows, tabs, the session rules, registered scripts, the action and storage. */
+/**
+ * An in-memory browser: windows, tabs, the session rules, registered scripts, the action and storage.
+ * Like Chrome, windows.getAll returns only the window types asked for (normal and popup by default), and
+ * incognito windows are visible, as when the student allowed Üki Lock in incognito.
+ */
 export class FakeBrowser {
   windows: FakeWindow[] = [];
   tabs: FakeTab[] = [];
@@ -71,19 +82,28 @@ export class FakeBrowser {
   openPopupCalls = 0;
   keepAliveCalls = 0;
   lastFocusedFocused = true;
+  /** The window getLastFocused reports; the first window when null. */
+  lastFocusedId: number | null = null;
   private nextId = 100;
 
   addWindow(
     urls: string[],
-    options: { focused?: boolean; state?: WindowState; activeIndex?: number } = {},
+    options: {
+      focused?: boolean;
+      state?: WindowState;
+      activeIndex?: number;
+      type?: WindowKind;
+      incognito?: boolean;
+    } = {},
   ): number {
     const id = this.nextId++;
+    const incognito = options.incognito ?? false;
     this.windows.push({
       id,
       focused: options.focused ?? false,
       state: options.state ?? "normal",
-      type: "normal",
-      incognito: false,
+      type: options.type ?? "normal",
+      incognito,
     });
     urls.forEach((url, index) => {
       this.tabs.push({
@@ -93,7 +113,7 @@ export class FakeBrowser {
         url,
         pinned: false,
         active: index === (options.activeIndex ?? 0),
-        incognito: false,
+        incognito,
       });
     });
     return id;
@@ -177,22 +197,29 @@ export class FakeBrowser {
       },
     },
     windows: {
-      getAll: async ({ populate }) =>
-        this.windows.map(
-          (w): WindowInfo => ({
-            ...w,
-            ...(populate ? { tabs: this.tabsOf(w.id).map((t) => ({ ...t })) } : {}),
-          }),
-        ),
+      getAll: async ({ populate, windowTypes }) =>
+        this.windows
+          .filter((w) => (windowTypes ?? ["normal", "popup"]).includes(w.type))
+          .map(
+            (w): WindowInfo => ({
+              ...w,
+              ...(populate ? { tabs: this.tabsOf(w.id).map((t) => ({ ...t })) } : {}),
+            }),
+          ),
       get: async (windowId) => {
         const found = this.windows.find((w) => w.id === windowId);
         if (!found) throw new Error(`no window ${windowId}`);
         return { ...found };
       },
-      getLastFocused: async () => ({
-        ...(this.windows[0] ?? { id: -1, incognito: false }),
-        focused: this.lastFocusedFocused,
-      }),
+      getLastFocused: async (query) => {
+        const window = this.windows.find((w) => w.id === this.lastFocusedId) ?? this.windows[0];
+        if (!window) return { id: -1, incognito: false, focused: this.lastFocusedFocused };
+        return {
+          ...window,
+          focused: this.lastFocusedFocused,
+          ...(query?.populate ? { tabs: this.tabsOf(window.id).map((t) => ({ ...t })) } : {}),
+        };
+      },
       create: async ({ url, focused, state }) => {
         const urls = url === undefined ? ["chrome://newtab/"] : Array.isArray(url) ? url : [url];
         const id = this.addWindow(urls, { focused: focused ?? false, state: state ?? "normal" });

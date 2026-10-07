@@ -1,6 +1,8 @@
-// Saving and restoring the student's tabs ("One tab" in docs/phase-0-plan.md). At the start the Lock saves
-// every tab of every normal window, keeps one (the exam tab) and closes the rest; at release it puts them
-// back in their windows and order. Both plans are pure, so they are tested without a browser.
+// Saving and restoring the student's tabs ("One tab" in docs/phase-0-plan.md). At the start the Lock keeps
+// one tab of a normal window (the exam tab) and closes every other tab of every window it can see: popup
+// and app windows too, and incognito ones when the student allowed Üki Lock there. It saves the closed
+// tabs, except incognito ones, and at release puts them back in their windows and order. Both plans are
+// pure, so they are tested without a browser.
 import { z } from "zod";
 import { isAllowedUrl } from "./hosts.ts";
 
@@ -85,7 +87,8 @@ export function isRestorableUrl(url: string | undefined, extensionId: string): u
   return !url.startsWith("devtools://");
 }
 
-function normalWindows(windows: readonly WindowSnapshot[]): WindowSnapshot[] {
+/** Windows the exam tab may be kept in: normal and not incognito. */
+export function examWindows(windows: readonly WindowSnapshot[]): WindowSnapshot[] {
   return windows.filter((w) => w.id !== undefined && !w.incognito && (w.type ?? "normal") === "normal");
 }
 
@@ -107,17 +110,18 @@ function chooseKeep(windows: readonly WindowSnapshot[], options: LockPlanOptions
 
 /** What to keep, what to save and what to close when the lock starts. */
 export function planLock(windows: readonly WindowSnapshot[], options: LockPlanOptions): LockPlan {
-  const normal = normalWindows(windows);
-  const kept = chooseKeep(normal, options);
+  const kept = chooseKeep(examWindows(windows), options);
   const saved: SavedWindow[] = [];
   const close: number[] = [];
-  for (const window of normal) {
+  for (const window of windows) {
+    if (window.id === undefined || window.type === "devtools") continue;
     const tabs = [...(window.tabs ?? [])].sort((a, b) => a.index - b.index);
     const savedTabs: SavedTab[] = [];
     for (const tab of tabs) {
-      if (tab.id === undefined || tab.incognito) continue;
-      if (tab.id === kept?.id) continue;
+      if (tab.id === undefined || tab.id === kept?.id) continue;
       close.push(tab.id);
+      // Incognito tabs close without a trace: their URLs are never written to storage.
+      if (window.incognito || tab.incognito) continue;
       const url = tabUrl(tab);
       if (isRestorableUrl(url, options.extensionId))
         savedTabs.push({ url, pinned: tab.pinned, active: tab.active, index: tab.index });

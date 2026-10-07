@@ -23,7 +23,7 @@ async function activeTabInfo(): Promise<{ tabId: number | undefined; others: num
  * The popup page: reads the service worker's view from storage and follows the app's locale (kk until the
  * app sends one). Opening it while the app is connected but not paired asks for a code at once.
  */
-export function PopupRoot({ productName }: { productName: string }) {
+export function PopupRoot() {
   const view = useStored(STORAGE_KEYS.view, LockView, EMPTY_VIEW);
   const now = useNow();
   const [tabs, setTabs] = useState<{ tabId: number | undefined; others: number }>({
@@ -58,14 +58,7 @@ export function PopupRoot({ productName }: { productName: string }) {
   }, [locale]);
   return (
     <LockIntlProvider locale={locale}>
-      <PopupApp
-        view={view}
-        productName={productName}
-        otherTabs={tabs.others}
-        nowMs={now}
-        locale={locale}
-        actions={actions}
-      />
+      <PopupApp view={view} otherTabs={tabs.others} nowMs={now} locale={locale} actions={actions} />
     </LockIntlProvider>
   );
 }

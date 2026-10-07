@@ -2,7 +2,12 @@
 // chrome.scripting.registerContentScripts (document_start, not persisted across sessions) and injects it
 // into the exam tab that is already open. It marks the page locked, cancels copy and print, and draws the
 // Lock bar and the E.6 toast in a shadow root, so page styles and Üki styles never mix. It talks only to
-// the service worker; the bar's data comes from chrome.storage.local.
+// the service worker; the bar's data comes from chrome.storage.local. At release (the bar goes away) it
+// takes all of it off the page again, the copy guard's listeners included.
+// First: Kazakh Intl for Chrome, whose ICU has no Kazakh (the toast prints a time), before anything
+// creates a formatter. Content scripts have their own Intl, so the pages' own is untouched.
+import "@uki/i18n/polyfill";
+
 import { isLocale } from "@uki/i18n";
 import { createRoot, type Root } from "react-dom/client";
 import { browser } from "wxt/browser";
@@ -36,7 +41,8 @@ async function run(ctx: ContentScriptContext): Promise<void> {
   let toast: ToastRequest | null = null;
   let unmark: (() => void) | null = null;
   let ui: ShadowRootContentScriptUi<Root> | null = null;
-  let guarded = false;
+  /** The copy guard's listeners, removed together at release. */
+  let guard: AbortController | null = null;
 
   const render = () => {
     const root = ui?.mounted;
@@ -59,11 +65,13 @@ async function run(ctx: ContentScriptContext): Promise<void> {
 
   const activate = async () => {
     unmark ??= markLocked(document);
-    if (!guarded) {
-      guarded = true;
+    if (!guard) {
+      // Not ctx.addEventListener: it replaces the signal with the context's own, which outlives a release.
+      const scope = new AbortController();
+      guard = scope;
       installGuard(window, {
         listen: (target, type, listener) =>
-          ctx.addEventListener(target as Window, type as keyof WindowEventMap, listener, { capture: true }),
+          target.addEventListener(type, listener, { capture: true, signal: scope.signal }),
         onBlocked: (hit) => {
           if (bar) onBlocked(hit);
         },
@@ -87,6 +95,8 @@ async function run(ctx: ContentScriptContext): Promise<void> {
   };
 
   const deactivate = () => {
+    guard?.abort();
+    guard = null;
     unmark?.();
     unmark = null;
     ui?.remove();

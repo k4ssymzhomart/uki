@@ -231,7 +231,9 @@ describe("exams in the app", () => {
     expect(fake.windows.some((w) => w.id === other)).toBe(false);
     const reopened = fake.windows.find((w) => w.id !== main);
     expect(reopened && fake.tabsOf(reopened.id).map((t) => t.url)).toEqual(["https://chat.example/"]);
-    expect(socket.ofType("lock.released")).toEqual([{ type: "lock.released", tabs_restored: 4 }]);
+    expect(socket.ofType("lock.released")).toEqual([
+      { type: "lock.released", tabs_restored: 4, trigger: "app" },
+    ]);
     expect(fake.openPopupCalls).toBe(1);
     expect(h.controller.view().released).toMatchObject({ trigger: "app", tabs_restored: 4, mode: "app" });
     expect(h.fake.store.get(STORAGE_KEYS.lock)).toBeNull();
@@ -468,15 +470,16 @@ describe("exams in the browser", () => {
     );
   });
 
-  it("releases itself at the end time plus 2 minutes", async () => {
+  it("releases itself at the end time plus 2 minutes once the app is gone", async () => {
     const { h, fake, socket } = await locked();
+    socket.close();
+    await h.settle();
     await vi.advanceTimersByTimeAsync(Date.parse(browserExam.ends_at) + 119_000 - START);
     await h.settle();
     expect(fake.rules).toHaveLength(1);
     await vi.advanceTimersByTimeAsync(1_000);
     await h.settle();
     expect(fake.rules).toEqual([]);
-    expect(socket.ofType("lock.released")).toHaveLength(1);
     expect(h.controller.view().released?.trigger).toBe("deadline");
   });
 
@@ -512,6 +515,8 @@ describe("exams in the browser", () => {
     next.open();
     next.receive({ type: "hello", app_version: "0.1.0", os: "windows", paired: true, student_name: null });
     await h.settle();
+    next.receive(examState(browserExam, "writing"));
+    await h.settle();
     expect(lockEvents(next).map((e) => e.type)).toEqual(["tab.blocked"]);
     next.receive(examState(browserExam, "writing"));
     await h.settle();
@@ -541,5 +546,284 @@ describe("exams in the browser", () => {
     await restarted.settle();
     expect(fake.rules).toEqual([]);
     expect(restarted.controller.view().released?.trigger).toBe("deadline");
+  });
+
+  it("sends chrome://, file:// and data: pages in a second allowed tab to the block page", async () => {
+    const { h, fake, socket, main } = await locked();
+    const second = await fake.api.tabs.create({ windowId: main, url: `${PORTAL}/help` });
+    await h.controller.onTabCreated(second);
+    for (const url of [
+      "file:///Users/student/notes.pdf",
+      "chrome://extensions/",
+      "data:text/html,<p>x</p>",
+    ]) {
+      await fake.api.tabs.update(second.id as number, { url });
+      await h.controller.onTabUpdated(second.id as number, { url }, { ...second, url });
+      await h.settle();
+      expect(fake.tabs.find((t) => t.id === second.id)?.url).toBe(BLOCKED);
+    }
+    expect(lockEvents(socket).map((e) => [e.type, e.data])).toEqual([
+      ["tab.blocked", { host: null }],
+      ["tab.blocked", { host: null }],
+      ["tab.blocked", { host: null }],
+    ]);
+    // The second tab on the portal itself, and about:blank, stay as they are.
+    for (const url of [`${PORTAL}/help`, "about:blank"]) {
+      await fake.api.tabs.update(second.id as number, { url });
+      await h.controller.onTabUpdated(second.id as number, { url }, { ...second, url });
+    }
+    await h.settle();
+    expect(fake.tabs.find((t) => t.id === second.id)?.url).toBe("about:blank");
+    expect(lockEvents(socket)).toHaveLength(3);
+  });
+
+  it("closes the tabs of popup, app and incognito windows at Lock and start and never saves incognito", async () => {
+    const fake = new FakeBrowser();
+    const main = fake.addWindow(["https://notes.example/", PORTAL], { focused: true, activeIndex: 1 });
+    const popup = fake.addWindow(["https://chatgpt.com/"], { type: "popup" });
+    fake.addWindow(["https://chatgpt.com/c/1"], { type: "app" });
+    fake.addWindow(["https://private.example/"], { incognito: true });
+    const h = setup(fake);
+    const socket = await connected(h, true);
+    socket.receive(examState(browserExam, "ready"));
+    await h.settle();
+    await h.controller.handleRuntimeMessage({ type: "popup.lock" });
+    await h.settle();
+    expect(fake.tabs.map((t) => t.url)).toEqual([PORTAL]);
+    expect(fake.windows.map((w) => w.id)).toEqual([main]);
+    expect(socket.ofType("lock.started")).toEqual([{ type: "lock.started", tabs_closed: 4 }]);
+    expect(JSON.stringify(fake.store.get(STORAGE_KEYS.lock))).not.toContain("private.example");
+
+    socket.receive({ type: "lock.release", reason: "submitted" });
+    await h.settle();
+    const restored = fake.tabs.map((t) => t.url);
+    expect(restored).toEqual(
+      expect.arrayContaining(["https://notes.example/", "https://chatgpt.com/", "https://chatgpt.com/c/1"]),
+    );
+    expect(restored).not.toContain("https://private.example/");
+    expect(fake.windows.some((w) => w.id === popup)).toBe(false);
+  });
+
+  it("counts focus on another window as away unless it holds only allowed pages", async () => {
+    const { h, fake, socket, main } = await locked();
+    // A window the lock could not close, as a popup that opened past the tab check.
+    const popup = fake.addWindow(["https://chatgpt.com/"], { type: "popup" });
+    fake.lastFocusedId = popup;
+    h.controller.onWindowFocusChanged(popup);
+    await vi.advanceTimersByTimeAsync(2000);
+    await h.settle();
+    expect(lockEvents(socket).map((e) => [e.type, e.data])).toEqual([["tab.blocked", { host: null }]]);
+    expect(fake.windows.find((w) => w.id === main)?.focused).toBe(true);
+
+    // Back on the exam, then over to a second window on the portal: not away.
+    h.controller.onWindowFocusChanged(main);
+    const second = fake.addWindow([`${PORTAL}/help`]);
+    fake.lastFocusedId = second;
+    h.controller.onWindowFocusChanged(second);
+    await vi.advanceTimersByTimeAsync(3000);
+    await h.settle();
+    expect(lockEvents(socket)).toHaveLength(1);
+  });
+});
+
+describe("events reach only their exam", () => {
+  const bExam: LockExam = {
+    ...appExam,
+    session_id: "0192f3a0-0000-7000-8000-000000000003",
+    starts_at: "2026-10-07T12:00:00Z",
+    ends_at: "2026-10-07T13:00:00Z",
+  };
+
+  async function finishedOnTheDonePath(socket: FakeSocket, h: Harness, fake: FakeBrowser) {
+    const portal = fake.tabs.find((t) => t.url === PORTAL);
+    if (!portal) throw new Error("no portal tab");
+    const review = `${PORTAL}/review`;
+    await fake.api.tabs.update(portal.id, { url: review });
+    await h.controller.onTabUpdated(portal.id, { url: review }, { ...portal, url: review });
+    await h.settle();
+    return socket;
+  }
+
+  async function lockedBrowserExam() {
+    const fake = new FakeBrowser();
+    fake.addWindow(["https://notes.example/", PORTAL], { focused: true, activeIndex: 1 });
+    const h = setup(fake);
+    const socket = await connected(h, true);
+    socket.receive(examState(browserExam, "ready"));
+    await h.settle();
+    await h.controller.handleRuntimeMessage({ type: "popup.lock" });
+    await h.settle();
+    return { h, fake, socket };
+  }
+
+  it("never resends exam A's exam.submitted to the app on exam B", async () => {
+    const { h, fake, socket } = await lockedBrowserExam();
+    await finishedOnTheDonePath(socket, h, fake);
+    const [submitted] = socket.ofType("lock.event");
+    expect(submitted).toMatchObject({
+      session_id: browserExam.session_id,
+      event: { type: "exam.submitted" },
+    });
+    socket.close();
+    h.controller.stop();
+
+    // Three hours later the worker starts again and the app is on exam B.
+    vi.setSystemTime(START + 3 * 60 * 60 * 1000);
+    const later = setup(fake);
+    const first = await connected(later, true);
+    expect(lockEvents(first)).toEqual([]);
+    first.receive(examState(bExam, "writing"));
+    first.receive({ type: "lock.start" });
+    await later.settle();
+    expect(later.controller.view().locked?.exam.session_id).toBe(bExam.session_id);
+    expect(fake.store.get(STORAGE_KEYS.outbox)).toEqual([]);
+
+    // A blip mid-exam, and the app's own hello on the new link: nothing of A comes back.
+    first.close();
+    await later.settle();
+    await vi.advanceTimersByTimeAsync(2000);
+    const next = later.app();
+    next.open();
+    const hello = {
+      type: "hello",
+      app_version: "0.1.0",
+      os: "windows",
+      paired: true,
+      student_name: null,
+    } as const;
+    next.receive(hello);
+    next.receive(examState(bExam, "writing"));
+    next.receive(hello);
+    await later.settle();
+    expect(lockEvents(next)).toEqual([]);
+    expect(later.controller.view().locked).not.toBeNull();
+  });
+
+  it("holds an exam's events while the app is away and gives them to the app on that exam", async () => {
+    const { h, fake, socket } = await lockedBrowserExam();
+    socket.close();
+    await h.settle();
+    await finishedOnTheDonePath(socket, h, fake);
+    expect(h.controller.view().locked).toBeNull();
+    await vi.advanceTimersByTimeAsync(2000);
+    const next = h.app();
+    next.open();
+    next.receive({ type: "hello", app_version: "0.1.0", os: "windows", paired: true, student_name: null });
+    await h.settle();
+    // Not before the app says which exam it is on.
+    expect(lockEvents(next)).toEqual([]);
+    next.receive(examState(browserExam, "writing"));
+    await h.settle();
+    expect(next.ofType("lock.event")).toEqual([
+      {
+        type: "lock.event",
+        session_id: browserExam.session_id,
+        event: expect.objectContaining({ type: "exam.submitted" }),
+      },
+    ]);
+    // An app on another exam makes the Lock forget them.
+    next.receive(examState(bExam, "lobby"));
+    await h.settle();
+    expect(fake.store.get(STORAGE_KEYS.outbox)).toEqual([]);
+  });
+
+  it("drops events older than 6 hours before it sends anything", async () => {
+    const { h, fake, socket } = await lockedBrowserExam();
+    const main = fake.windows[0]?.id as number;
+    socket.close();
+    await h.settle();
+    for (const url of ["https://wikipedia.org/", "https://chat.example/"]) {
+      const blocked = await fake.api.tabs.create({ windowId: main, url });
+      await h.controller.onTabCreated(blocked);
+      await h.settle();
+      // The second one comes just under 6 hours after the first.
+      vi.setSystemTime(START + 6 * 60 * 60 * 1000 - 1000);
+    }
+    vi.setSystemTime(START + 6 * 60 * 60 * 1000 + 1);
+    await vi.advanceTimersByTimeAsync(2000);
+    const next = h.app();
+    next.open();
+    next.receive({ type: "hello", app_version: "0.1.0", os: "windows", paired: true, student_name: null });
+    next.receive(examState(browserExam, "writing"));
+    await h.settle();
+    expect(lockEvents(next).map((e) => e.data)).toEqual([{ host: "chat.example" }]);
+  });
+});
+
+describe("the server's clock", () => {
+  const FAST = 40 * 60 * 1000;
+
+  async function lockedWithFastClock() {
+    // The laptop clock runs 40 minutes ahead of the server; the exam ends at 09:40 server time.
+    vi.setSystemTime(START + FAST);
+    const fake = new FakeBrowser();
+    fake.addWindow([PORTAL, "https://chat.example/"], { focused: true });
+    const h = setup(fake);
+    const socket = await connected(h, true);
+    socket.receive({ ...examState(browserExam, "ready"), clock_offset_ms: -FAST } as AppToLock);
+    await h.settle();
+    const reply = await h.controller.handleRuntimeMessage({ type: "popup.lock" });
+    await h.settle();
+    return { h, fake, socket, reply };
+  }
+
+  it("does not release a lock on a laptop clock that runs fast, and shows time left on the laptop's clock", async () => {
+    const { h, fake, socket, reply } = await lockedWithFastClock();
+    expect(reply).toEqual({ ok: true });
+    expect(fake.rules).toHaveLength(1);
+    expect(socket.ofType("lock.released")).toEqual([]);
+    // 09:40 server time is 10:20 on this laptop, for the bar's and popup's countdowns.
+    expect(fake.store.get(STORAGE_KEYS.bar)).toMatchObject({ ends_at: "2026-10-07T10:20:00.000Z" });
+    expect(h.controller.view().locked?.exam.ends_at).toBe("2026-10-07T10:20:00.000Z");
+
+    // The app goes away; the deadline is 09:42 server time, 10:22 on the laptop.
+    socket.close();
+    await h.settle();
+    await vi.advanceTimersByTimeAsync(Date.parse(browserExam.ends_at) + 119_000 - START);
+    await h.settle();
+    expect(fake.rules).toHaveLength(1);
+    await vi.advanceTimersByTimeAsync(1_000);
+    await h.settle();
+    expect(fake.rules).toEqual([]);
+    expect(h.controller.view().released?.trigger).toBe("deadline");
+  });
+
+  it("never lets go on its own clock while the app holds the exam, and says why when it does", async () => {
+    const fake = new FakeBrowser();
+    fake.addWindow([PORTAL, "https://chat.example/"], { focused: true });
+    const h = setup(fake);
+    const socket = await connected(h, true);
+    socket.receive(examState(browserExam, "ready"));
+    await h.settle();
+    await h.controller.handleRuntimeMessage({ type: "popup.lock" });
+    socket.receive(examState(browserExam, "writing"));
+    await h.settle();
+
+    // The student moves the clock 40 minutes on; the app's next exam.state still says writing.
+    vi.setSystemTime(Date.now() + FAST);
+    socket.receive(examState(browserExam, "writing"));
+    await vi.advanceTimersByTimeAsync(10_000);
+    await h.settle();
+    expect(fake.rules).toHaveLength(1);
+    expect(fake.tabs.map((t) => t.url)).toEqual([PORTAL]);
+    expect(socket.ofType("lock.released")).toEqual([]);
+
+    // An app that no longer holds the exam leaves the deadline to the Lock, which reports it.
+    socket.receive({ type: "exam.state", phase: "idle", watch: "watching", locale: "ru", exam: null });
+    await h.settle();
+    expect(fake.rules).toEqual([]);
+    expect(socket.ofType("lock.released")).toEqual([
+      { type: "lock.released", tabs_restored: 1, trigger: "deadline" },
+    ]);
+  });
+
+  it("follows the app's clock offset through a restart of the worker", async () => {
+    const { fake, socket } = await lockedWithFastClock();
+    socket.close();
+    const restarted = setup(fake);
+    await restarted.controller.start();
+    await restarted.settle();
+    expect(fake.rules).toHaveLength(1);
+    expect(restarted.controller.view().locked?.exam.ends_at).toBe("2026-10-07T10:20:00.000Z");
   });
 });

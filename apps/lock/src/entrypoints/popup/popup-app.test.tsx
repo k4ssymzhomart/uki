@@ -62,14 +62,7 @@ function actions(): PopupActions {
 function show(view: LockView, locale: Locale, handlers = actions()) {
   render(
     <LockIntlProvider locale={locale}>
-      <PopupApp
-        view={view}
-        productName="Üki Lock"
-        otherTabs={3}
-        nowMs={NOW}
-        locale={locale}
-        actions={handlers}
-      />
+      <PopupApp view={view} otherTabs={3} nowMs={NOW} locale={locale} actions={handlers} />
     </LockIntlProvider>,
   );
   return handlers;
@@ -114,7 +107,6 @@ describe.each(LOCALES)("the popup in %s", (locale) => {
       <LockIntlProvider locale={locale}>
         <PopupApp
           view={VIEWS[name] as LockView}
-          productName="Üki Lock"
           otherTabs={3}
           nowMs={NOW}
           locale={locale}
@@ -126,13 +118,19 @@ describe.each(LOCALES)("the popup in %s", (locale) => {
     expect(errors).not.toHaveBeenCalled();
   });
 
-  it("E.3 shows the code, the device and Pair", () => {
+  it("E.3 shows the header, the code, the device and Pair", () => {
     const handlers = show(VIEWS.pair as LockView, locale);
+    expect(screen.getByText(m.name)).toBeTruthy();
     expect(screen.getByText("482 913")).toBeTruthy();
     expect(screen.getByText("Windows · Aliya S.")).toBeTruthy();
     expect(screen.getByText(m.pair.badge)).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: m.pair.action }));
     expect(handlers.confirm).toHaveBeenCalledOnce();
+  });
+
+  it("E.3 names the OS alone before the student joins", () => {
+    show({ ...(VIEWS.pair as LockView), app: { ...app, os: "macos", student_name: null } }, locale);
+    expect(screen.getByText(loadMessages(locale).os.macos)).toBeTruthy();
   });
 
   it("E.3 asks for a code with Pair when none is shown yet", () => {
@@ -161,14 +159,7 @@ describe.each(LOCALES)("the popup in %s", (locale) => {
 it("starts in Kazakh before the app sends a locale", () => {
   render(
     <LockIntlProvider>
-      <PopupApp
-        view={EMPTY_VIEW}
-        productName="Üki Lock"
-        otherTabs={0}
-        nowMs={NOW}
-        locale="kk"
-        actions={actions()}
-      />
+      <PopupApp view={EMPTY_VIEW} otherTabs={0} nowMs={NOW} locale="kk" actions={actions()} />
     </LockIntlProvider>,
   );
   expect(screen.getAllByRole("heading").map((h) => h.textContent)).toContain(

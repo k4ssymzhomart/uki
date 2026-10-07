@@ -22,7 +22,7 @@ export function browserLockApi(): LockApi {
     windows: {
       getAll: async (query) => loose<WindowInfo[]>(await browser.windows.getAll(loose(query))),
       get: async (windowId) => loose<WindowInfo>(await browser.windows.get(windowId)),
-      getLastFocused: async () => loose<WindowInfo>(await browser.windows.getLastFocused()),
+      getLastFocused: async (query) => loose<WindowInfo>(await browser.windows.getLastFocused(loose(query))),
       create: async (properties) =>
         loose<WindowInfo | undefined>(await browser.windows.create(loose(properties))),
       update: (windowId, properties) => browser.windows.update(windowId, loose(properties)),

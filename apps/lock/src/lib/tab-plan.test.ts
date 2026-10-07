@@ -59,7 +59,7 @@ describe("planLock", () => {
   it("browser exams keep the portal tab, save the rest in order and close them", () => {
     const plan = planLock(windows, { mode: "browser", allowedHosts: ["localhost:5180"], extensionId: ID });
     expect(plan.keep).toEqual({ tab_id: 12, window_id: 1, url: "http://localhost:5180/physics-1/quiz-3" });
-    expect(plan.close).toEqual([11, 13, 21, 22]);
+    expect(plan.close).toEqual([11, 13, 21, 22, 31, 41]);
     expect(plan.saved).toEqual([
       {
         window_id: 1,
@@ -83,7 +83,43 @@ describe("planLock", () => {
           { url: "chrome://newtab/", pinned: false, active: false, index: 1 },
         ],
       },
+      {
+        window_id: 4,
+        focused: false,
+        state: "normal",
+        tabs: [{ url: "https://popup.example", pinned: false, active: false, index: 0 }],
+      },
     ]);
+  });
+
+  it("closes popup, app and incognito windows too, and never saves an incognito URL", () => {
+    const others: WindowSnapshot[] = [
+      { id: 1, focused: true, incognito: false, type: "normal", tabs: [tab(11, 1, 0, "https://a.example")] },
+      {
+        id: 5,
+        focused: false,
+        incognito: false,
+        type: "popup",
+        tabs: [tab(51, 5, 0, "https://chatgpt.com/")],
+      },
+      { id: 6, focused: false, incognito: false, type: "app", tabs: [tab(61, 6, 0, "https://chatgpt.com/")] },
+      {
+        id: 7,
+        focused: false,
+        incognito: true,
+        type: "normal",
+        tabs: [{ ...tab(71, 7, 0, "https://private.example/"), active: true, incognito: true }],
+      },
+      { id: 8, focused: false, incognito: false, type: "devtools", tabs: [] },
+    ];
+    const plan = planLock(others, { mode: "app", allowedHosts: [], preferredTabId: 71, extensionId: ID });
+    expect(plan.keep?.tab_id).toBe(11);
+    expect(plan.close).toEqual([51, 61, 71]);
+    expect(plan.saved.map((w) => [w.window_id, w.tabs.map((t) => t.url)])).toEqual([
+      [5, ["https://chatgpt.com/"]],
+      [6, ["https://chatgpt.com/"]],
+    ]);
+    expect(JSON.stringify(plan)).not.toContain("private.example");
   });
 
   it("finds the portal in another tab when the active one is not on it", () => {
@@ -105,7 +141,7 @@ describe("planLock", () => {
   it("exams in the app keep the active tab of the focused window and remember its URL", () => {
     const plan = planLock(windows, { mode: "app", allowedHosts: [], extensionId: ID });
     expect(plan.keep).toEqual({ tab_id: 12, window_id: 1, url: "http://localhost:5180/physics-1/quiz-3" });
-    expect(plan.close).toHaveLength(4);
+    expect(plan.close).toHaveLength(6);
   });
 
   it("does not save the Lock's own pages or developer tools", () => {
@@ -160,8 +196,13 @@ describe("planRestore", () => {
           { url: "chrome://newtab/", pinned: false, active: false, index: 1 },
         ],
       },
+      {
+        kind: "window",
+        window: { focused: false, state: "normal" },
+        tabs: [{ url: "https://popup.example", pinned: false, active: false, index: 0 }],
+      },
     ]);
-    expect(countRestoredTabs(steps)).toBe(4);
+    expect(countRestoredTabs(steps)).toBe(5);
   });
 
   it("restores the original order around the kept tab when indexes are created in ascending order", () => {
