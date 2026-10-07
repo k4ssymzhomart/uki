@@ -3,6 +3,7 @@
 import { ToastContext, ToastProvider } from "@uki/ui";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useCallback, useContext, useEffect, useState } from "react";
+import { useServerOffset } from "../../lib/use-now.ts";
 import { browserSupabase } from "./browser-services.ts";
 import { DarkTheme } from "./dark-theme.tsx";
 import { LiveEvents } from "./live-events.tsx";
@@ -16,9 +17,6 @@ import { WallStats } from "./wall-stats.tsx";
 import type { WallInitialData } from "./wall-store.ts";
 import { WallStoreProvider } from "./wall-store-context.tsx";
 import { WallToolbar, type WallView } from "./wall-toolbar.tsx";
-
-/** A browser clock this far from the server's is corrected; smaller gaps are page-load time. */
-const CLOCK_SKEW_MS = 2000;
 
 /** Uses the shell's toasts when the layout has them, otherwise brings its own. */
 function EnsureToasts({ children }: { children: ReactNode }) {
@@ -40,21 +38,22 @@ export interface LiveWallProps {
   initial: WallInitialData;
   /** Tests pass a fake; the app uses the browser Supabase client. */
   getClient?: () => AnyClient;
+  /** Server clock minus this browser's (lib/use-now.ts); tests pass a fake. Must be stable. */
+  measureOffset?: () => Promise<number | null>;
 }
 
 /** 2.4 Live wall with 2.4a to 2.4e and the 2.5 drawer, fed by Realtime. */
-export function LiveWall({ initial, getClient = browserSupabase }: LiveWallProps) {
+export function LiveWall({ initial, getClient = browserSupabase, measureOffset }: LiveWallProps) {
   const [client, setClient] = useState<AnyClient | null>(null);
-  const [offsetMs, setOffsetMs] = useState(0);
   const [view, setView] = useState<WallView>("flags");
   const drawerSession = useDrawerSession();
+  // Measured from a fresh server answer, never from the render time: page load is not clock skew.
+  const offsetMs = useServerOffset(measureOffset);
 
-  // Browser-only: the Supabase client and the clock offset are set after hydration.
+  // Browser-only: the Supabase client is set after hydration.
   useEffect(() => {
     setClient(getClient());
-    const skew = initial.serverNowMs - Date.now();
-    setOffsetMs(Math.abs(skew) > CLOCK_SKEW_MS ? skew : 0);
-  }, [getClient, initial.serverNowMs]);
+  }, [getClient]);
 
   const onOpenTimeline = useCallback((sessionId: string) => setDrawerSession(sessionId), []);
   const options: OrderOptions = {

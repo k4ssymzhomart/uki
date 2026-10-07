@@ -20,8 +20,7 @@ setupDom();
 
 afterEach(() => vi.useRealTimers());
 
-function mount(rows: Record<string, unknown[]> = {}) {
-  const db = fakeClient(rows);
+function mount(rows: Record<string, unknown[]> = {}, db = fakeClient(rows)) {
   let store: WallStore | null = null;
   function Probe() {
     store = useWallStoreApi();
@@ -98,6 +97,58 @@ describe("exam channel", () => {
     await waitFor(() => expect(store().getState().events[sessionId(2)]).toEqual([missed]));
     expect(store().getState().sessions[sessionId(1)]?.state).toBe("time_up");
     expect(db.queries).toEqual(expect.arrayContaining(["events", "sessions"]));
+  });
+
+  it("never rolls a session back to a catch-up read that started before its session message", async () => {
+    // The sessions read answers only when the test releases it, after the End's message arrived. It
+    // read session 1 as writing (before the End committed) and session 2 as paused.
+    const db = fakeClient({ events: [], sessions: [sessionRow(1), sessionRow(2, { state: "paused" })] });
+    let release = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const from = db.client.from.bind(db.client);
+    db.client.from = ((table: string) => {
+      const chain = from(table);
+      if (table !== "sessions") return chain;
+      const gated: unknown = new Proxy(
+        {},
+        {
+          get(_target, prop) {
+            if (prop === "then") {
+              return (resolve: (value: unknown) => void) => {
+                void gate.then(() => (chain as unknown as PromiseLike<unknown>).then(resolve));
+              };
+            }
+            return () => gated;
+          },
+        },
+      );
+      return gated;
+    }) as typeof db.client.from;
+    const { store } = mount({}, db);
+    await waitFor(() => expect(db.subscribed()).toBe(true));
+    act(() => db.status("SUBSCRIBED"));
+    await waitFor(() => expect(db.queries).toContain("sessions"));
+    act(() =>
+      db.broadcast("session", {
+        id: sessionId(1),
+        exam_id: EXAM_ID,
+        student_id: studentId(1),
+        state: "ended",
+        status: {},
+        last_seen_at: iso(0),
+        extra_min: 0,
+        paused_s: 0,
+      }),
+    );
+    expect(store().getState().sessions[sessionId(1)]?.state).toBe("ended");
+    await act(async () => {
+      release();
+      await gate;
+    });
+    await waitFor(() => expect(store().getState().sessions[sessionId(2)]?.state).toBe("paused"));
+    expect(store().getState().sessions[sessionId(1)]?.state).toBe("ended");
   });
 
   it("reconciles every 20 s while the page is not hidden, for broadcasts Realtime never delivered", async () => {

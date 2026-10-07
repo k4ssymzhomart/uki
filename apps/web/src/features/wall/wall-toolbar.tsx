@@ -34,6 +34,7 @@ export function WallToolbar({
     <div className="flex w-full flex-wrap items-center gap-3">
       <TabGroup
         aria-label={t("sort.label")}
+        variant="plain"
         value={view}
         onValueChange={(next) => {
           if (isWallView(next)) onViewChange(next);

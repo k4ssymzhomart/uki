@@ -3,7 +3,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CompactEvent } from "@uki/contracts";
-import { THRESHOLDS } from "@uki/contracts";
+import { FLAG_TILE_EVENT_TYPES, THRESHOLDS } from "@uki/contracts";
 import { EVENT_COLUMNS, parseEvents, parseSessions, SESSION_COLUMNS, type SessionRow } from "./rows.ts";
 
 /** PostgREST answers at most this many rows per request (supabase/config.toml max_rows). */
@@ -59,9 +59,46 @@ export async function fetchRecentEvents(
   return parseEvents(rows);
 }
 
+/** Phone and second-face events received before `beforeIso`, newest first. */
+async function fetchOlderFlagEvents(
+  client: AnyClient,
+  examId: string,
+  beforeIso: string,
+): Promise<CompactEvent[]> {
+  const rows = await readPages((from, to) =>
+    client
+      .from("events")
+      .select(EVENT_COLUMNS)
+      .eq("exam_id", examId)
+      .in("type", [...FLAG_TILE_EVENT_TYPES])
+      .lt("received_at", beforeIso)
+      .order("received_at", { ascending: false })
+      .range(from, to),
+  );
+  return parseEvents(rows);
+}
+
 /** Since when the server render reads events. */
 export function initialEventsSince(nowMs: number): string {
   return new Date(nowMs - THRESHOLDS.wall.initialEventsWindowMs).toISOString();
+}
+
+/**
+ * The server render's events: flag and log events from the last 60 minutes, and every older phone or
+ * second-face event. The Flagged tile has no time limit (Phase 0 has no review table, so every one
+ * stays unreviewed), so those are read whatever their age.
+ */
+export async function fetchInitialEvents(
+  client: AnyClient,
+  examId: string,
+  nowMs: number,
+): Promise<CompactEvent[]> {
+  const since = initialEventsSince(nowMs);
+  const [recent, olderFlags] = await Promise.all([
+    fetchRecentEvents(client, examId, since),
+    fetchOlderFlagEvents(client, examId, since),
+  ]);
+  return [...recent, ...olderFlags];
 }
 
 /** Where a refetch starts: `overlapMs` before the last event seen, or the initial window. */

@@ -52,6 +52,29 @@ describe("clocks", () => {
     expect(examEndsAt(state.exam, sessions).getTime() - NOW).toBe((42 * 60 + 17) * 1000 + 10 * 60_000);
     expect(groupExtraMin([])).toBe(0);
   });
+
+  it("keeps the group's added minutes while a student is still at check-in", () => {
+    // issue_command raises extra_min only on rules, ready, writing and paused sessions.
+    for (const checkIn of ["joined", "checking", "identity"] as const) {
+      const state = initialWallState(
+        initialData([
+          sessionRow(1, { extra_min: 10 }),
+          sessionRow(2, { extra_min: 10, state: "paused" }),
+          sessionRow(3, { extra_min: 10, state: "ready" }),
+          sessionRow(4, { extra_min: 0, state: checkIn, started_at: null }),
+        ]),
+        NOW,
+      );
+      const sessions = Object.values(state.sessions);
+      expect(groupExtraMin(sessions)).toBe(10);
+      expect(examEndsAt(state.exam, sessions).getTime() - NOW).toBe((42 * 60 + 17) * 1000 + 10 * 60_000);
+    }
+    const onlyCheckIn = initialWallState(
+      initialData([sessionRow(1, { extra_min: 0, state: "identity", started_at: null })]),
+      NOW,
+    );
+    expect(groupExtraMin(Object.values(onlyCheckIn.sessions))).toBe(0);
+  });
 });
 
 describe("drawer model", () => {

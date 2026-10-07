@@ -138,7 +138,7 @@ export function OverviewView({ rows, groupCount, readiness, nowMs }: OverviewVie
               value={filter}
               onValueChange={(value) => setFilter(value as ExamFilter)}
               aria-label={t("overview.filter.label")}
-              className="inset-ring-0"
+              variant="plain"
             >
               {EXAM_FILTERS.map((id) => (
                 <Tab key={id} value={id}>

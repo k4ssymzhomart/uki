@@ -1,15 +1,19 @@
 // The group's end time for the breadcrumb ("00:42:17 left") and 2.4c ("Ends at 11:40 instead of 11:30").
-import { isFinalState, sessionEndsAt } from "@uki/contracts";
+import { type SessionState, sessionEndsAt } from "@uki/contracts";
 import type { WallExam, WallSession } from "./wall-store.ts";
 
+/** Sessions a group command reaches: rules, ready, writing or paused (plan, API; issue_command). */
+export const GROUP_STATES: ReadonlySet<SessionState> = new Set(["rules", "ready", "writing", "paused"]);
+
 /**
- * Minutes a group add_time gave everyone: the smallest extra_min among sessions still writing or
- * waiting (a student with their own extra minutes has more). 0 when no session is active.
+ * Minutes a group add_time gave everyone: the smallest extra_min among the sessions a group command
+ * reaches (a student with their own extra minutes has more). Sessions still at check-in (joined,
+ * checking, identity) never get a group add_time, so they do not count. 0 when no session is reached.
  */
 export function groupExtraMin(sessions: Iterable<WallSession>): number {
   let least: number | null = null;
   for (const session of sessions) {
-    if (isFinalState(session.state)) continue;
+    if (!GROUP_STATES.has(session.state)) continue;
     least = least === null ? session.extraMin : Math.min(least, session.extraMin);
   }
   return least ?? 0;

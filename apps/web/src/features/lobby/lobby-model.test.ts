@@ -46,14 +46,14 @@ const sessions = parseRows(LobbySession, [
   session(
     1,
     "identity",
-    { step: "identity", detail: "card_retry:2" },
+    { step: "identity", detail: "card:retry:2" },
     { os: "windows", app_version: "0.1.0" },
   ),
-  session(2, "checking", { step: "checking", detail: "Telegram" }, { os: "macos", app_version: "0.1.0" }),
+  session(2, "checking", { step: "checking", detail: "app:Telegram" }, { os: "macos", app_version: "0.1.0" }),
   session(
     3,
     "checking",
-    { step: "checking", detail: "camera_blocked" },
+    { step: "checking", detail: "camera:busy" },
     { os: "windows", app_version: "0.1.0" },
   ),
   session(5, "ready", { step: "ready" }, { os: "macos", app_version: "0.1.0" }),
@@ -105,13 +105,32 @@ describe("lobby rows", () => {
     expect(byName("Bolat Serikov")).toMatchObject({ category: "checking", device: null, detail: null });
   });
 
-  it("reads an app: detail and shows unknown details as they are", () => {
+  it("reads every detail of the status-detail vocabulary, and nothing else", () => {
     const entry = roster[0] as RosterEntry;
-    const at = (state: string, detail: string) =>
-      lobbyRow(entry, parseRows(LobbySession, [session(1, state, { detail })])[0] ?? null).detail;
+    const row = (state: string, detail: string) =>
+      lobbyRow(entry, parseRows(LobbySession, [session(1, state, { detail })])[0] ?? null);
+    const at = (state: string, detail: string) => row(state, detail).detail;
     expect(at("checking", "app:Discord")).toEqual({ key: "appOpen", app: "Discord" });
-    expect(at("identity", "Card is upside down")).toEqual({ key: "text", text: "Card is upside down" });
-    expect(at("writing", "anything")).toEqual({ key: "text", text: "anything" });
+    expect(at("checking", "camera:busy")).toEqual({ key: "cameraBlocked" });
+    expect(at("identity", "card:retry:1")).toEqual({ key: "cardRetry", attempt: 1, max: 3 });
+    expect(at("identity", "card:help:3")).toEqual({ key: "cardRetry", attempt: 3, max: 3 });
+    // In the vocabulary, with no string in Figma yet: Needs help without a detail line.
+    for (const detail of [
+      "lock:not_paired",
+      "network:slow",
+      "network:offline",
+      "storage:low",
+      "camera:dark",
+    ]) {
+      expect(row("checking", detail), detail).toMatchObject({ category: "needHelp", detail: null });
+    }
+    // Text outside the vocabulary is never shown and asks for no help.
+    for (const detail of ["Telegram", "camera_blocked", "card_retry:2", "Card is upside down"]) {
+      expect(row("checking", detail), detail).toMatchObject({ category: "checking", detail: null });
+    }
+    // Past the check-in, a leftover detail is not shown.
+    expect(at("writing", "app:Telegram")).toBeNull();
+    expect(at("ready", "app:Telegram")).toEqual({ key: "waiting" });
   });
 
   it("moves writing and finished sessions out of the check-in categories", () => {
@@ -220,5 +239,21 @@ describe("lobby realtime", () => {
       device: { os: "macos", version: "0.1.0" },
     });
     expect(mergeSessions(merged, fresh)).toHaveLength(merged.length);
+  });
+
+  it("keeps a session a message updated while the read was in flight", () => {
+    // The read saw Madina still ready; her `session` message (writing) arrived before the reply.
+    const moved = applySessionUpdate(sessions, { id: sid(5), state: "writing", status: {} });
+    const stale = parseRows(LobbySession, [
+      session(5, "ready", { step: "ready" }, { os: "macos", app_version: "0.1.0" }),
+      session(6, "ready", { step: "ready" }, { os: "windows", app_version: "0.1.0" }),
+      session(4, "joined", {}, { os: "macos", app_version: "0.1.0" }),
+    ]);
+    const merged = mergeSessions(moved.sessions, stale, new Set([sid(5), sid(4)]));
+    const state = (n: number) => merged.find((s) => s.id === sid(n))?.state;
+    expect(state(5)).toBe("writing");
+    expect(state(6)).toBe("ready");
+    expect(state(4)).toBe("joined");
+    expect(mergeSessions(moved.sessions, stale).find((s) => s.id === sid(5))?.state).toBe("ready");
   });
 });

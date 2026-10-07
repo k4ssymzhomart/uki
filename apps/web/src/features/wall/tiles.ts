@@ -2,6 +2,7 @@
 // liveFeed). Results are cached per store snapshot, so the stat cards, the order and 125 tiles share
 // one computation per tick.
 import {
+  CommandGroupId,
   type CompactEvent,
   countTiles,
   liveFeed,
@@ -179,13 +180,23 @@ export function isGroupEvent(event: CompactEvent): boolean {
   );
 }
 
-/** Keeps one event of each group command (same type, time and data), so it cannot push flags out. */
+/**
+ * The group command an event belongs to: `data.group_id`, which issue_command writes into every event
+ * of one group call. Events stored before group ids fall back to the same type, time and data.
+ */
+export function groupKey(event: CompactEvent): string {
+  const groupId = CommandGroupId.safeParse(event.data.group_id);
+  if (groupId.success) return `group|${groupId.data}`;
+  const { staff_id: _staff, group_id: _group, ...data } = event.data;
+  return `${event.type}|${event.at}|${JSON.stringify(data)}`;
+}
+
+/** Keeps one event of each group command, so a command to 125 students cannot push flags out. */
 export function collapseGroupEvents(events: readonly CompactEvent[]): CompactEvent[] {
   const seen = new Set<string>();
   return events.filter((event) => {
     if (!isGroupEvent(event)) return true;
-    const { staff_id: _staff, ...data } = event.data;
-    const key = `${event.type}|${event.at}|${JSON.stringify(data)}`;
+    const key = groupKey(event);
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
