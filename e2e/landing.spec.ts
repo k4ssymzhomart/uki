@@ -124,12 +124,12 @@ test.describe("Book a pilot", () => {
 
   test("stores a request, shows Sent, and refuses a fourth one from the same address", async ({ page }) => {
     const admin = adminClient();
-    // request_pilot and pilot_requests arrive with WP 1.1 (20261009000000_phase1.sql).
-    const probe = await admin
-      .from("pilot_requests" as never)
-      .select("id")
-      .limit(1);
-    test.skip(probe.error !== null, "pilot_requests is not in this database yet (WP 1.1)");
+    // A local stack started before WP 1.1's migration (20261009000000_phase1.sql) has no pilot_requests.
+    const probe = await admin.from("pilot_requests").select("id").limit(1);
+    test.skip(
+      probe.error !== null,
+      "pilot_requests is not in this database: apply 20261009000000_phase1.sql",
+    );
 
     const email = `pilot-e2e-${Date.now()}@kru.test`;
     try {
@@ -145,16 +145,21 @@ test.describe("Book a pilot", () => {
           ).toBeVisible();
           await expect(page.getByText(email)).toBeVisible();
         } else {
-          await expect(page.getByRole("alert")).toHaveText(
-            message("dashboard.landing.pilot.form.error.rateLimited"),
-          );
+          // Next.js's route announcer is an empty alert too, so look for the form's line by its text.
+          await expect(
+            page
+              .getByRole("alert")
+              .filter({ hasText: message("dashboard.landing.pilot.form.error.rateLimited") }),
+          ).toBeVisible();
+          const { count } = await admin
+            .from("pilot_requests")
+            .select("id", { count: "exact", head: true })
+            .eq("email", email);
+          expect(count).toBe(3);
         }
       }
     } finally {
-      await admin
-        .from("pilot_requests" as never)
-        .delete()
-        .eq("email" as never, email as never);
+      await admin.from("pilot_requests").delete().eq("email", email);
     }
   });
 });
