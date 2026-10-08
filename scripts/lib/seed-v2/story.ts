@@ -5,10 +5,15 @@
 // old (retention) and Dana's languages. Times are relative to the server's clock when they must be.
 // supabase/seed.sql writes the invites, the help request and the delete request the same way on a
 // fresh reset; `pnpm demo:reset` writes all of it.
-import type { HelpTopic, Locale } from "../../../packages/contracts/src/index.ts";
+import {
+  type EventType,
+  type HelpTopic,
+  type Locale,
+  stillPath,
+} from "../../../packages/contracts/src/index.ts";
 import { createRng } from "../sim/rng.ts";
-import { addDays, almatyIso } from "./term.ts";
-import { PEOPLE, phase0Students, studentId, WORKSPACE_ID } from "./world.ts";
+import { addDays, almatyIso, type TermPlan } from "./term.ts";
+import { BOUNCED_EMAIL, PEOPLE, phase0Students, studentId, WORKSPACE_ID } from "./world.ts";
 
 /** Phase 0's exams (supabase/seed.sql). */
 export const EXAM = {
@@ -22,10 +27,16 @@ export const EXAM = {
 /** Seed v2's exam 91 days back, in the spring term, which holds the still retention removes. */
 export const OLD_EXAM_ID = "e0000000-0000-4000-8200-000000000001";
 
-/** Every exam id the seed owns; `pnpm demo:reset` deletes any other exam of the workspace. */
+/**
+ * Judge mode's always-live exam (another package seeds it). `pnpm demo:reset` never deletes it, its
+ * roster or its help requests, though its id is not one of the seed's.
+ */
+export const JUDGE_EXAM_CODE = "DEMO-LIVE";
+
+/** Every exam id the seed owns; `pnpm demo:reset` deletes any other exam of the workspace but DEMO-LIVE. */
 export function isSeedExamId(id: string): boolean {
   return (
-    Object.values(EXAM).includes(id as (typeof EXAM)[keyof typeof EXAM]) ||
+    (Object.values(EXAM) as string[]).includes(id) ||
     id.startsWith("e0000000-0000-4000-8100-") ||
     id === OLD_EXAM_ID
   );
@@ -47,10 +58,27 @@ export type StaffKey = keyof typeof STAFF_EMAIL;
 /** Dana's languages, English first, so the dashboard opens in English without a cookie (WP 1.2). */
 export const DANA_LANGUAGES: Locale[] = ["en", "ru"];
 
-/** Mathematics 2's proctors as scripts/seed-staff.ts makes them, unconfirmed (0.9a, 0.3b). */
+/**
+ * Mathematics 2's proctors as scripts/seed-staff.ts makes them. Aigerim, the lead, confirmed her seats
+ * when the invites went out; Nurlan has not, so he confirms 65 to 128 on stage (0.9a).
+ */
 export const MATH2_PROCTORS = [
-  { staff: "aigerim", seatFrom: 1, seatTo: 64, isLead: true, languages: ["kk", "ru"] as Locale[] },
-  { staff: "nurlan", seatFrom: 65, seatTo: 128, isLead: false, languages: ["ru", "en"] as Locale[] },
+  {
+    staff: "aigerim",
+    seatFrom: 1,
+    seatTo: 64,
+    isLead: true,
+    languages: ["kk", "ru"] as Locale[],
+    confirmed: true,
+  },
+  {
+    staff: "nurlan",
+    seatFrom: 65,
+    seatTo: 128,
+    isLead: false,
+    languages: ["ru", "en"] as Locale[],
+    confirmed: false,
+  },
 ] as const;
 
 // ---------------------------------------------------------------------------------------------------
@@ -72,12 +100,11 @@ export function math2Invites(): InviteSeed[] {
     .map((student) => ({
       examId: EXAM.math2,
       studentId: student.id,
-      email: student.number === PEOPLE.yerlan ? BOUNCED : student.email,
+      email: student.number === PEOPLE.yerlan ? BOUNCED_EMAIL : student.email,
       locale: student.locale,
       state: student.number === PEOPLE.yerlan ? "bounced" : "sent",
     }));
 }
-const BOUNCED = "yerlan.tokhtarov@kru.test";
 
 /** When the seeded invites went out: two days before the reset. */
 export const INVITES_SENT_DAYS_AGO = 2;
@@ -181,10 +208,47 @@ export function historyStills(): StillSeed[] {
       eventId,
       sessionId,
       examId: EXAM.history,
-      path: `${EXAM.history}/${sessionId}/${eventId}-0.jpg`,
+      path: stillPath(EXAM.history, sessionId, eventId, 0),
       file,
     };
   });
+}
+
+/** The evidence picture for a flag type. */
+function stillFor(type: EventType): StillFile {
+  switch (type) {
+    case "phone.detected":
+      return STILL_FILES.phone;
+    case "gaze.down":
+      return STILL_FILES.lookingDown;
+    case "face.second":
+      return STILL_FILES.secondPerson;
+    case "face.missing":
+    case "camera.lost":
+      return STILL_FILES.emptySeat;
+    default:
+      return STILL_FILES.lookedAway;
+  }
+}
+
+/**
+ * The delete request's student's term flags (term.ts gives them three in two History of Kazakhstan
+ * quizzes), one still each, so A.5a has frames from two exams to delete.
+ */
+export function deleteStudentStills(plan: TermPlan): StillSeed[] {
+  const sessions = new Set(
+    plan.sessions.filter((session) => session.number === PEOPLE.deleteRequest).map((session) => session.id),
+  );
+  return plan.events
+    .filter((event) => sessions.has(event.sessionId))
+    .map((event) => ({
+      frameId: `fa100000${event.id.slice(8)}`,
+      eventId: event.id,
+      sessionId: event.sessionId,
+      examId: event.examId,
+      path: stillPath(event.examId, event.sessionId, event.id, 0),
+      file: stillFor(event.type),
+    }));
 }
 
 /** History's own events (seed.sql numbers 1 to 10); `pnpm demo:reset` removes any other, such as notes. */
@@ -297,7 +361,7 @@ export function oldExamPlan(nowMs: number): OldExamPlan {
     },
     still: {
       frameId: "fa000000-0000-4000-8200-000000000001",
-      path: `${OLD_EXAM_ID}/${flagged.id}/${flagId}-0.jpg`,
+      path: stillPath(OLD_EXAM_ID, flagged.id, flagId, 0),
       capturedAt: new Date(at).toISOString(),
       file: STILL_FILES.phone,
     },

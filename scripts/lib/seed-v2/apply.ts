@@ -1,8 +1,11 @@
 // Writes seed v2 (world.ts, term.ts, story.ts) to a Supabase project through PostgREST, Storage and two
 // staff calls, with the secret key: what `pnpm demo:reset` restores after a rehearsal, on the local
-// stack or the cloud project. Every step is idempotent: rows with fixed ids are upserted, the term and
-// the old exam are rebuilt only when they differ from the plan, and rehearsal leftovers (exams the wizard
-// made, help requests, shares, data requests, History's decisions and notes) are deleted.
+// stack or the cloud project. Every step is idempotent: rows with fixed ids are upserted, the term is
+// repaired row by row (or rebuilt when its exams, sessions or rosters differ), and rehearsal leftovers
+// are deleted: exams the wizard made, help requests, reports and shares, data requests, History of
+// Kazakhstan's decisions and notes. Judge mode's DEMO-LIVE exam, its roster and its requests are left
+// alone. Audit rows are never deleted.
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { FRAMES_BUCKET } from "../../../packages/contracts/src/index.ts";
@@ -10,19 +13,22 @@ import type { Json, TablesInsert } from "../../../packages/db/src/index.ts";
 import { type Logger, must, ok } from "../cli.ts";
 import type { ScriptEnv } from "../env.ts";
 import { ROOT } from "../paths.ts";
-import { staffClient, type UkiClient } from "../supabase.ts";
-import { type Cleared, deleteExam, inChunks } from "./clear.ts";
+import { listFramesUnder, removeFrames, staffClient, type UkiClient } from "../supabase.ts";
+import { deleteExam, inChunks } from "./clear.ts";
+import { termDecisionRows } from "./decisions.ts";
 import {
   copyExportPath,
   DANA_LANGUAGES,
   DATA_REQUEST,
   DELETE_STUDENT_HISTORY_SESSION,
+  deleteStudentStills,
   EXAM,
   historyStills,
   INVITES_SENT_DAYS_AGO,
   isHistorySeedEvent,
   isSeedExamId,
   isSeedStudentId,
+  JUDGE_EXAM_CODE,
   MATH2_PROCTORS,
   math2Invites,
   OLD_EXAM_ID,
@@ -32,14 +38,15 @@ import {
   SHARED_REPORT,
   STAFF_EMAIL,
   type StaffKey,
-  type StillFile,
+  type StillSeed,
 } from "./story.ts";
 import { buildTermPlan, type TermPlan } from "./term.ts";
 import { allStudents, FACULTY, GROUPS, groupByCode, groupId, PEOPLE, WORKSPACE_ID } from "./world.ts";
 
 export const STILLS_DIR = join(ROOT, "demo", "stills");
 
-const HOUR = 3_600_000;
+const MINUTE = 60_000;
+const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
 const iso = (ms: number) => new Date(ms).toISOString();
 
@@ -57,9 +64,13 @@ export interface ApplyOptions {
 /** One line per step for the summary: what it found and what it did. */
 export type StepReport = { step: string; detail: string };
 
-async function staffIds(client: UkiClient): Promise<Record<StaffKey, string>> {
-  const wanted = new Map(Object.entries(STAFF_EMAIL).map(([key, email]) => [email, key as StaffKey]));
-  const found: Partial<Record<StaffKey, string>> = {};
+type Staff = Record<StaffKey, string>;
+
+async function staffIds(client: UkiClient): Promise<Staff> {
+  const wanted = new Map<string, StaffKey>(
+    (Object.entries(STAFF_EMAIL) as [StaffKey, string][]).map(([key, email]) => [email, key]),
+  );
+  const found: Partial<Staff> = {};
   for (let page = 1; page < 100; page += 1) {
     const { data, error } = await client.auth.admin.listUsers({ page, perPage: 1000 });
     if (error) throw new Error(`listing users: ${error.message}`);
@@ -69,11 +80,11 @@ async function staffIds(client: UkiClient): Promise<Record<StaffKey, string>> {
     }
     if (data.users.length < 1000) break;
   }
-  const missing = Object.keys(STAFF_EMAIL).filter((key) => found[key as StaffKey] === undefined);
+  const missing = [...wanted.values()].filter((key) => found[key] === undefined);
   if (missing.length > 0) {
     throw new Error(`staff accounts missing (${missing.join(", ")}): run pnpm seed:staff first`);
   }
-  return found as Record<StaffKey, string>;
+  return found as Staff;
 }
 
 async function selectAll<T>(
@@ -89,88 +100,46 @@ async function selectAll<T>(
   }
 }
 
-async function insertAll<T extends object>(
+type Writable =
+  | "groups"
+  | "students"
+  | "exams"
+  | "exam_groups"
+  | "exam_students"
+  | "sessions"
+  | "events"
+  | "review_decisions"
+  | "invites"
+  | "proctor_assignments";
+
+/** Inserts (or upserts on `onConflict`) `rows` in slices of `size`. */
+async function writeRows<T extends Writable>(
   client: UkiClient,
-  table: string,
-  rows: readonly T[],
+  table: T,
+  rows: readonly TablesInsert<T>[],
   options: { onConflict?: string; size?: number } = {},
 ): Promise<void> {
   await inChunks(rows, options.size ?? 500, async (chunk) => {
-    // The table name is checked by the typed callers; the untyped call keeps this helper generic.
-    const query = (client as unknown as { from: (t: string) => { upsert: Function; insert: Function } }).from(
-      table,
-    );
+    const query = client.from(table);
     const result = options.onConflict
-      ? await query.upsert(chunk, { onConflict: options.onConflict })
-      : await query.insert(chunk);
-    ok(result as { error: { message: string } | null }, `write ${table}`);
+      ? await query.upsert(chunk as never, { onConflict: options.onConflict })
+      : await query.insert(chunk as never);
+    ok(result, `write ${table}`);
   });
 }
 
 // ---------------------------------------------------------------------------------------------------
-// The world: groups and students
-// ---------------------------------------------------------------------------------------------------
-
-async function applyWorld(o: ApplyOptions, report: StepReport[]): Promise<void> {
-  const { client } = o;
-  // Students the wizard added (any id outside the seed's scheme) go once nothing references them.
-  const students = await selectAll<{ id: string; student_number: string }>("students", (from, to) =>
-    client.from("students").select("id, student_number").eq("workspace_id", WORKSPACE_ID).range(from, to),
-  );
-  const extra = students.filter((row) => !isSeedStudentId(row.id));
-  if (!o.dryRun) {
-    await inChunks(
-      extra.map((row) => row.id),
-      100,
-      async (chunk) => {
-        ok(await client.from("invites").delete().in("student_id", chunk), "delete their invites");
-        ok(await client.from("exam_students").delete().in("student_id", chunk), "delete their seats");
-        ok(await client.from("data_requests").delete().in("student_id", chunk), "delete their requests");
-        const result = await client.from("students").delete().in("id", chunk);
-        if (result.error) o.log.warn(`kept ${chunk.length} added students: ${result.error.message}`);
-      },
-    );
-    const groupRows: TablesInsert<"groups">[] = GROUPS.map((group) => ({
-      id: group.id,
-      workspace_id: WORKSPACE_ID,
-      faculty_id: FACULTY[group.faculty],
-      code: group.code,
-    }));
-    await insertAll(client, "groups", groupRows, { onConflict: "id" });
-    const studentRows: TablesInsert<"students">[] = allStudents().map((student) => ({
-      id: student.id,
-      workspace_id: WORKSPACE_ID,
-      student_number: student.number,
-      full_name: student.fullName,
-      email: student.email,
-      group_id: groupId(student.groupCode),
-      locale: student.locale,
-      programme: student.programme,
-      year: student.year,
-    }));
-    await insertAll(client, "students", studentRows, { onConflict: "id" });
-  }
-  report.push({
-    step: "students",
-    detail: `${allStudents().length} with programme and year in ${GROUPS.length} groups; ${extra.length} added by the wizard ${o.dryRun ? "would go" : "removed"}`,
-  });
-}
-
-// ---------------------------------------------------------------------------------------------------
-// Exams the wizard made
+// Exams the wizard made, and the students it added
 // ---------------------------------------------------------------------------------------------------
 
 async function deleteWizardExams(o: ApplyOptions, report: StepReport[]): Promise<void> {
   const exams = must(
-    await o.client.from("exams").select("id, title, status").eq("workspace_id", WORKSPACE_ID),
+    await o.client.from("exams").select("id, title, code").eq("workspace_id", WORKSPACE_ID),
     "exams",
   );
-  const extra = exams.filter((exam) => !isSeedExamId(exam.id));
+  const extra = exams.filter((exam) => !isSeedExamId(exam.id) && exam.code !== JUDGE_EXAM_CODE);
   let sessions = 0;
-  for (const exam of extra) {
-    const cleared: Cleared = await deleteExam(o.client, exam.id, o.dryRun);
-    sessions += cleared.sessions;
-  }
+  for (const exam of extra) sessions += (await deleteExam(o.client, exam.id, o.dryRun)).sessions;
   const names = extra.map((exam) => exam.title.trim() || "(untitled draft)");
   report.push({
     step: "wizard exams",
@@ -181,69 +150,156 @@ async function deleteWizardExams(o: ApplyOptions, report: StepReport[]): Promise
   });
 }
 
+async function applyWorld(o: ApplyOptions, report: StepReport[]): Promise<void> {
+  const { client } = o;
+  const students = await selectAll<{ id: string }>("students", (from, to) =>
+    client.from("students").select("id").eq("workspace_id", WORKSPACE_ID).order("id").range(from, to),
+  );
+  // A student the wizard's roster import added goes once no exam lists them (judge mode's roster stays).
+  const added = students.filter((row) => !isSeedStudentId(row.id)).map((row) => row.id);
+  const rostered = new Set<string>();
+  await inChunks(added, 100, async (chunk) => {
+    const rows = must(
+      await client.from("exam_students").select("student_id").in("student_id", chunk),
+      "rosters",
+    );
+    for (const row of rows) rostered.add(row.student_id);
+  });
+  const extra = added.filter((id) => !rostered.has(id));
+  if (!o.dryRun) {
+    await inChunks(extra, 100, async (chunk) => {
+      ok(await client.from("invites").delete().in("student_id", chunk), "delete their invites");
+      ok(await client.from("data_requests").delete().in("student_id", chunk), "delete their requests");
+      const result = await client.from("students").delete().in("id", chunk);
+      if (result.error) o.log.warn(`kept ${chunk.length} added students: ${result.error.message}`);
+    });
+    await writeRows(
+      client,
+      "groups",
+      GROUPS.map((group) => ({
+        id: group.id,
+        workspace_id: WORKSPACE_ID,
+        faculty_id: FACULTY[group.faculty],
+        code: group.code,
+      })),
+      { onConflict: "id" },
+    );
+    await writeRows(
+      client,
+      "students",
+      allStudents().map((student) => ({
+        id: student.id,
+        workspace_id: WORKSPACE_ID,
+        student_number: student.number,
+        full_name: student.fullName,
+        email: student.email,
+        group_id: groupId(student.groupCode),
+        locale: student.locale,
+        programme: student.programme,
+        year: student.year,
+      })),
+      { onConflict: "id" },
+    );
+  }
+  report.push({
+    step: "students",
+    detail: `${allStudents().length} with programme and year in ${GROUPS.length} groups; ${extra.length} added by the wizard ${o.dryRun ? "would go" : "removed"}`,
+  });
+}
+
 // ---------------------------------------------------------------------------------------------------
 // The term
 // ---------------------------------------------------------------------------------------------------
 
-type DecisionRow = { session_id: string; decision: string; decided_at: string; reviewer_id: string };
+interface TermState {
+  /** Why the term must be written from scratch, or null when its exams, sessions and rosters are there. */
+  rebuild: string | null;
+  /** Term exams whose status is not `reviewed`. */
+  statusWrong: string[];
+  missingEvents: TermPlan["events"];
+  extraEvents: string[];
+  wrongDecisions: TermPlan["decisions"];
+  extraDecisions: string[];
+}
 
-async function termMatches(
-  o: ApplyOptions,
-  plan: TermPlan,
-  staff: Record<StaffKey, string>,
-): Promise<string | null> {
+async function inspectTerm(o: ApplyOptions, plan: TermPlan, staff: Staff): Promise<TermState> {
   const { client } = o;
   const ids = plan.exams.map((exam) => exam.id);
+  const state: TermState = {
+    rebuild: null,
+    statusWrong: [],
+    missingEvents: [],
+    extraEvents: [],
+    wrongDecisions: [],
+    extraDecisions: [],
+  };
   const exams = must(await client.from("exams").select("id, starts_at, status").in("id", ids), "term exams");
-  if (exams.length !== ids.length) return `${exams.length} of ${ids.length} exams`;
   const byId = new Map(plan.exams.map((exam) => [exam.id, exam]));
+  if (exams.length !== ids.length) {
+    state.rebuild = `${exams.length} of ${ids.length} exams`;
+    return state;
+  }
   for (const row of exams) {
     const exam = byId.get(row.id);
-    if (!exam || Date.parse(row.starts_at) !== Date.parse(exam.startsAt) || row.status !== "reviewed") {
-      return `exam ${row.id} changed`;
+    if (!exam || Date.parse(row.starts_at) !== Date.parse(exam.startsAt)) {
+      state.rebuild = `exam ${row.id} moved`;
+      return state;
     }
+    if (row.status !== "reviewed") state.statusWrong.push(row.id);
   }
   const sessions = await client
     .from("sessions")
-    .select("*", { count: "exact", head: true })
+    .select("id", { count: "exact", head: true })
     .in("exam_id", ids);
   if (sessions.error) throw new Error(`count term sessions: ${sessions.error.message}`);
-  if (sessions.count !== plan.sessions.length) return `${sessions.count} of ${plan.sessions.length} sessions`;
+  if (sessions.count !== plan.sessions.length) {
+    state.rebuild = `${sessions.count} of ${plan.sessions.length} sessions`;
+    return state;
+  }
   const roster = await client
     .from("exam_students")
-    .select("*", { count: "exact", head: true })
+    .select("student_id", { count: "exact", head: true })
     .in("exam_id", ids);
   if (roster.error) throw new Error(`count term roster: ${roster.error.message}`);
-  if (roster.count !== plan.roster.length) return `${roster.count} of ${plan.roster.length} roster rows`;
+  if (roster.count !== plan.roster.length) {
+    state.rebuild = `${roster.count} of ${plan.roster.length} roster rows`;
+    return state;
+  }
   const events = await selectAll<{ id: string }>("term events", (from, to) =>
     client.from("events").select("id").in("exam_id", ids).order("id").range(from, to),
   );
+  const present = new Set(events.map((row) => row.id));
   const planned = new Set(plan.events.map((event) => event.id));
-  if (events.length !== planned.size || events.some((row) => !planned.has(row.id))) {
-    return `${events.length} of ${planned.size} flags`;
-  }
-  const decisions = await selectAll<DecisionRow>("term decisions", (from, to) =>
+  state.missingEvents = plan.events.filter((event) => !present.has(event.id));
+  state.extraEvents = events.map((row) => row.id).filter((id) => !planned.has(id));
+  const decisions = await selectAll<{
+    session_id: string;
+    decision: string;
+    decided_at: string;
+    reviewer_id: string;
+    note: string | null;
+  }>("term decisions", (from, to) =>
     client
       .from("review_decisions")
-      .select("session_id, decision, decided_at, reviewer_id")
+      .select("session_id, decision, decided_at, reviewer_id, note")
       .in("exam_id", ids)
       .order("session_id")
       .range(from, to),
   );
-  const want = new Map(plan.decisions.map((decision) => [decision.sessionId, decision]));
-  if (decisions.length !== want.size) return `${decisions.length} of ${want.size} decisions`;
-  for (const row of decisions) {
-    const planned = want.get(row.session_id);
-    if (
-      !planned ||
-      planned.decision !== row.decision ||
-      Date.parse(planned.decidedAt) !== Date.parse(row.decided_at) ||
-      staff[planned.reviewer] !== row.reviewer_id
-    ) {
-      return `decision on ${row.session_id} changed`;
-    }
-  }
-  return null;
+  const current = new Map(decisions.map((row) => [row.session_id, row]));
+  const wanted = new Set(plan.decisions.map((decision) => decision.sessionId));
+  state.wrongDecisions = plan.decisions.filter((decision) => {
+    const row = current.get(decision.sessionId);
+    return (
+      row === undefined ||
+      row.decision !== decision.decision ||
+      row.note !== decision.note ||
+      row.reviewer_id !== staff[decision.reviewer] ||
+      Date.parse(row.decided_at) !== Date.parse(decision.decidedAt)
+    );
+  });
+  state.extraDecisions = decisions.map((row) => row.session_id).filter((id) => !wanted.has(id));
+  return state;
 }
 
 /** Receipt ids other sessions already hold: a planned receipt that clashes takes the next number. */
@@ -273,73 +329,8 @@ async function freeReceipts(o: ApplyOptions, plan: TermPlan): Promise<Map<string
   return result;
 }
 
-async function writeTerm(o: ApplyOptions, plan: TermPlan, staff: Record<StaffKey, string>): Promise<void> {
-  const { client } = o;
-  const ids = plan.exams.map((exam) => exam.id);
-  // Children first: flags, commands, then sessions (decisions, reports and help requests cascade), exams.
-  await inChunks(ids, 10, async (chunk) => {
-    ok(await client.from("frames").delete().in("exam_id", chunk), "delete term frames");
-    ok(await client.from("events").delete().in("exam_id", chunk), "delete term events");
-    ok(await client.from("session_commands").delete().in("exam_id", chunk), "delete term commands");
-    ok(await client.from("sessions").delete().in("exam_id", chunk), "delete term sessions");
-    ok(await client.from("exams").delete().in("id", chunk), "delete term exams");
-  });
-  const receipts = await freeReceipts(o, plan);
-  const exams: TablesInsert<"exams">[] = plan.exams.map((exam) => ({
-    id: exam.id,
-    workspace_id: WORKSPACE_ID,
-    faculty_id: FACULTY[exam.faculty],
-    title: exam.title,
-    course: exam.course,
-    kind: exam.kind,
-    code: null,
-    mode: "app",
-    starts_at: exam.startsAt,
-    duration_min: exam.durationMin,
-    lobby_opens_at: iso(Date.parse(exam.startsAt) - 20 * 60_000),
-    status: "reviewed",
-    created_by: staff.dana,
-    created_at: iso(Date.parse(exam.startsAt) - 9 * DAY),
-    scheduled_at: iso(Date.parse(exam.startsAt) - 8 * DAY),
-  }));
-  await insertAll(client, "exams", exams);
-  await insertAll(
-    client,
-    "exam_groups",
-    plan.exams.flatMap((exam) => exam.groups.map((code) => ({ exam_id: exam.id, group_id: groupId(code) }))),
-  );
-  await insertAll(
-    client,
-    "exam_students",
-    plan.roster.map((row) => ({
-      exam_id: row.examId,
-      student_id: row.studentId,
-      seat: row.seat,
-      invite_status: "sent",
-    })),
-    { size: 1000 },
-  );
-  const sessions: TablesInsert<"sessions">[] = plan.sessions.map((session) => ({
-    id: session.id,
-    exam_id: session.examId,
-    student_id: session.studentId,
-    auth_uid: session.authUid,
-    state: session.state,
-    locale: session.locale,
-    device: { os: session.os, app_version: "0.1.0" },
-    identity_result: "matched",
-    identity_score: session.identityScore,
-    joined_at: session.joinedAt,
-    started_at: session.startedAt,
-    submitted_at: session.submittedAt,
-    time_used_s: session.timeUsedS,
-    last_seen_at: session.submittedAt,
-    receipt_id: receipts.get(session.id) ?? session.receiptId,
-    rules_accepted_at: session.rulesAcceptedAt,
-    rules_locale: session.locale,
-  }));
-  await insertAll(client, "sessions", sessions);
-  const events: TablesInsert<"events">[] = plan.events.map((event) => ({
+function eventRows(events: TermPlan["events"]): TablesInsert<"events">[] {
+  return events.map((event) => ({
     id: event.id,
     session_id: event.sessionId,
     exam_id: event.examId,
@@ -353,34 +344,159 @@ async function writeTerm(o: ApplyOptions, plan: TermPlan, staff: Record<StaffKey
     frame_count: 0,
     app_version: "0.1.0",
   }));
-  await insertAll(client, "events", events);
-  const decisions: TablesInsert<"review_decisions">[] = plan.decisions.map((decision) => ({
-    session_id: decision.sessionId,
-    exam_id: decision.examId,
-    decision: decision.decision,
-    note: decision.note,
-    reviewer_id: staff[decision.reviewer],
-    decided_at: decision.decidedAt,
-  }));
-  await insertAll(client, "review_decisions", decisions);
 }
 
-async function applyTerm(
-  o: ApplyOptions,
-  staff: Record<StaffKey, string>,
-  report: StepReport[],
-): Promise<TermPlan> {
-  const plan = buildTermPlan();
-  const differs = await termMatches(o, plan, staff);
-  if (differs !== null && !o.dryRun) await writeTerm(o, plan, staff);
-  report.push({
-    step: "Autumn 2026 term",
-    detail:
-      differs === null
-        ? `in place: ${plan.exams.length} exams, ${plan.sessions.length} sessions, ${plan.events.length} flags, ${plan.decisions.length} decisions`
-        : `${o.dryRun ? "would rebuild" : "rebuilt"} (${differs}): ${plan.exams.length} exams, ${plan.sessions.length} sessions, ${plan.events.length} flags, ${plan.decisions.length} decisions`,
+async function deleteEvents(client: UkiClient, ids: readonly string[]): Promise<void> {
+  await inChunks(ids, 100, async (chunk) => {
+    const frames = must(
+      await client.from("frames").select("storage_path").in("event_id", chunk),
+      "frames of extra events",
+    );
+    await removeFrames(
+      client,
+      frames.map((row) => row.storage_path),
+    );
+    ok(await client.from("frames").delete().in("event_id", chunk), "delete frames of extra events");
+    ok(await client.from("events").delete().in("id", chunk), "delete extra events");
   });
-  return plan;
+}
+
+/** The whole term from scratch: what a cloud project seeded before seed v2 needs once. */
+async function writeTerm(o: ApplyOptions, plan: TermPlan, staff: Staff): Promise<void> {
+  const { client } = o;
+  const ids = plan.exams.map((exam) => exam.id);
+  for (const id of ids) await removeFrames(client, await listFramesUnder(client, id));
+  // Children first: stills rows, flags, commands, then sessions (answers, decisions, reports and help
+  // requests cascade), then the exams (rosters, groups and invites cascade).
+  await inChunks(ids, 6, async (chunk) => {
+    ok(await client.from("frames").delete().in("exam_id", chunk), "delete term frames");
+    ok(await client.from("events").delete().in("exam_id", chunk), "delete term events");
+    ok(await client.from("session_commands").delete().in("exam_id", chunk), "delete term commands");
+    ok(await client.from("help_requests").delete().in("exam_id", chunk), "delete term help requests");
+    ok(await client.from("sessions").delete().in("exam_id", chunk), "delete term sessions");
+    ok(await client.from("exams").delete().in("id", chunk), "delete term exams");
+  });
+  const receipts = await freeReceipts(o, plan);
+  await writeRows(
+    client,
+    "exams",
+    plan.exams.map((exam) => ({
+      id: exam.id,
+      workspace_id: WORKSPACE_ID,
+      faculty_id: FACULTY[exam.faculty],
+      title: exam.title,
+      course: exam.course,
+      kind: exam.kind,
+      code: null,
+      mode: "app" as const,
+      starts_at: exam.startsAt,
+      duration_min: exam.durationMin,
+      lobby_opens_at: iso(Date.parse(exam.startsAt) - 20 * MINUTE),
+      status: "reviewed" as const,
+      created_by: staff.dana,
+      created_at: iso(Date.parse(exam.startsAt) - 9 * DAY),
+      scheduled_at: iso(Date.parse(exam.startsAt) - 8 * DAY),
+    })),
+  );
+  await writeRows(
+    client,
+    "exam_groups",
+    plan.exams.flatMap((exam) => exam.groups.map((code) => ({ exam_id: exam.id, group_id: groupId(code) }))),
+  );
+  await writeRows(
+    client,
+    "exam_students",
+    plan.roster.map((row) => ({
+      exam_id: row.examId,
+      student_id: row.studentId,
+      seat: row.seat,
+      invite_status: "sent",
+    })),
+    { size: 1000 },
+  );
+  await writeRows(
+    client,
+    "sessions",
+    plan.sessions.map((session) => ({
+      id: session.id,
+      exam_id: session.examId,
+      student_id: session.studentId,
+      auth_uid: session.authUid,
+      state: session.state,
+      locale: session.locale,
+      device: { os: session.os, app_version: "0.1.0" },
+      identity_result: "matched",
+      identity_score: session.identityScore,
+      joined_at: session.joinedAt,
+      started_at: session.startedAt,
+      submitted_at: session.submittedAt,
+      time_used_s: session.timeUsedS,
+      last_seen_at: session.submittedAt,
+      receipt_id: receipts.get(session.id) ?? session.receiptId,
+      rules_accepted_at: session.rulesAcceptedAt,
+      rules_locale: session.locale,
+    })),
+  );
+  await writeRows(client, "events", eventRows(plan.events));
+  await writeRows(client, "review_decisions", termDecisionRows(plan, staff));
+}
+
+async function applyTerm(o: ApplyOptions, plan: TermPlan, staff: Staff, report: StepReport[]): Promise<void> {
+  const { client } = o;
+  const state = await inspectTerm(o, plan, staff);
+  const size = `${plan.exams.length} exams, ${plan.sessions.length} sessions, ${plan.events.length} flags, ${plan.decisions.length} decisions`;
+  if (state.rebuild !== null) {
+    if (!o.dryRun) await writeTerm(o, plan, staff);
+    report.push({
+      step: "Autumn 2026 term",
+      detail: `${o.dryRun ? "would rebuild" : "rebuilt"} (${state.rebuild}): ${size}`,
+    });
+  } else {
+    if (!o.dryRun) {
+      if (state.statusWrong.length > 0) {
+        ok(
+          await client.from("exams").update({ status: "reviewed" }).in("id", state.statusWrong),
+          "term status",
+        );
+      }
+      await deleteEvents(client, state.extraEvents);
+      await writeRows(client, "events", eventRows(state.missingEvents));
+      await inChunks(state.extraDecisions, 100, async (chunk) => {
+        ok(await client.from("review_decisions").delete().in("session_id", chunk), "delete extra decisions");
+      });
+      const wrong = new Set(state.wrongDecisions.map((decision) => decision.sessionId));
+      await writeRows(
+        client,
+        "review_decisions",
+        termDecisionRows(plan, staff).filter((row) => wrong.has(row.session_id)),
+        { onConflict: "session_id" },
+      );
+    }
+    const fixes = [
+      state.statusWrong.length > 0 ? `${state.statusWrong.length} statuses` : "",
+      state.missingEvents.length > 0 ? `${state.missingEvents.length} missing flags` : "",
+      state.extraEvents.length > 0 ? `${state.extraEvents.length} added events` : "",
+      state.wrongDecisions.length + state.extraDecisions.length > 0
+        ? `${state.wrongDecisions.length + state.extraDecisions.length} decisions`
+        : "",
+    ].filter(Boolean);
+    report.push({
+      step: "Autumn 2026 term",
+      detail: `in place (${size})${fixes.length > 0 ? `; ${o.dryRun ? "would fix" : "fixed"} ${fixes.join(", ")}` : ""}`,
+    });
+  }
+  // The delete request's student's three flags keep a still each (A.5a: frames from two exams).
+  const at = new Map(plan.events.map((event) => [event.id, event.at]));
+  let put = 0;
+  for (const still of deleteStudentStills(plan)) {
+    if (await ensureStill(o, still, at.get(still.eventId) ?? iso(o.nowMs))) put += 1;
+  }
+  if (put > 0) {
+    report.push({
+      step: "delete request's stills",
+      detail: `${put} of 3 ${o.dryRun ? "to put back" : "put back"}`,
+    });
+  }
 }
 
 // ---------------------------------------------------------------------------------------------------
@@ -395,27 +511,8 @@ async function stillExists(client: UkiClient, path: string): Promise<boolean> {
   return data.some((entry) => entry.name === name);
 }
 
-async function uploadStill(o: ApplyOptions, path: string, file: StillFile): Promise<void> {
-  const bytes = readFileSync(join(o.stillsDir ?? STILLS_DIR, file));
-  const { error } = await o.client.storage
-    .from(FRAMES_BUCKET)
-    .upload(path, bytes, { contentType: "image/jpeg", upsert: true });
-  if (error) throw new Error(`storage upload ${path}: ${error.message}`);
-}
-
-/** The flag's still: the object, its frames row at the flag's time, and frame_count 1. */
-async function ensureStill(
-  o: ApplyOptions,
-  still: {
-    frameId: string;
-    eventId: string;
-    sessionId: string;
-    examId: string;
-    path: string;
-    file: StillFile;
-  },
-  capturedAt: string,
-): Promise<boolean> {
+/** The flag's still: the object, its frames row at `capturedAt`, and frame_count 1. True when it wrote. */
+async function ensureStill(o: ApplyOptions, still: StillSeed, capturedAt: string): Promise<boolean> {
   const present = await stillExists(o.client, still.path);
   const rows = must(
     await o.client
@@ -428,7 +525,13 @@ async function ensureStill(
   const rowOk = rows.length === 1 && Date.parse(rows[0]?.captured_at ?? "") === Date.parse(capturedAt);
   if (present && rowOk) return false;
   if (o.dryRun) return true;
-  if (!present) await uploadStill(o, still.path, still.file);
+  if (!present) {
+    const bytes = readFileSync(join(o.stillsDir ?? STILLS_DIR, still.file));
+    const { error } = await o.client.storage
+      .from(FRAMES_BUCKET)
+      .upload(still.path, bytes, { contentType: "image/jpeg", upsert: true });
+    if (error) throw new Error(`storage upload ${still.path}: ${error.message}`);
+  }
   ok(await o.client.from("frames").delete().eq("event_id", still.eventId), "delete frames row");
   ok(
     await o.client.from("frames").insert({
@@ -451,51 +554,45 @@ async function ensureStill(
 
 async function applyHistory(o: ApplyOptions, report: StepReport[]): Promise<void> {
   const { client } = o;
+  const exam = must(await client.from("exams").select("status").eq("id", EXAM.history), "History")[0];
+  if (!exam) throw new Error("History of Kazakhstan not found: load supabase/seed.sql first");
   const decisions = await client
     .from("review_decisions")
-    .select("*", { count: "exact", head: true })
+    .select("session_id", { count: "exact", head: true })
     .eq("exam_id", EXAM.history);
   if (decisions.error) throw new Error(`History decisions: ${decisions.error.message}`);
   const events = must(
     await client.from("events").select("id, at").eq("exam_id", EXAM.history),
     "History events",
   );
-  const extra = events.filter((event) => !isHistorySeedEvent(event.id));
+  const extra = events.filter((event) => !isHistorySeedEvent(event.id)).map((event) => event.id);
   const reports = must(
     await client.from("reports").select("id").eq("exam_id", EXAM.history),
     "History reports",
   );
-  const exam = must(await client.from("exams").select("status").eq("id", EXAM.history), "History")[0];
-  if (!exam) throw new Error("History of Kazakhstan not found: load supabase/seed.sql first");
-  let stills = 0;
   if (!o.dryRun) {
     ok(
       await client.from("review_decisions").delete().eq("exam_id", EXAM.history),
       "delete History decisions",
     );
     ok(await client.from("reports").delete().eq("exam_id", EXAM.history), "delete History reports");
-    await inChunks(
-      extra.map((event) => event.id),
-      100,
-      async (chunk) => {
-        ok(await client.from("frames").delete().in("event_id", chunk), "delete note frames");
-        ok(await client.from("events").delete().in("id", chunk), "delete History notes");
-      },
-    );
+    await deleteEvents(client, extra);
     ok(
       await client.from("exams").update({ status: "to_review" }).eq("id", EXAM.history),
       "History to_review",
     );
   }
   const at = new Map(events.map((event) => [event.id, event.at]));
+  let stills = 0;
   for (const still of historyStills()) {
     const flagAt = at.get(still.eventId);
     if (!flagAt) throw new Error(`History flag ${still.eventId} is missing: load supabase/seed.sql again`);
     if (await ensureStill(o, still, flagAt)) stills += 1;
   }
+  const verb = o.dryRun ? "would be cleared" : "cleared";
   report.push({
     step: "History of Kazakhstan",
-    detail: `${decisions.count ?? 0} decisions, ${reports.length} reports and ${extra.length} added events ${o.dryRun ? "would be" : ""} cleared; status ${exam.status} -> to_review; ${stills} of 7 stills ${o.dryRun ? "to put back" : "put back"}`,
+    detail: `${decisions.count ?? 0} decisions, ${reports.length} reports and ${extra.length} added events ${verb}; status ${exam.status} -> to_review; ${stills} of 7 stills ${o.dryRun ? "to put back" : "put back"}`,
   });
 }
 
@@ -503,11 +600,7 @@ async function applyHistory(o: ApplyOptions, report: StepReport[]): Promise<void
 // Mathematics 2: invites and proctors
 // ---------------------------------------------------------------------------------------------------
 
-async function applyMath2(
-  o: ApplyOptions,
-  staff: Record<StaffKey, string>,
-  report: StepReport[],
-): Promise<void> {
+async function applyMath2(o: ApplyOptions, staff: Staff, report: StepReport[]): Promise<void> {
   const { client } = o;
   const invites = math2Invites();
   const current = must(
@@ -523,34 +616,35 @@ async function applyMath2(
   const assignments = must(
     await client
       .from("proctor_assignments")
-      .select("staff_id, seat_from, seat_to, confirmed_at, change_request")
+      .select("staff_id, confirmed_at, change_request")
       .eq("exam_id", EXAM.math2),
     "Mathematics 2 proctors",
   );
-  const confirmed = assignments.filter(
-    (row) => row.confirmed_at !== null || row.change_request !== null,
-  ).length;
+  const nurlan = assignments.find((row) => row.staff_id === staff.nurlan);
+  const sentAt = iso(o.nowMs - INVITES_SENT_DAYS_AGO * DAY);
   if (!o.dryRun) {
-    const sentAt = iso(o.nowMs - INVITES_SENT_DAYS_AGO * DAY);
-    const rows: TablesInsert<"invites">[] = invites.map((invite) => ({
-      exam_id: invite.examId,
-      student_id: invite.studentId,
-      email: invite.email,
-      locale: invite.locale,
-      state: invite.state,
-      provider_id: null,
-      error: null,
-      sent_at: sentAt,
-    }));
-    const keep = new Set(invites.map((invite) => invite.studentId));
-    const stray = current.filter((row) => !keep.has(row.student_id)).map((row) => row.student_id);
+    const stray = current.filter((row) => !want.has(row.student_id)).map((row) => row.student_id);
     if (stray.length > 0) {
       ok(
         await client.from("invites").delete().eq("exam_id", EXAM.math2).in("student_id", stray),
         "stray invites",
       );
     }
-    await insertAll(client, "invites", rows, { onConflict: "exam_id,student_id" });
+    await writeRows(
+      client,
+      "invites",
+      invites.map((invite) => ({
+        exam_id: invite.examId,
+        student_id: invite.studentId,
+        email: invite.email,
+        locale: invite.locale,
+        state: invite.state,
+        provider_id: null,
+        error: null,
+        sent_at: sentAt,
+      })),
+      { onConflict: "exam_id,student_id" },
+    );
     const proctors = new Set(MATH2_PROCTORS.map((row) => staff[row.staff]));
     const others = assignments.filter((row) => !proctors.has(row.staff_id)).map((row) => row.staff_id);
     if (others.length > 0) {
@@ -559,7 +653,7 @@ async function applyMath2(
         "other proctors",
       );
     }
-    await insertAll(
+    await writeRows(
       client,
       "proctor_assignments",
       MATH2_PROCTORS.map((row) => ({
@@ -569,15 +663,22 @@ async function applyMath2(
         seat_to: row.seatTo,
         languages: row.languages,
         is_lead: row.isLead,
-        confirmed_at: null,
+        confirmed_at: row.confirmed ? sentAt : null,
         change_request: null,
       })),
       { onConflict: "exam_id,staff_id" },
     );
   }
+  const before = nurlan
+    ? nurlan.change_request !== null
+      ? "had asked for a change"
+      : nurlan.confirmed_at !== null
+        ? "had confirmed"
+        : "was unconfirmed"
+    : "had no assignment";
   report.push({
     step: "Mathematics 2",
-    detail: `${invites.length} invites (Yerlan's bounced), ${changed} ${o.dryRun ? "to put back" : "put back"}; Aigerim 1-64 and Nurlan 65-128 unconfirmed (${confirmed} confirmed or changed before)`,
+    detail: `${invites.length} invites (Yerlan's bounced), ${changed} ${o.dryRun ? "to put back" : "put back"}; Nurlan's seats 65-128 unconfirmed (he ${before}), Aigerim's 1-64 confirmed`,
   });
 }
 
@@ -589,14 +690,13 @@ async function applyPhysicsHelp(o: ApplyOptions, report: StepReport[]): Promise<
   const { client } = o;
   const exam = must(await client.from("exams").select("starts_at").eq("id", EXAM.physics1), "Physics 1")[0];
   if (!exam) throw new Error("Physics 1 not found: load supabase/seed.sql first");
-  const others = must(
-    await client.from("help_requests").select("id, event_id, done_at"),
+  const requests = must(
+    await client.from("help_requests").select("id, event_id, exam_id, done_at"),
     "help requests",
-  ).filter((row) => row.event_id !== PHYSICS_HELP.eventId);
-  const existing = must(
-    await client.from("help_requests").select("id, done_at").eq("event_id", PHYSICS_HELP.eventId),
-    "seeded help request",
-  )[0];
+  );
+  // Rehearsal requests on the seed's exams go; judge mode's DEMO-LIVE keeps its own.
+  const others = requests.filter((row) => row.event_id !== PHYSICS_HELP.eventId && isSeedExamId(row.exam_id));
+  const existing = requests.find((row) => row.event_id === PHYSICS_HELP.eventId);
   if (!o.dryRun) {
     await inChunks(
       others.map((row) => row.id),
@@ -617,31 +717,37 @@ async function applyPhysicsHelp(o: ApplyOptions, report: StepReport[]): Promise<
     if (!existing) {
       const start = Date.parse(exam.starts_at);
       const student = must(
-        await client.from("students").select("locale, full_name").eq("id", PHYSICS_HELP.studentId),
+        await client.from("students").select("locale").eq("id", PHYSICS_HELP.studentId),
         "help student",
       )[0];
       if (!student) throw new Error("the Physics 1 help student is missing");
-      const minute = (m: number) => iso(start + m * 60_000);
+      const minute = (m: number) => iso(start + m * MINUTE);
       // A finished session: the tile shows Done rather than No signal, and the request stays open.
-      const session: TablesInsert<"sessions"> = {
-        id: PHYSICS_HELP.sessionId,
-        exam_id: EXAM.physics1,
-        student_id: PHYSICS_HELP.studentId,
-        auth_uid: PHYSICS_HELP.authUid,
-        state: "submitted",
-        locale: student.locale,
-        device: { os: "windows", app_version: "0.1.0-sim", simulated: true },
-        identity_result: "matched",
-        identity_score: 0.84,
-        joined_at: minute(PHYSICS_HELP.joinedMin),
-        rules_accepted_at: minute(PHYSICS_HELP.rulesMin),
-        rules_locale: student.locale,
-        started_at: minute(0),
-        submitted_at: minute(PHYSICS_HELP.submittedMin),
-        time_used_s: PHYSICS_HELP.submittedMin * 60,
-        last_seen_at: minute(PHYSICS_HELP.submittedMin),
-      };
-      ok(await client.from("sessions").upsert(session, { onConflict: "id" }), "help session");
+      ok(
+        await client.from("sessions").upsert(
+          {
+            id: PHYSICS_HELP.sessionId,
+            exam_id: EXAM.physics1,
+            student_id: PHYSICS_HELP.studentId,
+            auth_uid: PHYSICS_HELP.authUid,
+            state: "submitted",
+            locale: student.locale,
+            device: { os: "windows", app_version: "0.1.0-sim", simulated: true },
+            identity_result: "matched",
+            identity_score: 0.84,
+            joined_at: minute(PHYSICS_HELP.joinedMin),
+            rules_accepted_at: minute(PHYSICS_HELP.rulesMin),
+            rules_locale: student.locale,
+            started_at: minute(0),
+            submitted_at: minute(PHYSICS_HELP.submittedMin),
+            time_used_s: PHYSICS_HELP.submittedMin * 60,
+            last_seen_at: minute(PHYSICS_HELP.submittedMin),
+          },
+          { onConflict: "id" },
+        ),
+        "help session",
+      );
+      // The help_from_event trigger makes the help_requests row and broadcasts `help` to the wall.
       ok(
         await client.from("events").upsert(
           {
@@ -653,7 +759,7 @@ async function applyPhysicsHelp(o: ApplyOptions, report: StepReport[]): Promise<
             review: "log",
             seq: 12,
             at: minute(PHYSICS_HELP.askedMin),
-            received_at: iso(start + PHYSICS_HELP.askedMin * 60_000 + 1000),
+            received_at: iso(start + PHYSICS_HELP.askedMin * MINUTE + 1000),
             data: { topic: PHYSICS_HELP.topic, text: PHYSICS_HELP.text },
             frame_count: 0,
             app_version: "0.1.0-sim",
@@ -664,9 +770,10 @@ async function applyPhysicsHelp(o: ApplyOptions, report: StepReport[]): Promise<
       );
     }
   }
+  const state = existing ? (existing.done_at ? "reopened" : "open") : o.dryRun ? "to add" : "added";
   report.push({
     step: "Physics 1",
-    detail: `the simulated student's help request ${existing ? (existing.done_at ? "reopened" : "open") : o.dryRun ? "to add" : "added"}; ${others.length} rehearsal help requests ${o.dryRun ? "would go" : "removed"}`,
+    detail: `the simulated student's help request ${state}; ${others.length} rehearsal help requests ${o.dryRun ? "would go" : "removed"}`,
   });
 }
 
@@ -674,15 +781,18 @@ async function applyPhysicsHelp(o: ApplyOptions, report: StepReport[]): Promise<
 // Data requests (A.5)
 // ---------------------------------------------------------------------------------------------------
 
-async function backdateAudit(o: ApplyOptions, ids: number[], at: string): Promise<void> {
+async function backdateAudit(o: ApplyOptions, ids: readonly number[], at: string): Promise<void> {
   if (ids.length === 0) return;
-  const { error } = await o.client.from("audit_log").update({ at }).in("id", ids);
+  const { error } = await o.client
+    .from("audit_log")
+    .update({ at })
+    .in("id", [...ids]);
   if (error) o.log.warn(`audit rows keep the time of this run: ${error.message}`);
 }
 
 async function applyDataRequests(
   o: ApplyOptions,
-  staff: Record<StaffKey, string>,
+  staff: Staff,
   plan: TermPlan,
   report: StepReport[],
 ): Promise<void> {
@@ -691,8 +801,8 @@ async function applyDataRequests(
     await client.from("data_requests").select("id, status").eq("workspace_id", WORKSPACE_ID),
     "data requests",
   );
-  const seeded = new Set<string>([DATA_REQUEST.delete.id, DATA_REQUEST.copy.id]);
-  const extra = rows.filter((row) => !seeded.has(row.id));
+  const seededIds: string[] = [DATA_REQUEST.delete.id, DATA_REQUEST.copy.id];
+  const extra = rows.filter((row) => !seededIds.includes(row.id));
   const deleteRow = rows.find((row) => row.id === DATA_REQUEST.delete.id);
   if (!o.dryRun) {
     await inChunks(
@@ -703,11 +813,6 @@ async function applyDataRequests(
       },
     );
     const received = (days: number) => o.nowMs - days * DAY;
-    const isNew = new Set(
-      Object.values(DATA_REQUEST).flatMap((value) =>
-        typeof value === "object" && !rows.some((row) => row.id === value.id) ? [value.id] : [],
-      ),
-    );
     const requests: TablesInsert<"data_requests">[] = [
       {
         id: DATA_REQUEST.delete.id,
@@ -737,11 +842,10 @@ async function applyDataRequests(
       },
     ];
     for (const request of requests) {
+      const isNew = !rows.some((row) => row.id === request.id);
       ok(await client.from("data_requests").upsert(request, { onConflict: "id" }), "seeded data request");
-    }
-    // A new row writes data_request.received (the table's trigger) now; it happened when it arrived.
-    for (const request of requests) {
-      if (!request.id || !isNew.has(request.id)) continue;
+      if (!isNew || request.id === undefined) continue;
+      // A new row writes data_request.received now (the table's trigger); it happened when it arrived.
       const audit = must(
         await client
           .from("audit_log")
@@ -784,7 +888,8 @@ async function applyDataRequests(
         "copy audit row",
       );
     }
-    // A privacy delete in rehearsal cleared the student's identity scores and device records.
+    // A privacy delete in rehearsal cleared the student's identity scores and device records (the
+    // term step has put back their flags, and ensureStill their stills).
     ok(
       await client
         .from("sessions")
@@ -815,39 +920,43 @@ async function applyDataRequests(
 // The English B2 report, shared and opened twice (A.6)
 // ---------------------------------------------------------------------------------------------------
 
-async function shareViews(client: UkiClient, shareId: string): Promise<number[]> {
-  const rows = must(
-    await client
-      .from("audit_log")
-      .select("id")
-      .eq("action", "report.share_view")
-      .eq("meta->>share_id", shareId)
-      .order("id"),
-    "share views",
-  );
-  return rows.map((row) => row.id);
+async function shareViews(client: UkiClient, shareId: string, sinceIso?: string): Promise<number[]> {
+  let query = client
+    .from("audit_log")
+    .select("id")
+    .eq("action", "report.share_view")
+    .eq("meta->>share_id", shareId);
+  if (sinceIso !== undefined) query = query.gte("at", sinceIso);
+  return must(await query.order("id"), "share views").map((row) => row.id);
 }
 
 async function applySharedReport(o: ApplyOptions, report: StepReport[]): Promise<void> {
   const { client } = o;
-  const reports = must(await client.from("reports").select("id, session_id"), "reports");
+  const reports = must(await client.from("reports").select("id, session_id, exam_id"), "reports").filter(
+    (row) => isSeedExamId(row.exam_id),
+  );
   const seeded = reports.find((row) => row.session_id === SHARED_REPORT.sessionId);
   const otherReports = reports.filter((row) => row.session_id !== SHARED_REPORT.sessionId);
-  const shares = must(
-    await client
-      .from("report_shares")
-      .select("id, report_id, created_at, expires_at, revoked_at")
-      .order("created_at"),
-    "shares",
+  const shares = seeded
+    ? must(
+        await client
+          .from("report_shares")
+          .select("id, expires_at, revoked_at")
+          .eq("report_id", seeded.id)
+          .order("created_at"),
+        "shares",
+      )
+    : [];
+  const live = shares.filter(
+    (share) => share.revoked_at === null && Date.parse(share.expires_at) > o.nowMs + DAY,
   );
-  const seededShare = seeded ? shares.find((share) => share.report_id === seeded.id) : undefined;
-  const healthy =
-    seededShare !== undefined &&
-    seededShare.revoked_at === null &&
-    Date.parse(seededShare.expires_at) > o.nowMs + DAY &&
-    (await shareViews(client, seededShare.id)).length >= 2;
-  const extraShares = shares.filter((share) => share.id !== (healthy ? seededShare?.id : undefined));
+  let healthy: string | null = null;
+  for (const share of live) {
+    if ((await shareViews(client, share.id)).length >= 2) healthy = share.id;
+  }
+  const staleShares = shares.filter((share) => share.id !== healthy).map((share) => share.id);
   if (!o.dryRun) {
+    // Reports made in rehearsal go with their shares (report_shares cascade); audit rows stay.
     await inChunks(
       otherReports.map((row) => row.id),
       100,
@@ -855,72 +964,79 @@ async function applySharedReport(o: ApplyOptions, report: StepReport[]): Promise
         ok(await client.from("reports").delete().in("id", chunk), "delete rehearsal reports");
       },
     );
-    await inChunks(
-      extraShares.map((row) => row.id),
-      100,
-      async (chunk) => {
-        ok(await client.from("report_shares").delete().in("id", chunk), "delete rehearsal shares");
-      },
-    );
-    if (!healthy) await makeSharedReport(o);
+    await inChunks(staleShares, 100, async (chunk) => {
+      ok(await client.from("report_shares").delete().in("id", chunk), "delete rehearsal shares");
+    });
+    if (healthy === null) await makeSharedReport(o);
   }
   report.push({
     step: "English B2 report",
-    detail: `${healthy ? "shared, 2 views: in place" : o.dryRun ? "to make, share and open twice" : "made with get_report, shared and opened twice"}; ${otherReports.length} other reports and ${extraShares.length - (healthy ? 0 : seededShare ? 1 : 0)} rehearsal shares ${o.dryRun ? "would go" : "removed"}`,
+    detail: `${healthy !== null ? "shared, 2 views: in place" : o.dryRun ? "to make, share and open twice" : "made with get_report, shared and opened twice"}; ${otherReports.length} other reports and ${staleShares.length} other shares ${o.dryRun ? "would go" : "removed"}`,
   });
-}
-
-async function sha256Hex(text: string): Promise<string> {
-  const { createHash } = await import("node:crypto");
-  return createHash("sha256").update(text, "utf8").digest("hex");
 }
 
 async function makeSharedReport(o: ApplyOptions): Promise<void> {
   const { client } = o;
+  const runStart = iso(o.nowMs - MINUTE);
   const dana = await staffClient(o.env, STAFF_EMAIL.dana);
   try {
     const payload = await dana.client.rpc("get_report", { session_id: SHARED_REPORT.sessionId });
     if (payload.error) throw new Error(`get_report: ${payload.error.message}`);
     const row = must(
-      await client.from("reports").select("id, verify_code").eq("session_id", SHARED_REPORT.sessionId),
+      await client.from("reports").select("id").eq("session_id", SHARED_REPORT.sessionId),
       "the English B2 report",
     )[0];
     if (!row) throw new Error("get_report made no reports row");
     const shared = await dana.client.rpc("create_share", { report_id: row.id });
     if (shared.error) throw new Error(`create_share: ${shared.error.message}`);
-    const share = shared.data as { share_id?: string; token?: string } | null;
-    if (!share?.share_id || !share.token) throw new Error("create_share returned no token");
-    const hash = await sha256Hex(share.token);
+    const share = shared.data as { share_id?: unknown; token?: unknown } | null;
+    if (typeof share?.share_id !== "string" || typeof share.token !== "string") {
+      throw new Error("create_share returned no token");
+    }
+    // Opened twice through the link, as the shared-report function does it: by the token's hash.
+    const hash = createHash("sha256").update(share.token, "utf8").digest("hex");
     for (let view = 0; view < 2; view += 1) {
       const opened = await client.rpc("open_shared_report", { p_token_hash: hash });
       if (opened.error) throw new Error(`open_shared_report: ${opened.error.message}`);
     }
-    // The story's times: made and shared two days ago, opened a day later and yesterday evening.
+    // The story's times: made and shared two days ago, opened a day later and yesterday evening. The
+    // link keeps the length create_share gave it.
     const sharedAt = o.nowMs - SHARED_REPORT.sharedHoursAgo * HOUR;
+    const made = must(
+      await client.from("report_shares").select("created_at, expires_at").eq("id", share.share_id),
+      "the share",
+    )[0];
+    if (!made) throw new Error("create_share made no share row");
+    const shift = sharedAt - Date.parse(made.created_at);
     ok(
       await client
         .from("report_shares")
-        .update({ created_at: iso(sharedAt), expires_at: iso(sharedAt + 7 * DAY) })
+        .update({ created_at: iso(sharedAt), expires_at: iso(Date.parse(made.expires_at) + shift) })
         .eq("id", share.share_id),
       "share times",
     );
     ok(
       await client
         .from("reports")
-        .update({ created_at: iso(sharedAt - 10 * 60_000) })
+        .update({ created_at: iso(sharedAt - 10 * MINUTE), issued_at: iso(sharedAt - 10 * MINUTE) })
         .eq("id", row.id),
       "report time",
     );
-    const madeRows = must(
-      await client.from("audit_log").select("id").eq("action", "report.view").eq("meta->>report_id", row.id),
+    const viewed = must(
+      await client
+        .from("audit_log")
+        .select("id")
+        .eq("action", "report.view")
+        .eq("meta->>report_id", row.id)
+        .gte("at", runStart),
       "report view rows",
     );
     await backdateAudit(
       o,
-      madeRows.map((r) => r.id),
-      iso(sharedAt - 10 * 60_000),
+      viewed.map((r) => r.id),
+      iso(sharedAt - 10 * MINUTE),
     );
-    const shareRows = must(
+    const sharedRows = must(
       await client
         .from("audit_log")
         .select("id")
@@ -930,10 +1046,10 @@ async function makeSharedReport(o: ApplyOptions): Promise<void> {
     );
     await backdateAudit(
       o,
-      shareRows.map((r) => r.id),
+      sharedRows.map((r) => r.id),
       iso(sharedAt),
     );
-    const views = await shareViews(client, share.share_id);
+    const views = await shareViews(client, share.share_id, runStart);
     for (const [i, id] of views.entries()) {
       await backdateAudit(o, [id], iso(o.nowMs - (SHARED_REPORT.viewsHoursAgo[i] ?? 1) * HOUR));
     }
@@ -946,11 +1062,7 @@ async function makeSharedReport(o: ApplyOptions): Promise<void> {
 // The still 91 days old
 // ---------------------------------------------------------------------------------------------------
 
-async function applyOldExam(
-  o: ApplyOptions,
-  staff: Record<StaffKey, string>,
-  report: StepReport[],
-): Promise<void> {
+async function applyOldExam(o: ApplyOptions, staff: Staff, report: StepReport[]): Promise<void> {
   const { client } = o;
   const plan: OldExamPlan = oldExamPlan(o.nowMs);
   const exam = must(
@@ -959,7 +1071,7 @@ async function applyOldExam(
   )[0];
   const sessions = await client
     .from("sessions")
-    .select("*", { count: "exact", head: true })
+    .select("id", { count: "exact", head: true })
     .eq("exam_id", OLD_EXAM_ID);
   if (sessions.error) throw new Error(`old exam sessions: ${sessions.error.message}`);
   const flag = must(await client.from("events").select("id, at").eq("id", plan.flag.id), "old flag")[0];
@@ -994,15 +1106,11 @@ async function applyOldExam(
   });
 }
 
-async function writeOldExam(
-  o: ApplyOptions,
-  plan: OldExamPlan,
-  staff: Record<StaffKey, string>,
-): Promise<void> {
+async function writeOldExam(o: ApplyOptions, plan: OldExamPlan, staff: Staff): Promise<void> {
   const { client } = o;
   const start = Date.parse(plan.exam.startsAt);
-  ok(
-    await client.from("exams").insert({
+  await writeRows(client, "exams", [
+    {
       id: plan.exam.id,
       workspace_id: WORKSPACE_ID,
       faculty_id: FACULTY.physics,
@@ -1012,20 +1120,19 @@ async function writeOldExam(
       mode: "app",
       starts_at: plan.exam.startsAt,
       duration_min: plan.exam.durationMin,
-      lobby_opens_at: iso(start - 20 * 60_000),
+      lobby_opens_at: iso(start - 20 * MINUTE),
       status: "reviewed",
       created_by: staff.dana,
       created_at: iso(start - 14 * DAY),
       scheduled_at: iso(start - 13 * DAY),
-    }),
-    "old exam",
-  );
-  await insertAll(
+    },
+  ]);
+  await writeRows(
     client,
     "exam_groups",
     plan.exam.groups.map((code) => ({ exam_id: plan.exam.id, group_id: groupByCode(code).id })),
   );
-  await insertAll(
+  await writeRows(
     client,
     "exam_students",
     plan.roster.map((row) => ({
@@ -1035,7 +1142,7 @@ async function writeOldExam(
       invite_status: "sent",
     })),
   );
-  await insertAll(
+  await writeRows(
     client,
     "sessions",
     plan.sessions.map((session) => ({
@@ -1048,8 +1155,8 @@ async function writeOldExam(
       device: { os: session.os, app_version: "0.1.0" },
       identity_result: "matched",
       identity_score: session.identityScore,
-      joined_at: iso(start - 8 * 60_000),
-      rules_accepted_at: iso(start - 6 * 60_000),
+      joined_at: iso(start - 8 * MINUTE),
+      rules_accepted_at: iso(start - 6 * MINUTE),
       rules_locale: session.locale,
       started_at: session.startedAt,
       submitted_at: session.submittedAt,
@@ -1057,8 +1164,8 @@ async function writeOldExam(
       last_seen_at: session.submittedAt,
     })),
   );
-  ok(
-    await client.from("events").insert({
+  await writeRows(client, "events", [
+    {
       id: plan.flag.id,
       session_id: plan.flag.sessionId,
       exam_id: plan.exam.id,
@@ -1071,31 +1178,25 @@ async function writeOldExam(
       data: { score: plan.flag.score, held_ms: plan.flag.heldMs },
       frame_count: 1,
       app_version: "0.1.0",
-    }),
-    "old flag",
-  );
-  ok(
-    await client.from("review_decisions").insert({
+    },
+  ]);
+  await writeRows(client, "review_decisions", [
+    {
       session_id: plan.flag.sessionId,
       exam_id: plan.exam.id,
       decision: "no_issue",
       note: "Phone on the desk, face down.",
       reviewer_id: staff.gulnara,
       decided_at: plan.decidedAt,
-    }),
-    "old decision",
-  );
+    },
+  ]);
 }
 
 // ---------------------------------------------------------------------------------------------------
 // Dana
 // ---------------------------------------------------------------------------------------------------
 
-async function applyDana(
-  o: ApplyOptions,
-  staff: Record<StaffKey, string>,
-  report: StepReport[],
-): Promise<void> {
+async function applyDana(o: ApplyOptions, staff: Staff, report: StepReport[]): Promise<void> {
   const row = must(await o.client.from("staff").select("languages").eq("id", staff.dana), "Dana")[0];
   if (!o.dryRun) {
     ok(
@@ -1111,16 +1212,17 @@ async function applyDana(
 
 /** Writes seed v2. Phase 0's reset of Mathematics 2 and Physics 1 must already have run. */
 export async function applySeedV2(o: ApplyOptions): Promise<StepReport[]> {
-  const report: StepReport[] = [];
-  const staff = await staffIds(o.client);
   if (o.env.SEED_STAFF_PASSWORD === undefined || o.env.SUPABASE_PUBLISHABLE_KEY === undefined) {
     throw new Error(
       "seed v2 makes the English B2 report as Dana (get_report): set SEED_STAFF_PASSWORD and SUPABASE_PUBLISHABLE_KEY",
     );
   }
+  const report: StepReport[] = [];
+  const staff = await staffIds(o.client);
+  const plan = buildTermPlan();
   await deleteWizardExams(o, report);
   await applyWorld(o, report);
-  const plan = await applyTerm(o, staff, report);
+  await applyTerm(o, plan, staff, report);
   await applyOldExam(o, staff, report);
   await applyHistory(o, report);
   await applyMath2(o, staff, report);

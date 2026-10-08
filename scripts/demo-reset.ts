@@ -1,33 +1,56 @@
-// `pnpm demo:reset`: puts the two demo exams back to the start of the demo script
-// (docs/phase-0-plan.md, "Demo commands"), on the local stack or the cloud project.
+// `pnpm demo:reset`: puts the demo back to the start of the Demo Day script (docs/phase-1-plan.md,
+// "Demo commands"; Phase 0's part from docs/phase-0-plan.md), on the local stack or the cloud project.
 //
-// - Clears every session of Mathematics 2 and Physics 1, with their answers, events, frames rows,
-//   still objects in the private `frames` bucket, and proctor commands. Simulated sessions go too.
-// - Mathematics 2 · Midterm: starts in 15 minutes (on the server's clock, whole minutes), lobby open
-//   from 20 minutes before, 90 minutes, status scheduled.
-// - Physics 1 · Quiz 3: started 5 minutes ago, 40 minutes, status live. With SEED_LMS_URL set, its
-//   lms_url points at that mock portal.
-// Other exams (History, Linear Algebra, English B2), staff, rosters and the audit log are untouched.
-// Idempotent: run it as often as you like.
+// 1. One Realtime connection for a few seconds, as Dana on Mathematics 2's channel: a project creates
+//    the day's realtime.messages partitions only when a client connects (scripts/lib/realtime-warmup.ts).
+// 2. Phase 0: clears every session of Mathematics 2 and Physics 1, with their answers, events, frames
+//    rows, still objects and proctor commands (simulated sessions too). Mathematics 2 · Midterm starts
+//    in 15 minutes (server clock, whole minutes), lobby open from 20 minutes before, 90 minutes,
+//    scheduled; Physics 1 · Quiz 3 started 5 minutes ago, 40 minutes, live, and with SEED_LMS_URL set
+//    its lms_url points at that mock portal.
+// 3. Seed v2 (scripts/lib/seed-v2/apply.ts): deletes the exams the wizard made (judge mode's DEMO-LIVE
+//    stays), puts back the students with programme and year, the Autumn 2026 term with its decisions,
+//    Mathematics 2's invites with Yerlan's bounced and Nurlan's unconfirmed seats, History of
+//    Kazakhstan's seven flags with stills and no decision, the open help request on Physics 1, the two
+//    data requests, the English B2 report shared and opened twice, the still dated 91 days ago, and
+//    Dana's languages with English first. Rehearsal help requests, reports, shares and data requests go.
+// Staff accounts and the audit log are kept. Idempotent: run it as often as you like.
 //
 //   pnpm demo:reset [--yes] [--dry-run] [--env-file <path>]
 //
-// Reads SUPABASE_URL and SUPABASE_SECRET_KEY (and optionally SEED_LMS_URL) from the environment or the
-// repository's .env. A cloud target asks for confirmation unless --yes is given.
+// Reads SUPABASE_URL, SUPABASE_SECRET_KEY, SUPABASE_PUBLISHABLE_KEY and SEED_STAFF_PASSWORD (and
+// optionally SEED_LMS_URL) from the environment or the repository's .env; --env-file .env.cloud for the
+// cloud project. A cloud target asks for confirmation unless --yes is given. Exits 1 when Realtime did
+// not connect, after the data is reset.
 import { z } from "zod";
-import { almatyTime, confirm, createLogger, must, ok, parseCli, style, UsageError } from "./lib/cli.ts";
+import {
+  almatyTime,
+  confirm,
+  createLogger,
+  formatDuration,
+  must,
+  ok,
+  parseCli,
+  style,
+  UsageError,
+} from "./lib/cli.ts";
 import { serverClock } from "./lib/clock.ts";
 import { DEMO_EXAMS, type DemoExamKey, demoSchedule, physicsLmsUrl } from "./lib/demo.ts";
 import { describeTarget, isLocalUrl, loadEnvFile, readScriptEnv } from "./lib/env.ts";
-import { adminClient, listFramesUnder, removeFrames, type UkiClient } from "./lib/supabase.ts";
+import { warmRealtime } from "./lib/realtime-warmup.ts";
+import { applySeedV2 } from "./lib/seed-v2/apply.ts";
+import { clearExamSessions } from "./lib/seed-v2/clear.ts";
+import { STAFF_EMAIL } from "./lib/seed-v2/story.ts";
+import { adminClient, staffClient } from "./lib/supabase.ts";
 
 const log = createLogger("demo:reset");
 
 const USAGE = `Usage: pnpm demo:reset [--yes] [--dry-run] [--env-file <path>]
 
   --yes            do not ask before resetting a cloud project
-  --dry-run        count what would be cleared; change nothing
-  --env-file <p>   read SUPABASE_URL and SUPABASE_SECRET_KEY from this file instead of .env`;
+  --dry-run        count what would be cleared and restored; change nothing
+  --env-file <p>   read SUPABASE_URL, SUPABASE_SECRET_KEY, SUPABASE_PUBLISHABLE_KEY and
+                   SEED_STAFF_PASSWORD from this file instead of .env (the cloud: .env.cloud)`;
 
 const Args = z.object({
   yes: z.boolean().default(false),
@@ -41,81 +64,6 @@ interface ExamRow {
   code: string | null;
   title: string;
   status: string;
-}
-
-interface Cleared {
-  stills: number;
-  frames: number;
-  events: number;
-  commands: number;
-  answers: number;
-  sessions: number;
-  simulated: number;
-}
-
-async function countRows(
-  client: UkiClient,
-  table: "frames" | "events" | "session_commands" | "sessions",
-  examId: string,
-): Promise<number> {
-  const { count, error } = await client
-    .from(table)
-    .select("*", { count: "exact", head: true })
-    .eq("exam_id", examId);
-  if (error) throw new Error(`count ${table}: ${error.message}`);
-  return count ?? 0;
-}
-
-async function clearExam(client: UkiClient, exam: ExamRow, dryRun: boolean): Promise<Cleared> {
-  const stills = await listFramesUnder(client, exam.id);
-  const sessions = must(
-    await client.from("sessions").select("id, device").eq("exam_id", exam.id),
-    `sessions of ${exam.title}`,
-  );
-  const sessionIds = sessions.map((row) => row.id);
-  const simulated = sessions.filter((row) => {
-    const device = row.device;
-    return (
-      typeof device === "object" && device !== null && !Array.isArray(device) && device.simulated === true
-    );
-  }).length;
-  let answers = 0;
-  for (let i = 0; i < sessionIds.length; i += 100) {
-    const { count, error } = await client
-      .from("answers")
-      .select("*", { count: "exact", head: true })
-      .in("session_id", sessionIds.slice(i, i + 100));
-    if (error) throw new Error(`count answers: ${error.message}`);
-    answers += count ?? 0;
-  }
-  const cleared: Cleared = {
-    stills: stills.length,
-    frames: await countRows(client, "frames", exam.id),
-    events: await countRows(client, "events", exam.id),
-    commands: await countRows(client, "session_commands", exam.id),
-    answers,
-    sessions: sessionIds.length,
-    simulated,
-  };
-  if (dryRun) return cleared;
-
-  // Children first: frames reference events and sessions; events and commands reference sessions;
-  // answers cascade with their session but are deleted explicitly so a partial run leaves no orphans.
-  await removeFrames(client, stills);
-  ok(await client.from("frames").delete().eq("exam_id", exam.id), "delete frames");
-  ok(await client.from("events").delete().eq("exam_id", exam.id), "delete events");
-  ok(await client.from("session_commands").delete().eq("exam_id", exam.id), "delete session_commands");
-  for (let i = 0; i < sessionIds.length; i += 100) {
-    ok(
-      await client
-        .from("answers")
-        .delete()
-        .in("session_id", sessionIds.slice(i, i + 100)),
-      "delete answers",
-    );
-  }
-  ok(await client.from("sessions").delete().eq("exam_id", exam.id), "delete sessions");
-  return cleared;
 }
 
 async function main(): Promise<void> {
@@ -137,12 +85,17 @@ async function main(): Promise<void> {
   const env = readScriptEnv();
   const target = describeTarget(env.SUPABASE_URL);
   log.info(`${args["dry-run"] ? "dry run against" : "resetting"} the ${style.bold(target)}`);
+  if (env.SUPABASE_PUBLISHABLE_KEY === undefined || env.SEED_STAFF_PASSWORD === undefined) {
+    throw new UsageError(
+      "SUPABASE_PUBLISHABLE_KEY and SEED_STAFF_PASSWORD are needed: Realtime and the shared report run as Dana",
+    );
+  }
 
   if (!args["dry-run"] && !args.yes && !isLocalUrl(env.SUPABASE_URL)) {
     if (!process.stdin.isTTY) {
       throw new UsageError(`refusing to reset the ${target} without --yes (stdin is not a terminal)`);
     }
-    if (!(await confirm(`Clear the demo sessions on the ${target}?`))) {
+    if (!(await confirm(`Reset the demo data (Phase 0 and seed v2) on the ${target}?`))) {
       log.info("nothing changed");
       return;
     }
@@ -151,6 +104,7 @@ async function main(): Promise<void> {
   const client = adminClient(env);
   const clock = await serverClock(env.SUPABASE_URL, env.SUPABASE_SECRET_KEY);
   if (clock.offsetMs !== 0) log.info(`server clock is ${clock.offsetMs} ms ahead of this laptop`);
+  const startedAt = Date.now();
 
   const keys = Object.keys(DEMO_EXAMS) as DemoExamKey[];
   const codes = keys.map((key) => DEMO_EXAMS[key].code);
@@ -169,12 +123,33 @@ async function main(): Promise<void> {
     byKey.set(key, row);
   }
 
+  // Realtime first, so the day's partitions exist before the reset's writes broadcast anything.
+  let realtimeOk = true;
+  if (!args["dry-run"]) {
+    const dana = await staffClient(env, STAFF_EMAIL.dana);
+    const math2 = byKey.get("math");
+    const warm = math2
+      ? await warmRealtime(dana.client, dana.accessToken, math2.id)
+      : { ok: false, attempts: 0, ms: null, errors: ["no Mathematics 2"] };
+    dana.client.realtime.disconnect();
+    await dana.client.auth.signOut();
+    realtimeOk = warm.ok;
+    if (warm.ok) {
+      log.info(
+        `realtime: connected as Dana in ${warm.ms} ms (attempt ${warm.attempts}), held a few seconds` +
+          (warm.errors.length > 0 ? `; earlier attempts: ${warm.errors.join("; ")}` : ""),
+      );
+    } else {
+      log.error(`realtime: no connection after ${warm.attempts} attempts: ${warm.errors.join("; ")}`);
+    }
+  }
+
   const schedule = demoSchedule(clock.now());
   const summary: string[] = [];
   for (const key of keys) {
     const exam = byKey.get(key);
     if (!exam) continue;
-    const cleared = await clearExam(client, exam, args["dry-run"]);
+    const cleared = await clearExamSessions(client, exam.id, args["dry-run"]);
     const plan = schedule[key];
     const update: {
       starts_at: string;
@@ -201,17 +176,28 @@ async function main(): Promise<void> {
     );
   }
   for (const line of summary) log.info(line);
-  if (!args["dry-run"]) {
-    log.info(style.green("done: reload any open dashboard; a student app joins again from 1.1"));
+
+  const steps = await applySeedV2({ client, env, nowMs: clock.now(), dryRun: args["dry-run"], log });
+  for (const step of steps) log.info(`${style.bold(step.step)}: ${step.detail}`);
+  log.info(`took ${formatDuration(Date.now() - startedAt)}`);
+  if (args["dry-run"]) return;
+  if (!realtimeOk) {
+    log.error("the data is reset, but Realtime did not connect: the walls will not update; run it again");
+    process.exitCode = 1;
+    return;
   }
+  log.info(style.green("done: reload any open dashboard; a student app joins again from 1.1"));
 }
 
-main().catch((error: unknown) => {
-  if (error instanceof UsageError) {
-    log.error(error.message);
-    process.stderr.write(`${USAGE}\n`);
-    process.exit(2);
-  }
-  log.error(error instanceof Error ? error.message : String(error));
-  process.exit(1);
-});
+// Exits explicitly: the staff sign-ins leave Auth's refresh timer and the Realtime socket behind.
+main()
+  .then(() => process.exit(process.exitCode ?? 0))
+  .catch((error: unknown) => {
+    if (error instanceof UsageError) {
+      log.error(error.message);
+      process.stderr.write(`${USAGE}\n`);
+      process.exit(2);
+    }
+    log.error(error instanceof Error ? error.message : String(error));
+    process.exit(1);
+  });

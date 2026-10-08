@@ -5,9 +5,10 @@
 #   stack     the slim local stack (pnpm db:start, as pnpm dev:local starts it; the edge runtime runs
 #             under functions serve), then a clean db reset of every migration and the seed (P.9), then
 #             supabase functions serve; pgTAP; the functions' integration tests and the
-#             desktop flow against the stack; the dashboard smoke test (Playwright Chromium); the demo
-#             scripts against the real schema; then send-invites (WP 1.4) and pilot-notify (WP 1.13) again
-#             with UKI_EMAIL_SINK set
+#             desktop flow against the stack; seed v2 checked row for row (pnpm seed:check); the
+#             dashboard smoke test (Playwright Chromium); the demo scripts against the real schema, each
+#             demo:reset checked; then send-invites (WP 1.4) and pilot-notify (WP 1.13) again with
+#             UKI_EMAIL_SINK set
 #   build     web (with the /try models, checked against the SHA-256 manifest), the mock portal and Üki
 #             Lock (Chrome and Edge zips, uploaded as the uki-lock artifact), then the Üki Lock smoke test
 #             in headless Chrome for Testing and the /try demo with Chromium's fake camera
@@ -116,8 +117,10 @@ jobs:
         run: pnpm env:local
       - name: pgTAP (RLS for every role, RPCs, triggers)
         run: pnpm db:test
-      - name: Staff accounts
+      - name: Staff accounts (and the seed v2 term's decisions)
         run: pnpm seed:staff
+      - name: Seed v2 row for row against scripts/lib/seed-v2, and A.1's figures from the term views
+        run: pnpm seed:check
       - name: Serve the Edge Functions (as pnpm dev:local does)
         run: nohup pnpm functions:serve > functions-serve.log 2>&1 &
       - name: Functions and realtime integration tests
@@ -126,11 +129,13 @@ jobs:
         run: pnpm test:integration:desktop
       - name: Dashboard smoke test
         run: pnpm e2e
-      - name: Demo scripts against the schema
+      - name: Demo scripts against the schema (demo:reset v2 twice, checked each time)
         run: |
           pnpm demo:reset
+          pnpm seed:check --demo
           pnpm demo:simulate --sessions 20 --speed 4 --start-after 15 --seconds 50 --watch
           pnpm demo:reset
+          pnpm seed:check --demo
       - name: send-invites and pilot-notify with UKI_EMAIL_SINK (the functions served again with a sink)
         run: |
           pkill -f "functions serve" || true
