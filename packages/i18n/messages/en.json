@@ -172,6 +172,16 @@
         "students": "Students",
         "when": "When"
       },
+      "dataKept": {
+        "body": "Üki checks video on each laptop. Only events and flagged frames reach the server.",
+        "count": "{count, number}",
+        "events": "Events",
+        "frames": "Flagged frames",
+        "pending": "—",
+        "privacyCentre": "Open privacy centre",
+        "title": "Why 0 MB?",
+        "video": "Video"
+      },
       "exams": {
         "empty": "No exams here.",
         "title": "Exams"
@@ -222,6 +232,9 @@
       "title": "Overview"
     },
     "shell": {
+      "account": {
+        "language": "Language"
+      },
       "lookupFailed": {
         "body": "Your account did not load, so this page cannot open yet. Try again in a moment.",
         "retry": "Try again",
@@ -230,7 +243,12 @@
       "nav": {
         "exams": "Exams",
         "live": "Live",
-        "overview": "Overview"
+        "overview": "Overview",
+        "privacy": "Privacy",
+        "reports": "Reports",
+        "review": "Review",
+        "settings": "Settings",
+        "students": "Students"
       },
       "navLabel": "Dashboard",
       "note": {
@@ -243,12 +261,16 @@
         "proctor": "Proctor"
       },
       "section": {
+        "admin": "Admin",
         "workspace": "Workspace"
       },
-      "signOut": "Sign out",
+      "signOut": "Log out",
       "toast": {
         "close": "Close",
         "label": "Notifications"
+      },
+      "workspace": {
+        "allFaculties": "All faculties"
       }
     },
     "signIn": {

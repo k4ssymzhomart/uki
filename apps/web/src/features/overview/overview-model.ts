@@ -1,6 +1,7 @@
 import { ExamChecks, ExamStatus, Timestamp, toMs, Uuid } from "@uki/contracts";
 import type { ChipStatus, ExamCheck } from "@uki/ui";
 import { z } from "zod";
+import { almatyDay } from "../../lib/format.ts";
 
 /**
  * 0.1 Overview, as pure functions over `exam_overview` rows (the view runs under the caller's RLS, so a
@@ -12,6 +13,8 @@ const Count = z.number().int().nonnegative();
 /** One `exam_overview` row with the columns the overview and the sidebar read. */
 export const OverviewRow = z.object({
   id: Uuid,
+  /** The faculty the exam belongs to, for the workspace menu's faculty filter (0.1c). */
+  faculty_id: Uuid.nullable().default(null),
   title: z.string(),
   course: z.string(),
   status: ExamStatus,
@@ -31,7 +34,7 @@ export type OverviewRow = z.infer<typeof OverviewRow>;
 
 /** The columns to select from `exam_overview`. */
 export const OVERVIEW_COLUMNS =
-  "id, title, course, status, starts_at, duration_min, lobby_opens_at, checks, groups, proctor_count, roster_size, joined, writing, flagged_events, sessions_final";
+  "id, faculty_id, title, course, status, starts_at, duration_min, lobby_opens_at, checks, groups, proctor_count, roster_size, joined, writing, flagged_events, sessions_final";
 
 /** Parses the view's rows; a row that does not parse is left out rather than shown wrong. */
 export function parseOverviewRows(rows: readonly unknown[]): OverviewRow[] {
@@ -170,4 +173,37 @@ export function liveTarget(rows: readonly OverviewRow[], nowMs: number): LiveTar
  */
 export function coversAllGroups(groups: readonly string[], workspaceGroupCount: number): boolean {
   return groups.length > 1 && groups.length >= workspaceGroupCount;
+}
+
+// ---------------------------------------------------------------------------------------------
+// 0.1c: the workspace menu's faculty filter
+
+/** The rows of one faculty, or every row when no faculty is chosen. */
+export function rowsInFaculty(rows: readonly OverviewRow[], facultyId: string | null): OverviewRow[] {
+  return facultyId === null ? [...rows] : rows.filter((row) => row.faculty_id === facultyId);
+}
+
+const almatyWeekday = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Almaty", weekday: "short" });
+const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const DAY_MS = 86_400_000;
+
+/** The seven Asia/Almaty calendar days, Monday to Sunday, of the week holding `nowMs` ("2026-10-05"...). */
+export function almatyWeekDays(nowMs: number): Set<string> {
+  const today = Math.max(0, WEEKDAYS.indexOf(almatyWeekday.format(nowMs)));
+  return new Set(Array.from({ length: 7 }, (_, day) => almatyDay(nowMs + (day - today) * DAY_MS)));
+}
+
+/**
+ * The workspace menu's number per faculty (Figma Menu/Workspace 83:2391: "The number is exams this
+ * week"): exams that start this Monday-to-Sunday week in Asia/Almaty, cancelled ones left out.
+ */
+export function examsThisWeekByFaculty(rows: readonly OverviewRow[], nowMs: number): Record<string, number> {
+  const week = almatyWeekDays(nowMs);
+  const counts: Record<string, number> = {};
+  for (const row of rows) {
+    if (row.faculty_id === null || row.status === "cancelled") continue;
+    if (!week.has(almatyDay(row.starts_at))) continue;
+    counts[row.faculty_id] = (counts[row.faculty_id] ?? 0) + 1;
+  }
+  return counts;
 }

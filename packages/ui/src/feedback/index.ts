@@ -1,4 +1,4 @@
-// Feedback: dialog, toast, banner, spinner, tooltip and the dropdown menu building blocks.
+// Feedback: dialog, toast, banner, spinner, tooltip, the info popover and the dropdown menu building blocks.
 export * from "./banner.tsx";
 export * from "./dialog.tsx";
 export * from "./menu.ts";
@@ -6,6 +6,7 @@ export * from "./menu-content.tsx";
 export * from "./menu-item.tsx";
 export * from "./menu-label.tsx";
 export * from "./menu-separator.tsx";
+export * from "./popover.tsx";
 export * from "./spinner.tsx";
 export * from "./toast.tsx";
 export * from "./toast-context.ts";

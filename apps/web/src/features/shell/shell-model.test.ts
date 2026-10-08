@@ -1,8 +1,25 @@
 import { describe, expect, it } from "vitest";
 import { formatGroupCodes, isSameAlmatyDay, minutesUntil } from "../../lib/format.ts";
-import { activeNav, isDarkRoute, liveHref, workspaceInitial, workspaceShortName } from "./shell-model.ts";
+import {
+  activeNav,
+  isDarkRoute,
+  liveHref,
+  NAV,
+  type NavId,
+  type NavSpec,
+  navSections,
+  PROCTORS_LAND_ON_MY_EXAMS,
+  staffHomePath,
+  workspaceInitial,
+  workspaceShortName,
+} from "./shell-model.ts";
 
 const exam = "e0000000-0000-4000-8000-000000000001";
+
+/** Every item built, as the sidebar will be once 1.8 to 1.12 have landed. */
+const ALL_BUILT = Object.fromEntries(
+  Object.entries(NAV).map(([id, spec]) => [id, { ...spec, built: true }]),
+) as Record<NavId, NavSpec>;
 
 describe("shell", () => {
   it("marks Overview on the overview and Live on an exam's lobby and wall", () => {
@@ -10,6 +27,45 @@ describe("shell", () => {
     expect(activeNav(`/exams/${exam}/lobby`)).toBe("live");
     expect(activeNav(`/exams/${exam}/live`)).toBe("live");
     expect(activeNav("/sign-in")).toBeNull();
+  });
+
+  it("marks the Phase 1 items on their routes, and Overview on a proctor's /my-exams (0.9)", () => {
+    expect(activeNav("/my-exams")).toBe("overview");
+    expect(activeNav("/review")).toBe("review");
+    expect(activeNav(`/review/${exam}/report`)).toBe("review");
+    expect(activeNav("/reports")).toBe("reports");
+    expect(activeNav(`/students/${exam}`)).toBe("students");
+    expect(activeNav("/settings")).toBe("settings");
+    expect(activeNav("/privacy-centre/audit-log")).toBe("privacy");
+    // /privacy is the public policy page, not the privacy centre.
+    expect(activeNav("/privacy")).toBeNull();
+    expect(activeNav("/reviewer")).toBeNull();
+  });
+
+  it("lists the items per role as the frames do: 0.1 for the exam office, 0.9 for proctors", () => {
+    expect(navSections("exam_office", ALL_BUILT)).toEqual([
+      { id: "workspace", items: ["overview", "exams", "live", "review", "reports", "students"] },
+      { id: "admin", items: ["settings", "privacy"] },
+    ]);
+    expect(navSections("admin", ALL_BUILT)).toEqual(navSections("exam_office", ALL_BUILT));
+    expect(navSections("proctor", ALL_BUILT)).toEqual([
+      { id: "workspace", items: ["overview", "exams", "live", "review", "reports", "students"] },
+    ]);
+  });
+
+  it("hides every item whose page is not built yet, and the empty Admin section with them", () => {
+    const built = (Object.keys(NAV) as NavId[]).filter((id) => NAV[id].built);
+    expect(built).toEqual(["overview", "exams", "live"]);
+    expect(navSections("exam_office")).toEqual([{ id: "workspace", items: ["overview", "exams", "live"] }]);
+    expect(navSections("proctor")).toEqual([{ id: "workspace", items: ["overview", "exams", "live"] }]);
+  });
+
+  it("lands proctors on /my-exams only once WP 1.5 has turned it on", () => {
+    expect(PROCTORS_LAND_ON_MY_EXAMS).toBe(false);
+    expect(staffHomePath("proctor")).toBe("/overview");
+    expect(staffHomePath("proctor", true)).toBe("/my-exams");
+    expect(staffHomePath("exam_office", true)).toBe("/overview");
+    expect(staffHomePath("admin", true)).toBe("/overview");
   });
 
   it("draws only the live wall dark", () => {

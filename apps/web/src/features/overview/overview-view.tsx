@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import reportArt from "../../assets/uki-3d-report.png";
 import stopwatchArt from "../../assets/uki-3d-stopwatch.png";
+import { useDashboardLocale } from "../../i18n/use-dashboard-locale.ts";
 import {
   dayOf,
   formatGroupCodes,
@@ -18,6 +19,7 @@ import { AppLink } from "../shell/app-link.tsx";
 import { PageHeader } from "../shell/page-header.tsx";
 import { workspaceShortName } from "../shell/shell-model.ts";
 import { useStaff } from "../shell/staff-context.ts";
+import { DataKeptTile } from "./data-kept-popover.tsx";
 import {
   coversAllGroups,
   EXAM_FILTERS,
@@ -38,6 +40,11 @@ export type OverviewViewProps = {
   readiness: { ready: number; total: number } | null;
   /** The server's clock when the page rendered, so "Today" matches on both sides. */
   nowMs: number;
+  /**
+   * The breadcrumb's second part: the faculty the exam office chose in the workspace menu (0.1c), or
+   * "All faculties"; undefined for a proctor, who sees their own faculty.
+   */
+  scopeName?: string;
 };
 
 /** Where an exam's row leads in Phase 0: its lobby before the start, its live wall after. */
@@ -49,10 +56,12 @@ function examHref(row: OverviewRow): string | undefined {
 
 /**
  * 0.1 Overview (Figma 51:2046): stat cards, the exams table with client-side filters, and the next
- * exam's card with Open lobby. Import CSV and New exam are hidden until Phase 1.
+ * exam's card with Open lobby, and 0.1b behind Video uploaded. Import CSV and New exam stay hidden
+ * until the wizard (WP 1.3) lands.
  */
-export function OverviewView({ rows, groupCount, readiness, nowMs }: OverviewViewProps) {
+export function OverviewView({ rows, groupCount, readiness, nowMs, scopeName }: OverviewViewProps) {
   const t = useTranslations("dashboard");
+  const locale = useDashboardLocale();
   const staff = useStaff();
   const [filter, setFilter] = useState<ExamFilter>("all");
   const stats = overviewStats(rows);
@@ -72,13 +81,14 @@ export function OverviewView({ rows, groupCount, readiness, nowMs }: OverviewVie
   const whenOf = (row: OverviewRow) =>
     isSameAlmatyDay(row.starts_at, nowMs)
       ? t("common.todayTime", { time: timeOf(row.starts_at) })
-      : t("common.dateTime", { date: dayOf(row.starts_at), time: timeOf(row.starts_at) });
+      : t("common.dateTime", { date: dayOf(row.starts_at, locale), time: timeOf(row.starts_at) });
   const oneLine = (text: string | undefined) =>
     text === undefined ? undefined : <span className="block truncate">{text}</span>;
   const titles = (list: readonly OverviewRow[]) =>
     list.length > 0 ? list.map((row) => row.title).join(" · ") : undefined;
-  const breadcrumb = staff.facultyName
-    ? t("common.withDetail", { main: workspaceShortName(staff.workspaceName), detail: staff.facultyName })
+  const scope = scopeName ?? staff.facultyName;
+  const breadcrumb = scope
+    ? t("common.withDetail", { main: workspaceShortName(staff.workspaceName), detail: scope })
     : staff.workspaceName;
 
   return (
@@ -94,7 +104,7 @@ export function OverviewView({ rows, groupCount, readiness, nowMs }: OverviewVie
               next
                 ? t("overview.stat.upcoming.caption", {
                     course: next.course,
-                    weekday: weekdayOf(next.starts_at),
+                    weekday: weekdayOf(next.starts_at, locale),
                     time: timeOf(next.starts_at),
                   })
                 : undefined
@@ -112,17 +122,7 @@ export function OverviewView({ rows, groupCount, readiness, nowMs }: OverviewVie
             value={stats.review.flags}
             caption={oneLine(titles(stats.review.exams))}
           />
-          <StatTile
-            className="items-stretch"
-            label={
-              <span className="inline-flex items-center gap-1.5">
-                {t("overview.stat.video.label")}
-                <Icon name="info" className="size-3.5" />
-              </span>
-            }
-            value={t("overview.stat.video.value", { megabytes: 0 })}
-            caption={t("overview.stat.video.caption")}
-          />
+          <DataKeptTile examIds={rows.map((row) => row.id)} />
         </div>
 
         <section
@@ -218,7 +218,7 @@ export function OverviewView({ rows, groupCount, readiness, nowMs }: OverviewVie
               <Image src={stopwatchArt} alt="" className="size-21 shrink-0 object-contain" />
               <div className="flex min-w-0 flex-1 flex-col items-start gap-1">
                 <p className="type-mono-tag">
-                  {t("overview.next.overline", { date: dayOf(next.starts_at) })}
+                  {t("overview.next.overline", { date: dayOf(next.starts_at, locale) })}
                 </p>
                 <h2 className="type-card-title">
                   {t("overview.next.title", { course: next.course, time: timeOf(next.starts_at) })}
@@ -244,7 +244,7 @@ export function OverviewView({ rows, groupCount, readiness, nowMs }: OverviewVie
                 <Image src={reportArt} alt="" className="size-21 shrink-0 object-contain" />
                 <div className="flex min-w-0 flex-1 flex-col items-start gap-1">
                   <p className="type-mono-tag">
-                    {t("overview.readiness.overline", { weekday: longWeekdayOf(next.starts_at) })}
+                    {t("overview.readiness.overline", { weekday: longWeekdayOf(next.starts_at, locale) })}
                   </p>
                   <h2 className="type-card-title">{t("overview.readiness.title")}</h2>
                   <p className="type-ui-caption">{t("overview.readiness.body", readiness)}</p>

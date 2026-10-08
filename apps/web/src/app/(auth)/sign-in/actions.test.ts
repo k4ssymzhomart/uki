@@ -18,6 +18,7 @@ const ROW = {
   id: ID,
   full_name: "Dana Akhmetova",
   role: "exam_office",
+  languages: ["ru"],
   workspace: { name: "KRU · Kostanay" },
   faculty: null,
 };
