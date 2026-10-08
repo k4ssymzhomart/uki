@@ -219,7 +219,8 @@ export function selectScreen(snapshot: FlowSnapshot): ScreenModel {
         frame: stage === "identityHelp" ? "1.3a" : "1.3",
         step: stepper(STEPS.identity),
         rows: context.identity.rows,
-        tries: context.identity.tries,
+        // The check keeps trying on 1.3a, but the frame counts only the tries that asked for help: "3 of 3".
+        tries: Math.min(context.identity.tries, THRESHOLDS.identity.maxTries),
         maxTries: THRESHOLDS.identity.maxTries,
         status: stage === "identityMatched" ? "matched" : context.identity.status,
         cardRect: cameraCardRect(),

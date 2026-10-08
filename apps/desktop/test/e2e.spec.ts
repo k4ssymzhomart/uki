@@ -1,5 +1,6 @@
-// The student path end to end in the real Electron app (WP 0.6): join, system check, identity, rules,
-// Start exam from the lead proctor, answers, a network cut, the proctor's pause, message, added time and
+// The student path end to end in the real Electron app (WP 0.6): join, system check, identity (three
+// failed card matches ask the proctor on 1.3a, then a later match recovers), rules, Start exam from the
+// lead proctor, answers, a network cut, the proctor's pause, message, added time and
 // end, the phone warning, the no-face pause, submit and the receipt. The camera is the e2e build's
 // synthetic camera (src/renderer/integration/synthetic-camera.ts); everything else is real: the main
 // process, the uki:// scheme, window.uki, detection, the outbox, Realtime and the Edge Functions.
@@ -38,6 +39,13 @@ const KIOSK = process.env.UKI_E2E_KIOSK === "1";
 const PHONE_SCORE = 0.7;
 /** Exit criterion 7: proctor pause, message and end reach the app within 1 second. */
 const COMMAND_BUDGET_MS = 1000;
+/**
+ * The number printed on the card while 1.3 fails (P.8): another student's. The photo is still the
+ * student's own, so the face matches and the number does not, try after try, as in Figma 1.3a.
+ */
+const WRONG_CARD_NUMBER = STUDENTS.arman.number;
+/** THRESHOLDS.identity.maxTries: 1.3a opens after this many failed tries. */
+const HELP_AFTER_TRIES = 3;
 
 const messages = { kk: messagesFor("kk"), ru: messagesFor("ru"), en: messagesFor("en") };
 const en = messages.en;
@@ -59,6 +67,8 @@ const evidence = {
   pairing: {} as Record<string, unknown>,
   offline: {} as Record<string, unknown>,
   identity: {} as Record<string, unknown>,
+  /** 1.3a: the failed tries, the help request on the server, and the recovery (P.8). */
+  identityHelp: {} as Record<string, unknown>,
   phone: {} as Record<string, unknown>,
   receipt: {} as Record<string, unknown>,
   frames: [] as string[],
@@ -271,7 +281,7 @@ test("1.1 and 1.1a: the join form in three languages, a wrong code, then the rig
   await joinExam(page, "1.2");
 });
 
-test("1.2, 1.3 and 1.4: system check, the card match and the rules", async () => {
+test("1.2 and E.3: the system check, and Üki Lock pairs with the app", async () => {
   const { page } = madina;
   evidence.checkAgainPresses = await passSystemCheck(page);
   await shotInEveryLanguage(page, "1.2");
@@ -295,29 +305,80 @@ test("1.2, 1.3 and 1.4: system check, the card match and the rules", async () =>
   } finally {
     lock.close();
   }
+});
+
+test("1.3a: three failed card matches ask the proctor (student.help_requested, topic identity)", async () => {
+  const { page } = madina;
+  // Another student's number on the card from the first try: the match fails on the number three times.
+  await setScene(page, { cardNumber: WRONG_CARD_NUMBER });
   await button(page, en.action.continue).click();
   await waitForFrame(page, "1.3");
   await shot(page, "1.3-checking-en");
   const started = Date.now();
+  await waitForFrame(page, "1.3a", 120_000);
+  const helpAfterMs = Date.now() - started;
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(en.identity.help.title);
+  await expect(page.getByText(en.status.needs_help, { exact: true })).toBeVisible();
+  await expect(button(page, en.action.continue)).toBeDisabled();
+  await shotInEveryLanguage(page, "1.3a");
+
+  // The help request went through the outbox to ingest: one student.help_requested, topic identity.
+  const session = await until(
+    () => sessionOf(fixture, STUDENTS.madina.number),
+    (s) => typeof s?.id === "string",
+    90_000,
+    "session on the server",
+  );
+  sessionId = session?.id ?? "";
+  const record = await until(
+    () => serverRecord(fixture, sessionId),
+    (r) => r.events.some((e) => e.type === "student.help_requested"),
+    90_000,
+    "student.help_requested on the server",
+  );
+  const help = record.events.filter((e) => e.type === "student.help_requested");
+  expect(help).toHaveLength(1);
+  expect(help[0]?.data).toEqual({ topic: "identity" });
+  expect(help[0]?.source).toBe("app");
+  expect(record.events.some((e) => e.type === "identity.matched")).toBe(false);
+  evidence.identityHelp = {
+    cardNumberShown: "another student's (20230912)",
+    helpFrameAfterMs: helpAfterMs,
+    helpEventsOnServer: help.length,
+    helpEvent: { type: help[0]?.type, source: help[0]?.source, review: help[0]?.review, data: help[0]?.data },
+    sessionStateDuringHelp: session?.state,
+  };
+});
+
+test("1.3 and 1.4: a later card match recovers, then the rules", async () => {
+  const { page } = madina;
+  // The right card again: a later try on 1.3a matches, and 1.3 offers Continue.
+  const fixedAt = Date.now();
+  await setScene(page, { cardNumber: null });
   await expect(button(page, en.action.continue)).toBeEnabled({ timeout: 120_000 });
-  evidence.identity = { matchedAfterMs: Date.now() - started };
+  const recoveredAfterMs = Date.now() - fixedAt;
+  expect(await currentFrame(page)).toBe("1.3");
   await shotInEveryLanguage(page, "1.3");
   await button(page, en.action.continue).click();
   await waitForFrame(page, "1.4");
   await shotInEveryLanguage(page, "1.4");
   await page.getByRole("checkbox").click();
   await expect(page.getByRole("checkbox")).toBeChecked();
-  const session = await until(
+  await until(
     () => sessionOf(fixture, STUDENTS.madina.number),
     (s) => s?.state === "ready",
     90_000,
     "session ready on the server",
   );
-  sessionId = session?.id ?? "";
   const { events } = await recordOf(sessionId);
   const matched = events.find((e) => e.type === "identity.matched");
   expect(matched, "identity.matched reached the server").toBeTruthy();
-  evidence.identity = { ...evidence.identity, event: matched?.data };
+  const tries = (matched?.data as { tries?: number } | undefined)?.tries ?? 0;
+  expect(tries, "matched on a try after the help request").toBeGreaterThan(HELP_AFTER_TRIES);
+  // Still one help request: the tries on 1.3a send nothing.
+  expect(events.filter((e) => e.type === "student.help_requested")).toHaveLength(1);
+  evidence.identity = { recoveredAfterMs, event: matched?.data };
+  evidence.identityHelp = { ...evidence.identityHelp, matchedOnTry: tries };
 });
 
 test("2.1: Start exam from the lead proctor opens the exam", async () => {

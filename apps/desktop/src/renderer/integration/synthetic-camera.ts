@@ -8,6 +8,8 @@
 //            "absent" (the empty seat)
 //   card     "auto" shows a student card in the 1.3 card frame while the identity check runs, with the
 //            joined student's number and the student's own photo; "shown" and "hidden" force it
+//   cardNumber  the number printed on the card; null (the default) prints the joined student's, and
+//            another number makes the card match fail on the number while the face still matches (1.3a)
 // The card sits at cameraCardRect() in camera coordinates, exactly where the identity check reads it.
 import { type Camera, cameraFromStream, FULL_INPUT, type InputSize } from "@uki/detection";
 import emptySeat from "../screens/gallery-assets/uki-evidence-empty-seat.jpg";
@@ -21,6 +23,8 @@ export type SyntheticCard = "auto" | "shown" | "hidden";
 export interface SyntheticScene {
   subject: SyntheticSubject;
   card: SyntheticCard;
+  /** The number printed on the card; null prints the joined student's. */
+  cardNumber: string | null;
 }
 
 export interface SyntheticCameraControl {
@@ -48,7 +52,7 @@ export interface SyntheticCameraOptions {
 
 const SUBJECT_SRC: Record<SyntheticSubject, string> = { present: normal, phone, absent: emptySeat };
 
-let scene: SyntheticScene = { subject: "present", card: "auto" };
+let scene: SyntheticScene = { subject: "present", card: "auto", cardNumber: null };
 
 export const syntheticCameraControl: SyntheticCameraControl = {
   get: () => ({ ...scene }),
@@ -129,7 +133,7 @@ export async function openSyntheticCamera(options: SyntheticCameraOptions): Prom
 
   const draw = (): void => {
     drawCover(context, images[scene.subject], size);
-    const number = options.studentNumber();
+    const number = scene.cardNumber ?? options.studentNumber();
     const showCard = scene.card === "shown" || (scene.card === "auto" && options.cardWanted());
     if (showCard && number && scene.subject !== "absent") drawCard(context, present, geometry, number);
   };

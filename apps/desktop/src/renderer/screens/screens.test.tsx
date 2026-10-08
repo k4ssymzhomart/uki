@@ -83,6 +83,14 @@ describe("every frame in every language", () => {
     expect(screen.getByText("3 · их проверит человек")).toBeTruthy();
   });
 
+  it("1.3a names the proctor in full in the banner and short on the waiting button (Figma 151:11547)", () => {
+    const model = fixture("1.3a", "en");
+    if (model.frame !== "1.3a" || model.help === null) throw new Error("1.3a fixture without help");
+    renderFrame("1.3a", "en", { ...model, help: { ...model.help, proctorName: "Aigerim Sadykova" } });
+    expect(screen.getByText("Waiting for Aigerim S.")).toBeTruthy();
+    expect(screen.getByText(/^Aigerim Sadykova sees your step and device/)).toBeTruthy();
+  });
+
   it("writes times and dates in Asia/Almaty", () => {
     renderFrame("3.1", "en");
     expect(screen.getByText("11:28:04 · Fri 9 Oct")).toBeTruthy();
