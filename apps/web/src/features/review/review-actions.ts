@@ -11,7 +11,6 @@ import {
   DecideSessionOutput,
   matchErrorCode,
 } from "@uki/contracts";
-import { revalidatePath } from "next/cache";
 import { requireStaff } from "../../lib/auth.ts";
 import { createSupabaseServerClient } from "../../lib/supabase/server.ts";
 
@@ -29,7 +28,8 @@ function failure(error: unknown): { ok: false; code: ReviewErrorCode } {
 /**
  * One decision for the session (no issue, talk to the student, or committee) with an optional note.
  * A later decision replaces the earlier one; the exam turns `reviewed` when no flag is left without a
- * newer decision. The review pages are revalidated, so the queue never shows the old state.
+ * newer decision. Nothing is revalidated: the review pages are dynamic, so the next visit reads them
+ * again, and the live wall that calls Mark reviewed is not rendered again on the server.
  */
 export async function decideSession(input: unknown): Promise<ReviewActionResult<DecideSessionOutput>> {
   if (!(await requireStaff())) return { ok: false, code: "failed" };
@@ -44,7 +44,6 @@ export async function decideSession(input: unknown): Promise<ReviewActionResult<
   if (error) return failure(error);
   const output = DecideSessionOutput.safeParse(data);
   if (!output.success) return { ok: false, code: "failed" };
-  revalidatePath("/review", "layout");
   return { ok: true, data: output.data };
 }
 
@@ -61,6 +60,5 @@ export async function addSessionNote(input: unknown): Promise<ReviewActionResult
   if (error) return failure(error);
   const output = AddSessionNoteOutput.safeParse(data);
   if (!output.success) return { ok: false, code: "failed" };
-  revalidatePath("/review", "layout");
   return { ok: true, data: output.data };
 }

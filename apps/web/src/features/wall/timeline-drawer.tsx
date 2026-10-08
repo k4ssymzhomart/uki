@@ -93,6 +93,18 @@ function DrawerMessage({
   const [noting, setNoting] = useState(false);
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
+  // Leaving the note field unmounts it; focus goes back to Add note, so it stays in the dialog (Escape).
+  const addNoteRef = useRef<HTMLButtonElement>(null);
+  const [refocus, setRefocus] = useState(false);
+  useEffect(() => {
+    if (noting || !refocus) return;
+    addNoteRef.current?.focus();
+    setRefocus(false);
+  }, [noting, refocus]);
+  const closeNote = () => {
+    setNoting(false);
+    setRefocus(true);
+  };
 
   const saveNote = async () => {
     const text = note.trim();
@@ -106,7 +118,7 @@ function DrawerMessage({
     }
     // The proctor.note event reaches the timeline through the exam channel, like every event.
     setNote("");
-    setNoting(false);
+    closeNote();
   };
 
   if (noting) {
@@ -121,7 +133,7 @@ function DrawerMessage({
           autoFocus
         />
         <div className="flex w-full items-start justify-end gap-2.5">
-          <Button variant="ghost" disabled={saving} onClick={() => setNoting(false)}>
+          <Button variant="ghost" disabled={saving} onClick={closeNote}>
             {wall("message.cancel")}
           </Button>
           <Button
@@ -167,7 +179,7 @@ function DrawerMessage({
       </div>
       <div className="flex w-full items-start justify-end gap-2.5">
         {/* Phase 1 (WP 1.8): a note for the review, on the session's timeline in 2.5 and 3.3. */}
-        <Button variant="ghost" onClick={() => setNoting(true)}>
+        <Button ref={addNoteRef} variant="ghost" onClick={() => setNoting(true)}>
           {t("addNote")}
         </Button>
         <Button

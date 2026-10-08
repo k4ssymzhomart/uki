@@ -131,6 +131,10 @@ describe("timeline drawer (2.5)", () => {
     );
     // Back to the quick message; the event comes through the exam channel like any other.
     expect(await screen.findByRole("button", { name: "Send" })).toBeTruthy();
+    // Focus stays in the dialog, on Add note, so Escape still closes the drawer.
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole("button", { name: "Add note" })),
+    );
     act(() => {
       store()
         .getState()
