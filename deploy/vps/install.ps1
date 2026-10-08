@@ -62,7 +62,7 @@ function Find-Node {
   $candidates += (Join-Path $env:ProgramFiles "nodejs\node.exe")
   foreach ($path in $candidates) {
     if (-not (Test-Path $path)) { continue }
-    $version = (& $path --version) 2>$null
+    $version = & $path --version
     if ($version -match '^v(\d+)\.' -and [int]$Matches[1] -ge $NodeMajor) { return (Resolve-Path $path).Path }
   }
   return $null
@@ -143,8 +143,12 @@ $envText = @(
 & icacls.exe $appDir /grant "*S-1-5-19:(OI)(CI)RX" | Out-Null
 
 # The bundle answers --dry-run without the network: a broken copy fails here, not at boot.
-$check = & $node (Join-Path $appDir "judge-sim.mjs") --dry-run --env-file $envFile --plan-minutes 1 2>&1
-if ($LASTEXITCODE -ne 0) { $check | Write-Host; throw "judge-sim.mjs --dry-run failed." }
+# Windows PowerShell 5.1 turns a native command's stderr into errors, which "Stop" would throw on.
+$ErrorActionPreference = "Continue"
+$check = & $node (Join-Path $appDir "judge-sim.mjs") --dry-run --env-file $envFile --plan-minutes 1 2>&1 | Out-String
+$checkExit = $LASTEXITCODE
+$ErrorActionPreference = "Stop"
+if ($checkExit -ne 0) { Write-Host $check; throw "judge-sim.mjs --dry-run failed ($checkExit)." }
 Write-Step "Dry run passed"
 
 # ---------------------------------------------------------------------------------------------------
