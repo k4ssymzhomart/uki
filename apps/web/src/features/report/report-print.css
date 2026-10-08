@@ -1,0 +1,44 @@
+/*
+ * Download PDF on 3.4 and 3.5 prints the report page, nothing else (Phase 1 plan, Decisions: Integrity
+ * report; Risks: print to PDF). A4 portrait with 40 pt margins, as Figma's "Windows and breakpoints"
+ * (212:2521) sets for PDF exports. The stills keep their fixed 72 x 48 size from the page. Only the
+ * element marked data-print-root is printed: everything else is hidden, so neither the shell nor the
+ * share banner needs to know about printing.
+ */
+@page {
+  size: A4 portrait;
+  margin: 40pt;
+}
+
+@media print {
+  html,
+  body {
+    background: var(--color-surface);
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  [data-print-root],
+  [data-print-root] * {
+    visibility: visible;
+  }
+
+  [data-print-root] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  [data-print-root] img {
+    break-inside: avoid;
+  }
+
+  [data-print-root] li {
+    break-inside: avoid;
+  }
+}

@@ -820,6 +820,87 @@
       },
       "title": "Overview"
     },
+    "report": {
+      "breadcrumb": "Review / {exam} / {student}",
+      "doc": {
+        "decision": "{decision, select, no_issue {No issue} talk {Talk to the student} committee {Send to the exam committee} other {Not reviewed yet}}",
+        "flagTitle": "{time}  {flag}",
+        "flags": "Flags · {count}",
+        "footer": "Flag ≠ fail. This report lists moments, not verdicts. Video was processed on the student’s laptop; only the frames above and the event log were stored.",
+        "identity": "{result, select, matched {Matched on device · {time}} matchedNoTime {Matched on device} other {Not checked}}",
+        "noFlags": "No flags in this session.",
+        "noProctor": "Not assigned",
+        "noteDetail": "{name, select, none {“{text}”} other {“{text}” · {name}}}",
+        "notes": "Notes · {count}",
+        "phoneDetail": "Confidence {score, number, ::.00} · held {seconds, number, ::.#} s",
+        "reviewed": "{name} · {time}",
+        "row": {
+          "decision": "Decision",
+          "identity": "Identity",
+          "note": "Note",
+          "proctor": "Proctor",
+          "reviewed": "Reviewed",
+          "student": "Student",
+          "timeUsed": "Time used"
+        },
+        "still": "Still of the flag at {time}",
+        "student": "{name} · {number}",
+        "subtitle": "{exam} · {date} · Group {group}",
+        "subtitleNoGroup": "{exam} · {date}",
+        "timeUsed": "{used} of {total} min"
+      },
+      "export": {
+        "csv": "Export CSV",
+        "pdf": "Download PDF",
+        "title": "Export"
+      },
+      "kept": {
+        "count": "{count, number}",
+        "days": "{days, plural, one {# day} other {# days}}, then deleted",
+        "events": "Events",
+        "eyebrow": "This exam",
+        "for": "Kept for",
+        "frames": "Flagged frames",
+        "megabytes": "{mb} MB",
+        "title": "Data kept",
+        "video": "Video uploaded"
+      },
+      "notFound": {
+        "body": "It may have expired or been withdrawn. Ask the exam office for a new link.",
+        "title": "This link is not available"
+      },
+      "share": {
+        "copied": "Link copied",
+        "copy": "Copy link",
+        "failed": "The link could not be made. Try again.",
+        "field": "Read-only link · expires in {days, plural, one {# day} other {# days}}",
+        "label": "Share with the committee",
+        "once": "Shown only once. Copy it now; Üki keeps only a fingerprint of it."
+      },
+      "shared": {
+        "audit": "Opening this link is recorded in the {workspace} audit log.",
+        "banner": "{name, select, none {Read-only. Shared by {workspace}.} other {Read-only. Shared by {name}, {workspace}.}} Link expires {date}, {time}.",
+        "copy": {
+          "events": "{count, number} for this session",
+          "frames": "{session} of {exam} in this exam",
+          "issued": "Issued",
+          "issuedValue": "{date} · {time} by Üki",
+          "keptUntil": "Frames kept until",
+          "keptUntilValue": "{date}, then deleted",
+          "reportId": "Report ID",
+          "title": "This copy"
+        },
+        "decisionNote": "{decision, select, talk {“Talk to the student” means the proctor wants a conversation, not a sanction. The committee decides any next step.} committee {“Send to the exam committee” means the proctor asks the committee to look at these moments. A flag is not a verdict.} no_issue {“No issue” means the proctor found nothing to follow up. The flags stay in this report for the record.} other {}}"
+      },
+      "title": "Integrity report",
+      "verify": {
+        "result": "{result, select, intact {This code belongs to an Üki integrity report that has not changed since it was issued.} other {This code does not match a current Üki integrity report. The printout may be of an older version.}}",
+        "row": {
+          "date": "Date",
+          "exam": "Exam"
+        }
+      }
+    },
     "review": {
       "breadcrumb": {
         "exam": "Review / {exam}",

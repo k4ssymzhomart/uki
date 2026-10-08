@@ -4,7 +4,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-const FUNCTIONS = ["ingest", "frames", "command", "stills", "pilot-notify"] as const;
+const FUNCTIONS = ["ingest", "frames", "command", "stills", "pilot-notify", "shared-report"] as const;
 const read = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8")) as unknown;
 
 describe("deno.json import maps", () => {

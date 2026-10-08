@@ -1,0 +1,239 @@
+{
+  "$comment": "WP 1.9 Report and sharing: 3.4 integrity report (Figma 51:2096), 3.5 shared report (162:13464), /verify/[code] and the share link's not-found page. English from the frames; keys without a Figma source are listed in docs/decisions.md under 1.9. The Russian is a first pass by the agent: native review needed, P.18.",
+  "dashboard.report.title": {
+    "en": "Integrity report",
+    "ru": "Отчёт о проверке"
+  },
+  "dashboard.report.breadcrumb": {
+    "en": "Review / {exam} / {student}",
+    "ru": "Проверка / {exam} / {student}"
+  },
+  "dashboard.report.doc.subtitle": {
+    "en": "{exam} · {date} · Group {group}",
+    "ru": "{exam} · {date} · группа {group}"
+  },
+  "dashboard.report.doc.subtitleNoGroup": {
+    "en": "{exam} · {date}",
+    "ru": "{exam} · {date}"
+  },
+  "dashboard.report.doc.row.student": {
+    "en": "Student",
+    "ru": "Студент"
+  },
+  "dashboard.report.doc.row.identity": {
+    "en": "Identity",
+    "ru": "Личность"
+  },
+  "dashboard.report.doc.row.timeUsed": {
+    "en": "Time used",
+    "ru": "Время"
+  },
+  "dashboard.report.doc.row.proctor": {
+    "en": "Proctor",
+    "ru": "Проктор"
+  },
+  "dashboard.report.doc.row.decision": {
+    "en": "Decision",
+    "ru": "Решение"
+  },
+  "dashboard.report.doc.row.note": {
+    "en": "Note",
+    "ru": "Заметка"
+  },
+  "dashboard.report.doc.row.reviewed": {
+    "en": "Reviewed",
+    "ru": "Проверил"
+  },
+  "dashboard.report.doc.student": {
+    "en": "{name} · {number}",
+    "ru": "{name} · {number}"
+  },
+  "dashboard.report.doc.identity": {
+    "en": "{result, select, matched {Matched on device · {time}} matchedNoTime {Matched on device} other {Not checked}}",
+    "ru": "{result, select, matched {Совпала на устройстве · {time}} matchedNoTime {Совпала на устройстве} other {Не проверялась}}"
+  },
+  "dashboard.report.doc.timeUsed": {
+    "en": "{used} of {total} min",
+    "ru": "{used} из {total} мин"
+  },
+  "dashboard.report.doc.noProctor": {
+    "en": "Not assigned",
+    "ru": "Не назначен"
+  },
+  "dashboard.report.doc.flags": {
+    "en": "Flags · {count}",
+    "ru": "Отметки · {count}"
+  },
+  "dashboard.report.doc.noFlags": {
+    "en": "No flags in this session.",
+    "ru": "В этой сессии нет отметок."
+  },
+  "dashboard.report.doc.flagTitle": {
+    "en": "{time}  {flag}",
+    "ru": "{time}  {flag}"
+  },
+  "dashboard.report.doc.phoneDetail": {
+    "en": "Confidence {score, number, ::.00} · held {seconds, number, ::.#} s",
+    "ru": "Уверенность {score, number, ::.00} · в руках {seconds, number, ::.#} с"
+  },
+  "dashboard.report.doc.still": {
+    "en": "Still of the flag at {time}",
+    "ru": "Кадр отметки в {time}"
+  },
+  "dashboard.report.doc.notes": {
+    "en": "Notes · {count}",
+    "ru": "Заметки · {count}"
+  },
+  "dashboard.report.doc.noteDetail": {
+    "en": "{name, select, none {“{text}”} other {“{text}” · {name}}}",
+    "ru": "{name, select, none {«{text}»} other {«{text}» · {name}}}"
+  },
+  "dashboard.report.doc.decision": {
+    "en": "{decision, select, no_issue {No issue} talk {Talk to the student} committee {Send to the exam committee} other {Not reviewed yet}}",
+    "ru": "{decision, select, no_issue {Нарушений нет} talk {Поговорить со студентом} committee {Передать в экзаменационную комиссию} other {Ещё не проверено}}"
+  },
+  "dashboard.report.doc.reviewed": {
+    "en": "{name} · {time}",
+    "ru": "{name} · {time}"
+  },
+  "dashboard.report.doc.footer": {
+    "en": "Flag ≠ fail. This report lists moments, not verdicts. Video was processed on the student’s laptop; only the frames above and the event log were stored.",
+    "ru": "Отметка ≠ провал. В отчёте перечислены моменты, а не выводы. Видео обрабатывалось на ноутбуке студента; сохранены только кадры выше и журнал событий."
+  },
+  "dashboard.report.export.title": {
+    "en": "Export",
+    "ru": "Экспорт"
+  },
+  "dashboard.report.export.pdf": {
+    "en": "Download PDF",
+    "ru": "Скачать PDF"
+  },
+  "dashboard.report.export.csv": {
+    "en": "Export CSV",
+    "ru": "Экспорт CSV"
+  },
+  "dashboard.report.share.label": {
+    "en": "Share with the committee",
+    "ru": "Поделиться с комиссией"
+  },
+  "dashboard.report.share.field": {
+    "en": "Read-only link · expires in {days, plural, one {# day} other {# days}}",
+    "ru": "Ссылка для чтения · {days, plural, one {# день} few {# дня} many {# дней} other {# дня}}"
+  },
+  "dashboard.report.share.copy": {
+    "en": "Copy link",
+    "ru": "Скопировать ссылку"
+  },
+  "dashboard.report.share.copied": {
+    "en": "Link copied",
+    "ru": "Ссылка скопирована"
+  },
+  "dashboard.report.share.once": {
+    "en": "Shown only once. Copy it now; Üki keeps only a fingerprint of it.",
+    "ru": "Показывается один раз. Скопируйте её сейчас: Üki хранит только её отпечаток."
+  },
+  "dashboard.report.share.failed": {
+    "en": "The link could not be made. Try again.",
+    "ru": "Не удалось создать ссылку. Попробуйте ещё раз."
+  },
+  "dashboard.report.kept.eyebrow": {
+    "en": "This exam",
+    "ru": "Этот экзамен"
+  },
+  "dashboard.report.kept.title": {
+    "en": "Data kept",
+    "ru": "Что хранится"
+  },
+  "dashboard.report.kept.video": {
+    "en": "Video uploaded",
+    "ru": "Загружено видео"
+  },
+  "dashboard.report.kept.megabytes": {
+    "en": "{mb} MB",
+    "ru": "{mb} МБ"
+  },
+  "dashboard.report.kept.frames": {
+    "en": "Flagged frames",
+    "ru": "Отмеченные кадры"
+  },
+  "dashboard.report.kept.events": {
+    "en": "Events",
+    "ru": "События"
+  },
+  "dashboard.report.kept.count": {
+    "en": "{count, number}",
+    "ru": "{count, number}"
+  },
+  "dashboard.report.kept.for": {
+    "en": "Kept for",
+    "ru": "Срок хранения"
+  },
+  "dashboard.report.kept.days": {
+    "en": "{days, plural, one {# day} other {# days}}, then deleted",
+    "ru": "{days, plural, one {# день} few {# дня} many {# дней} other {# дня}}, затем удаляются"
+  },
+  "dashboard.report.shared.banner": {
+    "en": "{name, select, none {Read-only. Shared by {workspace}.} other {Read-only. Shared by {name}, {workspace}.}} Link expires {date}, {time}.",
+    "ru": "{name, select, none {Только для чтения. Отправлено: {workspace}.} other {Только для чтения. Отправил(а) {name}, {workspace}.}} Ссылка действует до {date}, {time}."
+  },
+  "dashboard.report.shared.copy.title": {
+    "en": "This copy",
+    "ru": "Эта копия"
+  },
+  "dashboard.report.shared.copy.issued": {
+    "en": "Issued",
+    "ru": "Выдан"
+  },
+  "dashboard.report.shared.copy.issuedValue": {
+    "en": "{date} · {time} by Üki",
+    "ru": "{date} · {time}, Üki"
+  },
+  "dashboard.report.shared.copy.reportId": {
+    "en": "Report ID",
+    "ru": "Номер отчёта"
+  },
+  "dashboard.report.shared.copy.frames": {
+    "en": "{session} of {exam} in this exam",
+    "ru": "{session} из {exam} на этом экзамене"
+  },
+  "dashboard.report.shared.copy.events": {
+    "en": "{count, number} for this session",
+    "ru": "{count, number} за эту сессию"
+  },
+  "dashboard.report.shared.copy.keptUntil": {
+    "en": "Frames kept until",
+    "ru": "Кадры хранятся до"
+  },
+  "dashboard.report.shared.copy.keptUntilValue": {
+    "en": "{date}, then deleted",
+    "ru": "{date}, затем удаляются"
+  },
+  "dashboard.report.shared.decisionNote": {
+    "en": "{decision, select, talk {“Talk to the student” means the proctor wants a conversation, not a sanction. The committee decides any next step.} committee {“Send to the exam committee” means the proctor asks the committee to look at these moments. A flag is not a verdict.} no_issue {“No issue” means the proctor found nothing to follow up. The flags stay in this report for the record.} other {}}",
+    "ru": "{decision, select, talk {«Поговорить со студентом» значит, что проктор хочет разговора, а не наказания. Дальнейшие шаги решает комиссия.} committee {«Передать в экзаменационную комиссию» значит, что проктор просит комиссию посмотреть на эти моменты. Отметка — не приговор.} no_issue {«Нарушений нет» значит, что проктор не нашёл, что обсуждать. Отметки остаются в отчёте для истории.} other {}}"
+  },
+  "dashboard.report.shared.audit": {
+    "en": "Opening this link is recorded in the {workspace} audit log.",
+    "ru": "Каждое открытие этой ссылки записывается в журнал аудита {workspace}."
+  },
+  "dashboard.report.verify.result": {
+    "en": "{result, select, intact {This code belongs to an Üki integrity report that has not changed since it was issued.} other {This code does not match a current Üki integrity report. The printout may be of an older version.}}",
+    "ru": "{result, select, intact {Этот код принадлежит отчёту Üki, который не менялся с момента выдачи.} other {Этот код не совпадает с действующим отчётом Üki. Возможно, распечатана старая версия.}}"
+  },
+  "dashboard.report.verify.row.exam": {
+    "en": "Exam",
+    "ru": "Экзамен"
+  },
+  "dashboard.report.verify.row.date": {
+    "en": "Date",
+    "ru": "Дата"
+  },
+  "dashboard.report.notFound.title": {
+    "en": "This link is not available",
+    "ru": "Ссылка недоступна"
+  },
+  "dashboard.report.notFound.body": {
+    "en": "It may have expired or been withdrawn. Ask the exam office for a new link.",
+    "ru": "Возможно, срок её действия истёк или её отозвали. Попросите в экзаменационном отделе новую ссылку."
+  }
+}

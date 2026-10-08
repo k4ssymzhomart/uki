@@ -441,3 +441,7 @@ verify_jwt = false
 # Called by the pilot_requests trigger through pg_net with the secret key (WP 1.13).
 [functions.pilot-notify]
 verify_jwt = false
+
+# shared-report has no caller credential (withSupabase auth "none"): the share token in its body is the key.
+[functions.shared-report]
+verify_jwt = false
