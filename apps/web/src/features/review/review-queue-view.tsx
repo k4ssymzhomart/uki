@@ -105,6 +105,7 @@ function FlagsPreview({ session, flags }: { session: ReviewSession; flags: React
     <FlagPreview
       open={open}
       onOpenChange={setOpen}
+      alignOffset={-9}
       trigger={
         <AppLink href={href} className="block rounded-sm outline-none focus-visible:shadow-focus">
           {flags}
@@ -123,9 +124,13 @@ function FlagsPreview({ session, flags }: { session: ReviewSession; flags: React
       title={t("preview.title", { name: shortName(session.name), what: text(copy.feed ?? copy.title) })}
       detail={flagDetail(flag)}
       link={
-        <RowAction icon="arrow-right" iconPosition="end" asChild>
-          <AppLink href={href}>{t("preview.open")}</AppLink>
-        </RowAction>
+        <AppLink
+          href={href}
+          className="inline-flex items-center gap-1.5 rounded-sm outline-none type-label-m focus-visible:shadow-focus"
+        >
+          {t("preview.open")}
+          <Icon name="arrow-right" className="size-4" />
+        </AppLink>
       }
     />
   );
