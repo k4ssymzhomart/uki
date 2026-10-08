@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   createScreenlessLockdown,
   describeDevFlags,
+  hasDevEscape,
   NO_DEV_FLAGS,
   readDevFlags,
   withoutBlockedApps,
@@ -63,5 +64,16 @@ describe("createScreenlessLockdown", () => {
     expect(changes).toEqual([true, false]);
     const detach = lockdown.attach({} as never);
     expect(() => detach()).not.toThrow();
+  });
+});
+
+describe("hasDevEscape", () => {
+  it("keeps the escape in development builds and the lab zip only", () => {
+    expect(hasDevEscape(false, "development")).toBe(true);
+    expect(hasDevEscape(false, "e2e")).toBe(true);
+    expect(hasDevEscape(true, "lab")).toBe(true);
+    // The shipped zip, the installer and the MacBook's dmg.
+    expect(hasDevEscape(true, "production")).toBe(false);
+    expect(hasDevEscape(true, "e2e")).toBe(false);
   });
 });

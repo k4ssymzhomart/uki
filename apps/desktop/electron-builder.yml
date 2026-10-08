@@ -1,6 +1,6 @@
 # Unsigned Phase 0 installers ("Builds" in docs/phase-0-plan.md): dmg for macOS arm64 and x64, NSIS and
 # zip for Windows x64. Build the dmg on the MacBook itself and Windows on GitHub's Windows runners; runbook:
-# docs/runbooks/demo-laptops.md.
+# docs/runbooks/lab-session.md.
 # One arch on this machine: pnpm --filter desktop dist --mac dmg --arm64 (or --win nsis --x64 on Windows).
 # Run `pnpm --filter @uki/detection models` and `models:verify` first: the model binaries are not in git.
 appId: kz.uki.app
@@ -61,6 +61,26 @@ win:
     - target: zip
       arch:
         - x64
+  # The keyboard hook's Koffi (WP 0.13, src/main/keyboard-hook-win32.ts), outside the asar so Windows
+  # loads its native file from disk: resources/koffi/node_modules/koffi, the loader with its MIT licence,
+  # and resources/koffi/node_modules/@koromix/koffi-win32-x64, the binary (an optional dependency of this
+  # package, installed on Windows only). macOS builds carry neither. build/after-pack.cjs fails the build
+  # when either is missing, so the zip, the lab zip and the installer all have it.
+  extraResources:
+    - from: node_modules/koffi
+      to: koffi/node_modules/koffi
+      filter:
+        - package.json
+        - LICENSE.txt
+        - index.cjs
+        - src/koffi/index.cjs
+        - src/koffi/src/static.cjs
+    - from: node_modules/@koromix/koffi-win32-x64
+      to: koffi/node_modules/@koromix/koffi-win32-x64
+      filter:
+        - package.json
+        - index.js
+        - win32_x64/koffi.node
 nsis:
   oneClick: false
   perMachine: false
