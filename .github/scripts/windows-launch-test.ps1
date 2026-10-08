@@ -4,6 +4,10 @@
 # the process still runs and shows a window after -Seconds (20), saves a screenshot of the screen when
 # -Screenshot names a file, and stops every Uki process again, pass or fail.
 #
+# The main process log (stdout and stderr) is kept and printed. WP 0.13: it must say that the keyboard
+# hook's Koffi loaded ("[desktop] keyboard hook ready"; src/main/keyboard-hook.ts) and must not say that
+# it failed, so a packaging fault in the hook shows here and not in an exam.
+#
 #   pwsh .github/scripts/windows-launch-test.ps1 -Zip apps/desktop/release/Uki-0.0.0-x64.zip
 #   pwsh .github/scripts/windows-launch-test.ps1 -Exe "$env:LOCALAPPDATA\Programs\Uki\Uki.exe"
 [CmdletBinding()]
@@ -48,9 +52,20 @@ function Save-Screen([string]$Path) {
   }
 }
 
+# The keyboard hook's line in the main process log (src/main/keyboard-hook.ts).
+$hookReady = '[desktop] keyboard hook ready'
+$hookFailed = '[desktop] keyboard hook failed'
+
+$logs = Join-Path ([IO.Path]::GetTempPath()) ('uki-launch-log-' + [Guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Force -Path $logs | Out-Null
+$stdout = Join-Path $logs 'stdout.txt'
+$stderr = Join-Path $logs 'stderr.txt'
+
 Stop-Uki
 Write-Host "launch test: starting $Exe"
-$app = Start-Process -FilePath $Exe -WorkingDirectory (Split-Path -Parent $Exe) -PassThru
+$app = Start-Process -FilePath $Exe -WorkingDirectory (Split-Path -Parent $Exe) -PassThru `
+  -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+$failure = $null
 try {
   Start-Sleep -Seconds $Seconds
   $app.Refresh()
@@ -59,10 +74,27 @@ try {
       Where-Object { $_.MainWindowHandle -ne [IntPtr]::Zero })
   if ($windowed.Count -eq 0) { throw "launch test: Uki.exe still runs after $Seconds s but shows no window" }
   $processes = @(Get-Process -Name 'Uki').Count
-  Write-Host ("launch test: passed. Uki.exe (pid $($app.Id)) still runs after $Seconds s with a window " +
+  Write-Host ("launch test: Uki.exe (pid $($app.Id)) still runs after $Seconds s with a window " +
     "titled '$($windowed[0].MainWindowTitle)' ($processes Uki processes)")
   if ($Screenshot -ne '') { Save-Screen $Screenshot }
+} catch {
+  $failure = $_
 } finally {
   Stop-Uki
   if ($null -ne $folder) { Remove-Item -LiteralPath $folder -Recurse -Force -ErrorAction SilentlyContinue }
 }
+
+# Read after the stop, when Uki.exe no longer holds the files.
+$log = @($stdout, $stderr | Where-Object { Test-Path -LiteralPath $_ } | ForEach-Object { Get-Content -LiteralPath $_ })
+Write-Host 'launch test: main process log'
+$log | ForEach-Object { Write-Host "  | $_" }
+Remove-Item -LiteralPath $logs -Recurse -Force -ErrorAction SilentlyContinue
+if ($null -ne $failure) { throw $failure }
+if (@($log | Where-Object { $_.Contains($hookFailed) }).Count -gt 0) {
+  throw "launch test: the keyboard hook failed to load (see the log above)"
+}
+if (@($log | Where-Object { $_.Contains($hookReady) }).Count -eq 0) {
+  throw "launch test: no '$hookReady' in the main process log"
+}
+Write-Host 'launch test: passed, with the keyboard hook ready'
+
