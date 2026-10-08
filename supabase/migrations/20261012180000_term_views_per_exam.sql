@@ -9,10 +9,28 @@
 -- comes from term_exams under the caller's row-level security. Everyone sees exactly the rows they saw
 -- before: for staff, sessions_select_staff, events_select_staff and the review_decisions policies all
 -- come down to is_exam_staff() of the row's exam; students and other workspaces see no term_exams row
--- (it joins workspaces, which only the workspace's staff read), so they saw nothing and still do
+-- (it joins workspaces, which only the workspace's staff read), so they saw nothing and still do; and a
+-- caller that skips row-level security (the secret key, psql) still reads every row
 -- (supabase/tests/18_term_views.test.sql passes on both versions). The views keep their names, columns,
 -- types and grants, and stay security_invoker; term_kpis, term_weekly_flags, term_decisions and
 -- term_review_time read term_sessions and are unchanged.
+
+-- Whether the role these functions were called by skips row-level security (the secret key's
+-- service_role, or postgres in psql), as it did when the views read the tables directly. Inside a
+-- security definer function current_user is the owner, but the `role` setting is still the caller's.
+create function public.invoker_bypasses_rls()
+returns boolean
+language sql
+stable
+set search_path = ''
+as $$
+  select coalesce((
+    select r.rolbypassrls or r.rolsuper
+    from pg_catalog.pg_roles r
+    where r.rolname = case when current_setting('role') = 'none' then session_user
+      else current_setting('role') end
+  ), false)
+$$;
 
 -- One exam's sessions with their flag count and decision, for its proctors and its exam office.
 create function public.term_exam_sessions(p_exam_id uuid)
@@ -30,7 +48,7 @@ as $$
   from public.sessions se
   left join public.review_decisions d on d.session_id = se.id
   where se.exam_id = p_exam_id
-    and public.is_exam_staff(p_exam_id)
+    and (public.is_exam_staff(p_exam_id) or public.invoker_bypasses_rls())
 $$;
 
 -- One exam's flags per event type, for its proctors and its exam office.
@@ -45,10 +63,11 @@ as $$
   from public.events ev
   where ev.exam_id = p_exam_id
     and ev.review = 'flag'
-    and public.is_exam_staff(p_exam_id)
+    and (public.is_exam_staff(p_exam_id) or public.invoker_bypasses_rls())
   group by ev.type
 $$;
 
+revoke execute on function public.invoker_bypasses_rls() from public, anon, authenticated;
 revoke execute on function public.term_exam_sessions(uuid) from public, anon, authenticated;
 revoke execute on function public.term_exam_flag_types(uuid) from public, anon, authenticated;
 -- The views run as their caller, so the caller runs these.

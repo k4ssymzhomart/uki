@@ -128,6 +128,8 @@ select ok(not has_function_privilege('anon', 'public.term_exam_sessions(uuid)', 
   'anon cannot run term_exam_sessions');
 select ok(not has_function_privilege('anon', 'public.term_exam_flag_types(uuid)', 'execute'),
   'anon cannot run term_exam_flag_types');
+select ok(not has_function_privilege('authenticated', 'public.invoker_bypasses_rls()', 'execute'),
+  'the API roles cannot run invoker_bypasses_rls');
 
 -- ---------------------------------------------------------------------------
 -- Exam office: the whole workspace
@@ -197,6 +199,19 @@ select is((select count(session_id) from public.term_sessions), 0::bigint, 'a st
 select is((select count(*) from public.term_flag_types), 0::bigint, 'a student sees no flag type');
 select is((select count(*) from public.term_exam_sessions(t.id('ex_math'))), 0::bigint,
   'a student reads nothing through term_exam_sessions');
+reset role;
+
+-- Callers that skip row-level security read every row, as they did before.
+select results_eq($$
+  select exams_run, sessions, flags from public.term_kpis where term = '2025-autumn' and all_faculties
+$$, $$ values (2, 4, 4) $$, 'postgres (psql) reads the whole term');
+set local role service_role;
+select results_eq($$
+  select exams_run, sessions, flags from public.term_kpis where term = '2025-autumn' and all_faculties
+$$, $$ values (2, 4, 4) $$, 'service_role (the secret key) reads the whole term');
+select results_eq($$
+  select type, flags from public.term_flag_types where term = '2025-autumn' and all_faculties order by type
+$$, $$ values ('gaze.off_screen', 1), ('phone.detected', 3) $$, 'service_role reads every flag type');
 reset role;
 
 select t.anon();
