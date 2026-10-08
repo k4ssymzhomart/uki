@@ -43,7 +43,7 @@ It asks before touching the cloud project (`--yes` skips the question) and print
 - `judge@kru.test`, role `observer`, assigned to `DEMO-LIVE` only, its password `JUDGE_PASSWORD` from `.env.cloud`, or a new random one appended to `.env.cloud`;
 - the judge one-pager at `uki-judge-one-pager.md` next to the repository (`/Users/k4ssym/Downloads/qostanai/uki-judge-one-pager.md`): the dashboard and Live demo links, the email, the password, `/demo` and `/try`, three things to try. It is written outside the repository on purpose; `--one-pager <path>` puts it elsewhere, never inside the repository.
 
-Run it again at any time: it fills in what is missing and changes nothing else. A new judge password: delete the `JUDGE_PASSWORD` line from `.env.cloud` and run it again.
+Run it again at any time: it fills in what is missing and changes nothing else; an existing judge account keeps its password, so a judge who is signed in stays signed in. A new judge password: delete the `JUDGE_PASSWORD` line from `.env.cloud` and run it again (that signs the judge out everywhere). When the one-pager's password does not work (the account was changed by hand), `--reset-password` sets `JUDGE_PASSWORD` on the account again.
 
 Check: open the Live demo link from the one-pager in a private window, sign in, and the `DEMO-LIVE` wall opens. Before the simulator runs, the indicator says "Simulator: stopped · not seen yet".
 

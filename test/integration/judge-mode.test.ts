@@ -163,6 +163,10 @@ describe("judge setup", () => {
     expect(password()).toBe(pw);
     const questions = await adminClient().from("exam_questions").select("position").eq("exam_id", examId);
     expect(questions.data).toHaveLength(20);
+    // A second run keeps the judge's password, so a judge who is signed in stays signed in.
+    const user = await judge.auth.getUser();
+    expect(user.error).toBeNull();
+    expect(user.data.user?.email).toBe(JUDGE_EMAIL);
   });
 
   it("writes the one-pager with the password, outside the repository, and prints no password", () => {

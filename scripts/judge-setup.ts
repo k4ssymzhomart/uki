@@ -9,7 +9,7 @@
 //   JUDGE_PASSWORD from the env file when set; otherwise a new random one, appended to the env file. It is
 //   never printed: the one-pager (outside the repository) carries it to the judges.
 //
-//   pnpm judge:setup [--env-file .env.cloud] [--one-pager <path>] [--dashboard-url <url>] [--yes]
+//   pnpm judge:setup [--env-file .env.cloud] [--one-pager <path>] [--dashboard-url <url>] [--reset-password] [--yes]
 //
 // Uses the secret key, so it runs on your laptop, never on the VPS. A cloud target asks first unless --yes.
 import { execFileSync } from "node:child_process";
@@ -51,12 +51,14 @@ const USAGE = `Usage: pnpm judge:setup [--env-file <path>] [--one-pager <path>] 
   --one-pager <p>      where the judge one-pager goes; must be outside the repository
                        (default: uki-judge-one-pager.md next to the repository's main checkout)
   --dashboard-url <u>  the dashboard's address in the one-pager (default ${DEFAULT_DASHBOARD_URL})
+  --reset-password     set JUDGE_PASSWORD on the existing judge account again (signs the judge out)
   --yes                do not ask before changing a cloud project`;
 
 const Args = z.object({
   "env-file": z.string().optional(),
   "one-pager": z.string().optional(),
   "dashboard-url": z.url({ protocol: /^https?$/ }).default(DEFAULT_DASHBOARD_URL),
+  "reset-password": z.boolean().default(false),
   yes: z.boolean().default(false),
   help: z.boolean().default(false),
 });
@@ -79,12 +81,12 @@ function defaultOnePager(): string {
   }
 }
 
-async function findUserId(admin: UkiClient, email: string): Promise<string | null> {
+async function findUser(admin: UkiClient, email: string): Promise<{ id: string; confirmed: boolean } | null> {
   for (let page = 1; page < 100; page += 1) {
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
     if (error) throw new Error(`listing users: ${error.message}`);
     const match = data.users.find((user) => user.email?.toLowerCase() === email.toLowerCase());
-    if (match) return match.id;
+    if (match) return { id: match.id, confirmed: Boolean(match.email_confirmed_at) };
     if (data.users.length < 1000) return null;
   }
   return null;
@@ -97,6 +99,7 @@ async function main(): Promise<void> {
       "env-file": { type: "string" },
       "one-pager": { type: "string" },
       "dashboard-url": { type: "string" },
+      "reset-password": { type: "boolean" },
       yes: { type: "boolean" },
       help: { type: "boolean" },
     },
@@ -299,15 +302,27 @@ async function main(): Promise<void> {
     password = generatePassword();
     writeFileSync(envPath, appendEnvLine(envText, JUDGE_PASSWORD_KEY, password), { mode: 0o600 });
   }
+  // Setting a password signs the account out everywhere, so an existing judge keeps theirs unless the
+  // password is new in this run or --reset-password asks for it: a second run never logs a judge out.
   const attributes = { password, email_confirm: true, user_metadata: { full_name: JUDGE_NAME } };
-  let judgeId = await findUserId(admin, JUDGE_EMAIL);
-  if (judgeId === null) {
+  const existingJudge = await findUser(admin, JUDGE_EMAIL);
+  let judgeId: string;
+  let passwordSet = false;
+  if (existingJudge === null) {
     const { data, error } = await admin.auth.admin.createUser({ email: JUDGE_EMAIL, ...attributes });
     if (error || !data.user) throw new Error(`creating ${JUDGE_EMAIL}: ${error?.message ?? "no user"}`);
     judgeId = data.user.id;
+    passwordSet = true;
   } else {
-    const { error } = await admin.auth.admin.updateUserById(judgeId, attributes);
-    if (error) throw new Error(`updating ${JUDGE_EMAIL}: ${error.message}`);
+    judgeId = existingJudge.id;
+    if (newPassword || args["reset-password"]) {
+      const { error } = await admin.auth.admin.updateUserById(judgeId, attributes);
+      if (error) throw new Error(`updating ${JUDGE_EMAIL}: ${error.message}`);
+      passwordSet = true;
+    } else if (!existingJudge.confirmed) {
+      const { error } = await admin.auth.admin.updateUserById(judgeId, { email_confirm: true });
+      if (error) throw new Error(`confirming ${JUDGE_EMAIL}: ${error.message}`);
+    }
   }
   ok(
     await admin.from("staff").upsert(
@@ -361,7 +376,7 @@ async function main(): Promise<void> {
   );
   log.info(
     `${JUDGE_EMAIL}: observer of ${DEMO_LIVE_CODE} only; password ${newPassword ? "new, written to" : "from"} ` +
-      `${JUDGE_PASSWORD_KEY} in ${envPath}`,
+      `${JUDGE_PASSWORD_KEY} in ${envPath}${passwordSet ? "" : " (the account kept it; --reset-password sets it again)"}`,
   );
   log.info(`one-pager: ${onePager} (outside the repository; it holds the password)`);
 }
