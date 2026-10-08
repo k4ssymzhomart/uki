@@ -192,6 +192,33 @@ describe("1.5a Student card", () => {
     expect(within(card() as HTMLElement).getByText("retry 2 of 3")).toBeTruthy();
   });
 
+  it("moves to the next row's card when the pointer moves to that row", async () => {
+    setup();
+    fireEvent.mouseEnter(row(id(1)));
+    await act(async () => {
+      vi.advanceTimersByTime(HOVER_OPEN_MS + 10);
+    });
+    expect(card()?.getAttribute("data-student-card")).toBe(id(1));
+    fireEvent.mouseLeave(row(id(1)));
+    fireEvent.mouseEnter(row(id(2)));
+    await act(async () => {
+      vi.advanceTimersByTime(HOVER_OPEN_MS + 10);
+    });
+    expect(card()?.getAttribute("data-student-card")).toBe(id(2));
+  });
+
+  it("takes the focus when opened by keyboard or click, and gives it back to the name on Escape", async () => {
+    setup();
+    const name = screen.getByRole("button", { name: "Dias Kenzhebekov" });
+    name.focus();
+    fireEvent.click(name);
+    const open = card() as HTMLElement;
+    await waitFor(() => expect(open.contains(document.activeElement)).toBe(true));
+    fireEvent.keyDown(document.activeElement as HTMLElement, { key: "Escape" });
+    await waitFor(() => expect(card()).toBeNull());
+    expect(document.activeElement).toBe(name);
+  });
+
   it("opens on a click of the name, without Identity help for a ready student", async () => {
     setup();
     fireEvent.click(screen.getByRole("radio", { name: "All" }));

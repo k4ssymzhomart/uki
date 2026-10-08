@@ -60,6 +60,9 @@ export function StudentCard({ row, card, onMessage, onIdentityHelp }: StudentCar
       onOpenAutoFocus={(event) => {
         if (card.byHover) event.preventDefault();
       }}
+      onCloseAutoFocus={(event) => {
+        if (card.byHover) event.preventDefault();
+      }}
       trigger={
         <button
           type="button"

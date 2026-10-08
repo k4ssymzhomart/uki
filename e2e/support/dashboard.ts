@@ -33,7 +33,8 @@ async function signInErrors(page: Page, locale: DashboardLocale): Promise<string
 export const LOCALE_COOKIE = "uki_locale";
 
 /**
- * Signs in on A.0 with the seeded staff password and lands on the overview. "Sign-in is unavailable"
+ * Signs in on A.0 with the seeded staff password and lands on the staff member's home: the overview
+ * (0.1) for the exam office, My exams (0.9) for a proctor since WP 1.5. "Sign-in is unavailable"
  * (Auth answered 5xx or timed out, which a loaded local stack does) is retried twice; any other form
  * error fails at once with its text.
  *
@@ -67,7 +68,7 @@ export async function signIn(
     await page.getByRole("button", { name: message("dashboard.signIn.submit", form), exact: true }).click();
     const outcome = await Promise.race([
       page
-        .waitForURL(/\/overview$/, { timeout: 90_000 })
+        .waitForURL(/\/(?:overview|my-exams)$/, { timeout: 90_000 })
         .then(() => "signed in")
         .catch(() => "timeout"),
       anyError
@@ -84,13 +85,15 @@ export async function signIn(
       continue;
     }
     throw new Error(
-      `e2e: ${email} did not reach /overview (${shown.join(" ") || outcome}). ` +
+      `e2e: ${email} did not reach /overview or /my-exams (${shown.join(" ") || outcome}). ` +
         "Check SEED_STAFF_PASSWORD and run `pnpm seed:staff`.",
     );
   }
-  // With the browser's own cookies the overview may be in either language.
+  // With the browser's own cookies the home page may be in either language.
+  const home =
+    new URL(page.url()).pathname === "/my-exams" ? "dashboard.myExams.title" : "dashboard.overview.title";
   const titles = (locale === null ? (["en", "ru"] as const) : [locale]).map((language) =>
-    escapeRegExp(message("dashboard.overview.title", language)),
+    escapeRegExp(message(home, language)),
   );
   await expect(
     page.getByRole("heading", { level: 1, name: new RegExp(`^(?:${titles.join("|")})$`) }),

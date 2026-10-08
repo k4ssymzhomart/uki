@@ -19,6 +19,12 @@ export interface StudentPopoverProps extends StudentPopoverCardProps {
    * (1.5a) calls preventDefault() here, so hovering never moves the focus.
    */
   onOpenAutoFocus?: (event: Event) => void;
+  /**
+   * Called when the card closes and would give the focus back to its trigger. A card the pointer opened
+   * never had the focus, so the lobby calls preventDefault() here: moving to the next row's card must not
+   * pull the focus to the previous row (which would close the new card as a focus outside it).
+   */
+  onCloseAutoFocus?: (event: Event) => void;
 }
 
 /**
@@ -36,6 +42,7 @@ export function StudentPopover({
   sideOffset = 8,
   alignOffset = 0,
   onOpenAutoFocus,
+  onCloseAutoFocus,
   ...card
 }: StudentPopoverProps) {
   return (
@@ -50,6 +57,7 @@ export function StudentPopover({
           alignOffset={alignOffset}
           collisionPadding={16}
           onOpenAutoFocus={onOpenAutoFocus}
+          onCloseAutoFocus={onCloseAutoFocus}
         >
           <StudentPopoverCard {...card} />
         </Popover.Content>

@@ -38,5 +38,7 @@ export const STAFF = {
   aigerim: "aigerim.sadykova@kru.test",
   /** Lead proctor of Physics 1 only. */
   gulnara: "gulnara.kassenova@kru.test",
+  /** Proctor of Mathematics 2, seats 65 to 128, not lead (0.9, WP 1.5). */
+  nurlan: "nurlan.bekov@kru.test",
 } as const;
 export type StaffKey = keyof typeof STAFF;

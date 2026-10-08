@@ -9,7 +9,10 @@ export const HOVER_CLOSE_MS = 200;
 export type HoverCard = {
   /** The row whose card is open. */
   openId: string | null;
-  /** True when the pointer opened the card: it then keeps the focus where it was and closes on leave. */
+  /**
+   * True when the pointer opened the card (or, after it closed, opened the last one): such a card keeps
+   * the focus where it was, when it opens and when it closes, and closes when the pointer leaves.
+   */
   byHover: boolean;
   /** Mouse handlers for a row. */
   rowHandlers: (id: string) => { onMouseEnter: () => void; onMouseLeave: () => void };
@@ -40,7 +43,7 @@ export function useHoverCard(openMs = HOVER_OPEN_MS, closeMs = HOVER_CLOSE_MS): 
   const scheduleClose = useCallback(() => {
     clear();
     timer.current = setTimeout(() => {
-      setState((current) => (current.byHover ? { openId: null, byHover: false } : current));
+      setState((current) => (current.byHover ? { openId: null, byHover: true } : current));
     }, closeMs);
   }, [clear, closeMs]);
 
