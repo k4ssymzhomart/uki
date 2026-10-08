@@ -49,15 +49,20 @@ describe("shell", () => {
       { id: "admin", items: ["settings", "privacy"] },
     ]);
     expect(navSections("admin", ALL_BUILT)).toEqual(navSections("exam_office", ALL_BUILT));
+    // 0.9 draws Students for proctors too; the plan gives /students to the exam office only (1.11).
     expect(navSections("proctor", ALL_BUILT)).toEqual([
-      { id: "workspace", items: ["overview", "exams", "live", "review", "reports", "students"] },
+      { id: "workspace", items: ["overview", "exams", "live", "review", "reports"] },
     ]);
   });
 
   it("hides every item whose page is not built yet, and the empty Admin section with them", () => {
     const built = (Object.keys(NAV) as NavId[]).filter((id) => NAV[id].built);
-    // Each package turns its own item on with its page; Review landed with WP 1.8.
-    expect(built).toEqual(expect.arrayContaining(["overview", "exams", "live", "review"]));
+    // Each package turns its own item on with its page; Review landed with WP 1.8, Students and
+    // Settings with WP 1.11, for the exam office only.
+    expect(built).toEqual(
+      expect.arrayContaining(["overview", "exams", "live", "review", "students", "settings"]),
+    );
+    expect(navSections("proctor").flatMap((section) => section.items)).not.toContain("students");
     for (const role of ["exam_office", "proctor"] as const) {
       expect(navSections(role).flatMap((section) => section.items)).toEqual(
         NAV_ITEMS.filter((id) => NAV[id].built && NAV[id].roles.includes(role)),

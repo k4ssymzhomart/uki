@@ -492,6 +492,67 @@
         "tab_blocked": "New tab blocked"
       }
     },
+    "settings": {
+      "breadcrumb": "Admin / Settings",
+      "checks": {
+        "gaze": {
+          "detail": "Flags looks away over the threshold.",
+          "title": "Gaze control"
+        },
+        "identity": {
+          "detail": "Card and face, matched on the laptop.",
+          "title": "Identity check"
+        },
+        "lock": {
+          "detail": "Other tabs and apps stay closed.",
+          "title": "Browser lock"
+        },
+        "phone": {
+          "detail": "Flags a phone in the camera view.",
+          "title": "Phone detection"
+        },
+        "second": {
+          "detail": "Flags a second face in the frame.",
+          "title": "Second person"
+        },
+        "title": "Checks on by default"
+      },
+      "defaults": {
+        "caption": "Every new exam starts with these. Each exam can change them.",
+        "duration": {
+          "label": "Default duration",
+          "value": "{minutes} min"
+        },
+        "gaze": {
+          "label": "Gaze threshold",
+          "value": "{seconds, plural, one {# second} other {# seconds}}"
+        },
+        "lobby": {
+          "label": "Lobby opens",
+          "value": "{minutes} min before the start"
+        },
+        "phone": {
+          "label": "Phone confidence",
+          "value": "{score, number, ::.00}"
+        },
+        "retention": {
+          "label": "Keep flagged frames",
+          "value": "{days, plural, one {# day} other {# days}}"
+        },
+        "rulesLanguage": {
+          "kk": "Қазақша",
+          "label": "Rules language"
+        },
+        "title": "New exam defaults"
+      },
+      "error": {
+        "failed": "The settings were not saved. Try again.",
+        "forbidden": "Only the exam office can change these settings.",
+        "invalid": "That value is not allowed."
+      },
+      "saved": "Settings saved. The next new exam starts with them.",
+      "title": "Settings"
+    },
     "shell": {
       "account": {
         "language": "Language"
@@ -564,6 +625,143 @@
       "showPassword": "Show password",
       "submit": "Sign in",
       "title": "Sign in to Üki."
+    },
+    "students": {
+      "breadcrumb": "Students / {scope}",
+      "column": {
+        "exams": "Exams",
+        "flags": "Flags",
+        "group": "Group",
+        "lastExam": "Last exam",
+        "status": "Status",
+        "student": "Student"
+      },
+      "decision": {
+        "committee": "committee",
+        "no_issue": "no issue",
+        "talk": "follow-up"
+      },
+      "empty": {
+        "filtered": "No student matches the search and filters.",
+        "none": "No students yet. They arrive with an exam’s roster."
+      },
+      "filter": {
+        "group": {
+          "all": "All groups",
+          "label": "Group"
+        },
+        "programme": {
+          "all": "All programmes",
+          "label": "Programme"
+        },
+        "year": {
+          "all": "All years",
+          "label": "Year",
+          "value": "Year {year}"
+        }
+      },
+      "footer": {
+        "next": "Next page",
+        "previous": "Previous page",
+        "range": "{from}–{to} of {total}"
+      },
+      "language": {
+        "en": "English",
+        "kk": "Қазақша",
+        "ru": "Русский"
+      },
+      "profile": {
+        "breadcrumb": "Students / {group}",
+        "consent": {
+          "accepted": "Accepted {date}, {time}",
+          "notYet": "Not accepted yet",
+          "rules": "Exam rules",
+          "rulesIn": "Exam rules · {language}",
+          "title": "Consent"
+        },
+        "devices": {
+          "app": "Üki {version} · seen {seen}",
+          "empty": "No device yet: the app reports one when the student joins an exam.",
+          "lock": "Üki Lock",
+          "lockIn": "Üki Lock in {browser}",
+          "lockVersion": "Üki Lock {version} · seen {seen}",
+          "notSeen": "not yet",
+          "os": {
+            "macos": "macOS",
+            "windows": "Windows"
+          },
+          "title": "Devices"
+        },
+        "history": {
+          "detail": "{time} · {flags}",
+          "duration": "{duration} min",
+          "empty": "No exams yet.",
+          "flags": "{count, plural, one {# flag} other {# flags}}",
+          "title": "Exam history",
+          "used": "{used} of {duration} min"
+        },
+        "kept": {
+          "delete": "Delete on request",
+          "deletedOn": "Deleted on {date}",
+          "events": "{count, plural, one {Event log · # exam} other {Event log · # exams}}",
+          "eventsKept": "Kept until a delete request",
+          "frames": "Flagged frames · {count}",
+          "noFrames": "None kept",
+          "title": "Data kept",
+          "video": "Video · 0 MB",
+          "videoNever": "Never uploaded"
+        },
+        "stat": {
+          "decisions": {
+            "caption": "{latest} · {committee} to committee",
+            "label": "Decisions"
+          },
+          "exams": {
+            "caption": "since {date}",
+            "label": "Exams"
+          },
+          "flags": {
+            "caption": "{count} in {course}",
+            "label": "Flags"
+          }
+        },
+        "title": "Student profile"
+      },
+      "row": {
+        "group": "Group {code}",
+        "noGroup": "No group",
+        "programmeYear": "{programme}, year {year}"
+      },
+      "search": {
+        "label": "Search students by name or student ID",
+        "placeholder": "Name or student ID"
+      },
+      "stat": {
+        "flagged": {
+          "caption": "{share} of students",
+          "label": "Flagged this term"
+        },
+        "students": {
+          "caption": "{count, plural, one {in # faculty} other {in # faculties}}",
+          "label": "Students"
+        }
+      },
+      "status": {
+        "clear": "clear",
+        "committee": "committee",
+        "followUp": "follow-up",
+        "inReview": "in review",
+        "noIssue": "no issue"
+      },
+      "tab": {
+        "all": "All · {count}",
+        "flagged": "Flagged · {count}",
+        "label": "Show students"
+      },
+      "table": {
+        "title": "Students"
+      },
+      "title": "Students"
     },
     "wall": {
       "action": {
