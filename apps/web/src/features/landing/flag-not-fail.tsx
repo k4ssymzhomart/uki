@@ -11,19 +11,20 @@ const MOMENTS = [
 
 /**
  * Flag ≠ fail (Figma 116:3458 at 1440, 193:4000 at 390): three Evidence cards from the kit with the
- * generated stills, or one flag card on lime at 390.
+ * generated stills, or one flag card on lime at 390. Below 1280 the cards sit under the text, where
+ * each is wide enough for its chip and time.
  */
 export async function FlagNotFail() {
   const t = await getTranslations("dashboard.landing.flag");
   const phone = MOMENTS[0];
   return (
-    <section className="bg-brand-subtle px-6 py-14 text-fg-primary lg:flex lg:items-center lg:gap-16 lg:bg-canvas lg:px-16 lg:py-30">
+    <section className="bg-brand-subtle px-6 py-14 text-fg-primary lg:bg-canvas lg:px-16 lg:py-30 xl:flex xl:items-center xl:gap-16">
       <div className="flex flex-col gap-4 lg:w-120 lg:shrink-0 lg:gap-5">
         <Overline>{t("overline")}</Overline>
         <h2 className="type-h2 lg:type-display-l">{t("title")}</h2>
         <p className="opacity-80 type-body-s lg:w-110 lg:opacity-70 lg:type-body-m">{t("body")}</p>
       </div>
-      <ul className="hidden min-w-0 flex-1 gap-5 lg:flex">
+      <ul className="hidden min-w-0 flex-1 gap-5 lg:mt-12 lg:flex xl:mt-0">
         {MOMENTS.map((moment) => (
           <li key={moment.id} className="min-w-0 flex-1">
             <EvidenceCard

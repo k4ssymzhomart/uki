@@ -11,14 +11,14 @@ import { MobileMenu } from "./mobile-menu.tsx";
 /**
  * The public header (Figma Nav 114:2041 at 1440, 192:3588 at 390), drawn on the dark art of each page
  * under data-theme="dark". Sign in is not in the frame; the plan puts it in the header, so it sits with
- * the links (docs/decisions.md).
+ * the links (docs/decisions.md). Below 1280 the gaps tighten so the Russian links fit from 1024.
  */
 export async function SiteHeader({ locale, className }: { locale: LandingLocale; className?: string }) {
   const t = await getTranslations("dashboard.landing.nav");
   const other = otherLocale(locale);
   return (
     <header className={cx("relative z-10 text-fg-primary", className)}>
-      <div className="hidden h-22 items-center gap-8 px-16 lg:flex">
+      <div className="hidden h-22 items-center gap-4 px-8 lg:flex xl:gap-8 xl:px-16">
         <LandingLink
           href="/"
           aria-label={t("home")}
@@ -27,12 +27,12 @@ export async function SiteHeader({ locale, className }: { locale: LandingLocale;
           <Logo variant="wordmark-paper" className="h-8 w-auto" />
         </LandingLink>
         <span aria-hidden="true" className="flex-1" />
-        <nav aria-label={t("label")} className="flex items-center gap-8">
+        <nav aria-label={t("label")} className="flex items-center gap-4 xl:gap-8">
           {NAV_LINKS.map((link) => (
             <LandingLink
               key={link.key}
               href={sectionHref(link.section)}
-              className="rounded-sm opacity-80 type-label-m outline-none transition-opacity hover:opacity-100 focus-visible:shadow-focus"
+              className="whitespace-nowrap rounded-sm opacity-80 type-label-m outline-none transition-opacity hover:opacity-100 focus-visible:shadow-focus"
             >
               {t(link.key)}
             </LandingLink>
@@ -41,7 +41,7 @@ export async function SiteHeader({ locale, className }: { locale: LandingLocale;
         <span aria-hidden="true" className="flex-1" />
         <LandingLink
           href="/sign-in"
-          className="rounded-sm opacity-80 type-label-m outline-none transition-opacity hover:opacity-100 focus-visible:shadow-focus"
+          className="whitespace-nowrap rounded-sm opacity-80 type-label-m outline-none transition-opacity hover:opacity-100 focus-visible:shadow-focus"
         >
           {t("signIn")}
         </LandingLink>

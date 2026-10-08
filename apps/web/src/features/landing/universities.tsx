@@ -9,14 +9,14 @@ const BULLETS = ["bullet1", "bullet2", "bullet3", "bullet4"] as const;
 /**
  * Universities (Figma 117:3489 at 1440, 193:4027 at 390): the generated computer-lab and lecturer
  * photos with the floating group tag, then the points and Book a pilot. At 390 the lab photo follows
- * the points.
+ * the points; below 1280 the points sit under the photos, which leave them too little width beside.
  */
 export async function Universities() {
   const t = await getTranslations("dashboard.landing.universities");
   return (
     <section
       id={SECTION.universities}
-      className="flex scroll-mt-6 flex-col gap-4 bg-canvas px-6 py-14 text-fg-primary lg:flex-row lg:items-center lg:gap-18 lg:bg-surface lg:px-16 lg:py-32"
+      className="flex scroll-mt-6 flex-col gap-4 bg-canvas px-6 py-14 text-fg-primary lg:gap-12 lg:bg-surface lg:px-16 lg:py-32 xl:flex-row xl:items-center xl:gap-18"
     >
       <div className="relative order-2 h-55 shrink-0 lg:order-1 lg:h-140 lg:w-160">
         <Image

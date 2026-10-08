@@ -42,7 +42,7 @@ export async function PrivacyBand() {
           {DATA.map((item) => (
             <li
               key={item.id}
-              className="flex items-start justify-between border-line-default border-t py-3 lg:w-50 lg:flex-col lg:justify-start lg:gap-2.5 lg:rounded-md lg:border lg:bg-surface lg:px-4.5 lg:py-4"
+              className="flex items-start justify-between border-line-default border-t py-3 lg:w-44 lg:flex-col lg:justify-start xl:w-50 lg:gap-2.5 lg:rounded-md lg:border lg:bg-surface lg:px-4.5 lg:py-4"
             >
               <Icon name={item.icon} className="hidden size-5 lg:block" />
               <p className="type-label-m lg:type-card-title">{t(`${item.id}.title`)}</p>

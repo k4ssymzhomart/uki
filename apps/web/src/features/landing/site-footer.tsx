@@ -63,7 +63,7 @@ export async function SiteFooter() {
             <nav
               key={column.heading}
               aria-label={t(column.heading)}
-              className="flex flex-col gap-2 lg:w-55 lg:gap-3"
+              className="flex flex-col gap-2 lg:w-40 lg:gap-3 xl:w-55"
             >
               <p className="opacity-50 type-mono-tag">{t(column.heading)}</p>
               {column.links.map((link) => (

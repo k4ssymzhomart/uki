@@ -12,7 +12,9 @@ import { SiteHeader } from "./site-header.tsx";
  * Hero v2 (Figma 125:3549 at 1440, 192:3587 at 390): the generated lime-glow art behind the header and
  * the pitch, then the live wall as exported from Figma in a glass bezel. Around the bezel float the
  * Sees, Protects and Proves cards from the kit; at 390 only the Watching widget stays, at 70 %.
- * Positions are fractions of the bezel, so the composition holds between the two frames.
+ * Positions are fractions of the bezel, so the composition holds between the two frames. The cards
+ * hang outside the bezel, so from 1280 the bezel narrows until they fit the window (the frame's 1057
+ * at 1440); below 1280 the bezel takes the width and only the Watching widget stays, as at 390.
  */
 export async function Hero({ locale }: { locale: LandingLocale }) {
   const t = await getTranslations("dashboard.landing.hero");
@@ -60,7 +62,7 @@ export async function Hero({ locale }: { locale: LandingLocale }) {
         </div>
       </div>
 
-      <div className="relative mx-6 mt-11 lg:mx-auto lg:mt-18.5 lg:w-264.25 lg:max-w-[calc(100%-var(--spacing)*12)]">
+      <div className="relative mx-6 mt-11 lg:mx-auto lg:mt-18.5 lg:w-[calc(100%-var(--spacing)*12)] xl:w-[min(--spacing(264.25),calc((100vw-var(--spacing)*160)*1.42))]">
         <Mascot
           pose="peeking"
           size={150}
@@ -79,16 +81,16 @@ export async function Hero({ locale }: { locale: LandingLocale }) {
         <LiveWidget
           title={tCatalog("exam.watch.title")}
           detail={tCatalog("exam.watch.status", { elapsed: t("watchElapsed") })}
-          className="absolute top-[64%] left-[-1.75%] origin-top-left scale-70 whitespace-nowrap lg:top-[17.44%] lg:left-[-9.84%] lg:scale-100"
+          className="absolute top-[64%] left-[-1.75%] origin-top-left scale-70 whitespace-nowrap xl:top-[17.44%] xl:left-[-9.84%] xl:scale-100"
         />
-        <div data-theme="dark" className="absolute top-[-3.66%] right-[-11.16%] hidden lg:block">
+        <div data-theme="dark" className="absolute top-[-3.66%] right-[-11.16%] hidden xl:block">
           <LockToast
             message={t("toast")}
             time={tCatalog("lock.copy.noted", { time: t("toastTime") })}
             className="shadow-float"
           />
         </div>
-        <ReportCard className="absolute top-[34.88%] left-[85.15%] hidden lg:flex" />
+        <ReportCard className="absolute top-[34.88%] left-[85.15%] hidden xl:flex" />
       </div>
       <p className="px-6 pt-11 text-fg-primary opacity-80 type-mono-tag lg:hidden">{t("case")}</p>
     </section>
