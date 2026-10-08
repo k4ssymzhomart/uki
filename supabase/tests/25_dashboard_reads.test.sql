@@ -1,7 +1,8 @@
--- WP 1.14: exam_overview takes its counts from exam_overview_counts (20261013120000_exam_overview_counts.sql).
--- For every role the view shows the numbers it showed before: the exam office and an exam's proctors
--- every row of their exams, a student only their own session, the secret key everything, and nobody
--- an exam they cannot see. With seed v2's term the exam office's read stays fast.
+-- WP 1.14 (20261013120000_dashboard_reads_per_exam.sql): exam_overview, term_sessions and student_overview
+-- check access once per exam. For every role each view shows what its old definition showed: the exam
+-- office every row of its workspace's exams, a proctor those of the exams assigned to them, a student
+-- only their own session (and no term or student rows), the secret key everything, nobody an exam they
+-- cannot see. With seed v2's term the exam office's reads stay well inside the 8 s statement timeout.
 begin;
 create extension if not exists pgtap with schema extensions;
 select no_plan();
@@ -85,6 +86,11 @@ values (t.id('math2'), t.id('proctor'), '{ru}', true);
 select t.put('writing', t.new_session(t.id('math2'), '20231187', 'writing'));
 select t.put('paused', t.new_session(t.id('math2'), '20231044', 'paused'));
 select t.put('done', t.new_session(t.id('math2'), '20230912', 'submitted'));
+insert into public.events (id, session_id, exam_id, type, source, review, at, received_at, data)
+values (gen_random_uuid(), t.id('paused'), t.id('math2'), 'phone.detected', 'app', 'flag', now() - interval '2 minutes',
+  now() - interval '2 minutes', '{"score":0.9,"held_ms":800}');
+insert into public.review_decisions (session_id, exam_id, decision, note, reviewer_id, decided_at)
+values (t.id('done'), t.id('math2'), 'no_issue', null, t.id('proctor'), now() - interval '1 minute');
 
 -- Every exam's numbers read without row-level security, as postgres.
 create table t.expect as
@@ -120,6 +126,70 @@ create function t.differ() returns bigint language sql stable as $$
       x.sessions_final)
 $$;
 
+-- student_overview's old definition, as postgres, over the sessions of p_exams only.
+create function t.students_expect(p_exams uuid[]) returns table (id uuid, exams_taken int, flags int,
+  sessions_in_review int, last_exam_at timestamptz, latest_decision_at timestamptz)
+language sql stable security definer set search_path = public as $$
+  select st.id, coalesce(agg.exams_taken, 0), coalesce(agg.flags, 0), coalesce(agg.sessions_in_review, 0),
+    last_exam.starts_at, latest.decided_at
+  from public.students st
+  left join lateral (
+    select count(*)::int as exams_taken, coalesce(sum(fl.flags), 0)::int as flags,
+      (count(*) filter (where fl.open > 0))::int as sessions_in_review
+    from public.sessions se
+    cross join lateral (
+      select count(*) as flags,
+        count(*) filter (where d.decided_at is null or ev.received_at > d.decided_at) as open
+      from public.events ev
+      left join public.review_decisions d on d.session_id = se.id
+      where ev.session_id = se.id and ev.review = 'flag'
+    ) fl
+    where se.student_id = st.id and se.exam_id = any (p_exams)
+  ) agg on true
+  left join lateral (
+    select e.starts_at from public.sessions se join public.exams e on e.id = se.exam_id
+    where se.student_id = st.id and se.exam_id = any (p_exams) order by e.starts_at desc limit 1
+  ) last_exam on true
+  left join lateral (
+    select d.decided_at from public.review_decisions d join public.sessions se on se.id = d.session_id
+    where se.student_id = st.id and se.exam_id = any (p_exams) order by d.decided_at desc limit 1
+  ) latest on true
+  where st.workspace_id = 'a0000000-0000-4000-8000-000000000001'
+$$;
+
+-- student_overview rows, as the current role sees them, that differ from the old definition over p_exams.
+create function t.students_differ(p_exams uuid[]) returns bigint language sql stable as $$
+  select count(*) from public.student_overview o join t.students_expect(p_exams) x on x.id = o.id
+  where (o.exams_taken, o.flags, o.sessions_in_review, o.last_exam_at, o.latest_decision_at)
+    is distinct from (x.exams_taken, x.flags, x.sessions_in_review, x.last_exam_at, x.latest_decision_at)
+$$;
+
+-- term_sessions per exam with the old definition, as postgres: sessions, flags and decisions.
+create table t.term_expect as
+select te.exam_id, count(se.id)::int as sessions,
+  coalesce(sum((select count(*) from public.events ev where ev.session_id = se.id and ev.review = 'flag')), 0)::int
+    as flags,
+  count(d.decision)::int as decisions
+from public.term_exams te
+left join public.sessions se on se.exam_id = te.exam_id
+left join public.review_decisions d on d.session_id = se.id
+where te.workspace_id = t.id('ws')
+group by te.exam_id;
+grant select on t.term_expect to authenticated, service_role, anon;
+
+-- term_sessions exams, as the current role sees them, whose totals differ from t.term_expect.
+create function t.term_differ() returns bigint language sql stable as $$
+  select count(*) from (
+    select ts.exam_id, count(ts.session_id)::int as sessions, coalesce(sum(ts.flags), 0)::int as flags,
+      count(ts.decision)::int as decisions
+    from public.term_sessions ts group by ts.exam_id
+  ) o join t.term_expect x on x.exam_id = o.exam_id
+  where (o.sessions, o.flags, o.decisions) is distinct from (x.sessions, x.flags, x.decisions)
+$$;
+
+create table t.kru_exams as select array_agg(id) as ids from public.exams where workspace_id = t.id('ws');
+grant select on t.kru_exams to authenticated, service_role, anon;
+
 select ok((select count(*) from t.expect) >= 47, 'the seed has Phase 0''s exams and seed v2''s term');
 select ok((select roster_size from t.expect where id = t.id('term1')) > 0, 'a term exam has a roster');
 
@@ -138,6 +208,17 @@ select is((select writing || '|' || paused || '|' || sessions_final from public.
   '2|1|1', 'Mathematics 2: two writing (one paused) and one done');
 select is((select roster_size from public.exam_overview_counts(t.id('term1'))),
   (select roster_size from t.expect where id = t.id('term1')), 'exam_overview_counts answers the exam office');
+select ok(t.timed('select * from public.term_kpis') < interval '4 seconds',
+  'the exam office reads term_kpis over the whole term in well under the timeout');
+select is((select count(distinct exam_id) from public.term_sessions), (select count(*) from t.term_expect),
+  'term_sessions: every exam that ran');
+select is(t.term_differ(), 0::bigint, 'with the sessions, flags and decisions of its old definition');
+select ok(t.timed('select * from public.student_overview') < interval '4 seconds',
+  'the exam office reads student_overview for 1,284 students in well under the timeout');
+select is((select count(*) from public.student_overview),
+  (select count(*) from public.students where workspace_id = t.id('ws')), 'student_overview: every student');
+select is(t.students_differ((select ids from t.kru_exams)), 0::bigint,
+  'with the exams, flags, reviews, last exam and latest decision of its old definition');
 reset role;
 
 -- ---------------------------------------------------------------------------
@@ -149,6 +230,14 @@ select is(t.differ(), 0::bigint, 'with every count of it');
 select is((select proctor_count from public.exam_overview where id = t.id('math2')), 1, 'one proctor assigned');
 select is((select count(*) from public.exam_overview_counts(t.id('history'))), 0::bigint,
   'exam_overview_counts gives nothing for an exam they are not assigned');
+select is((select count(*) from public.student_overview), 128::bigint, 'student_overview: the 128 on their roster');
+select is(t.students_differ(array[t.id('math2')]), 0::bigint,
+  'counting only the sessions of their exam, as the old definition did');
+select is((select exams_taken || '|' || flags || '|' || sessions_in_review from public.student_overview
+  where student_number = '20231044'), '1|1|1', 'Dias: one exam, its undecided phone flag, in review');
+select is((select exams_taken || '|' || flags || '|' || coalesce(latest_decision::text, '-') from public.student_overview
+  where student_number = '20230912'), '1|0|no_issue', 'Arman: one exam, no flag, the latest decision');
+select is((select count(*) from public.term_sessions), 0::bigint, 'no term row: Mathematics 2 has not run');
 reset role;
 
 select t.login(t.id('other_proctor'));
@@ -167,6 +256,9 @@ select is((select joined || '|' || writing || '|' || roster_size || '|' || flagg
   'and counts only their own session: no roster, flags, proctors or groups');
 select is((select count(*) from public.exam_overview_counts(t.id('math2'))), 0::bigint,
   'exam_overview_counts gives a student nothing');
+select is((select count(*) from public.term_sessions), 0::bigint, 'a student sees no term_sessions row');
+select is((select count(*) from public.student_overview), 0::bigint, 'nor any student_overview row');
+select is((select count(*) from public.student_session_stats()), 0::bigint, 'and student_session_stats gives nothing');
 reset role;
 
 -- ---------------------------------------------------------------------------
@@ -176,11 +268,16 @@ select t.service();
 select is(t.differ(), 0::bigint, 'the secret key reads every count, as before');
 select is((select count(*) from public.exam_overview where workspace_id = t.id('ws')), (select count(*) from t.expect),
   'and every exam');
+select is(t.term_differ(), 0::bigint, 'term_sessions for the secret key, as before');
+select is(t.students_differ((select ids from t.kru_exams)), 0::bigint, 'student_overview for the secret key, as before');
 reset role;
 
 select t.anon();
 select throws_ok($$ select * from public.exam_overview_counts('e0000000-0000-4000-8000-000000000001') $$, '42501',
   null, 'anonymous visitors cannot call exam_overview_counts');
+select throws_ok($$ select * from public.term_session_rows('e0000000-0000-4000-8000-000000000001') $$, '42501',
+  null, 'nor term_session_rows');
+select throws_ok($$ select * from public.student_session_stats() $$, '42501', null, 'nor student_session_stats');
 reset role;
 
 select * from finish();

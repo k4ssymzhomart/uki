@@ -1180,7 +1180,7 @@ Decided by the agent that built `/try` and the PWA (branch `feat/judge-try`).
 
 ## 2026-10-09 · 1.14 Demo v2 (agent part)
 
-Built on `wp/1.14-seed-v2`. No migration. The world is data in `scripts/lib/seed-v2` (`world.ts` the groups and students, `term.ts` the Autumn 2026 term, `story.ts` the rest), written in three places.
+Built on `wp/1.14-seed-v2`. One migration, for the dashboard's reads with the term (below). The world is data in `scripts/lib/seed-v2` (`world.ts` the groups and students, `term.ts` the Autumn 2026 term, `story.ts` the rest), written in three places.
 
 **Where each part of seed v2 lives**
 - `supabase/seed.sql` (every fresh `supabase db reset`, CI included): seven more Mathematics groups (201 to 208 without 204, 836 students), a programme and year for every seeded student, Yerlan Tokhtarov's mistyped address, and the term's 42 exams, rosters, 5,346 sessions and 537 flags. The term's rows are generated: `pnpm seed:term` writes the absences and flags between two marker lines, and seed.sql builds the sessions from them with the same formulas as `termSession()` (`seed_v2.mix` is `mix()`; every intermediate stays below 2^53, so bigint and double agree). A unit test fails when the block is stale.
@@ -1206,6 +1206,11 @@ Built on `wp/1.14-seed-v2`. No migration. The world is data in `scripts/lib/seed
 - The English B2 report is made the way the product makes it: `get_report` and `create_share` as Dana, then two views through `open_shared_report` (the RPC the shared-report function calls, by the token's hash). The rows and the audit rows this run wrote then get the story's times: made two days before the reset, viewed 26 and 20 hours before. The link keeps the length `create_share` gave it (30 days since 1.9's revision). A healthy share with two views is kept on the next reset.
 - Stills are the brand kit's generated evidence pictures (`demo/stills`, from `brand/images/evidence/web`), uploaded to the private frames bucket at `stillPath()` paths with their frames rows at the flag's time.
 - Audit rows are never deleted, as in Phase 0: a rehearsal's rows stay in A.6 below the new ones.
+
+**The dashboard's reads with the term (`20261013120000_dashboard_reads_per_exam.sql`)**
+- With the term in the seed, the exam office's `exam_overview` read passed the authenticated role's 8 s statement timeout in CI (run 37837519069: nine dashboard e2e tests failed on it, through the layout every page loads). `exam_overview`, `term_sessions` and `student_overview` counted rows under row-level security, so `is_exam_staff()` (three nested security definer calls) ran for every roster, session and flag row; `student_overview` also scanned every session for each student, since `sessions.student_id` had no index.
+- Each view now reads an exam's rows through a security definer function that checks `is_exam_staff()` once for that exam: `exam_overview_counts(exam_id)`, `term_session_rows(exam_id)` and `student_session_stats()`, with `caller_bypasses_rls()` for the secret key and psql, and the index `sessions_student`. Every role sees what it saw: staff of an exam its rows, a student only their own session in `exam_overview` (its old subqueries stay as the fallback) and no term or student rows, the secret key everything. The views keep their names, columns, types and grants. pgTAP `25_dashboard_reads` compares each view with its old definition for the exam office, a proctor, a student and the secret key, and checks that the office's reads take under 4 s on the seeded term.
+- WP 1.10's `term_views_per_exam` migration does the same for the term views with functions of its own (`term_exam_sessions`, `invoker_bypasses_rls`); the names differ, so both apply, and whichever runs later defines `term_sessions`, with the same rows.
 
 **Checks**
 - `pnpm seed:check [--demo]` reads a database and checks seed v2 row for row (students, exams, rosters, sessions with their times, devices and identity scores, flags, decisions) and A.1's figures through the `term_*` views; `--demo` adds what demo:reset writes. CI runs it after `seed:staff` and after each `demo:reset`.

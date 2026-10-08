@@ -2040,6 +2040,7 @@ export type Database = {
         Args: { p_body?: Json; p_name: string }
         Returns: number
       }
+      caller_bypasses_rls: { Args: never; Returns: boolean }
       can_read_topic: { Args: { p_topic: string }; Returns: boolean }
       close_help_request: {
         Args: { id: string; reply?: string }
@@ -2288,6 +2289,20 @@ export type Database = {
       session_tick: { Args: never; Returns: Json }
       staff_may_share: { Args: never; Returns: boolean }
       start_exam: { Args: { exam_id: string }; Returns: Json }
+      student_session_stats: {
+        Args: never
+        Returns: {
+          exams_taken: number
+          flags: number
+          last_exam_at: string
+          last_exam_id: string
+          last_exam_title: string
+          latest_decision: Database["public"]["Enums"]["review_decision"]
+          latest_decision_at: string
+          sessions_in_review: number
+          student_id: string
+        }[]
+      }
       submit_session: { Args: { session_id: string }; Returns: Json }
       term_exam_flag_types: {
         Args: { p_exam_id: string }
@@ -2306,6 +2321,15 @@ export type Database = {
         }[]
       }
       term_key: { Args: { d: string }; Returns: string }
+      term_session_rows: {
+        Args: { p_exam_id: string }
+        Returns: {
+          decided_at: string
+          decision: Database["public"]["Enums"]["review_decision"]
+          flags: number
+          session_id: string
+        }[]
+      }
       term_start: { Args: { d: string }; Returns: string }
       try_uuid: { Args: { p: string }; Returns: string }
       unused_verify_code: { Args: never; Returns: string }
