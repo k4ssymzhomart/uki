@@ -12,8 +12,9 @@ const COLUMNS = [
   {
     heading: "product",
     links: [
-      { key: "app", href: sectionHref(SECTION.howItWorks) },
-      { key: "lock", href: sectionHref(SECTION.lock) },
+      // The app and the Lock lead to their downloads (decided by the user on 8 October).
+      { key: "app", href: sectionHref(SECTION.download) },
+      { key: "lock", href: sectionHref(SECTION.download) },
       { key: "liveWall", href: sectionHref(SECTION.liveWall) },
       { key: "reports", href: sectionHref(SECTION.review) },
     ],

@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { CtaBand } from "../../features/landing/cta-band.tsx";
+import { DownloadSection } from "../../features/landing/download-section.tsx";
 import { Faq } from "../../features/landing/faq.tsx";
 import { Features } from "../../features/landing/features.tsx";
 import { FlagNotFail } from "../../features/landing/flag-not-fail.tsx";
 import { Hero } from "../../features/landing/hero.tsx";
 import { HowItWorks } from "../../features/landing/how-it-works.tsx";
+import { JuryGuide } from "../../features/landing/jury-guide.tsx";
 import { homeRedirect, landingLocale } from "../../features/landing/landing-model.ts";
 import { Pillars } from "../../features/landing/pillars.tsx";
 import { PrivacyBand } from "../../features/landing/privacy-band.tsx";
@@ -40,6 +42,8 @@ export default async function LandingPage() {
       <Universities />
       <Faq />
       <CtaBand />
+      <DownloadSection />
+      <JuryGuide />
     </>
   );
 }

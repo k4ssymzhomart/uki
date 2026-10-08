@@ -7,6 +7,7 @@ import {
   parseSignInForm,
   type SignInState,
   signInErrorFromAuth,
+  signInNext,
 } from "../../../features/sign-in/sign-in-form.ts";
 import { loadStaffMember, retryOnce, type StaffLookup, staffUserFromClaims } from "../../../lib/auth.ts";
 import {
@@ -21,7 +22,8 @@ import { createSupabaseServerClient } from "../../../lib/supabase/server.ts";
  * A.0 Sign in: signInWithPassword through @supabase/ssr, so the session lands in the auth cookies with
  * the lifetime the staff member chose. Only staff (a `staff` row readable under RLS) may stay signed in;
  * errors come back to show under the fields. When the staff row cannot be read (twice), the user is
- * signed out with "unavailable", not told the account cannot use the dashboard.
+ * signed out with "unavailable", not told the account cannot use the dashboard. A safe `next` path (the
+ * judge path's Live demo button) wins over the role landing; any other `next` is ignored.
  */
 export async function signIn(_previous: SignInState, form: FormData): Promise<SignInState> {
   const parsed = parseSignInForm(form);
@@ -58,5 +60,5 @@ export async function signIn(_previous: SignInState, form: FormData): Promise<Si
 
   const marker = lifetimeCookie(lifetime, now);
   cookieStore.set(marker.name, marker.value, marker.options);
-  redirect(staffHomePath(lookup.staff.role));
+  redirect(signInNext(form) ?? staffHomePath(lookup.staff.role));
 }

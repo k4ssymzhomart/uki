@@ -42,14 +42,17 @@ export function ArrowLink({
   href,
   children,
   className,
+  onClick,
 }: {
   href: LandingHref;
   children: ReactNode;
   className?: string;
+  onClick?: () => void;
 }) {
   return (
     <LandingLink
       href={href}
+      onClick={onClick}
       className={cx(
         "group inline-flex items-center gap-1.5 rounded-sm type-label-m outline-none focus-visible:shadow-focus",
         className,

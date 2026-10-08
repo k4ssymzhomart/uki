@@ -1,4 +1,6 @@
+import type { Route } from "next";
 import { z } from "zod";
+import { safeNextPath } from "./sign-in-query.ts";
 
 /**
  * The A.0 form as the sign-in action receives it. Field names match the inputs: email, password and
@@ -70,4 +72,9 @@ export function signInErrorFromAuth(error: {
     return "credentials";
   }
   return "unavailable";
+}
+
+/** The form's hidden `next` field when it is a safe path on this site (sign-in-query.ts), else null. */
+export function signInNext(form: FormData): Route | null {
+  return safeNextPath(form.get("next"));
 }

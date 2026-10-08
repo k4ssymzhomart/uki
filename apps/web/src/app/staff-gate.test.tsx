@@ -95,7 +95,7 @@ describe("a failed staff lookup", () => {
 
   it("sends `/` to the overview, which looks again, and leaves the sign-in form in place", async () => {
     await expect(HomePage()).rejects.toThrow("redirect /overview");
-    expect((await SignInPage()).type).toBe(SignInScreen);
+    expect((await SignInPage(overviewProps)).type).toBe(SignInScreen);
   });
 
   it("shows visitors without a staff session the landing page instead of redirecting", async () => {

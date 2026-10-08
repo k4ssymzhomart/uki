@@ -1,5 +1,5 @@
 {
-  "$comment": "Landing site strings (WP 1.13): key to { en, ru }. English from the Figma Landing frames (114:2039, 192:3586, 194:4014, 195:4090, 196:4125, 197:4144); drafts for your read-through on Monday 12. FAQ answers 2 to 6, the pilot form's role and size options and its error lines have no frame: drafted from the other frames' copy, review needed. The Russian is a first pass by the agent (WP 1.13): native review needed, P.18.",
+  "$comment": "Landing site strings (WP 1.13): key to { en, ru }. English from the Figma Landing frames (114:2039, 192:3586, 194:4014, 195:4090, 196:4125, 197:4144); drafts for your read-through on Monday 12. FAQ answers 2 to 6, the pilot form's role and size options and its error lines have no frame: drafted from the other frames' copy, review needed. The Russian is a first pass by the agent (WP 1.13): native review needed, P.18. The download block and the jury guide (dashboard.landing.download.*, dashboard.landing.guide.*) are a user request of 8 October with no frame: copy drafted by the agent, review needed. The judge path (dashboard.landing.demo.*, dashboard.landing.demoLive.*, the Live demo button and the guide's Live demo step) is a user request of 9 October with no frame: copy drafted by the agent, review needed.",
   "dashboard.landing.meta.home.title": {
     "en": "Üki · Proctoring that never leaves the laptop",
     "ru": "Üki · Прокторинг, который не покидает ноутбук"
@@ -19,6 +19,18 @@
   "dashboard.landing.meta.terms.title": {
     "en": "Terms of use · Üki",
     "ru": "Условия использования · Üki"
+  },
+  "dashboard.landing.meta.demo.title": {
+    "en": "For the jury · Üki",
+    "ru": "Для жюри · Üki"
+  },
+  "dashboard.landing.meta.demo.description": {
+    "en": "The live demo, the student app, Üki Lock and three things to try, on one page.",
+    "ru": "Живое демо, приложение студента, Üki Lock и три вещи, которые стоит попробовать, на одной странице."
+  },
+  "dashboard.landing.meta.demoLive.title": {
+    "en": "Live demo · Üki",
+    "ru": "Живое демо · Üki"
   },
   "dashboard.landing.nav.label": {
     "en": "Site",
@@ -51,6 +63,10 @@
   "dashboard.landing.nav.signIn": {
     "en": "Sign in",
     "ru": "Войти"
+  },
+  "dashboard.landing.nav.liveDemo": {
+    "en": "Live demo",
+    "ru": "Живое демо"
   },
   "dashboard.landing.nav.bookPilot": {
     "en": "Book a pilot",
@@ -99,6 +115,10 @@
   "dashboard.landing.hero.seeDemo": {
     "en": "See the demo",
     "ru": "Смотреть демо"
+  },
+  "dashboard.landing.hero.liveDemo": {
+    "en": "Live demo",
+    "ru": "Живое демо"
   },
   "dashboard.landing.hero.case": {
     "en": "KRU × Qostanai Hub · Case 3",
@@ -631,6 +651,338 @@
   "dashboard.landing.cta.seeDemo": {
     "en": "See the demo",
     "ru": "Смотреть демо"
+  },
+  "dashboard.landing.download.overline": {
+    "en": "Download",
+    "ru": "Скачать"
+  },
+  "dashboard.landing.download.title": {
+    "en": "Try Üki on your own laptop.",
+    "ru": "Попробуйте Üki на своём ноутбуке."
+  },
+  "dashboard.landing.download.body": {
+    "en": "Test builds from the latest release, for the jury and pilot universities. They are not signed yet, so the first launch asks once.",
+    "ru": "Тестовые сборки из последнего релиза для жюри и пилотных университетов. Они пока не подписаны, поэтому первый запуск один раз попросит подтверждения."
+  },
+  "dashboard.landing.download.macArm.title": {
+    "en": "macOS · Apple silicon",
+    "ru": "macOS · Apple silicon"
+  },
+  "dashboard.landing.download.macArm.detail": {
+    "en": "M1 and later · .dmg",
+    "ru": "M1 и новее · .dmg"
+  },
+  "dashboard.landing.download.macIntel.title": {
+    "en": "macOS · Intel",
+    "ru": "macOS · Intel"
+  },
+  "dashboard.landing.download.macIntel.detail": {
+    "en": "Macs with an Intel processor · .dmg",
+    "ru": "Mac с процессором Intel · .dmg"
+  },
+  "dashboard.landing.download.winSetup.title": {
+    "en": "Windows · installer",
+    "ru": "Windows · установщик"
+  },
+  "dashboard.landing.download.winSetup.detail": {
+    "en": "Windows 10 and 11 · .exe",
+    "ru": "Windows 10 и 11 · .exe"
+  },
+  "dashboard.landing.download.winZip.title": {
+    "en": "Windows · no install",
+    "ru": "Windows · без установки"
+  },
+  "dashboard.landing.download.winZip.detail": {
+    "en": "Unzip it and run Uki.exe · .zip",
+    "ru": "Распакуйте и запустите Uki.exe · .zip"
+  },
+  "dashboard.landing.download.lock.title": {
+    "en": "Üki Lock for Chrome and Edge",
+    "ru": "Üki Lock для Chrome и Edge"
+  },
+  "dashboard.landing.download.lock.detail": {
+    "en": "The extension for exams in the browser · .zip",
+    "ru": "Расширение для экзаменов в браузере · .zip"
+  },
+  "dashboard.landing.download.lock.chrome": {
+    "en": "Chrome",
+    "ru": "Chrome"
+  },
+  "dashboard.landing.download.lock.edge": {
+    "en": "Edge",
+    "ru": "Edge"
+  },
+  "dashboard.landing.download.lock.chromeLabel": {
+    "en": "Download Üki Lock for Chrome",
+    "ru": "Скачать Üki Lock для Chrome"
+  },
+  "dashboard.landing.download.lock.edgeLabel": {
+    "en": "Download Üki Lock for Edge",
+    "ru": "Скачать Üki Lock для Edge"
+  },
+  "dashboard.landing.download.notes": {
+    "en": "First launch",
+    "ru": "Первый запуск"
+  },
+  "dashboard.landing.download.note.mac": {
+    "en": "macOS: drag Üki to Applications, then right-click it and choose Open. On macOS 15 and later, choose Open Anyway in System Settings › Privacy & Security.",
+    "ru": "macOS: перетащите Üki в «Программы», затем нажмите на него правой кнопкой и выберите «Открыть». В macOS 15 и новее выберите «Всё равно открыть» в «Системных настройках» › «Конфиденциальность и безопасность»."
+  },
+  "dashboard.landing.download.note.windows": {
+    "en": "Windows: if SmartScreen warns you, choose More info, then Run anyway. Before unzipping the zip, tick Unblock in its Properties.",
+    "ru": "Windows: если SmartScreen предупреждает, выберите «Подробнее», затем «Выполнить в любом случае». Перед распаковкой архива отметьте «Разблокировать» в его свойствах."
+  },
+  "dashboard.landing.download.note.lock": {
+    "en": "Üki Lock: unzip it into a folder you keep. Open chrome://extensions or edge://extensions, turn on Developer mode, choose Load unpacked and pick that folder. Then start the Üki app and pair with the 6-digit code it shows.",
+    "ru": "Üki Lock: распакуйте архив в папку, которую не будете удалять. Откройте chrome://extensions или edge://extensions, включите режим разработчика, нажмите «Загрузить распакованное расширение» и выберите эту папку. Затем запустите приложение Üki и подключитесь по 6-значному коду, который оно покажет."
+  },
+  "dashboard.landing.download.all": {
+    "en": "All files and checksums on GitHub",
+    "ru": "Все файлы и контрольные суммы на GitHub"
+  },
+  "dashboard.landing.guide.title": {
+    "en": "Jury guide",
+    "ru": "Гид для жюри"
+  },
+  "dashboard.landing.guide.close": {
+    "en": "Close the guide",
+    "ru": "Закрыть гид"
+  },
+  "dashboard.landing.guide.hello": {
+    "en": "Hi, I’m Üki. Five steps, about five minutes: here is what to try.",
+    "ru": "Привет, я Üki. Пять шагов, около пяти минут: вот что стоит попробовать."
+  },
+  "dashboard.landing.guide.what.title": {
+    "en": "What Üki is",
+    "ru": "Что такое Üki"
+  },
+  "dashboard.landing.guide.what.body": {
+    "en": "Proctoring for university exams that runs on the student’s own laptop. Proctors get flagged moments, never video.",
+    "ru": "Прокторинг университетских экзаменов на ноутбуке самого студента. Прокторы получают отмеченные моменты, а не видео."
+  },
+  "dashboard.landing.guide.signIn.title": {
+    "en": "Open the live demo",
+    "ru": "Откройте живое демо"
+  },
+  "dashboard.landing.guide.signIn.body": {
+    "en": "Live demo fills in the jury’s email; the password is on the one-pager you received. You land on the live wall of Demo · Live.",
+    "ru": "«Живое демо» подставит почту жюри, а пароль — в памятке, которую вы получили. Вы попадёте на экран наблюдения экзамена Demo · Live."
+  },
+  "dashboard.landing.guide.signIn.action": {
+    "en": "Live demo",
+    "ru": "Живое демо"
+  },
+  "dashboard.landing.guide.app.title": {
+    "en": "Download and open the student app",
+    "ru": "Скачайте и откройте приложение студента"
+  },
+  "dashboard.landing.guide.app.body": {
+    "en": "For macOS and Windows. Join with the exam code the team gives you, as a student would.",
+    "ru": "Для macOS и Windows. Войдите по коду экзамена от команды, как это сделал бы студент."
+  },
+  "dashboard.landing.guide.app.action": {
+    "en": "Get the app",
+    "ru": "Скачать приложение"
+  },
+  "dashboard.landing.guide.lock.title": {
+    "en": "Install Üki Lock for browser exams",
+    "ru": "Установите Üki Lock для экзаменов в браузере"
+  },
+  "dashboard.landing.guide.lock.body": {
+    "en": "The extension for Chrome and Edge that locks the university portal while the exam runs.",
+    "ru": "Расширение для Chrome и Edge, которое блокирует портал университета на время экзамена."
+  },
+  "dashboard.landing.guide.lock.action": {
+    "en": "Get Üki Lock",
+    "ru": "Скачать Üki Lock"
+  },
+  "dashboard.landing.guide.look.title": {
+    "en": "What to look at",
+    "ru": "На что посмотреть"
+  },
+  "dashboard.landing.guide.look.body": {
+    "en": "Once you are signed in:",
+    "ru": "После входа:"
+  },
+  "dashboard.landing.guide.look.wall.title": {
+    "en": "The live wall",
+    "ru": "Экран наблюдения"
+  },
+  "dashboard.landing.guide.look.wall.body": {
+    "en": "Flagged students rise to the top.",
+    "ru": "Отмеченные студенты поднимаются наверх."
+  },
+  "dashboard.landing.guide.look.ask.title": {
+    "en": "Ask proctor",
+    "ru": "«Спросить проктора»"
+  },
+  "dashboard.landing.guide.look.ask.body": {
+    "en": "A student’s question reaches the proctor within a second.",
+    "ru": "Вопрос студента доходит до проктора за секунду."
+  },
+  "dashboard.landing.guide.look.flag.title": {
+    "en": "A flagged moment",
+    "ru": "Отмеченный момент"
+  },
+  "dashboard.landing.guide.look.flag.body": {
+    "en": "One still and the time, not a recording.",
+    "ru": "Один кадр и время, а не запись."
+  },
+  "dashboard.landing.guide.look.report.title": {
+    "en": "The integrity report",
+    "ru": "Отчёт о проверке"
+  },
+  "dashboard.landing.guide.look.report.body": {
+    "en": "The decision, its evidence and a share link.",
+    "ru": "Решение, его основания и ссылка для комиссии."
+  },
+  "dashboard.landing.guide.look.video.title": {
+    "en": "0 MB of video",
+    "ru": "0 МБ видео"
+  },
+  "dashboard.landing.guide.look.video.body": {
+    "en": "The video never leaves the student’s laptop.",
+    "ru": "Видео не покидает ноутбук студента."
+  },
+  "dashboard.landing.guide.all": {
+    "en": "Every link for the jury on one page",
+    "ru": "Все ссылки для жюри на одной странице"
+  },
+  "dashboard.landing.demo.overline": {
+    "en": "For the jury",
+    "ru": "Для жюри"
+  },
+  "dashboard.landing.demo.title": {
+    "en": "Try Üki for yourself.",
+    "ru": "Попробуйте Üki сами."
+  },
+  "dashboard.landing.demo.lead": {
+    "en": "Everything for the jury on one page: the live dashboard, the demo video, three things to try, and the student app with Üki Lock.",
+    "ru": "Всё для жюри на одной странице: живая панель, демо-видео, три вещи, которые стоит попробовать, и приложение студента с Üki Lock."
+  },
+  "dashboard.landing.demo.dashboard.title": {
+    "en": "The live dashboard",
+    "ru": "Живая панель"
+  },
+  "dashboard.landing.demo.dashboard.body": {
+    "en": "Demo · Live is an exam that is always running, with 30 demo students. Live demo signs you in as the jury and opens its live wall. The jury account can look, not change.",
+    "ru": "Demo · Live — экзамен, который идёт всегда, с 30 демо-студентами. «Живое демо» входит под аккаунтом жюри и открывает его экран наблюдения. Аккаунт жюри может смотреть, но не менять."
+  },
+  "dashboard.landing.demo.dashboard.email": {
+    "en": "Email",
+    "ru": "Почта"
+  },
+  "dashboard.landing.demo.dashboard.password": {
+    "en": "Password",
+    "ru": "Пароль"
+  },
+  "dashboard.landing.demo.dashboard.passwordWhere": {
+    "en": "On the one-pager you received",
+    "ru": "В памятке, которую вы получили"
+  },
+  "dashboard.landing.demo.dashboard.liveDemo": {
+    "en": "Open the live demo",
+    "ru": "Открыть живое демо"
+  },
+  "dashboard.landing.demo.dashboard.open": {
+    "en": "Open the dashboard",
+    "ru": "Открыть панель"
+  },
+  "dashboard.landing.demo.video.title": {
+    "en": "The demo video",
+    "ru": "Демо-видео"
+  },
+  "dashboard.landing.demo.video.soon.title": {
+    "en": "The demo video goes here",
+    "ru": "Здесь будет демо-видео"
+  },
+  "dashboard.landing.demo.video.soon.body": {
+    "en": "We are recording it for Demo Day. Until then, the live demo shows the same screens.",
+    "ru": "Мы записываем его ко Дню демо. Пока его нет, те же экраны показывает живое демо."
+  },
+  "dashboard.landing.demo.video.watch": {
+    "en": "Watch the demo video",
+    "ru": "Смотреть демо-видео"
+  },
+  "dashboard.landing.demo.video.newTab": {
+    "en": "Opens in a new tab",
+    "ru": "Откроется в новой вкладке"
+  },
+  "dashboard.landing.demo.tries.title": {
+    "en": "Three things to try",
+    "ru": "Три вещи, которые стоит попробовать"
+  },
+  "dashboard.landing.demo.tries.flags.title": {
+    "en": "Flags on the live wall",
+    "ru": "Отметки на экране наблюдения"
+  },
+  "dashboard.landing.demo.tries.flags.body": {
+    "en": "Flagged students rise to the top of the wall. Open one: the drawer shows the stills of each flagged moment, never a video.",
+    "ru": "Отмеченные студенты поднимаются наверх. Откройте одного из них: в боковой панели — кадры каждого отмеченного момента, а не видео."
+  },
+  "dashboard.landing.demo.tries.ask.title": {
+    "en": "Ask proctor and the reply",
+    "ru": "«Спросить проктора» и ответ"
+  },
+  "dashboard.landing.demo.tries.ask.body": {
+    "en": "When a student presses Ask proctor, the question appears in the wall’s help panel within a second, and the proctor’s reply goes straight back to the student’s screen.",
+    "ru": "Когда студент нажимает «Спросить проктора», вопрос за секунду появляется в панели помощи на экране наблюдения, а ответ проктора сразу приходит на экран студента."
+  },
+  "dashboard.landing.demo.tries.report.title": {
+    "en": "A report and its share link",
+    "ru": "Отчёт и ссылка для комиссии"
+  },
+  "dashboard.landing.demo.tries.report.body": {
+    "en": "An integrity report sums up a session with its evidence. Its share link opens a read-only copy for the committee, and the code printed on it checks at /verify.",
+    "ru": "Отчёт о проверке подводит итог сессии вместе с основаниями. По ссылке комиссия открывает копию только для чтения, а напечатанный на нём код проверяется на странице /verify."
+  },
+  "dashboard.landing.demo.try.title": {
+    "en": "Detection in your browser",
+    "ru": "Распознавание в браузере"
+  },
+  "dashboard.landing.demo.try.body": {
+    "en": "Try Üki’s on-device detection with your own camera, right in this browser. Nothing is uploaded.",
+    "ru": "Попробуйте распознавание Üki со своей камерой прямо в браузере. Ничего не загружается на сервер."
+  },
+  "dashboard.landing.demo.try.action": {
+    "en": "Open the detection demo",
+    "ru": "Открыть демо распознавания"
+  },
+  "dashboard.landing.demo.apps.title": {
+    "en": "The student app and Üki Lock",
+    "ru": "Приложение студента и Üki Lock"
+  },
+  "dashboard.landing.demo.apps.body": {
+    "en": "Test builds from the latest release. Join with the exam code on your one-pager, as a student would.",
+    "ru": "Тестовые сборки из последнего релиза. Войдите по коду экзамена из памятки, как это сделал бы студент."
+  },
+  "dashboard.landing.demoLive.home": {
+    "en": "Üki home",
+    "ru": "Üki, главная"
+  },
+  "dashboard.landing.demoLive.missing.title": {
+    "en": "The live demo is not running yet.",
+    "ru": "Живое демо ещё не запущено."
+  },
+  "dashboard.landing.demoLive.missing.body": {
+    "en": "Üki could not find the exam {code} for this account. The team starts it before the session: try again in a minute.",
+    "ru": "Üki не нашёл экзамен {code} для этого аккаунта. Команда запускает его перед показом: попробуйте ещё раз через минуту."
+  },
+  "dashboard.landing.demoLive.failed.title": {
+    "en": "Could not reach Üki.",
+    "ru": "Не удалось связаться с Üki."
+  },
+  "dashboard.landing.demoLive.failed.body": {
+    "en": "The live demo could not be looked up just now. Check your connection and try again.",
+    "ru": "Сейчас не удалось найти живое демо. Проверьте подключение и попробуйте ещё раз."
+  },
+  "dashboard.landing.demoLive.retry": {
+    "en": "Try again",
+    "ru": "Попробовать снова"
+  },
+  "dashboard.landing.demoLive.dashboard": {
+    "en": "Open your dashboard",
+    "ru": "Открыть свою панель"
   },
   "dashboard.landing.footer.tagline": {
     "en": "Көреді. Қорғайды. Дәлелдейді.",

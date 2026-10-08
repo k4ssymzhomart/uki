@@ -3,6 +3,7 @@ import { Icon } from "@uki/ui/icon";
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
+import { LIVE_DEMO_HREF } from "../demo/demo-model.ts";
 import { Badge, Button, LiveWidget, LockToast, StatusDot } from "./kit.tsx";
 import type { LandingLocale } from "./landing-model.ts";
 import { cx, LandingLink } from "./landing-parts.tsx";
@@ -15,6 +16,8 @@ import { SiteHeader } from "./site-header.tsx";
  * Positions are fractions of the bezel, so the composition holds between the two frames. The cards
  * hang outside the bezel, so from 1280 the bezel narrows until they fit the window (the frame's 1057
  * at 1440); below 1280 the bezel takes the width and only the Watching widget stays, as at 390.
+ * Live demo (a user request of 9 October; not in the frames) joins Book a pilot and See the demo: it
+ * opens sign-in with the jury's email filled in, then the live wall of DEMO-LIVE.
  */
 export async function Hero({ locale }: { locale: LandingLocale }) {
   const t = await getTranslations("dashboard.landing.hero");
@@ -56,6 +59,12 @@ export async function Hero({ locale }: { locale: LandingLocale }) {
             </Button>
             <Button variant="secondary" asChild className="w-full lg:w-auto">
               <LandingLink href="/#product">{t("seeDemo")}</LandingLink>
+            </Button>
+            <Button variant="secondary" asChild className="w-full lg:w-auto">
+              <LandingLink href={LIVE_DEMO_HREF}>
+                <StatusDot tone="ok" className="size-2" />
+                {t("liveDemo")}
+              </LandingLink>
             </Button>
           </div>
           <p className="hidden opacity-45 type-mono-tag lg:block">{t("case")}</p>
