@@ -146,7 +146,11 @@ async function main(): Promise<void> {
   const faculty =
     existingFaculty.data ??
     must(
-      await admin.from("faculties").insert({ workspace_id: workspace.id, name: FACULTY }).select("id").single(),
+      await admin
+        .from("faculties")
+        .insert({ workspace_id: workspace.id, name: FACULTY })
+        .select("id")
+        .single(),
       `faculty ${FACULTY}`,
     );
   const group = must(
