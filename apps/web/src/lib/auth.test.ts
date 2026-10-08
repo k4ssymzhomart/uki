@@ -62,6 +62,7 @@ describe("staffMemberFromRow", () => {
     id: sub,
     full_name: "Dana Akhmetova",
     role: "exam_office",
+    languages: ["ru"],
     workspace: { name: "KRU · Kostanay" },
     faculty: { name: "Faculty of Mathematics" },
   };
@@ -71,6 +72,7 @@ describe("staffMemberFromRow", () => {
       ...user,
       fullName: "Dana Akhmetova",
       role: "exam_office",
+      languages: ["ru"],
       workspaceName: "KRU · Kostanay",
       facultyName: "Faculty of Mathematics",
     });
@@ -81,6 +83,7 @@ describe("staffMemberFromRow", () => {
     expect(staffMemberFromRow(user, null)).toBeNull();
     expect(staffMemberFromRow(user, { ...row, id: "0199b6a4-6c1e-7b3a-9f2d-3c4b5a690000" })).toBeNull();
     expect(staffMemberFromRow(user, { ...row, role: "student" })).toBeNull();
+    expect(staffMemberFromRow(user, { ...row, languages: ["de"] })).toBeNull();
   });
 });
 
@@ -92,6 +95,7 @@ const ROW = {
   id: sub,
   full_name: "Dana Akhmetova",
   role: "exam_office",
+  languages: ["ru"],
   workspace: { name: "KRU · Kostanay" },
   faculty: null,
 };
@@ -134,6 +138,7 @@ const DANA_STAFF: StaffMember = {
   id: sub,
   email: "dana.akhmetova@kru.test",
   fullName: "Dana Akhmetova",
+  languages: ["ru"],
   role: "exam_office",
   workspaceName: "KRU · Kostanay",
   facultyName: null,

@@ -1,4 +1,5 @@
 import { STAFF_ROLES } from "@uki/contracts";
+import { localeSchema } from "@uki/i18n";
 import { redirect, unstable_rethrow } from "next/navigation";
 import { cache } from "react";
 import { z } from "zod";
@@ -26,6 +27,8 @@ export const StaffRow = z.object({
   id: z.uuid(),
   full_name: z.string(),
   role: z.enum(STAFF_ROLES),
+  /** In order of preference; the first one picks the dashboard's default language. */
+  languages: z.array(localeSchema),
   workspace: z.object({ name: z.string() }),
   faculty: z.object({ name: z.string() }).nullable(),
 });
@@ -34,6 +37,7 @@ export type StaffRow = z.infer<typeof StaffRow>;
 export type StaffMember = StaffUser & {
   fullName: string;
   role: StaffRow["role"];
+  languages: StaffRow["languages"];
   workspaceName: string;
   facultyName: string | null;
 };
@@ -45,6 +49,7 @@ export function staffMemberFromRow(user: StaffUser, row: unknown): StaffMember |
     ...user,
     fullName: parsed.data.full_name,
     role: parsed.data.role,
+    languages: parsed.data.languages,
     workspaceName: parsed.data.workspace.name,
     facultyName: parsed.data.faculty?.name ?? null,
   };
@@ -79,7 +84,7 @@ export async function loadStaffMember(supabase: SupabaseServerClient, user: Staf
   try {
     const { data, error } = await supabase
       .from("staff")
-      .select("id, full_name, role, workspace:workspaces(name), faculty:faculties(name)")
+      .select("id, full_name, role, languages, workspace:workspaces(name), faculty:faculties(name)")
       .eq("id", user.id)
       .maybeSingle();
     if (error) return FAILED;

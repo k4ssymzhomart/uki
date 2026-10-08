@@ -19,7 +19,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import stopwatchArt from "../../assets/uki-3d-stopwatch.png";
-import { DASHBOARD_LOCALE } from "../../i18n/locale.ts";
+import { useDashboardLocale } from "../../i18n/use-dashboard-locale.ts";
 import { formatGroupCodes, minutesUntil, timeOf } from "../../lib/format.ts";
 import { useNow, useServerOffset } from "../../lib/use-now.ts";
 import { PageHeader } from "../shell/page-header.tsx";
@@ -77,6 +77,7 @@ export function LobbyView({
   measureOffset,
 }: LobbyViewProps) {
   const t = useTranslations("dashboard");
+  const locale = useDashboardLocale();
   const toast = useToast();
   // The banner and the Start exam gate run on the server's clock, like start_exam.
   const now = useNow(nowMs, CLOCK_TICK_MS, useServerOffset(measureOffset));
@@ -243,7 +244,7 @@ export function LobbyView({
                 <RowLobby
                   key={row.studentId}
                   data-category={row.category}
-                  initials={initials(row.name, DASHBOARD_LOCALE)}
+                  initials={initials(row.name, locale)}
                   name={row.name}
                   studentId={row.number}
                   step={t(`lobby.step.${row.step}`)}

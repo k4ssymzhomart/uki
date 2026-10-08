@@ -69,7 +69,7 @@
     "ru": "Видео не покидает ноутбуки студентов. Передаются только события и отмеченные кадры."
   },
   "dashboard.shell.signOut": {
-    "en": "Sign out",
+    "en": "Log out",
     "ru": "Выйти"
   },
   "dashboard.shell.toast.label": {
@@ -563,5 +563,69 @@
   "dashboard.lobby.message": {
     "en": "Message",
     "ru": "Написать"
+  },
+  "dashboard.overview.dataKept.body": {
+    "en": "Üki checks video on each laptop. Only events and flagged frames reach the server.",
+    "ru": "Üki проверяет видео на каждом ноутбуке. На сервер попадают только события и отмеченные кадры."
+  },
+  "dashboard.overview.dataKept.count": {
+    "en": "{count, number}",
+    "ru": "{count, number}"
+  },
+  "dashboard.overview.dataKept.events": {
+    "en": "Events",
+    "ru": "События"
+  },
+  "dashboard.overview.dataKept.frames": {
+    "en": "Flagged frames",
+    "ru": "Отмеченные кадры"
+  },
+  "dashboard.overview.dataKept.pending": {
+    "en": "—",
+    "ru": "—"
+  },
+  "dashboard.overview.dataKept.privacyCentre": {
+    "en": "Open privacy centre",
+    "ru": "Открыть центр конфиденциальности"
+  },
+  "dashboard.overview.dataKept.title": {
+    "en": "Why 0 MB?",
+    "ru": "Почему 0 МБ?"
+  },
+  "dashboard.overview.dataKept.video": {
+    "en": "Video",
+    "ru": "Видео"
+  },
+  "dashboard.shell.account.language": {
+    "en": "Language",
+    "ru": "Язык"
+  },
+  "dashboard.shell.nav.privacy": {
+    "en": "Privacy",
+    "ru": "Конфиденциальность"
+  },
+  "dashboard.shell.nav.reports": {
+    "en": "Reports",
+    "ru": "Отчёты"
+  },
+  "dashboard.shell.nav.review": {
+    "en": "Review",
+    "ru": "Проверка"
+  },
+  "dashboard.shell.nav.settings": {
+    "en": "Settings",
+    "ru": "Настройки"
+  },
+  "dashboard.shell.nav.students": {
+    "en": "Students",
+    "ru": "Студенты"
+  },
+  "dashboard.shell.section.admin": {
+    "en": "Admin",
+    "ru": "Управление"
+  },
+  "dashboard.shell.workspace.allFaculties": {
+    "en": "All faculties",
+    "ru": "Все факультеты"
   }
 }

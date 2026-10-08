@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { staffHomePath } from "../../../features/shell/shell-model.ts";
 import {
   parseSignInForm,
   type SignInState,
@@ -57,5 +58,5 @@ export async function signIn(_previous: SignInState, form: FormData): Promise<Si
 
   const marker = lifetimeCookie(lifetime, now);
   cookieStore.set(marker.name, marker.value, marker.options);
-  redirect("/overview");
+  redirect(staffHomePath(lookup.staff.role));
 }

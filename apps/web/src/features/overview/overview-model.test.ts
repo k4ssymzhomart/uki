@@ -18,6 +18,7 @@ const now = Date.parse("2026-10-07T09:00:00Z");
 function exam(id: number, status: OverviewRow["status"], startsAt: string, extra: Partial<OverviewRow> = {}) {
   return {
     id: `e0000000-0000-4000-8000-00000000000${id}`,
+    faculty_id: null,
     title: `Exam ${id}`,
     course: `Course ${id}`,
     status,

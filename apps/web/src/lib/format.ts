@@ -1,29 +1,30 @@
 import { type DateInput, formatDate, formatTime, TIME_ZONE } from "@uki/i18n";
-import { DASHBOARD_LOCALE } from "../i18n/locale.ts";
+import type { DashboardLocale } from "../i18n/locale.ts";
 
 /**
  * Formatting shared by the dashboard screens. Every time is shown in Asia/Almaty (CLAUDE.md), in the
- * dashboard's locale; the words around the values come from dashboard.* messages.
+ * dashboard's locale (useDashboardLocale() on the client); the words around the values come from
+ * dashboard.* messages.
  */
 
-/** "10:00". */
+/** "10:00": 24-hour in both dashboard languages, so it needs no locale. */
 export function timeOf(value: DateInput): string {
-  return formatTime(value, DASHBOARD_LOCALE);
+  return formatTime(value, "en");
 }
 
-/** "Fri 9 Oct". */
-export function dayOf(value: DateInput): string {
-  return formatDate(value, DASHBOARD_LOCALE);
+/** "Fri 9 Oct", "пт, 9 окт". */
+export function dayOf(value: DateInput, locale: DashboardLocale): string {
+  return formatDate(value, locale);
 }
 
-/** "Fri". */
-export function weekdayOf(value: DateInput): string {
-  return formatDate(value, DASHBOARD_LOCALE, { weekday: "short" });
+/** "Fri", "пт". */
+export function weekdayOf(value: DateInput, locale: DashboardLocale): string {
+  return formatDate(value, locale, { weekday: "short" });
 }
 
-/** "Friday". */
-export function longWeekdayOf(value: DateInput): string {
-  return formatDate(value, DASHBOARD_LOCALE, { weekday: "long" });
+/** "Friday", "пятница". */
+export function longWeekdayOf(value: DateInput, locale: DashboardLocale): string {
+  return formatDate(value, locale, { weekday: "long" });
 }
 
 const dayKeyFormat = new Intl.DateTimeFormat("en-CA", {

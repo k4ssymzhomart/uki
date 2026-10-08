@@ -1,20 +1,95 @@
+import type { StaffRole } from "@uki/contracts";
+import type { IconName } from "@uki/ui";
+import type { Route } from "next";
 import type { LiveTarget } from "../overview/overview-model.ts";
 
 /**
- * The dashboard shell as pure functions: which sidebar item is current, which routes are drawn dark,
- * where Live leads, and the initials shown for the workspace and the staff member.
+ * The dashboard shell as pure functions: which sidebar items a role sees, which one is current, which
+ * routes are drawn dark, where Live and a role's home lead, and the initials shown for the workspace
+ * and the staff member.
  */
 
-/** Phase 0 shows Overview, Exams and Live; Review, Reports, Students, Settings and Privacy stay hidden. */
-export const NAV_ITEMS = ["overview", "exams", "live"] as const;
+/** Every sidebar item Phase 1 has, in Figma's order (0.1 for the exam office, 0.9 for proctors). */
+export const NAV_ITEMS = [
+  "overview",
+  "exams",
+  "live",
+  "review",
+  "reports",
+  "students",
+  "settings",
+  "privacy",
+] as const;
 export type NavId = (typeof NAV_ITEMS)[number];
 
-const EXAM_ROUTE = /^\/exams\/[^/]+\/(lobby|live)(?:\/|$)/;
+export type NavSectionId = "workspace" | "admin";
 
-/** The current sidebar item: Overview on /overview; Live on an exam's lobby and live wall (1.5 and 2.4). */
+export type NavSpec = {
+  section: NavSectionId;
+  icon: IconName;
+  /** The roles the frames show the item for: 0.1 (exam office) and 0.9 (proctors). */
+  roles: readonly StaffRole[];
+  /**
+   * False until the item's page is built; the item stays hidden until then. Each package turns its own
+   * item on when its page lands: Review with 1.8, Reports with 1.10, Students and Settings with 1.11,
+   * Privacy with 1.12. Phase 2 and 3 entry points (A.4a to A.4d, A.7, A.8) are not items at all.
+   */
+  built: boolean;
+};
+
+const OFFICE: readonly StaffRole[] = ["exam_office", "admin"];
+const EVERYONE: readonly StaffRole[] = ["exam_office", "admin", "proctor"];
+
+export const NAV: Readonly<Record<NavId, NavSpec>> = {
+  overview: { section: "workspace", icon: "layout-grid", roles: EVERYONE, built: true },
+  exams: { section: "workspace", icon: "exam", roles: EVERYONE, built: true },
+  live: { section: "workspace", icon: "eyes", roles: EVERYONE, built: true },
+  review: { section: "workspace", icon: "flag", roles: EVERYONE, built: false },
+  reports: { section: "workspace", icon: "report", roles: EVERYONE, built: false },
+  students: { section: "workspace", icon: "users", roles: EVERYONE, built: false },
+  settings: { section: "admin", icon: "settings", roles: OFFICE, built: false },
+  privacy: { section: "admin", icon: "shield", roles: OFFICE, built: false },
+};
+
+/** Where the fixed items lead. Privacy is /privacy-centre, because /privacy is the public policy page. */
+export const NAV_HREFS: Readonly<Record<Exclude<NavId, "overview" | "exams" | "live">, string>> = {
+  review: "/review",
+  reports: "/reports",
+  students: "/students",
+  settings: "/settings",
+  privacy: "/privacy-centre",
+};
+
+/** The sidebar of a role: its built items, grouped into Workspace and Admin; an empty section is left out. */
+export function navSections(
+  role: StaffRole,
+  spec: Readonly<Record<NavId, NavSpec>> = NAV,
+): { id: NavSectionId; items: NavId[] }[] {
+  const sections: { id: NavSectionId; items: NavId[] }[] = [
+    { id: "workspace", items: [] },
+    { id: "admin", items: [] },
+  ];
+  for (const id of NAV_ITEMS) {
+    const item = spec[id];
+    if (!item.built || !item.roles.includes(role)) continue;
+    sections.find((section) => section.id === item.section)?.items.push(id);
+  }
+  return sections.filter((section) => section.items.length > 0);
+}
+
+const EXAM_ROUTE = /^\/exams\/[^/]+\/(lobby|live)(?:\/|$)/;
+const startsWith = (pathname: string, base: string) => pathname === base || pathname.startsWith(`${base}/`);
+
+/**
+ * The current sidebar item: Overview on /overview and a proctor's /my-exams (0.9 marks Overview); Live
+ * on an exam's lobby and live wall (1.5 and 2.4); the Phase 1 items on their own routes.
+ */
 export function activeNav(pathname: string): NavId | null {
-  if (pathname === "/overview") return "overview";
+  if (pathname === "/overview" || startsWith(pathname, "/my-exams")) return "overview";
   if (EXAM_ROUTE.test(pathname)) return "live";
+  for (const [id, href] of Object.entries(NAV_HREFS)) {
+    if (startsWith(pathname, href)) return id as NavId;
+  }
   return null;
 }
 
@@ -30,6 +105,19 @@ export function liveHref(target: LiveTarget): string {
 
 /** The Exams item opens the overview's exams table (the handoff links Overview and Exams to 0.1). */
 export const EXAMS_HREF = "/overview#exams";
+
+/**
+ * Proctors land on 0.9 (/my-exams) after sign-in (Phase 1 plan, Decisions: Proctor landing). /my-exams
+ * is WP 1.5; until it lands this stays false and proctors keep landing on the overview. WP 1.5 turns it
+ * on together with its page.
+ */
+export const PROCTORS_LAND_ON_MY_EXAMS = false;
+
+/** Where a staff member lands after sign-in and on `/`, and where their Overview item leads. */
+export function staffHomePath(role: StaffRole, myExamsBuilt: boolean = PROCTORS_LAND_ON_MY_EXAMS): Route {
+  // /my-exams is not a typed route until WP 1.5 adds its page.
+  return (role === "proctor" && myExamsBuilt ? "/my-exams" : "/overview") as Route;
+}
 
 /** "KRU · Kostanay" gives "K", as the workspace avatar in Figma. */
 export function workspaceInitial(name: string): string {
