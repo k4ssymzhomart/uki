@@ -1578,6 +1578,438 @@
         "close": "Close",
         "region": "Notifications"
       }
+    },
+    "wizard": {
+      "back": "Back",
+      "breadcrumb": "Exams / New exam",
+      "browser": {
+        "footer": "Saved · {time}",
+        "link": {
+          "invalid": "Paste the full link, starting with https://",
+          "label": "Exam link"
+        },
+        "mode": {
+          "title": "Where the exam runs"
+        },
+        "next": "Next: students",
+        "preview": {
+          "overline": "Student sees"
+        },
+        "rule": {
+          "copy_paste": {
+            "detail": "Each try goes to the exam log.",
+            "title": "Block copy and paste"
+          },
+          "devtools": {
+            "detail": "University-managed computers only",
+            "title": "Block developer tools"
+          },
+          "full_screen": {
+            "detail": "Leaving it pauses the exam.",
+            "title": "Require full screen"
+          },
+          "print": {
+            "detail": "Print and save as PDF are off.",
+            "title": "Block printing"
+          },
+          "screen_share": {
+            "detail": "Detected",
+            "title": "Block screen sharing"
+          }
+        },
+        "rules": {
+          "title": "Rules while locked"
+        },
+        "sites": {
+          "add": "Add site",
+          "addCalculator": "Add the calculator",
+          "addLabel": "Site address",
+          "calculator": "Calculator · built in",
+          "invalid": "Type a site such as exam.kru.test",
+          "locked": "The exam’s own site",
+          "remove": "Remove {host}",
+          "removeCalculator": "Turn off the calculator",
+          "title": "Open during the exam"
+        }
+      },
+      "cancel": "Cancel",
+      "checks": {
+        "footer": "Saved as draft · {time}",
+        "gaze": {
+          "detail": "Flag when eyes leave the screen for more than {seconds, plural, one {# second} other {# seconds}}.",
+          "title": "Gaze control"
+        },
+        "gazeInfo": {
+          "body": "How long eyes can leave the screen before Üki flags it. Shorter glances are ignored.",
+          "calm": "Calm, for reading",
+          "default": "Default",
+          "strict": "Strict",
+          "title": "Gaze threshold",
+          "value": "{seconds} s"
+        },
+        "gazeThreshold": {
+          "helper": "Shorter looks are ignored.",
+          "info": "About the gaze threshold",
+          "label": "Gaze threshold",
+          "value": "{seconds, plural, one {# second} other {# seconds}}"
+        },
+        "head": {
+          "caption": "Every check runs on the student’s laptop. Turn off what this exam does not need.",
+          "title": "What Üki checks"
+        },
+        "identity": {
+          "detail": "Student card and face, matched on the laptop before the start.",
+          "title": "Identity check"
+        },
+        "lock": {
+          "detail": "Other tabs and apps stay closed until the student submits.",
+          "title": "Browser lock"
+        },
+        "mic": {
+          "detail": "Off. Üki never records audio.",
+          "title": "Microphone"
+        },
+        "next": "Next: students",
+        "nextBrowser": "Next: browser rules",
+        "phone": {
+          "detail": "Flag a phone in frame at {score} confidence or higher.",
+          "title": "Phone detection"
+        },
+        "phoneThreshold": {
+          "helper": "Lower catches more, with more false flags.",
+          "label": "Phone confidence"
+        },
+        "preview": {
+          "language": "Preview language",
+          "overline": "Student preview",
+          "title": "Before you start"
+        },
+        "privacy": {
+          "body": "Video is processed on the student’s laptop. Only events and flagged frames are sent.",
+          "title": "On device"
+        },
+        "second": {
+          "detail": "Flag when a second face enters the frame.",
+          "title": "Second person"
+        }
+      },
+      "details": {
+        "card": {
+          "caption": "Students see the title, date and time in their invitation.",
+          "title": "Exam details"
+        },
+        "course": {
+          "label": "Course"
+        },
+        "duration": {
+          "label": "Duration"
+        },
+        "footer": "Draft saved {time}. Only the exam office sees drafts.",
+        "glance": {
+          "ends": "Exam ends",
+          "language": {
+            "en": "English",
+            "kk": "Қазақша",
+            "ru": "Русский"
+          },
+          "lobby": "Lobby opens",
+          "lobbyValue": "{time} · {minutes} min before",
+          "noGroups": "Add a group",
+          "note": "Checks start from your defaults in Settings. You change them in step 2.",
+          "proctors": "Proctors",
+          "proctorsValue": "You assign them in step 3",
+          "rules": "Rules language",
+          "rulesValue": "{first}, then {others}",
+          "students": "Students",
+          "studentsValue": "{count} · {groups}",
+          "title": "At a glance"
+        },
+        "groups": {
+          "add": "Add group",
+          "chip": "Group {code} · {count, plural, one {# student} other {# students}}",
+          "label": "Groups",
+          "option": "Group {code} · {count, plural, one {# student} other {# students}}",
+          "remove": "Remove group {code}"
+        },
+        "kind": {
+          "final": "Final",
+          "label": "Type",
+          "midterm": "Midterm",
+          "placeholder": "Choose a type",
+          "quiz": "Quiz",
+          "test": "Test"
+        },
+        "mode": {
+          "app": {
+            "detail": "Questions open inside Üki.",
+            "title": "In the Üki app"
+          },
+          "browser": {
+            "detail": "Any exam that opens in a browser.",
+            "title": "In your LMS, with Üki Lock"
+          },
+          "label": "Where the exam runs"
+        },
+        "next": "Next: checks",
+        "title": {
+          "label": "Exam title"
+        },
+        "when": {
+          "label": "Date and start",
+          "value": "{date} {year} · {time}"
+        }
+      },
+      "edit": "Edit",
+      "error": {
+        "failed": "Could not save. Check the connection and try again.",
+        "forbidden": "Only the exam office can change this exam.",
+        "invalid": "Some values are not valid. Check them and try again.",
+        "notDraft": "This exam is no longer a draft, so this step cannot change it."
+      },
+      "language": {
+        "en": "English",
+        "kk": "Kazakh",
+        "ru": "Russian"
+      },
+      "overview": {
+        "newExam": "New exam",
+        "scheduled": "Exam scheduled. Students join with the code {code}."
+      },
+      "picker": {
+        "apply": "Apply",
+        "examDay": "{date}, another exam",
+        "next": "Next month",
+        "previous": "Previous month",
+        "time": "Start time",
+        "weekday": {
+          "1": "Mo",
+          "2": "Tu",
+          "3": "We",
+          "4": "Th",
+          "5": "Fr",
+          "6": "Sa",
+          "7": "Su"
+        }
+      },
+      "review": {
+        "checks": {
+          "gaze": "Gaze · {seconds} s",
+          "identity": "Identity",
+          "identityOff": "Identity off",
+          "lock": "Browser lock",
+          "lockOff": "Browser lock off",
+          "microphone": "Microphone off",
+          "phone": "Phone · {score}",
+          "secondPerson": "Second person",
+          "title": "Checks"
+        },
+        "details": {
+          "app": "The Üki app",
+          "browser": "Your LMS, with Üki Lock",
+          "exam": "Exam",
+          "missing": "Not set yet",
+          "runsIn": "Runs in",
+          "students": "Students",
+          "studentsValue": "{groups} · {count, plural, one {# student} other {# students}}",
+          "title": "Details",
+          "when": "When",
+          "whenValue": "{date} {year} · {start}–{end} · {minutes} min"
+        },
+        "footerReady": "Everything is in place. Schedule the exam when you are ready.",
+        "footerWaiting": "{names} hasn’t confirmed yet. You can schedule now; they get a reminder.",
+        "invitesUnavailable": "Invites go out once the invite service is switched on.",
+        "next": {
+          "end": "Exam ends",
+          "endDetail": "Review opens for flagged sessions",
+          "invites": "{count, plural, one {# invite goes out} other {# invites go out}}",
+          "invitesDetail": "Exam code and install link, in 3 languages",
+          "lobby": "Lobby opens",
+          "lobbyDetail": "Students check in {minutes} min before",
+          "now": "Now",
+          "start": "Exam starts",
+          "startDetail": "Proctors press Start in the lobby",
+          "title": "When you schedule",
+          "when": "{weekday} {time}"
+        },
+        "people": {
+          "confirmed": "confirmed",
+          "noProctors": "No proctors yet",
+          "proctorValue": "Seats {from}–{to} · {languages} · {state}",
+          "roster": "Roster",
+          "rosterFile": "{valid} of {total} rows valid · {file}",
+          "rosterValue": "{count, plural, one {# student} other {# students}} on the roster",
+          "title": "Students and proctors",
+          "waiting": "waiting for confirmation"
+        },
+        "problem": {
+          "browser_rules_invalid": "The browser rules are not valid.",
+          "checks_invalid": "A check has a value out of range.",
+          "code_exhausted": "Too many exams share this course, group and weekday. Change one of them.",
+          "course_missing": "The exam has no course.",
+          "duration_invalid": "The duration must be 5 to 600 minutes.",
+          "groups_missing": "Add at least one group.",
+          "kind_missing": "The exam has no type.",
+          "lms_url_invalid": "The exam link is not a web address.",
+          "lms_url_missing": "The exam link is missing.",
+          "proctors_missing": "No proctors are assigned.",
+          "roster_empty": "The roster is empty.",
+          "seats_uncovered": "Some seats have no proctor.",
+          "starts_in_past": "The start time has passed. Pick a later one.",
+          "title_missing": "The exam has no title."
+        },
+        "problemLink": "Go to {step}",
+        "saveDraft": "Save draft",
+        "schedule": "Schedule exam",
+        "stepName": {
+          "browser": "Browser rules",
+          "checks": "Checks",
+          "details": "Details",
+          "review": "Review",
+          "roster": "Students"
+        },
+        "testInvite": "Send a test invite to me",
+        "testInviteFailed": "The test invite could not be sent.",
+        "testInviteSent": "Test invite sent. Check your inbox."
+      },
+      "roster": {
+        "action": {
+          "edit": "Edit",
+          "fixEmail": "Fix email",
+          "resend": "Resend"
+        },
+        "column": {
+          "action": "Action",
+          "group": "Group",
+          "invite": "Invite",
+          "proctor": "Proctor",
+          "student": "Student"
+        },
+        "empty": {
+          "caption": "Columns: name, student ID, email, group, language. Up to 2,000 rows.",
+          "choose": "Choose file",
+          "title": "Drop the dean’s office CSV here"
+        },
+        "errors": {
+          "download": "Download error report",
+          "noName": "—",
+          "reportFile": "roster-errors.csv",
+          "reportHeader": {
+            "column": "column",
+            "problem": "problem",
+            "row": "row"
+          },
+          "row": "Row {row}",
+          "skip": "Skip {count, plural, one {# row} other {# rows}}",
+          "summary": "{valid} of {total} rows are valid. Fix {bad, plural, one {# row} other {# rows}} or skip them.",
+          "upload": "Upload fixed file"
+        },
+        "file": {
+          "emptyFile": "This file has no rows.",
+          "fallbackName": "Roster",
+          "imported": "Imported {count, plural, one {# student} other {# students}} from the dean’s office export.",
+          "importing": "Importing the roster",
+          "replace": "Replace file",
+          "tooMany": "This file has more than 2,000 rows.",
+          "unreadable": "This file cannot be read as CSV.",
+          "valid": "{valid} of {total} valid"
+        },
+        "fix": {
+          "bounced": "This mailbox doesn’t exist.",
+          "failed": "The invite could not be sent to this address.",
+          "helper": "The invite goes out when you schedule the exam.",
+          "helperScheduled": "The invite goes out again to the new address.",
+          "invalidEmail": "Type an address with @ and a domain.",
+          "label": {
+            "email": "New email",
+            "full_name": "Full name",
+            "group": "New group",
+            "locale": "Language",
+            "student_number": "New student ID"
+          },
+          "roster": "Also fix it in the roster for later exams",
+          "titleEdit": "Edit {name}’s email",
+          "titleEmail": "Fix {name}’s email",
+          "titleGroup": "Fix {name}’s group",
+          "titleLocale": "Fix {name}’s language",
+          "titleNumber": "Fix {name}’s student ID",
+          "titleRow": "Fix row {row}"
+        },
+        "footer": "Each student gets an email with the exam code and a link to install Üki.",
+        "footerErrors": "Fix or skip the {count, plural, one {# row} other {# rows}} to continue. Nothing is sent until you schedule.",
+        "group": "Group {code}",
+        "importError": {
+          "row": "Row {row} was refused. Check it and import again."
+        },
+        "invite": {
+          "bounced": "Email bounced",
+          "failed": "Not sent · error",
+          "notSent": "Not sent",
+          "opened": "Opened",
+          "sent": "Sent · not opened"
+        },
+        "next": "Next: review",
+        "nextErrors": "Next",
+        "none": "No students match.",
+        "problem": {
+          "email_empty": "Email is empty",
+          "email_invalid": "Email {value} is not a valid address",
+          "email_no_at": "Email has no @",
+          "group_empty": "Group is empty",
+          "group_unknown": "Group {value} is not in this university",
+          "locale_invalid": "Language {value} is not kk, ru or en",
+          "name_empty": "Name is empty",
+          "name_too_long": "Name is longer than 200 characters",
+          "number_duplicate": "Student ID {value} appears twice",
+          "number_empty": "Student ID is empty",
+          "number_invalid": "Student ID {value} is not 8 digits"
+        },
+        "proctors": {
+          "add": "Add proctor",
+          "changeRequested": "Change requested",
+          "confirmed": "Confirmed",
+          "dialog": {
+            "addTitle": "Add proctor",
+            "choose": "Choose a proctor",
+            "editTitle": "Edit {name}’s seats",
+            "from": "From seat",
+            "languages": "Languages",
+            "proctor": "Proctor",
+            "remove": "Remove proctor",
+            "to": "To seat"
+          },
+          "edit": "Edit {name}",
+          "gap": "Seats {from}–{to} have no proctor. Ranges must follow each other from seat 1.",
+          "none": "No proctors yet. Each one takes a range of seats.",
+          "overlap": "Seats {from}–{to} are given to two proctors.",
+          "seats": "Seats {from}–{to} · {languages}",
+          "title": "Proctors",
+          "uncovered": "Seats {from}–{to} have no proctor yet.",
+          "waiting": "Not confirmed"
+        },
+        "programme": "{programme}, year {year}",
+        "search": "Find a student",
+        "students": {
+          "title": "Students · {count}",
+          "titleValid": "Students · {count} valid"
+        },
+        "tab": {
+          "all": "All",
+          "invited": "Invited",
+          "label": "Filter students",
+          "notOpened": "Not opened · {count}"
+        }
+      },
+      "save": "Save",
+      "step": {
+        "checks": "Checks",
+        "details": "Details",
+        "review": "Review",
+        "roster": "Students"
+      },
+      "stepper": {
+        "label": "Steps"
+      },
+      "title": "New exam"
     }
   },
   "done": {

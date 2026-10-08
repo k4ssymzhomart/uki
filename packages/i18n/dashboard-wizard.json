@@ -1,0 +1,1179 @@
+{
+  "$comment": "Dashboard strings of the new-exam wizard (WP 1.3): 0.4, 0.2, 0.2a, E.1, 0.3, 0.3a, 0.3b and 0.5, plus 0.1's New exam. English comes from the Figma frames; keys without a Figma source are listed in docs/decisions.md under 1.3 Exam wizard. The Russian is a first pass by the agent: native review needed, P.18.",
+  "dashboard.wizard.title": {
+    "en": "New exam",
+    "ru": "Новый экзамен"
+  },
+  "dashboard.wizard.breadcrumb": {
+    "en": "Exams / New exam",
+    "ru": "Экзамены / Новый экзамен"
+  },
+  "dashboard.wizard.stepper.label": {
+    "en": "Steps",
+    "ru": "Шаги"
+  },
+  "dashboard.wizard.step.details": {
+    "en": "Details",
+    "ru": "Детали"
+  },
+  "dashboard.wizard.step.checks": {
+    "en": "Checks",
+    "ru": "Проверки"
+  },
+  "dashboard.wizard.step.roster": {
+    "en": "Students",
+    "ru": "Студенты"
+  },
+  "dashboard.wizard.step.review": {
+    "en": "Review",
+    "ru": "Обзор"
+  },
+  "dashboard.wizard.back": {
+    "en": "Back",
+    "ru": "Назад"
+  },
+  "dashboard.wizard.cancel": {
+    "en": "Cancel",
+    "ru": "Отмена"
+  },
+  "dashboard.wizard.save": {
+    "en": "Save",
+    "ru": "Сохранить"
+  },
+  "dashboard.wizard.edit": {
+    "en": "Edit",
+    "ru": "Изменить"
+  },
+  "dashboard.wizard.error.forbidden": {
+    "en": "Only the exam office can change this exam.",
+    "ru": "Изменять этот экзамен может только экзаменационный отдел."
+  },
+  "dashboard.wizard.error.notDraft": {
+    "en": "This exam is no longer a draft, so this step cannot change it.",
+    "ru": "Экзамен больше не черновик, и этот шаг не может его изменить."
+  },
+  "dashboard.wizard.error.invalid": {
+    "en": "Some values are not valid. Check them and try again.",
+    "ru": "Некоторые значения неверны. Проверьте их и попробуйте снова."
+  },
+  "dashboard.wizard.error.failed": {
+    "en": "Could not save. Check the connection and try again.",
+    "ru": "Не удалось сохранить. Проверьте подключение и попробуйте снова."
+  },
+  "dashboard.wizard.details.footer": {
+    "en": "Draft saved {time}. Only the exam office sees drafts.",
+    "ru": "Черновик сохранён в {time}. Черновики видит только экзаменационный отдел."
+  },
+  "dashboard.wizard.details.next": {
+    "en": "Next: checks",
+    "ru": "Далее: проверки"
+  },
+  "dashboard.wizard.details.card.title": {
+    "en": "Exam details",
+    "ru": "Данные экзамена"
+  },
+  "dashboard.wizard.details.card.caption": {
+    "en": "Students see the title, date and time in their invitation.",
+    "ru": "Студенты увидят название, дату и время в приглашении."
+  },
+  "dashboard.wizard.details.title.label": {
+    "en": "Exam title",
+    "ru": "Название экзамена"
+  },
+  "dashboard.wizard.details.course.label": {
+    "en": "Course",
+    "ru": "Курс"
+  },
+  "dashboard.wizard.details.kind.label": {
+    "en": "Type",
+    "ru": "Тип"
+  },
+  "dashboard.wizard.details.kind.midterm": {
+    "en": "Midterm",
+    "ru": "Рубежный контроль"
+  },
+  "dashboard.wizard.details.kind.final": {
+    "en": "Final",
+    "ru": "Итоговый экзамен"
+  },
+  "dashboard.wizard.details.kind.quiz": {
+    "en": "Quiz",
+    "ru": "Контрольная"
+  },
+  "dashboard.wizard.details.kind.test": {
+    "en": "Test",
+    "ru": "Тест"
+  },
+  "dashboard.wizard.details.kind.placeholder": {
+    "en": "Choose a type",
+    "ru": "Выберите тип"
+  },
+  "dashboard.wizard.details.groups.label": {
+    "en": "Groups",
+    "ru": "Группы"
+  },
+  "dashboard.wizard.details.groups.chip": {
+    "en": "Group {code} · {count, plural, one {# student} other {# students}}",
+    "ru": "Группа {code} · {count, plural, one {# студент} few {# студента} many {# студентов} other {# студента}}"
+  },
+  "dashboard.wizard.details.groups.remove": {
+    "en": "Remove group {code}",
+    "ru": "Убрать группу {code}"
+  },
+  "dashboard.wizard.details.groups.add": {
+    "en": "Add group",
+    "ru": "Добавить группу"
+  },
+  "dashboard.wizard.details.groups.option": {
+    "en": "Group {code} · {count, plural, one {# student} other {# students}}",
+    "ru": "Группа {code} · {count, plural, one {# студент} few {# студента} many {# студентов} other {# студента}}"
+  },
+  "dashboard.wizard.details.when.label": {
+    "en": "Date and start",
+    "ru": "Дата и начало"
+  },
+  "dashboard.wizard.details.when.value": {
+    "en": "{date} {year} · {time}",
+    "ru": "{date} {year} · {time}"
+  },
+  "dashboard.wizard.details.duration.label": {
+    "en": "Duration",
+    "ru": "Длительность"
+  },
+  "dashboard.wizard.details.mode.label": {
+    "en": "Where the exam runs",
+    "ru": "Где проходит экзамен"
+  },
+  "dashboard.wizard.details.mode.app.title": {
+    "en": "In the Üki app",
+    "ru": "В приложении Üki"
+  },
+  "dashboard.wizard.details.mode.app.detail": {
+    "en": "Questions open inside Üki.",
+    "ru": "Вопросы открываются в Üki."
+  },
+  "dashboard.wizard.details.mode.browser.title": {
+    "en": "In your LMS, with Üki Lock",
+    "ru": "В вашей LMS, с Üki Lock"
+  },
+  "dashboard.wizard.details.mode.browser.detail": {
+    "en": "Any exam that opens in a browser.",
+    "ru": "Любой экзамен, который открывается в браузере."
+  },
+  "dashboard.wizard.details.glance.title": {
+    "en": "At a glance",
+    "ru": "Кратко"
+  },
+  "dashboard.wizard.details.glance.lobby": {
+    "en": "Lobby opens",
+    "ru": "Лобби открывается"
+  },
+  "dashboard.wizard.details.glance.lobbyValue": {
+    "en": "{time} · {minutes} min before",
+    "ru": "{time} · за {minutes} мин"
+  },
+  "dashboard.wizard.details.glance.ends": {
+    "en": "Exam ends",
+    "ru": "Конец экзамена"
+  },
+  "dashboard.wizard.details.glance.students": {
+    "en": "Students",
+    "ru": "Студенты"
+  },
+  "dashboard.wizard.details.glance.studentsValue": {
+    "en": "{count} · {groups}",
+    "ru": "{count} · {groups}"
+  },
+  "dashboard.wizard.details.glance.noGroups": {
+    "en": "Add a group",
+    "ru": "Добавьте группу"
+  },
+  "dashboard.wizard.details.glance.proctors": {
+    "en": "Proctors",
+    "ru": "Прокторы"
+  },
+  "dashboard.wizard.details.glance.proctorsValue": {
+    "en": "You assign them in step 3",
+    "ru": "Вы назначите их на шаге 3"
+  },
+  "dashboard.wizard.details.glance.rules": {
+    "en": "Rules language",
+    "ru": "Язык правил"
+  },
+  "dashboard.wizard.details.glance.rulesValue": {
+    "en": "{first}, then {others}",
+    "ru": "{first}, затем {others}"
+  },
+  "dashboard.wizard.details.glance.language.kk": {
+    "en": "Қазақша",
+    "ru": "Қазақша"
+  },
+  "dashboard.wizard.details.glance.language.ru": {
+    "en": "Русский",
+    "ru": "Русский"
+  },
+  "dashboard.wizard.details.glance.language.en": {
+    "en": "English",
+    "ru": "English"
+  },
+  "dashboard.wizard.details.glance.note": {
+    "en": "Checks start from your defaults in Settings. You change them in step 2.",
+    "ru": "Проверки берутся из настроек по умолчанию. Их можно изменить на шаге 2."
+  },
+  "dashboard.wizard.picker.previous": {
+    "en": "Previous month",
+    "ru": "Предыдущий месяц"
+  },
+  "dashboard.wizard.picker.next": {
+    "en": "Next month",
+    "ru": "Следующий месяц"
+  },
+  "dashboard.wizard.picker.weekday.1": {
+    "en": "Mo",
+    "ru": "Пн"
+  },
+  "dashboard.wizard.picker.weekday.2": {
+    "en": "Tu",
+    "ru": "Вт"
+  },
+  "dashboard.wizard.picker.weekday.3": {
+    "en": "We",
+    "ru": "Ср"
+  },
+  "dashboard.wizard.picker.weekday.4": {
+    "en": "Th",
+    "ru": "Чт"
+  },
+  "dashboard.wizard.picker.weekday.5": {
+    "en": "Fr",
+    "ru": "Пт"
+  },
+  "dashboard.wizard.picker.weekday.6": {
+    "en": "Sa",
+    "ru": "Сб"
+  },
+  "dashboard.wizard.picker.weekday.7": {
+    "en": "Su",
+    "ru": "Вс"
+  },
+  "dashboard.wizard.picker.time": {
+    "en": "Start time",
+    "ru": "Время начала"
+  },
+  "dashboard.wizard.picker.examDay": {
+    "en": "{date}, another exam",
+    "ru": "{date}, другой экзамен"
+  },
+  "dashboard.wizard.picker.apply": {
+    "en": "Apply",
+    "ru": "Применить"
+  },
+  "dashboard.wizard.checks.footer": {
+    "en": "Saved as draft · {time}",
+    "ru": "Сохранено как черновик · {time}"
+  },
+  "dashboard.wizard.checks.next": {
+    "en": "Next: students",
+    "ru": "Далее: студенты"
+  },
+  "dashboard.wizard.checks.nextBrowser": {
+    "en": "Next: browser rules",
+    "ru": "Далее: правила браузера"
+  },
+  "dashboard.wizard.checks.head.title": {
+    "en": "What Üki checks",
+    "ru": "Что проверяет Üki"
+  },
+  "dashboard.wizard.checks.head.caption": {
+    "en": "Every check runs on the student’s laptop. Turn off what this exam does not need.",
+    "ru": "Все проверки идут на ноутбуке студента. Отключите то, что этому экзамену не нужно."
+  },
+  "dashboard.wizard.checks.lock.title": {
+    "en": "Browser lock",
+    "ru": "Блокировка браузера"
+  },
+  "dashboard.wizard.checks.lock.detail": {
+    "en": "Other tabs and apps stay closed until the student submits.",
+    "ru": "Другие вкладки и приложения закрыты, пока студент не сдаст работу."
+  },
+  "dashboard.wizard.checks.gaze.title": {
+    "en": "Gaze control",
+    "ru": "Контроль взгляда"
+  },
+  "dashboard.wizard.checks.gaze.detail": {
+    "en": "Flag when eyes leave the screen for more than {seconds, plural, one {# second} other {# seconds}}.",
+    "ru": "Отметка, если взгляд уходит с экрана дольше {seconds, plural, one {# секунды} few {# секунд} many {# секунд} other {# секунды}}."
+  },
+  "dashboard.wizard.checks.phone.title": {
+    "en": "Phone detection",
+    "ru": "Обнаружение телефона"
+  },
+  "dashboard.wizard.checks.phone.detail": {
+    "en": "Flag a phone in frame at {score} confidence or higher.",
+    "ru": "Отметка, если телефон в кадре с уверенностью {score} или выше."
+  },
+  "dashboard.wizard.checks.identity.title": {
+    "en": "Identity check",
+    "ru": "Проверка личности"
+  },
+  "dashboard.wizard.checks.identity.detail": {
+    "en": "Student card and face, matched on the laptop before the start.",
+    "ru": "Студенческий билет и лицо сверяются на ноутбуке до начала."
+  },
+  "dashboard.wizard.checks.second.title": {
+    "en": "Second person",
+    "ru": "Второй человек"
+  },
+  "dashboard.wizard.checks.second.detail": {
+    "en": "Flag when a second face enters the frame.",
+    "ru": "Отметка, если в кадре появляется второе лицо."
+  },
+  "dashboard.wizard.checks.mic.title": {
+    "en": "Microphone",
+    "ru": "Микрофон"
+  },
+  "dashboard.wizard.checks.mic.detail": {
+    "en": "Off. Üki never records audio.",
+    "ru": "Выключен. Üki никогда не записывает звук."
+  },
+  "dashboard.wizard.checks.gazeThreshold.label": {
+    "en": "Gaze threshold",
+    "ru": "Порог взгляда"
+  },
+  "dashboard.wizard.checks.gazeThreshold.value": {
+    "en": "{seconds, plural, one {# second} other {# seconds}}",
+    "ru": "{seconds, plural, one {# секунда} few {# секунды} many {# секунд} other {# секунды}}"
+  },
+  "dashboard.wizard.checks.gazeThreshold.helper": {
+    "en": "Shorter looks are ignored.",
+    "ru": "Более короткие взгляды не учитываются."
+  },
+  "dashboard.wizard.checks.gazeThreshold.info": {
+    "en": "About the gaze threshold",
+    "ru": "О пороге взгляда"
+  },
+  "dashboard.wizard.checks.phoneThreshold.label": {
+    "en": "Phone confidence",
+    "ru": "Уверенность для телефона"
+  },
+  "dashboard.wizard.checks.phoneThreshold.helper": {
+    "en": "Lower catches more, with more false flags.",
+    "ru": "Чем ниже, тем больше находок и ложных отметок."
+  },
+  "dashboard.wizard.checks.gazeInfo.title": {
+    "en": "Gaze threshold",
+    "ru": "Порог взгляда"
+  },
+  "dashboard.wizard.checks.gazeInfo.body": {
+    "en": "How long eyes can leave the screen before Üki flags it. Shorter glances are ignored.",
+    "ru": "Сколько взгляд может быть не на экране, прежде чем Üki поставит отметку. Короткие взгляды не учитываются."
+  },
+  "dashboard.wizard.checks.gazeInfo.strict": {
+    "en": "Strict",
+    "ru": "Строго"
+  },
+  "dashboard.wizard.checks.gazeInfo.default": {
+    "en": "Default",
+    "ru": "По умолчанию"
+  },
+  "dashboard.wizard.checks.gazeInfo.calm": {
+    "en": "Calm, for reading",
+    "ru": "Мягко, для чтения"
+  },
+  "dashboard.wizard.checks.gazeInfo.value": {
+    "en": "{seconds} s",
+    "ru": "{seconds} с"
+  },
+  "dashboard.wizard.checks.preview.overline": {
+    "en": "Student preview",
+    "ru": "Как видит студент"
+  },
+  "dashboard.wizard.checks.preview.title": {
+    "en": "Before you start",
+    "ru": "Перед началом"
+  },
+  "dashboard.wizard.checks.preview.language": {
+    "en": "Preview language",
+    "ru": "Язык предпросмотра"
+  },
+  "dashboard.wizard.checks.privacy.title": {
+    "en": "On device",
+    "ru": "На устройстве"
+  },
+  "dashboard.wizard.checks.privacy.body": {
+    "en": "Video is processed on the student’s laptop. Only events and flagged frames are sent.",
+    "ru": "Видео обрабатывается на ноутбуке студента. Отправляются только события и отмеченные кадры."
+  },
+  "dashboard.wizard.browser.footer": {
+    "en": "Saved · {time}",
+    "ru": "Сохранено · {time}"
+  },
+  "dashboard.wizard.browser.next": {
+    "en": "Next: students",
+    "ru": "Далее: студенты"
+  },
+  "dashboard.wizard.browser.mode.title": {
+    "en": "Where the exam runs",
+    "ru": "Где проходит экзамен"
+  },
+  "dashboard.wizard.browser.link.label": {
+    "en": "Exam link",
+    "ru": "Ссылка на экзамен"
+  },
+  "dashboard.wizard.browser.link.invalid": {
+    "en": "Paste the full link, starting with https://",
+    "ru": "Вставьте полную ссылку, начиная с https://"
+  },
+  "dashboard.wizard.browser.sites.title": {
+    "en": "Open during the exam",
+    "ru": "Открыто во время экзамена"
+  },
+  "dashboard.wizard.browser.sites.calculator": {
+    "en": "Calculator · built in",
+    "ru": "Калькулятор · встроенный"
+  },
+  "dashboard.wizard.browser.sites.removeCalculator": {
+    "en": "Turn off the calculator",
+    "ru": "Выключить калькулятор"
+  },
+  "dashboard.wizard.browser.sites.addCalculator": {
+    "en": "Add the calculator",
+    "ru": "Добавить калькулятор"
+  },
+  "dashboard.wizard.browser.sites.remove": {
+    "en": "Remove {host}",
+    "ru": "Убрать {host}"
+  },
+  "dashboard.wizard.browser.sites.add": {
+    "en": "Add site",
+    "ru": "Добавить сайт"
+  },
+  "dashboard.wizard.browser.sites.addLabel": {
+    "en": "Site address",
+    "ru": "Адрес сайта"
+  },
+  "dashboard.wizard.browser.sites.invalid": {
+    "en": "Type a site such as exam.kru.test",
+    "ru": "Введите сайт, например exam.kru.test"
+  },
+  "dashboard.wizard.browser.sites.locked": {
+    "en": "The exam’s own site",
+    "ru": "Сайт самого экзамена"
+  },
+  "dashboard.wizard.browser.rules.title": {
+    "en": "Rules while locked",
+    "ru": "Правила во время блокировки"
+  },
+  "dashboard.wizard.browser.rule.copy_paste.title": {
+    "en": "Block copy and paste",
+    "ru": "Запретить копирование и вставку"
+  },
+  "dashboard.wizard.browser.rule.copy_paste.detail": {
+    "en": "Each try goes to the exam log.",
+    "ru": "Каждая попытка попадает в журнал экзамена."
+  },
+  "dashboard.wizard.browser.rule.print.title": {
+    "en": "Block printing",
+    "ru": "Запретить печать"
+  },
+  "dashboard.wizard.browser.rule.print.detail": {
+    "en": "Print and save as PDF are off.",
+    "ru": "Печать и сохранение в PDF отключены."
+  },
+  "dashboard.wizard.browser.rule.devtools.title": {
+    "en": "Block developer tools",
+    "ru": "Запретить инструменты разработчика"
+  },
+  "dashboard.wizard.browser.rule.devtools.detail": {
+    "en": "University-managed computers only",
+    "ru": "Только на компьютерах университета"
+  },
+  "dashboard.wizard.browser.rule.screen_share.title": {
+    "en": "Block screen sharing",
+    "ru": "Запретить показ экрана"
+  },
+  "dashboard.wizard.browser.rule.screen_share.detail": {
+    "en": "Detected",
+    "ru": "Обнаруживается"
+  },
+  "dashboard.wizard.browser.rule.full_screen.title": {
+    "en": "Require full screen",
+    "ru": "Требовать полный экран"
+  },
+  "dashboard.wizard.browser.rule.full_screen.detail": {
+    "en": "Leaving it pauses the exam.",
+    "ru": "Выход из него ставит экзамен на паузу."
+  },
+  "dashboard.wizard.browser.preview.overline": {
+    "en": "Student sees",
+    "ru": "Студент видит"
+  },
+  "dashboard.wizard.roster.footer": {
+    "en": "Each student gets an email with the exam code and a link to install Üki.",
+    "ru": "Каждый студент получит письмо с кодом экзамена и ссылкой на установку Üki."
+  },
+  "dashboard.wizard.roster.footerErrors": {
+    "en": "Fix or skip the {count, plural, one {# row} other {# rows}} to continue. Nothing is sent until you schedule.",
+    "ru": "Исправьте или пропустите {count, plural, one {# строку} few {# строки} many {# строк} other {# строки}}, чтобы продолжить. Ничего не отправляется до планирования."
+  },
+  "dashboard.wizard.roster.next": {
+    "en": "Next: review",
+    "ru": "Далее: обзор"
+  },
+  "dashboard.wizard.roster.nextErrors": {
+    "en": "Next",
+    "ru": "Далее"
+  },
+  "dashboard.wizard.roster.empty.title": {
+    "en": "Drop the dean’s office CSV here",
+    "ru": "Перетащите сюда CSV из деканата"
+  },
+  "dashboard.wizard.roster.empty.caption": {
+    "en": "Columns: name, student ID, email, group, language. Up to 2,000 rows.",
+    "ru": "Столбцы: имя, номер студента, email, группа, язык. До 2000 строк."
+  },
+  "dashboard.wizard.roster.empty.choose": {
+    "en": "Choose file",
+    "ru": "Выбрать файл"
+  },
+  "dashboard.wizard.roster.file.fallbackName": {
+    "en": "Roster",
+    "ru": "Список студентов"
+  },
+  "dashboard.wizard.roster.file.imported": {
+    "en": "Imported {count, plural, one {# student} other {# students}} from the dean’s office export.",
+    "ru": "Загружено {count, plural, one {# студент} few {# студента} many {# студентов} other {# студента}} из выгрузки деканата."
+  },
+  "dashboard.wizard.roster.file.replace": {
+    "en": "Replace file",
+    "ru": "Заменить файл"
+  },
+  "dashboard.wizard.roster.file.valid": {
+    "en": "{valid} of {total} valid",
+    "ru": "{valid} из {total} верны"
+  },
+  "dashboard.wizard.roster.file.importing": {
+    "en": "Importing the roster",
+    "ru": "Загружаем список"
+  },
+  "dashboard.wizard.roster.file.unreadable": {
+    "en": "This file cannot be read as CSV.",
+    "ru": "Этот файл не читается как CSV."
+  },
+  "dashboard.wizard.roster.file.emptyFile": {
+    "en": "This file has no rows.",
+    "ru": "В этом файле нет строк."
+  },
+  "dashboard.wizard.roster.file.tooMany": {
+    "en": "This file has more than 2,000 rows.",
+    "ru": "В этом файле больше 2000 строк."
+  },
+  "dashboard.wizard.roster.errors.summary": {
+    "en": "{valid} of {total} rows are valid. Fix {bad, plural, one {# row} other {# rows}} or skip them.",
+    "ru": "{valid} из {total} строк верны. Исправьте {bad, plural, one {# строку} few {# строки} many {# строк} other {# строки}} или пропустите их."
+  },
+  "dashboard.wizard.roster.errors.row": {
+    "en": "Row {row}",
+    "ru": "Строка {row}"
+  },
+  "dashboard.wizard.roster.errors.noName": {
+    "en": "—",
+    "ru": "—"
+  },
+  "dashboard.wizard.roster.errors.download": {
+    "en": "Download error report",
+    "ru": "Скачать отчёт об ошибках"
+  },
+  "dashboard.wizard.roster.errors.skip": {
+    "en": "Skip {count, plural, one {# row} other {# rows}}",
+    "ru": "Пропустить {count, plural, one {# строку} few {# строки} many {# строк} other {# строки}}"
+  },
+  "dashboard.wizard.roster.errors.upload": {
+    "en": "Upload fixed file",
+    "ru": "Загрузить исправленный файл"
+  },
+  "dashboard.wizard.roster.errors.reportFile": {
+    "en": "roster-errors.csv",
+    "ru": "roster-errors.csv"
+  },
+  "dashboard.wizard.roster.errors.reportHeader.row": {
+    "en": "row",
+    "ru": "строка"
+  },
+  "dashboard.wizard.roster.errors.reportHeader.column": {
+    "en": "column",
+    "ru": "столбец"
+  },
+  "dashboard.wizard.roster.errors.reportHeader.problem": {
+    "en": "problem",
+    "ru": "проблема"
+  },
+  "dashboard.wizard.roster.problem.number_empty": {
+    "en": "Student ID is empty",
+    "ru": "Номер студента пуст"
+  },
+  "dashboard.wizard.roster.problem.number_invalid": {
+    "en": "Student ID {value} is not 8 digits",
+    "ru": "Номер студента {value} не из 8 цифр"
+  },
+  "dashboard.wizard.roster.problem.number_duplicate": {
+    "en": "Student ID {value} appears twice",
+    "ru": "Номер студента {value} встречается дважды"
+  },
+  "dashboard.wizard.roster.problem.name_empty": {
+    "en": "Name is empty",
+    "ru": "Имя пустое"
+  },
+  "dashboard.wizard.roster.problem.name_too_long": {
+    "en": "Name is longer than 200 characters",
+    "ru": "Имя длиннее 200 символов"
+  },
+  "dashboard.wizard.roster.problem.email_empty": {
+    "en": "Email is empty",
+    "ru": "Email пустой"
+  },
+  "dashboard.wizard.roster.problem.email_no_at": {
+    "en": "Email has no @",
+    "ru": "В email нет @"
+  },
+  "dashboard.wizard.roster.problem.email_invalid": {
+    "en": "Email {value} is not a valid address",
+    "ru": "Email {value} не является адресом"
+  },
+  "dashboard.wizard.roster.problem.group_empty": {
+    "en": "Group is empty",
+    "ru": "Группа пустая"
+  },
+  "dashboard.wizard.roster.problem.group_unknown": {
+    "en": "Group {value} is not in this university",
+    "ru": "Группы {value} нет в этом университете"
+  },
+  "dashboard.wizard.roster.problem.locale_invalid": {
+    "en": "Language {value} is not kk, ru or en",
+    "ru": "Язык {value} не kk, ru или en"
+  },
+  "dashboard.wizard.roster.importError.row": {
+    "en": "Row {row} was refused. Check it and import again.",
+    "ru": "Строка {row} отклонена. Проверьте её и загрузите снова."
+  },
+  "dashboard.wizard.roster.students.title": {
+    "en": "Students · {count}",
+    "ru": "Студенты · {count}"
+  },
+  "dashboard.wizard.roster.students.titleValid": {
+    "en": "Students · {count} valid",
+    "ru": "Студенты · {count} верны"
+  },
+  "dashboard.wizard.roster.tab.label": {
+    "en": "Filter students",
+    "ru": "Фильтр студентов"
+  },
+  "dashboard.wizard.roster.tab.all": {
+    "en": "All",
+    "ru": "Все"
+  },
+  "dashboard.wizard.roster.tab.invited": {
+    "en": "Invited",
+    "ru": "Приглашены"
+  },
+  "dashboard.wizard.roster.tab.notOpened": {
+    "en": "Not opened · {count}",
+    "ru": "Не открыли · {count}"
+  },
+  "dashboard.wizard.roster.search": {
+    "en": "Find a student",
+    "ru": "Найти студента"
+  },
+  "dashboard.wizard.roster.column.student": {
+    "en": "Student",
+    "ru": "Студент"
+  },
+  "dashboard.wizard.roster.column.group": {
+    "en": "Group",
+    "ru": "Группа"
+  },
+  "dashboard.wizard.roster.column.proctor": {
+    "en": "Proctor",
+    "ru": "Проктор"
+  },
+  "dashboard.wizard.roster.column.invite": {
+    "en": "Invite",
+    "ru": "Приглашение"
+  },
+  "dashboard.wizard.roster.column.action": {
+    "en": "Action",
+    "ru": "Действие"
+  },
+  "dashboard.wizard.roster.group": {
+    "en": "Group {code}",
+    "ru": "Группа {code}"
+  },
+  "dashboard.wizard.roster.programme": {
+    "en": "{programme}, year {year}",
+    "ru": "{programme}, {year} курс"
+  },
+  "dashboard.wizard.roster.invite.notSent": {
+    "en": "Not sent",
+    "ru": "Не отправлено"
+  },
+  "dashboard.wizard.roster.invite.sent": {
+    "en": "Sent · not opened",
+    "ru": "Отправлено · не открыто"
+  },
+  "dashboard.wizard.roster.invite.opened": {
+    "en": "Opened",
+    "ru": "Открыто"
+  },
+  "dashboard.wizard.roster.invite.bounced": {
+    "en": "Email bounced",
+    "ru": "Письмо не доставлено"
+  },
+  "dashboard.wizard.roster.invite.failed": {
+    "en": "Not sent · error",
+    "ru": "Не отправлено · ошибка"
+  },
+  "dashboard.wizard.roster.action.edit": {
+    "en": "Edit",
+    "ru": "Изменить"
+  },
+  "dashboard.wizard.roster.action.fixEmail": {
+    "en": "Fix email",
+    "ru": "Исправить email"
+  },
+  "dashboard.wizard.roster.action.resend": {
+    "en": "Resend",
+    "ru": "Отправить снова"
+  },
+  "dashboard.wizard.roster.none": {
+    "en": "No students match.",
+    "ru": "Нет подходящих студентов."
+  },
+  "dashboard.wizard.roster.fix.titleEmail": {
+    "en": "Fix {name}’s email",
+    "ru": "Исправить email: {name}"
+  },
+  "dashboard.wizard.roster.fix.titleNumber": {
+    "en": "Fix {name}’s student ID",
+    "ru": "Исправить номер студента: {name}"
+  },
+  "dashboard.wizard.roster.fix.titleGroup": {
+    "en": "Fix {name}’s group",
+    "ru": "Исправить группу: {name}"
+  },
+  "dashboard.wizard.roster.fix.titleLocale": {
+    "en": "Fix {name}’s language",
+    "ru": "Исправить язык: {name}"
+  },
+  "dashboard.wizard.roster.fix.titleRow": {
+    "en": "Fix row {row}",
+    "ru": "Исправить строку {row}"
+  },
+  "dashboard.wizard.roster.fix.titleEdit": {
+    "en": "Edit {name}’s email",
+    "ru": "Изменить email: {name}"
+  },
+  "dashboard.wizard.roster.fix.bounced": {
+    "en": "This mailbox doesn’t exist.",
+    "ru": "Такого почтового ящика нет."
+  },
+  "dashboard.wizard.roster.fix.failed": {
+    "en": "The invite could not be sent to this address.",
+    "ru": "Приглашение не удалось отправить на этот адрес."
+  },
+  "dashboard.wizard.roster.fix.label.email": {
+    "en": "New email",
+    "ru": "Новый email"
+  },
+  "dashboard.wizard.roster.fix.label.student_number": {
+    "en": "New student ID",
+    "ru": "Новый номер студента"
+  },
+  "dashboard.wizard.roster.fix.label.full_name": {
+    "en": "Full name",
+    "ru": "Полное имя"
+  },
+  "dashboard.wizard.roster.fix.label.group": {
+    "en": "New group",
+    "ru": "Новая группа"
+  },
+  "dashboard.wizard.roster.fix.label.locale": {
+    "en": "Language",
+    "ru": "Язык"
+  },
+  "dashboard.wizard.roster.fix.helper": {
+    "en": "The invite goes out when you schedule the exam.",
+    "ru": "Приглашение уйдёт, когда вы запланируете экзамен."
+  },
+  "dashboard.wizard.roster.fix.helperScheduled": {
+    "en": "The invite goes out again to the new address.",
+    "ru": "Приглашение снова уйдёт на новый адрес."
+  },
+  "dashboard.wizard.roster.fix.roster": {
+    "en": "Also fix it in the roster for later exams",
+    "ru": "Исправить и в списке для следующих экзаменов"
+  },
+  "dashboard.wizard.roster.fix.invalidEmail": {
+    "en": "Type an address with @ and a domain.",
+    "ru": "Введите адрес с @ и доменом."
+  },
+  "dashboard.wizard.roster.proctors.title": {
+    "en": "Proctors",
+    "ru": "Прокторы"
+  },
+  "dashboard.wizard.roster.proctors.add": {
+    "en": "Add proctor",
+    "ru": "Добавить проктора"
+  },
+  "dashboard.wizard.roster.proctors.seats": {
+    "en": "Seats {from}–{to} · {languages}",
+    "ru": "Места {from}–{to} · {languages}"
+  },
+  "dashboard.wizard.roster.proctors.confirmed": {
+    "en": "Confirmed",
+    "ru": "Подтверждено"
+  },
+  "dashboard.wizard.roster.proctors.waiting": {
+    "en": "Not confirmed",
+    "ru": "Не подтверждено"
+  },
+  "dashboard.wizard.roster.proctors.changeRequested": {
+    "en": "Change requested",
+    "ru": "Просит изменить"
+  },
+  "dashboard.wizard.roster.proctors.none": {
+    "en": "No proctors yet. Each one takes a range of seats.",
+    "ru": "Прокторов пока нет. Каждый берёт диапазон мест."
+  },
+  "dashboard.wizard.roster.proctors.uncovered": {
+    "en": "Seats {from}–{to} have no proctor yet.",
+    "ru": "У мест {from}–{to} пока нет проктора."
+  },
+  "dashboard.wizard.roster.proctors.gap": {
+    "en": "Seats {from}–{to} have no proctor. Ranges must follow each other from seat 1.",
+    "ru": "У мест {from}–{to} нет проктора. Диапазоны должны идти подряд с места 1."
+  },
+  "dashboard.wizard.roster.proctors.overlap": {
+    "en": "Seats {from}–{to} are given to two proctors.",
+    "ru": "Места {from}–{to} отданы двум прокторам."
+  },
+  "dashboard.wizard.roster.proctors.dialog.addTitle": {
+    "en": "Add proctor",
+    "ru": "Добавить проктора"
+  },
+  "dashboard.wizard.roster.proctors.dialog.editTitle": {
+    "en": "Edit {name}’s seats",
+    "ru": "Места: {name}"
+  },
+  "dashboard.wizard.roster.proctors.dialog.proctor": {
+    "en": "Proctor",
+    "ru": "Проктор"
+  },
+  "dashboard.wizard.roster.proctors.dialog.choose": {
+    "en": "Choose a proctor",
+    "ru": "Выберите проктора"
+  },
+  "dashboard.wizard.roster.proctors.dialog.from": {
+    "en": "From seat",
+    "ru": "С места"
+  },
+  "dashboard.wizard.roster.proctors.dialog.to": {
+    "en": "To seat",
+    "ru": "По место"
+  },
+  "dashboard.wizard.roster.proctors.dialog.languages": {
+    "en": "Languages",
+    "ru": "Языки"
+  },
+  "dashboard.wizard.roster.proctors.dialog.remove": {
+    "en": "Remove proctor",
+    "ru": "Убрать проктора"
+  },
+  "dashboard.wizard.roster.proctors.edit": {
+    "en": "Edit {name}",
+    "ru": "Изменить: {name}"
+  },
+  "dashboard.wizard.language.kk": {
+    "en": "Kazakh",
+    "ru": "казахский"
+  },
+  "dashboard.wizard.language.ru": {
+    "en": "Russian",
+    "ru": "русский"
+  },
+  "dashboard.wizard.language.en": {
+    "en": "English",
+    "ru": "английский"
+  },
+  "dashboard.wizard.review.details.title": {
+    "en": "Details",
+    "ru": "Детали"
+  },
+  "dashboard.wizard.review.details.exam": {
+    "en": "Exam",
+    "ru": "Экзамен"
+  },
+  "dashboard.wizard.review.details.when": {
+    "en": "When",
+    "ru": "Когда"
+  },
+  "dashboard.wizard.review.details.whenValue": {
+    "en": "{date} {year} · {start}–{end} · {minutes} min",
+    "ru": "{date} {year} · {start}–{end} · {minutes} мин"
+  },
+  "dashboard.wizard.review.details.students": {
+    "en": "Students",
+    "ru": "Студенты"
+  },
+  "dashboard.wizard.review.details.studentsValue": {
+    "en": "{groups} · {count, plural, one {# student} other {# students}}",
+    "ru": "{groups} · {count, plural, one {# студент} few {# студента} many {# студентов} other {# студента}}"
+  },
+  "dashboard.wizard.review.details.runsIn": {
+    "en": "Runs in",
+    "ru": "Где проходит"
+  },
+  "dashboard.wizard.review.details.app": {
+    "en": "The Üki app",
+    "ru": "Приложение Üki"
+  },
+  "dashboard.wizard.review.details.browser": {
+    "en": "Your LMS, with Üki Lock",
+    "ru": "Ваша LMS, с Üki Lock"
+  },
+  "dashboard.wizard.review.details.missing": {
+    "en": "Not set yet",
+    "ru": "Пока не задано"
+  },
+  "dashboard.wizard.review.checks.title": {
+    "en": "Checks",
+    "ru": "Проверки"
+  },
+  "dashboard.wizard.review.checks.lock": {
+    "en": "Browser lock",
+    "ru": "Блокировка браузера"
+  },
+  "dashboard.wizard.review.checks.gaze": {
+    "en": "Gaze · {seconds} s",
+    "ru": "Взгляд · {seconds} с"
+  },
+  "dashboard.wizard.review.checks.phone": {
+    "en": "Phone · {score}",
+    "ru": "Телефон · {score}"
+  },
+  "dashboard.wizard.review.checks.identity": {
+    "en": "Identity",
+    "ru": "Личность"
+  },
+  "dashboard.wizard.review.checks.secondPerson": {
+    "en": "Second person",
+    "ru": "Второй человек"
+  },
+  "dashboard.wizard.review.checks.microphone": {
+    "en": "Microphone off",
+    "ru": "Микрофон выключен"
+  },
+  "dashboard.wizard.review.checks.lockOff": {
+    "en": "Browser lock off",
+    "ru": "Блокировка браузера выкл."
+  },
+  "dashboard.wizard.review.checks.identityOff": {
+    "en": "Identity off",
+    "ru": "Личность выкл."
+  },
+  "dashboard.wizard.review.people.title": {
+    "en": "Students and proctors",
+    "ru": "Студенты и прокторы"
+  },
+  "dashboard.wizard.review.people.roster": {
+    "en": "Roster",
+    "ru": "Список"
+  },
+  "dashboard.wizard.review.people.rosterValue": {
+    "en": "{count, plural, one {# student} other {# students}} on the roster",
+    "ru": "{count, plural, one {# студент} few {# студента} many {# студентов} other {# студента}} в списке"
+  },
+  "dashboard.wizard.review.people.rosterFile": {
+    "en": "{valid} of {total} rows valid · {file}",
+    "ru": "{valid} из {total} строк верны · {file}"
+  },
+  "dashboard.wizard.review.people.proctorValue": {
+    "en": "Seats {from}–{to} · {languages} · {state}",
+    "ru": "Места {from}–{to} · {languages} · {state}"
+  },
+  "dashboard.wizard.review.people.confirmed": {
+    "en": "confirmed",
+    "ru": "подтверждено"
+  },
+  "dashboard.wizard.review.people.waiting": {
+    "en": "waiting for confirmation",
+    "ru": "ждёт подтверждения"
+  },
+  "dashboard.wizard.review.people.noProctors": {
+    "en": "No proctors yet",
+    "ru": "Прокторов пока нет"
+  },
+  "dashboard.wizard.review.next.title": {
+    "en": "When you schedule",
+    "ru": "После планирования"
+  },
+  "dashboard.wizard.review.next.now": {
+    "en": "Now",
+    "ru": "Сейчас"
+  },
+  "dashboard.wizard.review.next.invites": {
+    "en": "{count, plural, one {# invite goes out} other {# invites go out}}",
+    "ru": "{count, plural, one {Уходит # приглашение} few {Уходят # приглашения} many {Уходят # приглашений} other {Уходят # приглашения}}"
+  },
+  "dashboard.wizard.review.next.invitesDetail": {
+    "en": "Exam code and install link, in 3 languages",
+    "ru": "Код экзамена и ссылка на установку, на 3 языках"
+  },
+  "dashboard.wizard.review.next.lobby": {
+    "en": "Lobby opens",
+    "ru": "Лобби открывается"
+  },
+  "dashboard.wizard.review.next.lobbyDetail": {
+    "en": "Students check in {minutes} min before",
+    "ru": "Студенты проходят проверку за {minutes} мин"
+  },
+  "dashboard.wizard.review.next.start": {
+    "en": "Exam starts",
+    "ru": "Экзамен начинается"
+  },
+  "dashboard.wizard.review.next.startDetail": {
+    "en": "Proctors press Start in the lobby",
+    "ru": "Прокторы нажимают «Начать» в лобби"
+  },
+  "dashboard.wizard.review.next.end": {
+    "en": "Exam ends",
+    "ru": "Экзамен заканчивается"
+  },
+  "dashboard.wizard.review.next.endDetail": {
+    "en": "Review opens for flagged sessions",
+    "ru": "Открывается проверка сессий с отметками"
+  },
+  "dashboard.wizard.review.next.when": {
+    "en": "{weekday} {time}",
+    "ru": "{weekday} {time}"
+  },
+  "dashboard.wizard.review.testInvite": {
+    "en": "Send a test invite to me",
+    "ru": "Отправить мне тестовое приглашение"
+  },
+  "dashboard.wizard.review.testInviteSent": {
+    "en": "Test invite sent. Check your inbox.",
+    "ru": "Тестовое приглашение отправлено. Проверьте почту."
+  },
+  "dashboard.wizard.review.testInviteFailed": {
+    "en": "The test invite could not be sent.",
+    "ru": "Не удалось отправить тестовое приглашение."
+  },
+  "dashboard.wizard.review.invitesUnavailable": {
+    "en": "Invites go out once the invite service is switched on.",
+    "ru": "Приглашения начнут уходить, когда включат сервис приглашений."
+  },
+  "dashboard.wizard.review.footerWaiting": {
+    "en": "{names} hasn’t confirmed yet. You can schedule now; they get a reminder.",
+    "ru": "{names}: места ещё не подтверждены. Можно планировать сейчас; придёт напоминание."
+  },
+  "dashboard.wizard.review.footerReady": {
+    "en": "Everything is in place. Schedule the exam when you are ready.",
+    "ru": "Всё готово. Запланируйте экзамен, когда будете готовы."
+  },
+  "dashboard.wizard.review.saveDraft": {
+    "en": "Save draft",
+    "ru": "Сохранить черновик"
+  },
+  "dashboard.wizard.review.schedule": {
+    "en": "Schedule exam",
+    "ru": "Запланировать экзамен"
+  },
+  "dashboard.wizard.review.problemLink": {
+    "en": "Go to {step}",
+    "ru": "Перейти: {step}"
+  },
+  "dashboard.wizard.review.problem.title_missing": {
+    "en": "The exam has no title.",
+    "ru": "У экзамена нет названия."
+  },
+  "dashboard.wizard.review.problem.course_missing": {
+    "en": "The exam has no course.",
+    "ru": "У экзамена не указан курс."
+  },
+  "dashboard.wizard.review.problem.kind_missing": {
+    "en": "The exam has no type.",
+    "ru": "У экзамена не указан тип."
+  },
+  "dashboard.wizard.review.problem.duration_invalid": {
+    "en": "The duration must be 5 to 600 minutes.",
+    "ru": "Длительность должна быть от 5 до 600 минут."
+  },
+  "dashboard.wizard.review.problem.starts_in_past": {
+    "en": "The start time has passed. Pick a later one.",
+    "ru": "Время начала уже прошло. Выберите более позднее."
+  },
+  "dashboard.wizard.review.problem.groups_missing": {
+    "en": "Add at least one group.",
+    "ru": "Добавьте хотя бы одну группу."
+  },
+  "dashboard.wizard.review.problem.code_exhausted": {
+    "en": "Too many exams share this course, group and weekday. Change one of them.",
+    "ru": "Слишком много экзаменов с этим курсом, группой и днём недели. Измените что-то одно."
+  },
+  "dashboard.wizard.review.problem.checks_invalid": {
+    "en": "A check has a value out of range.",
+    "ru": "У одной из проверок недопустимое значение."
+  },
+  "dashboard.wizard.review.problem.lms_url_missing": {
+    "en": "The exam link is missing.",
+    "ru": "Нет ссылки на экзамен."
+  },
+  "dashboard.wizard.review.problem.lms_url_invalid": {
+    "en": "The exam link is not a web address.",
+    "ru": "Ссылка на экзамен не является веб-адресом."
+  },
+  "dashboard.wizard.review.problem.browser_rules_invalid": {
+    "en": "The browser rules are not valid.",
+    "ru": "Правила браузера заданы неверно."
+  },
+  "dashboard.wizard.review.problem.roster_empty": {
+    "en": "The roster is empty.",
+    "ru": "Список студентов пуст."
+  },
+  "dashboard.wizard.review.problem.proctors_missing": {
+    "en": "No proctors are assigned.",
+    "ru": "Прокторы не назначены."
+  },
+  "dashboard.wizard.review.problem.seats_uncovered": {
+    "en": "Some seats have no proctor.",
+    "ru": "У некоторых мест нет проктора."
+  },
+  "dashboard.wizard.review.stepName.details": {
+    "en": "Details",
+    "ru": "Детали"
+  },
+  "dashboard.wizard.review.stepName.checks": {
+    "en": "Checks",
+    "ru": "Проверки"
+  },
+  "dashboard.wizard.review.stepName.browser": {
+    "en": "Browser rules",
+    "ru": "Правила браузера"
+  },
+  "dashboard.wizard.review.stepName.roster": {
+    "en": "Students",
+    "ru": "Студенты"
+  },
+  "dashboard.wizard.review.stepName.review": {
+    "en": "Review",
+    "ru": "Обзор"
+  },
+  "dashboard.wizard.overview.newExam": {
+    "en": "New exam",
+    "ru": "Новый экзамен"
+  },
+  "dashboard.wizard.overview.scheduled": {
+    "en": "Exam scheduled. Students join with the code {code}.",
+    "ru": "Экзамен запланирован. Студенты входят по коду {code}."
+  }
+}

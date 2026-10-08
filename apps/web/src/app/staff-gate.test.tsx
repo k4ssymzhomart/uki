@@ -48,6 +48,7 @@ vi.mock("../features/wall/load-wall.ts", () => ({ loadWall: vi.fn() }));
 
 const EXAM = "0199b6a4-6c1e-7b3a-9f2d-3c4b5a690001";
 const examProps = { params: Promise.resolve({ examId: EXAM }), searchParams: Promise.resolve({}) };
+const overviewProps = { params: Promise.resolve({}), searchParams: Promise.resolve({}) };
 
 /** Renders a page's answer, checks it is the error with Try again to `href`, and unmounts it. */
 function expectTryAgain(ui: ReactElement, href: string): void {
@@ -76,7 +77,7 @@ describe("a failed staff lookup", () => {
 
   it("shows the error on the overview, lobby and live wall, and loads nothing", async () => {
     location.pathname = "/overview";
-    expectTryAgain(await OverviewPage(), "/overview");
+    expectTryAgain(await OverviewPage(overviewProps), "/overview");
     location.pathname = `/exams/${EXAM}/lobby`;
     expectTryAgain(await LobbyPage(examProps), `/exams/${EXAM}/lobby`);
     location.pathname = `/exams/${EXAM}/live`;

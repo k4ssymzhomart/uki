@@ -7,6 +7,7 @@ import { OverviewView } from "../../../features/overview/overview-view.tsx";
 import { scopesFaculty } from "../../../features/shell/scope.ts";
 import { loadOverviewScope } from "../../../features/shell/scope-data.ts";
 import { StaffLookupFailed } from "../../../features/shell/staff-lookup-failed.tsx";
+import { ScheduledNotice } from "../../../features/wizard/new-exam-button.tsx";
 import { requireStaff } from "../../../lib/auth.ts";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -18,9 +19,9 @@ export async function generateMetadata(): Promise<Metadata> {
  * 0.1 Overview (Figma 51:2046), rendered on the server as the staff member under RLS: the exam office
  * sees its workspace's exams, within the faculty chosen in the workspace menu (0.1c), a proctor only
  * the exams assigned to it. The exam office also sees which exams have a proctor's change request
- * (0.9a, WP 1.5).
+ * (0.9a, WP 1.5). After Schedule exam (0.5) `?scheduled=<code>` shows the new code once.
  */
-export default async function OverviewPage() {
+export default async function OverviewPage({ searchParams }: PageProps<"/overview">) {
   const staff = await requireStaff();
   if (!staff) return <StaffLookupFailed />;
   const [scope, groupCount, changeRequests] = await Promise.all([
@@ -32,14 +33,18 @@ export default async function OverviewPage() {
   const bounced = next ? await loadBouncedInvites(next.id) : 0;
   const t = await getTranslations("dashboard.shell.workspace");
   const faculty = scope.faculties.find((item) => item.id === scope.facultyId);
+  const scheduled = (await searchParams).scheduled;
   return (
-    <OverviewView
-      rows={scope.rows}
-      groupCount={groupCount}
-      readiness={next ? { ready: Math.max(0, next.roster_size - bounced), total: next.roster_size } : null}
-      nowMs={Date.now()}
-      changeRequests={changeRequests}
-      scopeName={scopesFaculty(staff.role) ? (faculty?.name ?? t("allFaculties")) : undefined}
-    />
+    <>
+      <OverviewView
+        rows={scope.rows}
+        groupCount={groupCount}
+        readiness={next ? { ready: Math.max(0, next.roster_size - bounced), total: next.roster_size } : null}
+        nowMs={Date.now()}
+        changeRequests={changeRequests}
+        scopeName={scopesFaculty(staff.role) ? (faculty?.name ?? t("allFaculties")) : undefined}
+      />
+      <ScheduledNotice code={typeof scheduled === "string" ? scheduled : undefined} />
+    </>
   );
 }

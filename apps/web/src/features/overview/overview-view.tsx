@@ -19,6 +19,7 @@ import { AppLink } from "../shell/app-link.tsx";
 import { PageHeader } from "../shell/page-header.tsx";
 import { workspaceShortName } from "../shell/shell-model.ts";
 import { useStaff } from "../shell/staff-context.ts";
+import { NewExamButton } from "../wizard/new-exam-button.tsx";
 import { DataKeptTile } from "./data-kept-popover.tsx";
 import {
   coversAllGroups,
@@ -49,17 +50,21 @@ export type OverviewViewProps = {
   changeRequests?: readonly string[];
 };
 
-/** Where an exam's row leads in Phase 0: its lobby before the start, its live wall after. */
-function examHref(row: OverviewRow): string | undefined {
+/**
+ * Where an exam's row leads: a draft to its wizard (0.4) for the exam office, otherwise its lobby
+ * before the start and its live wall after.
+ */
+function examHref(row: OverviewRow, office: boolean): string | undefined {
   const phase = examPhase(row.status);
   if (phase === "cancelled") return undefined;
+  if (row.status === "draft" && office) return `/exams/${row.id}/edit/details`;
   return `/exams/${row.id}/${phase === "upcoming" ? "lobby" : "live"}`;
 }
 
 /**
  * 0.1 Overview (Figma 51:2046): stat cards, the exams table with client-side filters, and the next
- * exam's card with Open lobby, and 0.1b behind Video uploaded. Import CSV and New exam stay hidden
- * until the wizard (WP 1.3) lands.
+ * exam's card with Open lobby, and 0.1b behind Video uploaded. New exam (WP 1.3) shows for the exam
+ * office; Import CSV stays hidden (no Phase 1 frame imports exams).
  */
 export function OverviewView({
   rows,
@@ -72,6 +77,7 @@ export function OverviewView({
   const t = useTranslations("dashboard");
   const locale = useDashboardLocale();
   const staff = useStaff();
+  const office = staff.role === "exam_office" || staff.role === "admin";
   const [filter, setFilter] = useState<ExamFilter>("all");
   const stats = overviewStats(rows);
   const next = stats.upcoming.next;
@@ -155,6 +161,8 @@ export function OverviewView({
                 </Tab>
               ))}
             </TabGroup>
+            <div className="flex-1" />
+            {office ? <NewExamButton /> : null}
           </div>
           <Table>
             <thead>
@@ -211,7 +219,7 @@ export function OverviewView({
                         ? t("myExams.status.changeRequested")
                         : t(`overview.status.${chip.key}`, { count: chip.count ?? 0 })
                     }
-                    href={examHref(row)}
+                    href={examHref(row, office)}
                     linkAs={AppLink}
                   />
                 );
