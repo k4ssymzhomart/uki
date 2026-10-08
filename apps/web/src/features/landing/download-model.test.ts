@@ -1,3 +1,5 @@
+// @vitest-environment node
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { DOWNLOAD_CARDS, RELEASE_ASSETS, RELEASES_URL, releaseAssetUrl } from "./download-model.ts";
 
@@ -7,7 +9,11 @@ describe("the download block", () => {
   });
 
   it("uses the six stable names that the release workflow publishes (WP 0.15)", () => {
-    // scripts/lib/release.ts on wp/0.15-release: RELEASE_ASSETS[].name, in the same order.
+    // The release's own list (scripts/lib/release.ts, RELEASE_ASSETS[].name) read as text, so a renamed
+    // file fails here before the landing links a name the release no longer has.
+    const release = readFileSync(new URL("../../../../../scripts/lib/release.ts", import.meta.url), "utf8");
+    const published = [...release.matchAll(/^ {4}name: "([^"]+)",$/gm)].map((match) => match[1]);
+    expect(Object.values(RELEASE_ASSETS)).toEqual(published);
     expect(Object.values(RELEASE_ASSETS)).toEqual([
       "Uki-mac-arm64.dmg",
       "Uki-mac-x64.dmg",
