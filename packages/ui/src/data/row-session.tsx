@@ -1,4 +1,4 @@
-import type { ComponentProps, ReactNode } from "react";
+import type { ComponentProps, ReactElement, ReactNode } from "react";
 import { cn } from "../cn.ts";
 import { Avatar } from "./avatar.tsx";
 import { Chip, type ChipStatus } from "./chip.tsx";
@@ -21,6 +21,8 @@ export type RowSessionProps = Omit<ComponentProps<"tr">, "children"> & {
   statusLabel: ReactNode;
   /** Usually <RowAction icon="arrow-right" iconPosition="end" asChild><a href>Review</a></RowAction>. */
   action?: ReactNode;
+  /** Wraps the flag count and top flag, for example in a FlagPreview trigger (3.2b). */
+  renderFlags?: (flags: ReactElement) => ReactNode;
 };
 
 /**
@@ -38,9 +40,16 @@ export function RowSession({
   status,
   statusLabel,
   action,
+  renderFlags,
   className,
   ...props
 }: RowSessionProps) {
+  const flags = (
+    <div className="flex min-w-0 items-center gap-2.5 overflow-clip">
+      <Count tone={flagTone}>{flagCount}</Count>
+      {topFlag === undefined ? null : <p className="whitespace-nowrap type-ui-caption">{topFlag}</p>}
+    </div>
+  );
   return (
     <tr className={cn("h-19 border-b border-line-default bg-surface text-fg-primary", className)} {...props}>
       <td className={cn(columns.student, "pl-5 align-middle")}>
@@ -52,12 +61,7 @@ export function RowSession({
           </div>
         </div>
       </td>
-      <td className={cn(columns.flags, "pl-5 align-middle")}>
-        <div className="flex min-w-0 items-center gap-2.5 overflow-clip">
-          <Count tone={flagTone}>{flagCount}</Count>
-          {topFlag === undefined ? null : <p className="whitespace-nowrap type-ui-caption">{topFlag}</p>}
-        </div>
-      </td>
+      <td className={cn(columns.flags, "pl-5 align-middle")}>{renderFlags ? renderFlags(flags) : flags}</td>
       <td className={cn(columns.duration, "whitespace-nowrap pl-5 align-middle type-ui-mono")}>{duration}</td>
       <td className={cn(columns.status, "pl-5 align-middle")}>
         <Chip status={status}>{statusLabel}</Chip>
