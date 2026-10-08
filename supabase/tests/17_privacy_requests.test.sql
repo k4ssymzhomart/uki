@@ -119,8 +119,9 @@ insert into public.answers (session_id, question_id, choice_id, saved_at)
 select t.id('s7'), q.id, 'a', now() - interval '1 day' from public.questions q order by q.id limit 1;
 insert into public.review_decisions (session_id, exam_id, decision, note, reviewer_id)
 values (t.id('s7'), t.id('history'), 'talk', 'Phone on the desk.', t.id('proctor'));
-insert into public.reports (session_id, exam_id, verify_code, content_hash, created_by)
-values (t.id('s7'), t.id('history'), 'W112TESTCODE', 'hash', t.id('proctor'))
+-- The verify code comes from the column default (WP 1.9's unused_verify_code).
+insert into public.reports (session_id, exam_id, content_hash, created_by)
+values (t.id('s7'), t.id('history'), 'hash', t.id('proctor'))
 returning t.put('report', id);
 insert into public.events (id, session_id, exam_id, type, source, review, at, data)
 values (t.put('help_event', gen_random_uuid()), t.id('s7'), t.id('history'), 'student.help_requested', 'app', 'log',
