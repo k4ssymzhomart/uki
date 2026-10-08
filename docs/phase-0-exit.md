@@ -232,3 +232,44 @@ The CI job "Desktop installer (macOS dmg arm64 and x64)" runs on `macos-latest` 
 | Both apps start from their dmg | pass | Same script: "Uki (arm64) still runs after 20 s" and "Uki (x86_64) still runs after 20 s". The x64 app ran under Rosetta 2, which the runner already had; the step installs it when missing. Both apps were stopped and both images detached afterwards | 2026-10-08 |
 | Artifacts | pass | `uki-macos-arm64-dmg` (157 MB), `uki-macos-x64-dmg` (164 MB), and `macos-launch-test` (launch logs and screenshots), kept 14 days | 2026-10-08 |
 | The x64 dmg on an Intel Mac | pending | No Intel Mac in the hardware; Rosetta 2 on the runner is the only check | |
+
+## P.4 Lockdown guard
+
+WP 0.13: the Windows keyboard hook through Koffi, the blur rule on macOS, and `docs/runbooks/lab-session.md` in place of `demo-laptops.md`.
+
+- **Branch and PR:** `polish/p4-lockdown-guard`, PR #15.
+- **CI evidence run:** [37772734282](https://github.com/k4ssymzhomart/uki/actions/runs/37772734282) at `15032cd`. All six jobs passed. The Windows job ran on `windows-2025-vs2026` (Windows Server 2025, 10.0.26100).
+- **The MacBook checks** ran on the development Mac (Apple M4, macOS 15.6).
+
+| Check | Status | Evidence | Date |
+| --- | --- | --- | --- |
+| Key filter: every swallowed key and every passed key | pass | `key-filter.test.ts`, 9 tests. Swallowed: both Windows keys, alone and with Alt, Ctrl or Shift; Alt+Tab, also with Shift or Ctrl; Alt+Esc; Ctrl+Esc. Passed: Ctrl+Shift+Q (the lab zip's escape), Ctrl+Q, Tab and Esc alone or with Shift, Ctrl+Tab, and Ctrl+Shift+Esc. Every other virtual-key code from 0 to 255 passes with Alt and Ctrl held. Exactly four codes have a rule. Key state is read only for Esc | 2026-10-08 |
+| Installing and removing the hook, Koffi mocked | pass | `keyboard-hook.test.ts`, 20 tests. Start installs once and stop removes the same handle. While locked, the hook is reinstalled every 10 s, the new one before the old one is removed. Also covered: a hook Windows already dropped; a first install Windows refuses, retried; a failed reinstall, which keeps the old hook; Koffi failing to load, logged once with lockdown going on; prepare installing nothing; dispose; stop never throwing; logs with state changes only. The Win32 binding declares five `__stdcall` functions and installs a global `WH_KEYBOARD_LL` with the registered procedure. A NULL handle throws. Dispose removes any hook still installed, then unregisters once. The procedure returns 1 for a swallowed key without `CallNextHookEx`, and passes Ctrl+Shift+Q on unchanged | 2026-10-08 |
+| The hook procedure through real Koffi | pass | Same file. The procedure gets a real `KBDLLHOOKSTRUCT` through Koffi 3.3.2's own marshalling, `vkCode` at offset 0 and `flags` at offset 8. It swallows Win, Alt+Tab and Ctrl+Esc and passes Ctrl+Q. Ran on macOS arm64 (MacBook), Linux x64 (check job) and Windows x64 (Windows job) | 2026-10-08 |
+| The blur rule on macOS | pass (unit) | `lockdown.test.ts`, 20 tests. During lockdown on macOS, every blur restores a minimised window, activates the app, shows the window, pins it on every Space and on top, and focuses it. The renderer hears of it once per 5 s. Nothing happens after lockdown. The packaged build drops Cmd+Shift+Q and lockdown holds. `hasDevEscape` keeps the escape in development builds and the lab zip only. The hook starts with lockdown and stops on unlock and on the development escape | 2026-10-08 |
+| The Windows job installs and removes the real hook | pass | Step "Keyboard hook (WP 0.13) installs and removes the real WH_KEYBOARD_LL hook through Koffi" passed 2 of 2. Koffi loaded from `node_modules`, `SetWindowsHookExW` returned a handle, a second hook went in before the first came out, and both came out (10 ms). Lockdown's start, reinstall and stop ran against user32 (4 ms). `pnpm check` on Windows also ran them: desktop 46 files, 439 tests, none skipped | 2026-10-08 |
+| Koffi is in every Windows build, outside the asar | pass | `.github/scripts/windows-koffi-check.ps1` found the 8 files under `resources/koffi/node_modules` in `Uki-0.0.0-x64.zip`, in `Uki-lab-0.0.0-x64.zip` and in the current-user install. `build/after-pack.cjs` stops a Windows build without them: in a cross build on the MacBook without the binary package, it failed with "after-pack: the keyboard hook's Koffi is missing from resources/koffi/node_modules". A cross-built zip with it had the same layout. The macOS app folder (`electron-builder --mac dir`) has no Koffi file | 2026-10-08 |
+| The packaged app loads the hook and still launches | pass | Launch test, once from the zip unpacked into a new folder and once from the current-user install. Uki.exe still ran after 20 s with a window titled 'Üki' (4 processes). The main process log, now captured by the script, said `[desktop] keyboard hook ready` both times. The script fails on `keyboard hook failed` or on a missing ready line | 2026-10-08 |
+| A Koffi callback runs from Electron's main-thread loop | pass (proxy) | Windows calls a `WH_KEYBOARD_LL` procedure from the installing thread's message loop, outside any FFI call. On the MacBook, the same path in Electron 44.6.0: a Koffi 3.3.2 registered callback driven by a `CFRunLoopTimer` on the main run loop fired 3 of 3 times. A real key on Windows is a lab check | 2026-10-08 |
+| `pnpm check` on the MacBook | pass | Exit 0. Biome checked 781 files and the guards 808. Turbo ran 22 of 22 tasks. Desktop: 45 files and 437 tests passed; 2 were skipped, the Windows-only real hook tests | 2026-10-08 |
+
+**Pending hand checks on the MacBook (You):** on the packaged build, during lockdown. `docs/runbooks/lab-session.md` section 6 has the steps. The packaged build has no development escape, so End session on the dashboard is the way out.
+
+| Check | Status | Evidence | Date |
+| --- | --- | --- | --- |
+| Cmd+Tab does nothing | pending | | |
+| Cmd+Q does nothing | pending | | |
+| Force Quit (Cmd+Option+Esc) does nothing | pending | | |
+| The menu bar does nothing | pending | | |
+| Spotlight (Cmd+Space) does nothing, or brings the exam back and logs `tab.blocked` | pending | | |
+| Mission Control (Ctrl+Up, F3) does nothing, or brings the exam back and logs `tab.blocked` | pending | | |
+| Notification Center does nothing, or brings the exam back and logs `tab.blocked` | pending | | |
+| The screenshot keys (Cmd+Shift+3, 4, 5) do nothing, or bring the exam back and log `tab.blocked`; a screenshot shows no exam window | pending | | |
+| The wall shows at most one focus loss per 5 s while the keys are tried | pending | | |
+
+**Pending on a Windows 11 lab PC (P.5, You):** these are in the lab checklist in `docs/runbooks/lab-session.md`.
+
+- The Windows keys, Alt+Tab, Alt+Esc, Ctrl+Esc and Alt+F4 do nothing during lockdown.
+- Ctrl+Alt+Del, Win+L and Ctrl+Shift+Esc still work, and the wall shows the focus loss.
+- Ctrl+Shift+Q leaves lockdown in the lab zip.
+- Any antivirus prompt about the hook is written down.

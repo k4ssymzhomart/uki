@@ -146,16 +146,72 @@ describe("lockdown on macOS", () => {
     expect(fake.calls).toContain("setZoomFactor(1)");
   });
 
-  it("does not chase focus on macOS, where kiosk mode already stops app switching", () => {
+  it("brings the window back on every blur, re-pins it and tells the renderer at most once per 5 s", () => {
+    // The MacBook may be the only student machine on Demo Day: Spotlight, Notification Center or the
+    // screenshot toolbar taking the focus must not leave the exam behind.
+    let now = 1_000_000;
     const fake = fakeWindow();
     const onBlur = vi.fn();
-    const lockdown = createLockdown({ os: "macos", devEscape: false, onBlur });
+    const activateApp = vi.fn(() => fake.calls.push("activateApp"));
+    const lockdown = createLockdown({ os: "macos", devEscape: false, onBlur, activateApp, now: () => now });
     lockdown.attach(fake.window);
-    lockdown.set(true);
-    fake.calls.length = 0;
+
     fake.blur();
     expect(fake.calls).toEqual([]);
     expect(onBlur).not.toHaveBeenCalled();
+
+    lockdown.set(true);
+    fake.calls.length = 0;
+    fake.blur();
+    expect(fake.calls).toEqual([
+      "activateApp",
+      "show()",
+      'setVisibleOnAllWorkspaces(true, {"visibleOnFullScreen":true,"skipTransformProcessType":true})',
+      'setAlwaysOnTop(true, "screen-saver")',
+      "focus()",
+    ]);
+    expect(onBlur).toHaveBeenCalledTimes(1);
+
+    now += 1000;
+    fake.blur();
+    now += BLUR_NOTICE_INTERVAL_MS - 1001;
+    fake.blur();
+    expect(onBlur).toHaveBeenCalledTimes(1);
+    expect(fake.calls.filter((call) => call === "focus()")).toHaveLength(3);
+    expect(fake.calls.filter((call) => call === "activateApp")).toHaveLength(3);
+
+    now += 1;
+    fake.blur();
+    expect(onBlur).toHaveBeenCalledTimes(2);
+
+    lockdown.set(false);
+    fake.calls.length = 0;
+    now += BLUR_NOTICE_INTERVAL_MS;
+    fake.blur();
+    expect(fake.calls).toEqual([]);
+    expect(onBlur).toHaveBeenCalledTimes(2);
+  });
+
+  it("restores a minimised window before bringing it back", () => {
+    const fake = fakeWindow();
+    const lockdown = createLockdown({ os: "macos", devEscape: false, onBlur: vi.fn() });
+    lockdown.attach(fake.window);
+    lockdown.set(true);
+    fake.calls.length = 0;
+    fake.minimize();
+    fake.blur();
+    expect(fake.calls.slice(0, 2)).toEqual(["restore()", "show()"]);
+  });
+
+  it("keeps no development escape in a packaged build: Cmd+Shift+Q is dropped and lockdown holds", () => {
+    const fake = fakeWindow();
+    const lockdown = createLockdown({ os: "macos", devEscape: false, onBlur: vi.fn() });
+    lockdown.attach(fake.window);
+    lockdown.set(true);
+    expect(fake.key({ code: "KeyQ", meta: true, shift: true })).toBe(true);
+    expect(fake.key({ code: "KeyQ", meta: true })).toBe(true);
+    expect(lockdown.active).toBe(true);
+    expect(fake.close()).toBe(true);
   });
 
   it("applies a lockdown requested before the window existed once it attaches", () => {
@@ -275,6 +331,26 @@ describe("lockdown on Windows", () => {
     expect(onBlur).toHaveBeenCalledTimes(2);
   });
 
+  it("runs the keyboard hook from lockdown on until lockdown off", () => {
+    const fake = fakeWindow();
+    const hook = { start: vi.fn(), stop: vi.fn() };
+    const lockdown = createLockdown({ os: "windows", devEscape: false, onBlur: vi.fn(), keyboardHook: hook });
+    lockdown.attach(fake.window);
+    expect(hook.start).not.toHaveBeenCalled();
+    lockdown.set(true);
+    expect(hook.start).toHaveBeenCalledOnce();
+    expect(hook.stop).not.toHaveBeenCalled();
+    lockdown.set(false);
+    expect(hook.stop).toHaveBeenCalledOnce();
+  });
+
+  it("starts the hook even before the window exists, so no key slips through while it opens", () => {
+    const hook = { start: vi.fn(), stop: vi.fn() };
+    const lockdown = createLockdown({ os: "windows", devEscape: false, onBlur: vi.fn(), keyboardHook: hook });
+    lockdown.set(true);
+    expect(hook.start).toHaveBeenCalledOnce();
+  });
+
   it("restores a minimised window (Win+D) before showing it", () => {
     const fake = fakeWindow();
     const lockdown = createLockdown({ os: "windows", devEscape: false, onBlur: vi.fn() });
@@ -300,13 +376,15 @@ describe("development escape hatch", () => {
     expect(fake.calls).toContain("setKiosk(false)");
   });
 
-  it("uses Ctrl+Shift+Q on Windows", () => {
+  it("uses Ctrl+Shift+Q on Windows, which the keyboard hook lets through, and removes the hook", () => {
     const fake = fakeWindow();
-    const lockdown = createLockdown({ os: "windows", devEscape: true, onBlur: vi.fn() });
+    const hook = { start: vi.fn(), stop: vi.fn() };
+    const lockdown = createLockdown({ os: "windows", devEscape: true, onBlur: vi.fn(), keyboardHook: hook });
     lockdown.attach(fake.window);
     lockdown.set(true);
     fake.key({ code: "KeyQ", control: true, shift: true });
     expect(lockdown.active).toBe(false);
+    expect(hook.stop).toHaveBeenCalledOnce();
   });
 
   it("does nothing in packaged builds, where the shortcut is simply dropped", () => {

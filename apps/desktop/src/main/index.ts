@@ -21,8 +21,16 @@ import { buildCsp } from "../shared/csp.ts";
 import { isAppUrl } from "../shared/origin.ts";
 import { requestCameraAccess } from "./camera-access.ts";
 import { findDebugSwitch } from "./debug-switches.ts";
-import { createScreenlessLockdown, describeDevFlags, readDevFlags, withoutBlockedApps } from "./dev-flags.ts";
+import {
+  createScreenlessLockdown,
+  describeDevFlags,
+  hasDevEscape,
+  readDevFlags,
+  withoutBlockedApps,
+} from "./dev-flags.ts";
 import { createIpcHandlers, desktopOs, registerIpcHandlers, sendToRenderer } from "./ipc.ts";
+import { createKeyboardHook } from "./keyboard-hook.ts";
+import { loadWin32KeyboardHook } from "./keyboard-hook-win32.ts";
 import { startLockLink } from "./lock-link.ts";
 import { createLockdown } from "./lockdown.ts";
 import { appMenuTemplate } from "./menu.ts";
@@ -84,14 +92,25 @@ const watcher = createBlockedAppWatcher({
   onError: (error) => console.error("[desktop] process scan failed:", error),
 });
 
+// Windows only: the low-level keyboard hook that lockdown runs (keyboard-hook.ts). Koffi loads on first
+// use, never on macOS or Linux; a packaged app takes it from its resources folder.
+const keyboardHook =
+  os === "windows"
+    ? createKeyboardHook({
+        load: () => loadWin32KeyboardHook(app.isPackaged ? process.resourcesPath : null),
+        log: console,
+      })
+    : undefined;
+
 const lockdown = devFlags.noKiosk
   ? createScreenlessLockdown((on) =>
       console.warn(`[desktop] lockdown ${on ? "on" : "off"} (UKI_DEV_NO_KIOSK)`),
     )
   : createLockdown({
       os,
-      devEscape: isDevelopmentBuild || isLabBuild,
+      devEscape: hasDevEscape(app.isPackaged, import.meta.env.MODE),
       onBlur: () => notify(IPC_CHANNELS.examBlur),
+      keyboardHook,
       onDevEscape: () => {
         // The running scan holds the app too: the escape hatch lets quit through again.
         watcher.stop();
@@ -199,12 +218,16 @@ if (debugSwitch !== null) {
       (url) => isAppUrl(url, devServerUrl),
     );
     openMainWindow();
+    // Koffi and user32 load now, so a packaging fault shows at launch (the CI launch test reads this
+    // line), not when the exam starts. Nothing is installed until lockdown.
+    keyboardHook?.prepare();
 
     app.on("activate", () => {
       if (liveWindow()) focusMainWindow();
       else openMainWindow();
     });
     app.on("will-quit", () => {
+      keyboardHook?.stop();
       watcher.stop();
       trayMode.dispose();
       void lock.close();
@@ -212,4 +235,6 @@ if (debugSwitch !== null) {
   });
 
   app.on("window-all-closed", () => app.quit());
+  // app.exit() and a crash skip will-quit; Windows also removes the hook with the process.
+  process.once("exit", () => keyboardHook?.stop());
 }

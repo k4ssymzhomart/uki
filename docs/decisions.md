@@ -510,3 +510,73 @@ Choices that `20261009000000_phase1.sql` and the Phase 1 contracts make where th
 - **0.1b counts but does not weigh.** The plan says 0.1b “counts the stills in frames”. Staff cannot read object sizes: the frames bucket has no `storage.objects` policies by design, and events have no size. So the rows show “Video 0 MB”, “Flagged frames 38” and “Events 9,870”, without the frame's “· 2.6 MB” and “· 0.7 MB”. If the sizes are wanted, a size RPC can come with 1.12, which owns the frames bucket's data. “Open privacy centre” shows once 1.12 turns `NAV.privacy.built` on. Both counts run under RLS, for the exams the overview shows, when the popover opens. Popover/Info (76:2333) is `PopoverInfo` in `@uki/ui`.
 - **Proctor landing:** sign-in, `/`, the signed-in `/sign-in` and the proctor's Overview item all go through `staffHomePath(role)`. Proctors stay on `/overview` until WP 1.5 sets `PROCTORS_LAND_ON_MY_EXAMS = true` together with `/my-exams` (0.9).
 - **Russian layout notes for P.18:** “Экзаменационный отдел” fills the sidebar's role label and is clipped in the user block; “взгляд в сторону 2× · 4,5 с” is cut on a 1440 wall tile. Both are in the dashboard's own truncation, and P.18 may want shorter words.
+
+## 2026-10-08 · P.4 Lockdown guard (WP 0.13)
+
+**The keys the Windows hook swallows.** The plan lists the Windows keys, Alt+Tab, Alt+Esc and Ctrl+Esc. `apps/desktop/src/main/key-filter.ts` reads each of these as follows:
+
+- **The Windows keys.** Left and right, down and up alike, with or without other keys. This also stops the Win+ shortcuts that a hook can stop, such as Win+D, Win+Tab, Win+R and Win+Shift+S. Win+L stays with Windows.
+- **Alt+Tab.** Tab while Alt is held, with or without Shift or Ctrl, because all of these open one task switcher.
+- **Alt+Esc.** Esc while Alt is held.
+- **Ctrl+Esc.** Esc while Ctrl is held and Shift is not.
+
+Everything else passes, in particular:
+
+- **Ctrl+Shift+Esc** opens Task Manager, which Ctrl+Alt+Del also reaches. The plan leaves Ctrl+Alt+Del to Windows, so this stays with Windows too. The blur rule catches both, and the lab checklist step says so.
+- **Ctrl+Shift+Q** is the lab zip's development escape. `lockdown.ts` reads it in the window.
+- **Alt+F4** is not a hook key. The window refuses it: close is blocked and `before-input-event` drops it, as decided on 2026-10-07.
+
+**The hook procedure.** It reads only `vkCode` (offset 0) and `flags` (offset 8) of `KBDLLHOOKSTRUCT`, and it asks `GetAsyncKeyState` about Ctrl and Shift only for Esc. Then it returns 1 or calls `CallNextHookEx`. It logs state changes only (ready, on, off, failures) and never a key.
+
+**The hook's life.**
+
+- `lockdown.set(true)` starts the hook and `set(false)` stops it. The development escape goes through `set(false)`, so it stops the hook too.
+- While lockdown is on, the hook is reinstalled every 10 s. The new hook goes in before the old one comes out, so no key slips through in between and no swallowed Windows key goes up unseen.
+- A failed install is retried on the same 10 s timer.
+- `will-quit` and `process.on("exit")` remove the hook, and Windows removes it if the process dies.
+- **Known limit.** If the renderer crashes during lockdown, the window stays in kiosk with the hook on, as it did before this change. The way out is End session, or Ctrl+Alt+Del and Task Manager.
+
+**Koffi loads at launch on Windows, not at Start exam.** `keyboardHook.prepare()` runs after the window opens. It loads Koffi, user32 and kernel32 and installs nothing. This way a packaging fault shows in the CI launch test, which now requires `[desktop] keyboard hook ready` in the main process log, and not in the middle of an exam. macOS and Linux never load Koffi. If Koffi fails to load, the app logs it once and lockdown goes on with the blur rule alone, as the plan's fallback says.
+
+**Packaging Koffi 3.** Koffi 3 split its binaries into per-platform packages (`@koromix/koffi-<os>-<arch>`, optional dependencies). Three facts shaped the packaging:
+
+- electron-builder's pnpm collector bundles a transitive platform package only if the app lists it.
+- `electron-builder.yml` keeps `node_modules` out of the asar.
+- Windows cannot load a native file from inside an asar.
+
+So:
+
+- `koffi` is a dependency and `@koromix/koffi-win32-x64` an optional dependency of `apps/desktop`, both pinned to 3.3.2. Koffi refuses a binary of another version, and a test checks that the two pins match.
+- `win.extraResources` copies five loader files, with the MIT licence, and the binary to `resources/koffi/node_modules`. The app requires Koffi from there with `createRequire`. Development builds and the tests use the app's own `node_modules`.
+- No asarUnpack is needed, and the main bundle never contains Koffi.
+- `build/after-pack.cjs` fails a Windows build in which either file is missing. So the zip, the lab zip and the installer are all checked before they are made. CI also lists the files in each of them.
+- The dmg carries neither file.
+
+**The blur rule on macOS.** Phase 0 ran it on Windows only, because macOS kiosk mode already stops app switching. The MacBook may be the only student machine on Demo Day, and Spotlight, Notification Center and the screenshot toolbar can still take the focus. So on both systems, every blur during lockdown now:
+
+1. restores a minimised window;
+2. on macOS, activates the app with `app.focus({ steal: true })`, without which a background app cannot take the focus back;
+3. shows the window;
+4. pins it again, with `setVisibleOnAllWorkspaces` on macOS and `setAlwaysOnTop(true, "screen-saver")` on both;
+5. focuses it;
+6. tells the renderer at most once every 5 s, and the renderer sends `tab.blocked` with `app: null`.
+
+The packaged build has no development escape. `hasDevEscape(isPackaged, mode)` keeps one only in development builds and the lab zip.
+
+**`demo-laptops.md` became `lab-session.md`.** The plan puts `docs/runbooks/lab-session.md` in place of `demo-laptops.md`, so the new runbook takes over all of the old one's content:
+
+- the MacBook build and install;
+- Üki Lock;
+- the rehearsal steps;
+- the network fallback.
+
+It adds the lab session:
+
+- the CI artifacts to download;
+- the lab zip's Ctrl+Shift+D and Ctrl+Shift+Q;
+- SmartScreen and the antivirus notes about the hook;
+- the USB webcam;
+- the checklist with its steps;
+- where the results go.
+
+The links in `README.md`, `cloud-setup.md`, `electron-builder.yml` and `desktop-dist.yml` point to it.

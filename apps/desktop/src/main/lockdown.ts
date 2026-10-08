@@ -1,10 +1,13 @@
 // Exam lockdown ("Window states" and "Hardening" in docs/phase-0-plan.md): kiosk, always on top at the
 // screen-saver level, on every workspace on macOS; close and quit blocked; reload, DevTools, zoom,
-// close-tab and quit shortcuts dropped. On Windows kiosk mode is only full screen, so every blur during
-// lockdown brings the window back and tells the renderer (exam.onBlur) at most once per 5 seconds; the
-// renderer sends tab.blocked with app null.
+// close-tab and quit shortcuts dropped. The blur rule runs on both systems (WP 0.13): every blur during
+// lockdown brings the window back, pins it on top again (and on every Space on macOS) and tells the
+// renderer (exam.onBlur) at most once per 5 seconds; the renderer sends tab.blocked with app null. On
+// Windows, where kiosk mode is only full screen, lockdown also runs the keyboard hook
+// (keyboard-hook.ts), from lockdown on until lockdown off.
 import type { DesktopOs } from "@uki/contracts";
 import type { BrowserWindow, WebContents } from "electron";
+import type { KeyboardHook } from "./keyboard-hook.ts";
 import { isBlockedShortcut, isDevEscape } from "./shortcuts.ts";
 import { createGate } from "./throttle.ts";
 
@@ -39,8 +42,10 @@ export type LockdownOptions = {
   os: DesktopOs;
   /** Development (unpackaged) and lab builds only: Cmd/Ctrl+Shift+Q leaves lockdown. */
   devEscape: boolean;
-  /** Focus left the window during lockdown (Windows); at most once per BLUR_NOTICE_INTERVAL_MS. */
+  /** Focus left the window during lockdown; at most once per BLUR_NOTICE_INTERVAL_MS. */
   onBlur: () => void;
+  /** Windows: the keyboard hook, started with lockdown and stopped when it ends, the escape included. */
+  keyboardHook?: Pick<KeyboardHook, "start" | "stop">;
   /** After the development escape hatch turned lockdown off. */
   onDevEscape?: () => void;
   /**
@@ -125,6 +130,8 @@ export function createLockdown(options: LockdownOptions): Lockdown {
 
   function set(on: boolean): void {
     active = on;
+    if (on) options.keyboardHook?.start();
+    else options.keyboardHook?.stop();
     if (!usable(current)) return;
     if (on) enter(current);
     else leave(current);
@@ -137,10 +144,15 @@ export function createLockdown(options: LockdownOptions): Lockdown {
     const onClose = (event: Cancellable) => {
       if (active) event.preventDefault();
     };
+    // The blur rule. Every blur brings the window back, even when the system refuses the focus (Windows
+    // may only flash the taskbar button); the renderer hears of it at most once per 5 seconds.
     const onBlur = () => {
-      if (!active || os !== "windows" || window.isDestroyed()) return;
+      if (!active || window.isDestroyed()) return;
       if (window.isMinimized()) window.restore();
+      // macOS: an app that is not in front cannot take the focus back without activating itself.
+      if (os === "macos") options.activateApp?.();
       window.show();
+      if (os === "macos") window.setVisibleOnAllWorkspaces(true, MAC_ALL_WORKSPACES);
       window.setAlwaysOnTop(true, "screen-saver");
       window.focus();
       if (blurGate.pass()) options.onBlur();

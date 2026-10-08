@@ -2,7 +2,7 @@
 # without an install; never the lab zip, which only the CI job builds), attached to a draft GitHub release
 # (docs/phase-0-plan.md, Pipelines). The macOS installer is normally built on the MacBook itself, Windows
 # on GitHub's Windows runners; a CI build copied to a Mac needs the quarantine flag removed and a lab PC
-# needs SmartScreen's "Run anyway" (docs/runbooks/demo-laptops.md).
+# needs SmartScreen's "Run anyway" (docs/runbooks/lab-session.md).
 #
 # Variables (Settings > Secrets and variables > Actions > Variables): VITE_SUPABASE_URL and
 # VITE_SUPABASE_PUBLISHABLE_KEY of the cloud project, VITE_LOCK_EXTENSION_ID. Only the publishable key
@@ -103,5 +103,5 @@ jobs:
           else
             gh release create "$TAG" installers/* --draft --target "$GITHUB_SHA" --repo "$GITHUB_REPOSITORY" \
               --title "Üki desktop $TAG (unsigned)" \
-              --notes "Unsigned Phase 0 installers: macOS arm64 and x64 (dmg), Windows x64 (NSIS and zip). See docs/runbooks/demo-laptops.md for the quarantine and SmartScreen steps."
+              --notes "Unsigned Phase 0 installers: macOS arm64 and x64 (dmg), Windows x64 (NSIS and zip). See docs/runbooks/lab-session.md for the quarantine and SmartScreen steps."
           fi

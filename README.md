@@ -118,7 +118,7 @@ The Demo Day script is in [docs/phase-0-plan.md](docs/phase-0-plan.md#script): o
 5. The wall (2.4) fills with the simulated moments (looks away, a blocked tab, a second face, a phone at 0.94, an empty seat, a lost camera, a student with no signal, early submissions) next to Madina's real ones.
 6. Aliya joins `PHYS1-102-FRI` on the student machine and pairs Üki Lock (E.3 to E.9).
 
-Setting up the MacBook and a lab PC, the quarantine and SmartScreen steps and the network fallback are in [docs/runbooks/demo-laptops.md](docs/runbooks/demo-laptops.md); creating the cloud project and the Vercel projects is in [docs/runbooks/cloud-setup.md](docs/runbooks/cloud-setup.md).
+The lab session on a Windows 11 lab PC (the CI artifacts, SmartScreen, antivirus and the keyboard hook, the checklist), setting up the MacBook as the student machine, the quarantine step and the network fallback are in [docs/runbooks/lab-session.md](docs/runbooks/lab-session.md); creating the cloud project and the Vercel projects is in [docs/runbooks/cloud-setup.md](docs/runbooks/cloud-setup.md).
 
 ## Known limits
 

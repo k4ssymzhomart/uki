@@ -9,7 +9,9 @@
 #   build     web, the mock portal and Üki Lock (Chrome and Edge zips), then the Üki Lock smoke test in
 #             headless Chrome for Testing
 #   windows   WP 0.12 on windows-latest: pnpm check, the x64 zip, the NSIS installer, the launch test of
-#             the packaged Uki.exe from the zip and from a current-user install, and the lab zip
+#             the packaged Uki.exe from the zip and from a current-user install, and the lab zip; WP 0.13:
+#             the real keyboard hook installed and removed, Koffi in every Windows build, and the
+#             launch test's log showing that the packaged app loaded it
 #   desktop   the unsigned macOS installers, dmg arm64 and x64 (P.12): each dmg's app is checked for its
 #             architecture and started from the image (x64 under Rosetta 2)
 name: CI
@@ -203,6 +205,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: pnpm check
         run: pnpm check
+      - name: Keyboard hook (WP 0.13) installs and removes the real WH_KEYBOARD_LL hook through Koffi
+        run: pnpm --filter desktop exec vitest run --reporter=verbose src/main/keyboard-hook.win32.test.ts
       - name: Model files cache
         uses: actions/cache@v4
         with:
@@ -216,6 +220,11 @@ jobs:
           pnpm models:verify
       - name: NSIS installer and zip (x64)
         run: pnpm --filter desktop run dist --publish never
+      - name: The zip carries the keyboard hook's Koffi (WP 0.13)
+        shell: pwsh
+        run: |
+          $zip = Get-ChildItem apps/desktop/release -Filter 'Uki-*-x64.zip' | Select-Object -First 1
+          ./.github/scripts/windows-koffi-check.ps1 -Zip $zip.FullName
       - name: The shipped build carries no developer overlay
         shell: bash
         run: |
@@ -238,9 +247,15 @@ jobs:
             Get-ChildItem (Join-Path $env:LOCALAPPDATA 'Programs') -Recurse -Filter 'Uki.exe' -ErrorAction SilentlyContinue
             throw "no current-user install at $exe"
           }
+          ./.github/scripts/windows-koffi-check.ps1 -Folder (Split-Path -Parent $exe)
           ./.github/scripts/windows-launch-test.ps1 -Exe $exe -Screenshot "$env:RUNNER_TEMP/launch/installed.png"
       - name: Lab zip (developer overlay and Ctrl+Shift+Q on; never shipped)
         run: pnpm --filter desktop run dist:lab --publish never
+      - name: The lab zip carries the keyboard hook's Koffi (WP 0.13)
+        shell: pwsh
+        run: |
+          $zip = Get-ChildItem apps/desktop/release/lab -Filter 'Uki-lab-*-x64.zip' | Select-Object -First 1
+          ./.github/scripts/windows-koffi-check.ps1 -Zip $zip.FullName
       - name: The lab build carries the developer overlay
         shell: bash
         run: |
