@@ -1,5 +1,5 @@
 // The student window: languages (Kazakh first), the flow and the screens. The developer overlay mounts
-// only in development builds (Ctrl+Shift+D).
+// only in development builds and the lab and smoke zips (Ctrl+Shift+D); the smoke zip's marker with it.
 import { DevOverlay, FlowProvider } from "../flow/index.ts";
 import type { FlowRuntime } from "../flow/runtime.ts";
 import { UkiIntlProvider } from "../i18n/uki-intl-provider.tsx";

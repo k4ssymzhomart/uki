@@ -60,6 +60,17 @@ const isLabBuild = import.meta.env.MODE === "lab";
 if (isLabBuild) {
   console.warn("[desktop] lab build: the developer overlay (Ctrl+Shift+D) and Ctrl+Shift+Q are on");
 }
+// The smoke variant (`pnpm --filter desktop dist:smoke`): the lab build's overlay and escape, plus the
+// synthetic camera in place of a webcam, the smoke marker on every screen and in the window title,
+// and no content protection, for a Windows box with no webcam reached over Remote Desktop (the
+// coordinator's VPS). CI builds it as Uki-smoke-<version>-x64.zip; it never ships. Every smoke-only branch
+// hangs on Vite's build mode, a constant, so a production build holds none of them.
+const isSmokeBuild = import.meta.env.MODE === "smoke";
+if (isSmokeBuild) {
+  console.warn(
+    "[desktop] smoke build: synthetic camera (Ctrl+Shift+S), developer overlay (Ctrl+Shift+D), Ctrl+Shift+Q, capture allowed",
+  );
+}
 // Development-only switches (dev-flags.ts); a packaged build reads none of them.
 const devFlags = readDevFlags(process.env, app.isPackaged);
 if (describeDevFlags(devFlags).length > 0) {
@@ -134,8 +145,9 @@ function openMainWindow(): void {
   const window = createMainWindow({
     preloadPath,
     devServerUrl,
-    allowCapture: shouldAllowCapture(app.isPackaged, process.env),
+    allowCapture: shouldAllowCapture(app.isPackaged, process.env, import.meta.env.MODE),
     devTools: isDevelopmentBuild,
+    title: isSmokeBuild ? "Üki · SMOKE BUILD" : undefined,
   });
   const detach = [lockdown.attach(window), trayMode.attach(window), guardClose(window, examHoldsApp)];
   window.on("closed", () => {

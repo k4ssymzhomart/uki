@@ -1,7 +1,8 @@
 # Manual: the Üki release (WP 0.15). Builds the unsigned installers against the cloud project, macOS arm64
 # and x64 (dmg) and Windows x64 (the NSIS installer and the zip that runs without an install; never the lab
-# zip, which only the CI job builds), and Üki Lock for Chrome and Edge, then gives each file a stable name
-# without the version:
+# or smoke zip, which only the CI job builds), and Üki Lock for Chrome and Edge, then gives each file a
+# stable name without the version. Each build is checked to carry no developer overlay, synthetic camera or
+# smoke marker (.github/scripts/desktop-variant-check.sh production):
 #
 #   Uki-mac-arm64.dmg  Uki-mac-x64.dmg  Uki-Setup-win-x64.exe  Uki-win-x64.zip  Uki-Lock-chrome.zip  Uki-Lock-edge.zip
 #
@@ -110,6 +111,8 @@ jobs:
       # Both architectures in one run (electron-builder.yml); the x64 Electron download happens here.
       - name: Build the dmg for arm64 and x64
         run: pnpm --filter desktop run dist --publish never
+      - name: The shipped build carries no developer overlay, synthetic camera or smoke marker
+        run: bash .github/scripts/desktop-variant-check.sh production
       - name: The app talks to the cloud project and accepts only the release's Lock
         run: |
           grep -rqF "$VITE_SUPABASE_URL" apps/desktop/out/renderer || { echo "::error::the renderer has no $VITE_SUPABASE_URL"; exit 1; }
@@ -156,9 +159,13 @@ jobs:
         run: |
           pnpm models
           pnpm models:verify
-      # The shipped build only: dist:lab never runs here, so the lab zip cannot reach the release.
+      # The shipped build only: dist:lab and dist:smoke never run here, so neither the lab zip nor the smoke
+      # zip can reach the release.
       - name: NSIS installer and zip (x64)
         run: pnpm --filter desktop run dist --publish never
+      - name: The shipped build carries no developer overlay, synthetic camera or smoke marker
+        shell: bash
+        run: bash .github/scripts/desktop-variant-check.sh production
       - name: The app talks to the cloud project and accepts only the release's Lock
         shell: bash
         run: |

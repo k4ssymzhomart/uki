@@ -33,11 +33,11 @@ export function readDevFlags(env: Record<string, string | undefined>, isPackaged
 
 /**
  * The development escape (Cmd/Ctrl+Shift+Q leaves lockdown, lockdown.ts): development builds and the lab
- * zip (`electron-vite build --mode lab`) only. Every other packaged build keeps none, the MacBook's
- * Demo Day build included; a proctor's End session releases it.
+ * and smoke zips (`electron-vite build --mode lab` or `--mode smoke`) only. Every other packaged build
+ * keeps none, the MacBook's Demo Day build included; a proctor's End session releases it.
  */
 export function hasDevEscape(isPackaged: boolean, mode: string): boolean {
-  return !isPackaged || mode === "lab";
+  return !isPackaged || mode === "lab" || mode === "smoke";
 }
 
 /** Names the flags that are on, for one loud line in the main process log. */

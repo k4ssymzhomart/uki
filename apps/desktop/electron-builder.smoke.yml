@@ -1,0 +1,14 @@
+# The smoke variant of the Windows zip: the same app built with `electron-vite build --mode smoke`, for a
+# Windows box with no webcam reached over Remote Desktop (the coordinator's Windows Server VPS). Detection
+# reads the synthetic camera (src/renderer/integration/synthetic-camera.ts) instead of a webcam; the
+# developer overlay (Ctrl+Shift+D) and the development escape (Ctrl+Shift+Q) stay on as in the lab zip; the
+# window says "SMOKE BUILD" on every screen and in its title; content protection is off so the window shows
+# over Remote Desktop. It talks to the cloud project through the release's build variables. Only the CI
+# Windows job builds it, with `pnpm --filter desktop dist:smoke`, which also limits the targets to the x64
+# zip. It is named Uki-smoke-<version>-x64.zip and never ships: desktop-dist.yml and the release leave it
+# out. Runbook: docs/runbooks/lab-session.md, "Smoke box (VPS)".
+extends: ./electron-builder.yml
+artifactName: Uki-smoke-${version}-${arch}.${ext}
+directories:
+  output: release/smoke
+  buildResources: build

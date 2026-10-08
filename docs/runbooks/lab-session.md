@@ -53,6 +53,7 @@ gh workflow run desktop-dist.yml --repo k4ssymzhomart/uki --ref main -f publish=
 | --- | --- | --- |
 | `uki-windows-x64-zip` | `Uki-<version>-x64.zip` | The shipped app, unpacked. It runs from any folder or the USB drive with no install |
 | `uki-windows-x64-lab-zip` | `Uki-lab-<version>-x64.zip` | The same app with the developer overlay and the development escape on. Never ships |
+| `uki-windows-x64-smoke-zip` | `Uki-smoke-<version>-x64.zip` | The app for a Windows box with no webcam: a synthetic camera, the overlay, the escape and a SMOKE BUILD label. Never ships; section 10 |
 | `uki-windows-x64-installer` | `Uki-<version>-x64.exe` | The NSIS installer. Its install-mode page offers the current user only |
 | `uki-lock` | `Uki-Lock-chrome.zip`, `Uki-Lock-edge.zip` | Üki Lock for Chrome and Edge, under the release names |
 
@@ -257,3 +258,49 @@ The venue network may block websockets or drop. In order of preference:
    3. Keep every machine on one Wi-Fi or hotspot. The app's content security policy allows exactly that URL over http and ws.
 
    This loses the "runs on Supabase Cloud" story, so say so on stage.
+
+## 10. Smoke box (VPS)
+
+The coordinator's Windows Server 2022 VPS, reached over Remote Desktop, runs the **smoke zip**. The VPS has no webcam, so the smoke build feeds detection a synthetic camera: the brand kit's pictures of a student, drawn into a 640 × 480 stream. Otherwise it is the shipped app, built against the cloud project with the release's variables. It differs in five ways:
+
+- A red **SMOKE BUILD** label sits in the bottom-left corner of every screen, and the window title reads "Üki · SMOKE BUILD".
+- **Ctrl+Shift+S** changes the camera's picture: student, student holding a phone, empty seat. The label names the current picture.
+- **Ctrl+Shift+D** shows the developer overlay. **Ctrl+Shift+Q** leaves a stuck lockdown, as in the lab zip.
+- Content protection is off, so the window shows over Remote Desktop and in screenshots.
+- It never ships. Only the CI Windows job builds it, and the release never includes it.
+
+Do not use it for the lab checklist in section 4: its camera and capture behaviour are not the shipped app's.
+
+1. **Download.** Take the zip from the latest green CI run on `main`, as in section 1. The artifact is `uki-windows-x64-smoke-zip`. From the MacBook:
+
+   ```sh
+   RUN=$(gh run list --workflow CI --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId')
+   gh run download "$RUN" -n uki-windows-x64-smoke-zip -D smoke
+   ```
+
+   Or download it on the VPS from the run's Summary page, under Artifacts. A browser download wraps the zip in one more zip, so unzip that once.
+2. **Unzip.** On the VPS, right-click `Uki-smoke-<version>-x64.zip`, choose Properties and tick **Unblock**. Then unzip it to `C:\apps\uki\smoke`:
+
+   ```powershell
+   Expand-Archive -LiteralPath .\Uki-smoke-0.0.0-x64.zip -DestinationPath C:\apps\uki\smoke -Force
+   ```
+
+3. **Run.** Over Remote Desktop, run `C:\apps\uki\smoke\Uki.exe`. If SmartScreen asks, choose **More info**, then **Run anyway** (section 3). To keep the log, start the app from PowerShell instead:
+
+   ```powershell
+   Start-Process C:\apps\uki\smoke\Uki.exe -RedirectStandardOutput "$env:TEMP\uki-out.txt" -RedirectStandardError "$env:TEMP\uki-err.txt"
+   Get-Content "$env:TEMP\uki-out.txt", "$env:TEMP\uki-err.txt" | Select-String 'smoke build', 'keyboard hook'
+   ```
+
+4. **Expect the join screen.** 1.1 opens in Kazakh, with the SMOKE BUILD label in the corner. The log has `[desktop] smoke build` and `[desktop] keyboard hook ready`. Photograph the screen for `docs/phase-0-exit.md`, under "Windows smoke build".
+5. **Join DEMO-LIVE only if the coordinator says so.** The coordinator names the roster number, one of 20249001 to 20249030. Enter the code `DEMO-LIVE` and that number. The session then shows on the DEMO-LIVE wall as a real student.
+   - On 1.2, the camera row reads the synthetic camera.
+   - On 1.3, the picture holds a card with the joined number and the same student's photo, so the identity check should pass, as it does in the desktop end-to-end test.
+   - During the exam, Ctrl+Shift+S changes the picture.
+     - The empty seat pauses the exam for no face (2.3). Back on the student, I'm here resumes it.
+     - The phone picture scores about 0.77 as a phone. It raises the phone warning (2.2) and a flag on the wall only if DEMO-LIVE's phone threshold (`phone_score` in the exam's checks) is at or below that score. With the 0.85 default it may not flag (P.6). The end-to-end test sets 0.7 for this picture.
+   - Lockdown takes the VPS's screen. End session on the dashboard releases it; Ctrl+Shift+Q is the fallback. In the Remote Desktop client, Ctrl+Alt+End stands in for Ctrl+Alt+Del.
+6. **Stop.** Submit or end the session, then close the window. To remove the app, delete `C:\apps\uki\smoke`. Its data stays in `%APPDATA%\Üki` unless you delete that too.
+
+A VPS usually has no graphics card. The overlay's `delegate` row shows whether detection runs on the CPU, and `fps` shows its speed. If `Uki.exe` does not start and Windows reports that `MFPlat.DLL` or `MF.dll` is missing, add the Media Foundation feature (`Install-WindowsFeature Server-Media-Foundation`), restart the VPS and try again.
+

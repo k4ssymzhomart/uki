@@ -1,6 +1,6 @@
 // The window's one flow runtime, made and started on first use (StrictMode's double render and a later
-// hash change reuse it). In development and e2e builds it may open the synthetic camera instead of the
-// laptop's (camera-mode.ts); production builds compile that branch away.
+// hash change reuse it). In development, e2e and smoke builds it may open the synthetic camera instead of
+// the laptop's (camera-mode.ts); production builds compile that branch away.
 import { DetectionRuntime } from "../detection/runtime.ts";
 import { stageOf } from "../flow/derive.ts";
 import { createDefaultRuntime } from "../flow/provider.tsx";
@@ -11,12 +11,14 @@ import { cameraMode, SYNTHETIC_CAMERA_BUILD } from "./camera-mode.ts";
 let shared: FlowRuntime | null = null;
 
 /**
- * The synthetic camera's module, in development and e2e builds only. The condition is spelled out here
- * (not imported) so the bundler sees `false ? ... : null` in a production build and never emits the
- * module or its pictures.
+ * The synthetic camera's module, in development, e2e and smoke builds only. The condition is spelled out
+ * here (not imported) so the bundler sees `false ? ... : null` in a production build and never emits the
+ * module or its pictures (.github/scripts/desktop-variant-check.sh checks the built renderer).
  */
 const loadSyntheticCamera =
-  import.meta.env.DEV || import.meta.env.MODE === "e2e" ? () => import("./synthetic-camera.ts") : null;
+  import.meta.env.DEV || import.meta.env.MODE === "e2e" || import.meta.env.MODE === "smoke"
+    ? () => import("./synthetic-camera.ts")
+    : null;
 
 /** 1.3 or 1.3a is open: the student holds the card in its frame until Continue. */
 function identityOpen(runtime: FlowRuntime | null): boolean {
@@ -27,7 +29,7 @@ function identityOpen(runtime: FlowRuntime | null): boolean {
 
 declare global {
   interface Window {
-    /** Development and e2e builds with the synthetic camera only: the detection worker's numbers. */
+    /** Development, e2e and smoke builds with the synthetic camera only: the detection worker's numbers. */
     ukiDetectionDebug?: () => unknown;
   }
 }

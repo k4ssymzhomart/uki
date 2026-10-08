@@ -55,14 +55,33 @@ describe("createMainWindow", () => {
     expect(window?.loaded).toBe(DEV);
     expect(options.webPreferences?.devTools).toBe(true);
   });
+
+  it("keeps the app's own title unless the smoke build names itself", () => {
+    createMainWindow({ preloadPath: "/p.cjs", allowCapture: false, devTools: false });
+    expect(created.at(-1)?.options).not.toHaveProperty("title");
+    createMainWindow({
+      preloadPath: "/p.cjs",
+      allowCapture: true,
+      devTools: false,
+      title: "Üki · SMOKE BUILD",
+    });
+    expect(created.at(-1)?.options.title).toBe("Üki · SMOKE BUILD");
+  });
 });
 
 describe("shouldAllowCapture", () => {
   it("allows capture only in development builds with UKI_ALLOW_CAPTURE=1", () => {
-    expect(shouldAllowCapture(false, { UKI_ALLOW_CAPTURE: "1" })).toBe(true);
-    expect(shouldAllowCapture(true, { UKI_ALLOW_CAPTURE: "1" })).toBe(false);
-    expect(shouldAllowCapture(false, {})).toBe(false);
-    expect(shouldAllowCapture(false, { UKI_ALLOW_CAPTURE: "true" })).toBe(false);
+    expect(shouldAllowCapture(false, { UKI_ALLOW_CAPTURE: "1" }, "development")).toBe(true);
+    expect(shouldAllowCapture(true, { UKI_ALLOW_CAPTURE: "1" }, "production")).toBe(false);
+    expect(shouldAllowCapture(false, {}, "development")).toBe(false);
+    expect(shouldAllowCapture(false, { UKI_ALLOW_CAPTURE: "true" }, "development")).toBe(false);
+  });
+
+  it("allows capture in the smoke build and keeps protection in the shipped and lab builds", () => {
+    expect(shouldAllowCapture(true, {}, "smoke")).toBe(true);
+    expect(shouldAllowCapture(true, {}, "production")).toBe(false);
+    expect(shouldAllowCapture(true, {}, "lab")).toBe(false);
+    expect(shouldAllowCapture(true, { UKI_ALLOW_CAPTURE: "1" }, "lab")).toBe(false);
   });
 });
 
