@@ -13,6 +13,23 @@ Built for the Qostanai Industry Hackathon; the case customer is KRU, Kostanay. T
 
 Everything talks to one Supabase project: locally the Supabase CLI stack, on Demo Day the cloud project in Frankfurt (`eu-central-1`).
 
+## Download
+
+The [latest release](https://github.com/k4ssymzhomart/uki/releases/latest) has the student app and Üki Lock, built against the cloud project. Each file keeps its name from release to release, so these links always serve the newest one:
+
+| File | For |
+| --- | --- |
+| [`Uki-mac-arm64.dmg`](https://github.com/k4ssymzhomart/uki/releases/latest/download/Uki-mac-arm64.dmg) | Macs with Apple silicon (M1 and later) |
+| [`Uki-mac-x64.dmg`](https://github.com/k4ssymzhomart/uki/releases/latest/download/Uki-mac-x64.dmg) | Intel Macs |
+| [`Uki-Setup-win-x64.exe`](https://github.com/k4ssymzhomart/uki/releases/latest/download/Uki-Setup-win-x64.exe) | Windows 10 and 11 (x64), the installer; "Only for me" needs no admin rights |
+| [`Uki-win-x64.zip`](https://github.com/k4ssymzhomart/uki/releases/latest/download/Uki-win-x64.zip) | Windows (x64) without an install: unzip anywhere and run `Uki.exe` |
+| [`Uki-Lock-chrome.zip`](https://github.com/k4ssymzhomart/uki/releases/latest/download/Uki-Lock-chrome.zip) | Üki Lock for Google Chrome |
+| [`Uki-Lock-edge.zip`](https://github.com/k4ssymzhomart/uki/releases/latest/download/Uki-Lock-edge.zip) | Üki Lock for Microsoft Edge |
+
+The builds are unsigned. On macOS, right-click Üki in Applications and choose Open (on macOS 15 and later, System Settings, Privacy & Security, Open Anyway), or run `xattr -dr com.apple.quarantine /Applications/Uki.app` once. On Windows, if SmartScreen says "Windows protected your PC", choose More info, then Run anyway. For Üki Lock, unzip it, open `chrome://extensions` (or `edge://extensions`), turn on Developer mode, choose Load unpacked and pick the unzipped folder. The release's app pairs only with the release's Lock. The release notes have the details, and each file's size and SHA-256.
+
+A release is made from `main` by the Desktop installers workflow: `gh workflow run desktop-dist.yml --ref main -f publish=true` publishes `v0.1.<run number>` as the latest release. The lab zip, with its developer overlay, is never released: it is a CI artifact ([docs/runbooks/lab-session.md](docs/runbooks/lab-session.md)).
+
 ## Prerequisites
 
 | Tool | Version | Install on macOS |
@@ -79,6 +96,7 @@ The demo schedule is relative to the last `pnpm demo:reset` (or to the seed's lo
 | `pnpm supabase:deploy` | Pushes migrations and deploys the Edge Functions to the linked cloud project |
 | `pnpm --filter desktop dist` | Unsigned installers for the current OS into `apps/desktop/release/` |
 | `pnpm --filter lock zip` | Üki Lock zips for Chrome and Edge into `apps/lock/.output/` |
+| `pnpm release:assets` | The release's file names, Lock id checks and notes, for `desktop-dist.yml` (`scripts/release-assets.ts`) |
 
 Per app: `pnpm --filter <web|desktop|lock|lms-mock> <dev|build|typecheck|test>`. The UI kit gallery runs with `pnpm --filter @uki/ui gallery` on 5190, and in development builds at http://localhost:3000/gallery and at `#/gallery` in the desktop window.
 
@@ -118,13 +136,13 @@ The Demo Day script is in [docs/phase-0-plan.md](docs/phase-0-plan.md#script): o
 5. The wall (2.4) fills with the simulated moments (looks away, a blocked tab, a second face, a phone at 0.94, an empty seat, a lost camera, a student with no signal, early submissions) next to Madina's real ones.
 6. Aliya joins `PHYS1-102-FRI` on the student machine and pairs Üki Lock (E.3 to E.9).
 
-The lab session on a Windows 11 lab PC (the CI artifacts, SmartScreen, antivirus and the keyboard hook, the checklist), setting up the MacBook as the student machine, the quarantine step and the network fallback are in [docs/runbooks/lab-session.md](docs/runbooks/lab-session.md); creating the cloud project and the Vercel projects is in [docs/runbooks/cloud-setup.md](docs/runbooks/cloud-setup.md).
+The lab session on a Windows 11 lab PC (the release and the CI artifacts, SmartScreen, antivirus and the keyboard hook, the checklist), setting up the MacBook as the student machine, the quarantine step and the network fallback are in [docs/runbooks/lab-session.md](docs/runbooks/lab-session.md); creating the cloud project and the Vercel projects is in [docs/runbooks/cloud-setup.md](docs/runbooks/cloud-setup.md).
 
 ## Known limits
 
 Phase 0 scope:
 
-- Installers are unsigned: macOS needs the quarantine flag removed for a copied build, and Windows SmartScreen needs "Run anyway". Signing, notarization and auto-update come in Phase 2.
+- Installers are unsigned: macOS needs the quarantine flag removed for a downloaded or copied build, and Windows SmartScreen needs "Run anyway" (see Download). Signing, notarization and auto-update come in Phase 2.
 - The browser lock enforces copy and paste, printing and full screen; it detects but cannot block screen sharing, and cannot block developer tools outside university-managed computers.
 - macOS screen recorders built on ScreenCaptureKit can still capture the exam window; the process scan names them.
 - Not in Phase 0: the exam wizard and roster import, the review queue and reports, the privacy centre, the dashboard in Russian, and every frame the plan lists under Not in Phase 0.
