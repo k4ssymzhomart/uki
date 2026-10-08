@@ -13,10 +13,6 @@ import { buildMessages, LANGUAGES, serialise } from "./lib/catalog.ts";
 
 export const I18N_ROOT = fileURLToPath(new URL("..", import.meta.url));
 
-function readJson(file: string): unknown {
-  return JSON.parse(readFileSync(join(I18N_ROOT, file), "utf8"));
-}
-
 /**
  * The dashboard string files: dashboard.json plus any dashboard-<part>.json next to it (for example
  * dashboard-wall.json), so each dashboard feature keeps its own file. Sorted, so the merge is stable.
@@ -88,43 +84,55 @@ export function generateAll(root: string = I18N_ROOT): {
   };
 }
 
-function main(): void {
-  const check = process.argv.includes("--check");
-  const { files, problems } = generateAll();
+/**
+ * The build itself: writes the messages files that changed (or, with `check`, only reports them) and
+ * prints what it did. Returns the exit code. `pnpm i18n:import` runs it after writing the sheet's edits.
+ */
+export function runBuild(options: { check?: boolean; root?: string } = {}): number {
+  const check = options.check ?? false;
+  const root = options.root ?? I18N_ROOT;
+  const read = (file: string) => JSON.parse(readFileSync(join(root, file), "utf8")) as unknown;
+  const { files, problems } = generateAll(root);
   if (!files) {
     console.error(`@uki/i18n: ${problems.length} problem${problems.length === 1 ? "" : "s"}:`);
     for (const p of problems) console.error(`  - ${p}`);
-    process.exit(1);
+    return 1;
   }
   const stale: string[] = [];
   for (const [path, content] of Object.entries(files)) {
     let current: string | null;
     try {
-      current = readFileSync(join(I18N_ROOT, path), "utf8");
+      current = readFileSync(join(root, path), "utf8");
     } catch {
       current = null;
     }
     if (current === content) continue;
     stale.push(path);
     if (!check) {
-      mkdirSync(join(I18N_ROOT, "messages"), { recursive: true });
-      writeFileSync(join(I18N_ROOT, path), content);
+      mkdirSync(join(root, "messages"), { recursive: true });
+      writeFileSync(join(root, path), content);
     }
   }
   if (check && stale.length > 0) {
     console.error(`@uki/i18n: out of date, run pnpm i18n:build: ${stale.join(", ")}`);
-    process.exit(1);
+    return 1;
   }
-  const catalog = readJson("catalog.json") as { keys: unknown[] };
-  const sources = dashboardFiles();
+  const catalog = read("catalog.json") as { keys: unknown[] };
+  const sources = dashboardFiles(root);
   const dashboard = sources.reduce(
     (sum, file) =>
-      sum + Object.keys(readJson(file) as object).filter((key) => key !== DASHBOARD_COMMENT_KEY).length,
+      sum + Object.keys(read(file) as object).filter((key) => key !== DASHBOARD_COMMENT_KEY).length,
     0,
   );
   console.log(
     `@uki/i18n: ${catalog.keys.length} catalog keys and ${dashboard} dashboard keys in en and ru (${sources.join(", ")}) checked; ${stale.length === 0 ? "messages up to date" : `wrote ${stale.join(", ")}`}`,
   );
+  return 0;
+}
+
+function main(): void {
+  const code = runBuild({ check: process.argv.includes("--check") });
+  if (code !== 0) process.exit(code);
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) main();

@@ -136,6 +136,7 @@ gh secret set SUPABASE_ACCESS_TOKEN              # paste a token from https://su
 gh secret set SUPABASE_DB_PASSWORD               # paste the database password
 gh secret set SUPABASE_PROJECT_REF --body <ref>
 
+gh variable set CLOUD_DEPLOY --body true
 gh variable set UKI_ALLOWED_ORIGINS --body "https://<web>.vercel.app https://<web>-*.vercel.app"
 gh variable set VITE_SUPABASE_URL --body https://<ref>.supabase.co
 gh variable set VITE_SUPABASE_PUBLISHABLE_KEY --body sb_publishable_...
@@ -146,6 +147,7 @@ gh variable set LOCK_DEV_PUBLIC_KEY --body <base64 DER public key>
 | Name | Kind | Used by |
 | --- | --- | --- |
 | `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, `SUPABASE_PROJECT_REF` | Secrets | `deploy-supabase.yml`: link, `db push`, `functions deploy` after CI passes on `main` |
+| `CLOUD_DEPLOY` | Variable | `true` lets `deploy-supabase.yml` deploy; while it is unset, every run is skipped |
 | `UKI_ALLOWED_ORIGINS` | Variable | `deploy-supabase.yml` sets it as a function secret on every deploy |
 | `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_LOCK_EXTENSION_ID` | Variables | `desktop-dist.yml` (manual installers); CI's desktop build falls back to local values |
 | `LOCK_DEV_PUBLIC_KEY` | Variable | CI's Üki Lock build, for the fixed extension id; the private key stays on your laptop |
@@ -176,3 +178,17 @@ gh variable set DEPLOY_FREEZE --body true
 ```
 
 In both Vercel projects set Settings > Git > Ignored Build Step to "Don't build anything" (or a custom command `exit 0`) until Demo Day ends, then undo both.
+
+## Troubleshooting
+
+### TLS to Postgres fails, HTTPS works
+
+Seen on 8 October 2026 from the development Mac's network. `supabase db push` and `psql` cannot reach the database: the connection is reset during the TLS handshake, on the pooler's ports 5432 (session) and 6543 (transaction) alike. Plain TCP to the same ports still connects (`nc -vz <pooler host> 6543`, for example), and everything over HTTPS works: the API, Auth, the Edge Functions and the Management API.
+
+Work around it instead of debugging the network:
+
+- **Deploy from GitHub.** With step 7 done, `gh workflow run deploy-supabase.yml --ref main` runs link, `db push`, the CORS secret and `functions deploy` on GitHub's runner (it needs `CLOUD_DEPLOY=true`), then `gh run watch` follows it. The first cloud deploy, run 37816123967, went this way (`docs/phase-0-exit.md`, P.2).
+- **SQL over HTTPS.** With the project linked (step 2), `supabase db query --linked "<sql>"` (or `--file <file.sql>`) sends the query through the Management API, so checks such as `select count(*) from pg_tables where schemaname = 'public' and not rowsecurity` work from here. The dashboard's SQL editor works too.
+- **The seed (step 3).** Paste `supabase/seed.sql` into the SQL editor rather than using `psql`, then fix Physics 1's portal link with `pnpm demo:reset --env-file .env.cloud`, which talks HTTPS only. `scripts/seed-staff.ts` and the demo scripts also use HTTPS only.
+
+The direct commands in steps 2 and 3 are for a network without this limit; none was tried on 8 October.

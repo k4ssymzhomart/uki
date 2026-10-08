@@ -71,9 +71,9 @@ Everything marked pass below ran on one shared development Mac (Apple M4, 16 GB,
 | 0.9 | A Kazakh and a Russian speaker read every student and Lock screen | You | pending | The kk and ru strings are first-pass, including the 13 keys added on 2026-10-07 | |
 | 0.10 | Workflows parse: `ci.yml`, `deploy-supabase.yml`, `desktop-dist.yml` | Agent | pass | js-yaml strict load plus a structural check: each step has exactly one of run or uses, `with` appears only on uses steps, and every needs target exists. `ci.yml` has 5 jobs. actionlint and gitleaks are not installed here | 2026-10-07 |
 | 0.10 | Vercel installs skip Electron and WXT | Agent | pass | Offline frozen installs in scratch copies of the workspace: 214 packages for lms-mock and 266 for web, none of them Electron or WXT; lms-mock builds | 2026-10-07 |
-| 0.10 | Linked cloud project and `pnpm supabase:deploy` | Agent, with your keys | pending | No cloud project or keys on this machine | |
-| 0.10 | The dashboard on Vercel signs in against the cloud project with seed data | Agent, with your keys | pending | | |
-| 0.10 | A merge to `main` deploys migrations, functions and web | Agent | pending | No GitHub remote yet | |
+| 0.10 | Linked cloud project and `pnpm supabase:deploy` | Agent, with your keys | pass | Not from this Mac: its network resets TLS to Postgres (see "P.2 Cloud deploy" below). `deploy-supabase.yml` ran the same steps on GitHub, run [37816123967](https://github.com/k4ssymzhomart/uki/actions/runs/37816123967) on `main` at `f96a507`: link, `db push`, CORS origins and `functions deploy`, every step green. The cloud has the 16 migrations on `main` and 7 Edge Functions | 2026-10-08 |
+| 0.10 | The dashboard on Vercel signs in against the cloud project with seed data | Agent, with your keys | pass | The four staff accounts sign in through the cloud Auth API (HTTP 200 each); the seed is loaded (1 workspace, 5 exams, 448 students); `uki-web.vercel.app` answers 200 on `/`, `/sign-in` and `/pilot`. A sign-in in your own browser stays a hand check ("P.2 Cloud deploy" below) | 2026-10-08 |
+| 0.10 | A merge to `main` deploys migrations, functions and web | Agent | pending | Vercel deploys `main` to `uki-web.vercel.app` and `uki-portal.vercel.app`. `deploy-supabase.yml` runs after CI passes on `main` only while `CLOUD_DEPLOY=true`; every run before that variable was set was skipped, and the first deploy was started by hand (run 37816123967). The next merge to `main` is its first automatic run | |
 
 ## Exit criteria
 
@@ -92,17 +92,17 @@ Every criterion stays pending until it runs against the cloud project on the Mac
 | 9 | Üki Lock pairs by its 6-digit code, blocks a second tab and logs `tab.blocked` | pending | Local only. The Lock smoke test (headless Chrome for Testing, real relay) paired by code, closed a new tab with `tab.blocked`, showed E.7 with `site.closed`, blocked a copy and restored the tabs at release. Still needed: Chrome on macOS, and Chrome and Edge on Windows, with the real app and `tab.blocked` on the wall | 2026-10-07 |
 | 10 | Lockdown holds on the MacBook and, in one lab session, on a Windows 11 lab PC: blocked keys do nothing, other apps and screenshots are caught, and the packaged app starts from a folder without admin rights | pending | Local only. Added with the hardware correction (docs/phase-0-plan.md, Exit criteria). The kiosk e2e and the CDP-driven development build on this Mac held kiosk mode and refused quit (WP 0.6 rows above). Still needed: the MacBook hand checks on the packaged build (WP 0.13) and the lab session on a Windows 11 lab PC (WP 0.14) | |
 | 11 | Student screens switch between Kazakh, Russian and English from the catalog | pending | Local. Every student frame and Lock screen renders in kk, ru and en with no raw key and no missing message. The desktop e2e took 44 Electron screenshots in the three languages, covering 13 of the 14 frames and E.3. Kazakh numbers and dates are fixed in Electron and Chromium. Still needed: the MacBook and a lab PC, and a native-speaker review of the kk and ru strings | 2026-10-07 |
-| 12 | Dashboard on Vercel against the Supabase Cloud project, with seed data and RLS on every table | pending | Local only. Against the local stack with seed data, `pnpm e2e` passes 4/4: the exam office sees all five seeded exams; a proctor sees only assigned ones; another exam's proctor gets 404, 0 rows in 9 tables and a refused Realtime channel. pgTAP passes 390 tests with RLS for each role, and all 17 `public` tables have RLS on. Still needed: the cloud project, `pnpm supabase:deploy`, the seed there and the Vercel deployment | 2026-10-07 |
+| 12 | Dashboard on Vercel against the Supabase Cloud project, with seed data and RLS on every table | pass | Cloud (P.2, "P.2 Cloud deploy" below): the Frankfurt project has 24 `public` tables, every one with RLS on, the 16 migrations on `main` and the seed (1 workspace, 5 exams, 448 students, 20 questions). The four staff accounts sign in through the Auth API (HTTP 200) and an anonymous student sign-in works; `uki-web.vercel.app` answers 200 on `/`, `/sign-in` and `/pilot`. Locally, before the cloud: `pnpm e2e` 4/4 with the seed, the exam office seeing all five exams, a proctor only assigned ones, another exam's proctor 404, 0 rows and a refused Realtime channel; pgTAP with RLS for each role. Hand check left: Dana signs in on `uki-web.vercel.app` in your own browser and sees the seeded overview | 2026-10-08 |
 
 ## Your tasks
 
-- [ ] Create the Supabase project in Frankfurt with an asymmetric JWT signing key (ES256 or RS256), because `@supabase/server` refuses tokens signed with the legacy shared secret. Turn on anonymous sign-ins, then follow `docs/runbooks/cloud-setup.md`.
-- [ ] Create the GitHub repository and remote. Put the cloud URL and the publishable and secret keys into your local `.env.cloud` and into GitHub secrets.
-- [ ] Create the two Vercel projects (dashboard and mock portal), then set `UKI_ALLOWED_ORIGINS` to their origins.
-- [ ] Make the Üki Lock key pair with `apps/lock/scripts/make-key.ts` and keep the private key out of the repository. Set `VITE_LOCK_EXTENSION_ID`, and build the demo installers with the cloud `VITE_SUPABASE_URL` in `.env`: the built CSP fixes the URL at build time.
+- [x] Create the Supabase project in Frankfurt with an asymmetric JWT signing key (ES256 or RS256), because `@supabase/server` refuses tokens signed with the legacy shared secret. Turn on anonymous sign-ins, then follow `docs/runbooks/cloud-setup.md`.
+- [x] Create the GitHub repository and remote. Put the cloud URL and the publishable and secret keys into your local `.env.cloud` and into GitHub secrets.
+- [x] Create the two Vercel projects (dashboard and mock portal), then set `UKI_ALLOWED_ORIGINS` to their origins.
+- [ ] Make the Üki Lock key pair with `apps/lock/scripts/make-key.ts` and keep the private key out of the repository. Set `VITE_LOCK_EXTENSION_ID`, and build the demo installers with the cloud `VITE_SUPABASE_URL` in `.env`: the built CSP fixes the URL at build time. Done on 2026-10-08 except the installers: `LOCK_DEV_PUBLIC_KEY` and `VITE_LOCK_EXTENSION_ID` are GitHub variables and in the main checkout's `.env`.
 - [ ] Print the two mock student cards: your photo with 20231187, and the photo of whoever plays Aliya with 20231455, both with large digits.
 - [ ] Book the lab session on a Windows 11 lab PC for the NSIS build and the zips from GitHub's Windows runners, lockdown, and Üki Lock in Chrome and Edge.
-- [ ] Have a Kazakh and a Russian speaker review the first-pass kk and ru strings, including the 13 keys added on 2026-10-07.
+- [ ] Have a Kazakh and a Russian speaker review the first-pass kk and ru strings, including the 13 keys added on 2026-10-07. The sheets are in `docs/i18n/` ("P.18 Strings review sheets" below).
 - [ ] On the MacBook and a Windows 11 lab PC, tune `phone_score` with real phones and the identity similarity with the printed cards, then record both values in `docs/decisions.md`.
 - [ ] Run the pending hand checks above and fill in their rows.
 
@@ -326,3 +326,46 @@ The load average was 2.0 to 3.7 during these two runs.
 - The cloud project. Realtime there cannot be restarted on demand, so this check stays local.
 - The real wall in a browser. The command function is called exactly as the wall calls it.
 - A Realtime outage that keeps the channel subscribed but drops broadcasts. The same ingest reply covers it, because every reply carries the unacked commands.
+
+## P.2 Cloud deploy
+
+WP 0.10 on the Supabase project in Frankfurt (`eu-central-1`) and the two Vercel projects, `uki-web` and `uki-portal`.
+
+**Why the deploy ran on GitHub, not on this Mac.** This Mac's network resets TLS connections to Postgres. The pooler refuses the TLS handshake on ports 5432 and 6543, while plain TCP to the same ports and HTTPS to the project both work. So `supabase db push` and `psql` cannot reach the database from here. The deploy ran in `deploy-supabase.yml` on GitHub's runner instead, started by hand. Every SQL check below went through the Management API over HTTPS (`supabase db query --linked`). The runbook now has this as a troubleshooting note (`docs/runbooks/cloud-setup.md`).
+
+The coordinating agent ran the SQL, sign-in and secret checks on 8 October. For this entry the run's steps, the public key set, the HTTP answers and the GitHub names were checked again; nothing here wrote to the cloud.
+
+| Check | Status | Evidence | Date |
+| --- | --- | --- | --- |
+| Migrations and Edge Functions deploy | pass | [37816123967](https://github.com/k4ssymzhomart/uki/actions/runs/37816123967), Deploy Supabase on `main` at `f96a507`, started by hand (`workflow_dispatch`). The job "supabase db push and functions deploy" passed every step in 59 s: Secrets are set, `supabase link`, Copy the contracts into the functions, `supabase db push`, CORS origins for the functions, `supabase functions deploy` | 2026-10-08 |
+| Asymmetric JWT signing key | pass | The project's public key set (`/auth/v1/.well-known/jwks.json`) holds one ES256 key (EC, P-256), so `@supabase/server` accepts its tokens | 2026-10-08 |
+| Schema and row-level security | pass | 24 tables in `public`, every one with RLS on. The migration history has 16 migrations, the same 16 files as `supabase/migrations/` on `main` | 2026-10-08 |
+| Cron jobs and Vault secrets | pass | `cron.job` has `session_tick` and `retention_nightly`. Vault has `uki_project_url` and `uki_secret_key` (names checked, never values) | 2026-10-08 |
+| Edge Functions and their secrets | pass | 7 functions: `ingest`, `frames`, `command`, `stills`, `send-invites`, `shared-report`, `pilot-notify`. Function secrets set: `RESEND_API_KEY`, `UKI_EMAIL_SINK`, `UKI_WEB_URL`, `UKI_ALLOWED_ORIGINS` (names only) | 2026-10-08 |
+| The seed | pass | 1 workspace, 5 exams, 448 students, 20 questions. Physics 1's portal link is `https://uki-portal.vercel.app/physics-1/quiz-3`, which answers 200 | 2026-10-08 |
+| Staff and student sign-in | pass | The four staff accounts (Dana, Aigerim, Nurlan and Gulnara) each get HTTP 200 from the Auth API's password sign-in. An anonymous student sign-in works | 2026-10-08 |
+| The dashboard on Vercel | pass | `https://uki-web.vercel.app` answers 200 on `/`, `/sign-in` and `/pilot` (checked again at 22:55 Almaty time) | 2026-10-08 |
+| GitHub secrets and variables | pass | Secrets: `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, `SUPABASE_PROJECT_REF`. Variables: `CLOUD_DEPLOY=true`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `UKI_ALLOWED_ORIGINS`, `LOCK_DEV_PUBLIC_KEY`, `VITE_LOCK_EXTENSION_ID` (names from `gh secret list` and `gh variable list`) | 2026-10-08 |
+| Dana signs in on `uki-web.vercel.app` in your own browser, and 0.1 shows the seeded exams | pending | Hand check (You) | |
+| A merge to `main` deploys on its own | pending | The 0.10 row above: the next merge to `main` is the first automatic run with `CLOUD_DEPLOY=true` | |
+
+## P.17 Key rotation
+
+| Check | Status | Evidence | Date |
+| --- | --- | --- | --- |
+| The secret key, the database password and the Resend key that were exposed are replaced | pass (your report) | During P.2 on 8 October, the old secret key, the database password, the Resend key and the legacy `service_role` key were all still valid, so the rotation was still open. Later that day you said you had rotated them. No agent has checked since: agents hold neither the old nor the new values and must not use them | 2026-10-08 |
+| The legacy `anon` and `service_role` keys are turned off | pending | Your report did not say. Project Settings > API Keys > Legacy API keys shows whether they are disabled; Üki never uses them | |
+| Every copy of a rotated value is updated | pending | Each one stops something until it carries the new value. The secret key: `SUPABASE_SECRET_KEY` in your `.env.cloud` (the seed and demo scripts), and the Vault secret `uki_secret_key` (the database's calls to `retention` and `pilot-notify` through `pg_net`). The database password: the GitHub secret `SUPABASE_DB_PASSWORD` (the deploy's `link` and `db push`). The Resend key: the function secret `RESEND_API_KEY` (`send-invites` and `pilot-notify`). The Edge Functions get the project's own keys from the platform and need nothing | |
+| Proof that the new values work | pending | The next Deploy Supabase run is green (the database password); Send a test invite on 0.5 reaches your inbox (the Resend key); `select name, updated_at from vault.secrets` shows `uki_secret_key` updated after the rotation (the secret key) | |
+
+## P.18 Strings review sheets
+
+`pnpm i18n:export` wrote the sheets for the Kazakh and Russian read-through from `main` at `f96a507`: 1,541 strings, of which 181 are in the student app, 73 in Üki Lock, 16 in the email, 958 on the dashboard and 313 on the landing site; the 270 catalog strings have Kazakh.
+
+| File | What it holds |
+| --- | --- |
+| `docs/i18n/strings-review.xlsx` | Two sheets, "Russian review" (every string) and "Kazakh review" (the 270 with Kazakh). The header row is frozen and filterable, the text wraps, and every cell is text |
+| `docs/i18n/strings-review.csv` | Every string: key, where, en, ru, kk, source, notes; UTF-8 with a byte order mark, sorted by where, then key |
+| `docs/i18n/strings-review-kk.csv` | The 270 strings with Kazakh: key, where, en, kk, ru, notes |
+
+Edited Russian and Kazakh cells come back with `pnpm i18n:import <file.csv>`, which refuses the whole sheet on an unknown key or a string that fails the i18n build, such as a renamed placeholder (`packages/i18n/README.md`, "Review sheets"). The read-through itself is still yours (P.18, by Wednesday 14 October).
