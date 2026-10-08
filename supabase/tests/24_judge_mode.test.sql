@@ -72,6 +72,13 @@ begin
   perform set_config('role', 'authenticated', true);
 end $$;
 
+-- Back to the test's own role with no user: `reset role` alone keeps the last login's claims, and with
+-- them auth.uid(), which the observer guard reads.
+create function t.logout() returns void language plpgsql as $$
+begin
+  perform set_config('request.jwt.claims', '', true);
+end $$;
+
 create function t.anon() returns void language plpgsql as $$
 begin
   perform set_config('request.jwt.claims', json_build_object('role', 'anon')::text, true);
