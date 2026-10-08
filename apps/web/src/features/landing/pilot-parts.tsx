@@ -6,7 +6,8 @@ import { SiteHeader } from "./site-header.tsx";
 
 /**
  * The header band of /pilot (Figma 194:4015, 520 tall) on the generated moss-night art; Sent uses the
- * same art 380 tall without the pitch (195:4091).
+ * same art 380 tall without the pitch (195:4091). From 1280 the band is at least the frame's 520 and
+ * grows with a longer pitch, as the Russian one is, so the lead never runs out of the dark art.
  */
 export async function PilotBand({ locale, sent = false }: { locale: LandingLocale; sent?: boolean }) {
   const t = await getTranslations("dashboard.landing.pilot");
@@ -16,7 +17,7 @@ export async function PilotBand({ locale, sent = false }: { locale: LandingLocal
       className={
         sent
           ? "relative isolate h-60 overflow-clip lg:h-95"
-          : "relative isolate overflow-clip pb-20 xl:h-130 xl:pb-0"
+          : "relative isolate overflow-clip pb-20 xl:min-h-130 xl:pb-12"
       }
     >
       <Image
