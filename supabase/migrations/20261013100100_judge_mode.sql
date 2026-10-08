@@ -105,7 +105,7 @@ create table if not exists public.demo_live_views (
   exam_id uuid not null references public.exams on delete cascade,
   staff_id uuid not null references public.staff on delete cascade,
   seen_at timestamptz not null default now(),
-  primary key (exam_id, staff_id)
+  constraint demo_live_views_pkey primary key (exam_id, staff_id)
 );
 alter table public.demo_live_views enable row level security;
 revoke all on public.demo_live_views from public, anon, authenticated;
@@ -206,9 +206,10 @@ begin
   if not public.is_exam_staff(v_exam.id) then
     raise exception using message = 'forbidden', errcode = '42501';
   end if;
+  -- The constraint by name: the parameter `exam_id` would shadow the column in a column list here.
   insert into public.demo_live_views as v (exam_id, staff_id, seen_at)
   values (v_exam.id, v_uid, now())
-  on conflict (exam_id, staff_id) do update
+  on conflict on constraint demo_live_views_pkey do update
   set seen_at = excluded.seen_at
   where v.seen_at < excluded.seen_at - interval '15 seconds';
   return jsonb_build_object(
