@@ -1,0 +1,36 @@
+# Line endings (WP 0.12 in docs/phase-0-plan.md): every text file is LF in the index and in every
+# checkout, Windows included, so Biome, the guards and the tests read the same bytes on the Windows CI job
+# and on a lab PC as on the MacBook. Git for Windows' core.autocrlf no longer turns them into CRLF.
+* text=auto eol=lf
+
+# Images, including the SVG art exported from Figma: never converted, never merged line by line.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.icns binary
+*.svg binary
+
+# Fonts.
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+
+# Detection models, wasm and language data (fetched from the SHA-256 manifest, not in git).
+*.task binary
+*.tflite binary
+*.onnx binary
+*.bin binary
+*.wasm binary
+*.traineddata binary
+*.traineddata.gz binary
+
+# Archives, installers and documents.
+*.zip binary
+*.gz binary
+*.dmg binary
+*.exe binary
+*.pdf binary
