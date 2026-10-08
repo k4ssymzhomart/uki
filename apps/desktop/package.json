@@ -16,6 +16,7 @@
     "typecheck": "tsc --noEmit -p . && tsc --noEmit -p src/renderer && tsc --noEmit -p test",
     "test": "vitest run",
     "e2e": "electron-vite build --mode e2e && playwright test -c test/playwright.config.ts",
+    "e2e:realtime": "electron-vite build --mode e2e && playwright test -c test/playwright.realtime.config.ts",
     "e2e:cleanup": "tsx test/support/cleanup.ts"
   },
   "dependencies": {

@@ -76,7 +76,10 @@ export interface OutboxEvent {
 }
 
 /** Every row of one outbox table (raw IndexedDB; Dexie's database of the same name). */
-export async function outboxRows<T>(page: Page, table: "answers" | "events" | "stills"): Promise<T[]> {
+export async function outboxRows<T>(
+  page: Page,
+  table: "answers" | "events" | "stills" | "commands",
+): Promise<T[]> {
   return page.evaluate(
     ({ name, table }) =>
       new Promise<T[]>((resolve, reject) => {
