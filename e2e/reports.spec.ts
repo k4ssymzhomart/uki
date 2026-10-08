@@ -132,9 +132,9 @@ test("A.1 shows the term from the term views, by faculty, and Export PDF prints 
     // The term: in the breadcrumb and on the picker, with the term's numbers.
     const breadcrumb = `${message("dashboard.reports.title")} / ${termLabel(term)}`;
     await expect(page.getByRole("banner").getByText(breadcrumb)).toBeVisible();
-    await expect(page.getByRole("button", { name: message("dashboard.reports.filter.term") })).toHaveText(
-      termLabel(term),
-    );
+    await expect(
+      page.getByRole("button", { name: message("dashboard.reports.filter.term"), exact: true }),
+    ).toHaveText(termLabel(term));
     await expectTiles(page, all);
     const weekly = page.locator('[data-chart="weekly"]');
     await expect(weekly.getByRole("img")).toBeVisible();
@@ -157,9 +157,12 @@ test("A.1 shows the term from the term views, by faculty, and Export PDF prints 
         .select("name")
         .eq("id", facultyId)
         .single();
-      const picker = page.getByRole("button", { name: message("dashboard.reports.filter.faculty") });
+      const picker = page.getByRole("button", {
+        name: message("dashboard.reports.filter.faculty"),
+        exact: true,
+      });
       await picker.click();
-      await page.getByRole("menuitemcheckbox", { name: faculty?.name ?? "" }).click();
+      await page.getByRole("menuitemcheckbox", { name: faculty?.name ?? "", exact: true }).click();
       await expect(picker).toHaveText(faculty?.name ?? "");
       await expectTiles(page, await termKpis(term, facultyId));
       await expect.poll(() => auditIds(danaId, since)).toContain(`${term}:${facultyId}`);
@@ -180,12 +183,14 @@ test("A.1 shows the term from the term views, by faculty, and Export PDF prints 
         counted.ukiPrints = (counted.ukiPrints ?? 0) + 1;
       };
     });
-    await page.getByRole("button", { name: message("dashboard.reports.export") }).click();
+    await page.getByRole("button", { name: message("dashboard.reports.export"), exact: true }).click();
     expect(await page.evaluate(() => (window as Window & { ukiPrints?: number }).ukiPrints)).toBe(1);
 
     // Printing puts the reports page alone on one A4 sheet (Chromium's print to PDF, print media).
     await page.emulateMedia({ media: "print" });
-    await expect(page.getByRole("button", { name: message("dashboard.reports.export") })).toBeHidden();
+    await expect(
+      page.getByRole("button", { name: message("dashboard.reports.export"), exact: true }),
+    ).toBeHidden();
     await expect(page.getByRole("navigation")).toBeHidden();
     // The printout names the workspace, the faculty and the term above the tiles.
     await expect(page.locator("[data-print-root]").getByText(breadcrumb)).toBeVisible();
