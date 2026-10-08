@@ -12,7 +12,7 @@
 //                whole time, so only ingest replies can carry the two commands.
 //   - restart:   `docker restart`, and the pause as soon as Realtime stops answering.
 //   - reconnect: `docker restart`, and the pause as soon as Realtime answers again, while the app's
-//                channel is still rejoining.
+//                channel rejoins (the channel sometimes wins that race, and the broadcast brings it).
 //   In these two the resume goes out once the app's channel has joined again.
 // In the last two the first path wins: an ingest reply, the catch-up read when the channel joins
 // again, or the broadcast. Every arrival of a command at the window (Realtime frame, ingest reply,
@@ -72,7 +72,7 @@ const VARIANTS: Variant[] = Array.from(
 const TITLES: Record<Variant, string> = {
   stop: "Realtime stopped, a pause right after a heartbeat and the resume each arrive with an ingest reply within about 10 s",
   restart: "Realtime restarting, a pause sent while it is down shows 2.1c within about 10 s",
-  reconnect: "Realtime back before the channel joins, the pause shows 2.1c within about 10 s",
+  reconnect: "the pause as Realtime answers again, while the channel rejoins, shows 2.1c within about 10 s",
 };
 /**
  * "Within about 10 s": the app calls ingest at least every 10 s (THRESHOLDS.outbox.ingestHeartbeatMs,
@@ -433,12 +433,14 @@ for (const [index, variant] of VARIANTS.entries()) {
       await docker;
       docker = null;
       const upAt = await ping.waitFor(true, downAt, 90_000, "Realtime back");
-      const rejoinedAt = await pollUntil(
+      const polledAt = await pollUntil(
         () => network.channelUp(sessionId),
         90_000,
         "session channel joined again",
         100,
       );
+      // The join itself, from its reply frame (it may come before the pause, in a reconnect round).
+      const rejoinedAt = network.joinsBetween(sessionId, downAt, polledAt)[0] ?? polledAt;
 
       // restart and reconnect: the wall's Resume once the channel is back. 2.1 returns,
       const resume = resumeWhileDown ?? (await sendAndTime(page, "resume", "2.1"));
