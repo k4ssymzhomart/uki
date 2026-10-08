@@ -128,8 +128,10 @@ test("2.4d: requests reach both proctors' walls; Reply sends a message, Mark don
     const proctor = await staffClient(STAFF.aigerim);
     const samples: { id: string; atMs: number; aigerimMs: number; gulnaraMs: number }[] = [];
     try {
-      for (let i = 0; i < SAMPLES; i += 1) {
-        const student = fixture.students[i % fixture.students.length] ?? madina;
+      // One warm-up request first, not counted: the first call after the functions start pays for a
+      // cold isolate (about 2 s locally), which is not what a proctor sees during an exam.
+      for (let i = -1; i < SAMPLES; i += 1) {
+        const student = fixture.students[Math.max(0, i) % fixture.students.length] ?? madina;
         const marks = await Promise.all([badgeMark(aigerim), badgeMark(gulnara)]);
         const { sent } = await ingest(student, [
           draft("student.help_requested", {
@@ -143,12 +145,13 @@ test("2.4d: requests reach both proctors' walls; Reply sends a message, Mark don
           badgeReached(aigerim, 1, marks[0]),
           badgeReached(gulnara, 1, marks[1]),
         ]);
-        samples.push({
-          id: event.id,
-          atMs: event.atMs,
-          aigerimMs: seenA - event.atMs,
-          gulnaraMs: seenB - event.atMs,
-        });
+        if (i >= 0)
+          samples.push({
+            id: event.id,
+            atMs: event.atMs,
+            aigerimMs: seenA - event.atMs,
+            gulnaraMs: seenB - event.atMs,
+          });
         // Mark done through the RPC as the proctor, so the next sample starts from no open request.
         const { data: open } = await admin
           .from("help_requests")

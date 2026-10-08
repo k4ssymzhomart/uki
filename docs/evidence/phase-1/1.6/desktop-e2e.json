@@ -1,21 +1,21 @@
 {
-  "date": "2026-10-08T12:10:19.063Z",
+  "date": "2026-10-08T12:13:15.158Z",
   "offlineSeconds": 20,
   "kiosk": false,
   "latencyMs": {
-    "start": 46,
-    "pause": 75,
-    "resume": 76,
-    "message": 48,
-    "add_time": 46,
-    "reply": 16,
-    "end": 61
+    "start": 25,
+    "pause": 99,
+    "resume": 126,
+    "message": 35,
+    "add_time": 128,
+    "reply": 31,
+    "end": 40
   },
   "functionMs": {
-    "pause": 79,
-    "resume": 78,
-    "message": 48,
-    "add_time": 72
+    "pause": 110,
+    "resume": 163,
+    "message": 35,
+    "add_time": 137
   },
   "commandRetries": {},
   "checkAgainPresses": 0,
@@ -26,10 +26,10 @@
   },
   "offline": {
     "cutSeconds": 20,
-    "bannerAfterMs": 5315,
+    "bannerAfterMs": 5310,
     "queuedAnswers": 5,
-    "recoveredAfterMs": 81,
-    "syncedAfterMs": 416,
+    "recoveredAfterMs": 89,
+    "syncedAfterMs": 403,
     "answersLocal": 9,
     "answersServer": 9,
     "answersWaitingAtReconnect": 5,
@@ -42,12 +42,12 @@
     "duplicates": 0,
     "netOffline": {
       "queued": 11,
-      "offline_ms": 20058
+      "offline_ms": 20067
     },
     "netOfflineEvents": [
       {
         "queued": 11,
-        "offline_ms": 20058
+        "offline_ms": 20067
       }
     ],
     "framesDuringCut": [
@@ -57,7 +57,7 @@
     "requestsThroughDuringCut": []
   },
   "identity": {
-    "recoveredAfterMs": 6358,
+    "recoveredAfterMs": 6328,
     "event": {
       "score": 0.93,
       "tries": 5
@@ -65,7 +65,7 @@
   },
   "identityHelp": {
     "cardNumberShown": "another student's (20230912)",
-    "helpFrameAfterMs": 11372,
+    "helpFrameAfterMs": 11377,
     "helpEventsOnServer": 1,
     "helpEvent": {
       "type": "student.help_requested",
@@ -80,11 +80,11 @@
   },
   "rules": {
     "stamp": {
-      "rules_accepted_at": "2026-10-08T12:10:55.355055+00:00",
+      "rules_accepted_at": "2026-10-08T12:13:49.413054+00:00",
       "rules_locale": "en"
     },
     "afterLanguageSwitches": {
-      "rules_accepted_at": "2026-10-08T12:10:55.355055+00:00",
+      "rules_accepted_at": "2026-10-08T12:13:49.413054+00:00",
       "rules_locale": "en"
     }
   },
@@ -94,8 +94,8 @@
       "text": "Q 8: is the angle in radians or degrees?",
       "done": false
     },
-    "sendToServerMs": 1271,
-    "replyToScreenMs": 16
+    "sendToServerMs": 802,
+    "replyToScreenMs": 31
   },
   "phone": {
     "stillsConfirmed": 3,
@@ -111,48 +111,48 @@
       0.76953125
     ],
     "phoneMs": [
-      64.5,
-      50.8,
-      59.1,
-      55.2,
-      73.2,
-      48.9,
-      49.8,
-      54.3
+      47.1,
+      46,
+      51.7,
+      50.3,
+      45.9,
+      45.9,
+      45.9,
+      46.2
     ],
     "phoneChecksPerS": [
+      2,
+      2,
+      2,
+      2.5,
       2.5,
       2.5,
       2,
-      2,
-      2.5,
-      2.5,
-      2.5,
       2
     ],
     "fps": [
       15,
+      16,
+      15,
+      14,
+      13,
       13,
       14,
-      14,
-      13,
-      13,
-      14,
-      14
+      15
     ],
     "rulesPaused": false,
-    "warningAfterMs": 725,
+    "warningAfterMs": 573,
     "review": "flag",
     "data": {
       "score": 0.77,
-      "held_ms": 458
+      "held_ms": 465
     },
     "frameCount": 3
   },
   "receipt": {
-    "receiptId": "UKI-204-3117-MT",
-    "pdfBytes": 27106,
-    "timeUsedS": 49
+    "receiptId": "UKI-204-6334-MT",
+    "pdfBytes": 28401,
+    "timeUsedS": 50
   },
   "frames": [
     "1.1-kk",

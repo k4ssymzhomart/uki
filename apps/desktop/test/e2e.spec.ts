@@ -600,11 +600,9 @@ test("2.1 (Phase 1): Ask proctor reaches the proctor, and the reply shows as 2.1
   await shotInEveryLanguage(page, "2.1-ask");
   const askedAt = Date.now();
   await sheet.getByRole("button", { name: en.lock.ask.send }).click();
-  await expect(sheet).toBeHidden();
-  await expect(page.getByText(en.lock.ask.body)).toBeVisible();
-  await shot(page, "2.1-help-requested-en");
-  // Through the outbox and ingest: one help request with the topic and the note.
-  const help = await until(
+  // Through the outbox and ingest: one help request with the topic and the note. Polled every 300 ms
+  // from the click on, while the screen is checked and photographed.
+  const stored = until(
     async () => {
       const { data } = await admin()
         .from("help_requests")
@@ -616,11 +614,15 @@ test("2.1 (Phase 1): Ask proctor reaches the proctor, and the reply shows as 2.1
     (rows) => rows.length === 1,
     90_000,
     "the help request on the server",
-  );
+  ).then((rows) => ({ rows, at: Date.now() }));
+  await expect(sheet).toBeHidden();
+  await expect(page.getByText(en.lock.ask.body)).toBeVisible();
+  await shot(page, "2.1-help-requested-en");
+  const { rows: help, at: storedAt } = await stored;
   const request = help[0];
   if (request === undefined) throw new Error("no help request");
   expect(request.text).toBe("Q 8: is the angle in radians or degrees?");
-  const queuedMs = Date.now() - askedAt;
+  const queuedMs = storedAt - askedAt;
   // The lead proctor replies on 2.4d (close_help_request with a reply): a message command, shown as 2.1e.
   const seen = await armFrameWatch(page, "2.1e");
   const sentAt = Date.now();
