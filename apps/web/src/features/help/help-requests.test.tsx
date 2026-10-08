@@ -95,23 +95,24 @@ describe("2.4d Ask proctor requests", () => {
     expect(screen.queryByRole("button", { name: /^Requests/ })).toBeNull();
   });
 
-  it("lists the open requests oldest first with reason, time, note, Reply and Mark done", async () => {
-    renderWall([helpRequest(2), helpRequest(1)]);
+  it("lists the open requests newest first with reason, time, note, Reply and Mark done", async () => {
+    renderWall([helpRequest(1), helpRequest(2)]);
     const popover = await openPopover();
     expect(within(popover).getByText("Requests")).toBeTruthy();
     expect(within(popover).getByText("2 open")).toBeTruthy();
     const rows = within(popover).getAllByRole("listitem");
-    expect(rows[0]?.querySelector("[data-tone='lime']")?.textContent).toBe("MT");
-    expect(rows[0]?.textContent).toContain("Madina T.");
-    expect(rows[0]?.textContent).toContain("Question is unclear");
-    expect(rows[0]?.textContent).toContain("10:45");
-    expect(rows[0]?.textContent).toContain("“Q 8: is the angle in radians or degrees?”");
-    expect(rows[1]?.textContent).toContain("Arman B.");
+    // Newest first, as 2.4d lists them: Arman asked at 10:46, Madina at 10:45.
+    expect(rows[0]?.textContent).toContain("Arman B.");
     expect(
-      within(rows[1] as HTMLElement)
+      within(rows[0] as HTMLElement)
         .getByText("Technical problem")
         .getAttribute("data-tone"),
     ).toBe("warn");
+    expect(rows[1]?.querySelector("[data-tone='lime']")?.textContent).toBe("MT");
+    expect(rows[1]?.textContent).toContain("Madina T.");
+    expect(rows[1]?.textContent).toContain("Question is unclear");
+    expect(rows[1]?.textContent).toContain("10:45");
+    expect(rows[1]?.textContent).toContain("“Q 8: is the angle in radians or degrees?”");
     expect(within(popover).getAllByRole("button", { name: "Reply" })).toHaveLength(2);
     expect(within(popover).getAllByRole("button", { name: "Mark done" })).toHaveLength(2);
     expect(within(popover).getByText("Replies go to one student, in their language.")).toBeTruthy();

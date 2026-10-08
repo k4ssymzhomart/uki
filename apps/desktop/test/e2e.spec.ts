@@ -706,6 +706,15 @@ test("2.3: no face pauses the exam and I'm here resumes it", async () => {
   await setScene(page, { subject: "present" });
   const resume = button(page, en.exam.paused.resume);
   await expect(resume).toBeEnabled({ timeout: 15_000 });
+  // Phase 1: Ask proctor stays reachable above 2.3's veil (the first element at its centre is itself).
+  const ask = button(page, en.action.ask_proctor);
+  await expect(ask).toBeEnabled();
+  expect(
+    await ask.evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      return document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)?.closest("button") === el;
+    }),
+  ).toBe(true);
   await shotInEveryLanguage(page, "2.3");
   await resume.click();
   await waitForFrame(page, "2.1", 15_000);

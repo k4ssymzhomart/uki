@@ -37,9 +37,9 @@ const done = (request: HelpRequest): HelpRequest => ({
 });
 
 describe("2.4d requests", () => {
-  it("lists open requests oldest first and counts them for the badge", () => {
-    const state = initialHelpState([help(2), help(1)]);
-    expect(openRequests(state).map((r) => r.student_name)).toEqual(["Kamila Rakhimova", "Saule Tokhtarova"]);
+  it("lists open requests newest first, as 2.4d does, and counts them for the badge", () => {
+    const state = initialHelpState([help(1), help(2)]);
+    expect(openRequests(state).map((r) => r.student_name)).toEqual(["Saule Tokhtarova", "Kamila Rakhimova"]);
     expect(openCount(state)).toBe(2);
     expect(openRequests(state)).toBe(openRequests(state));
     expect(hasOpenRequest(state, help(1).session_id)).toBe(true);
@@ -63,7 +63,7 @@ describe("2.4d requests", () => {
     // The read began before help 2 was closed and before help 3 arrived.
     const during = applyHelp(closed, help(3));
     const merged = mergeOpenHelp(during, [help(1), help(2)], new Set([help(3).id]));
-    expect(openRequests(merged).map((r) => r.id)).toEqual([help(1).id, help(3).id]);
+    expect(openRequests(merged).map((r) => r.id)).toEqual([help(3).id, help(1).id]);
     // A read that finds nothing open empties the list.
     expect(openCount(mergeOpenHelp(merged, []))).toBe(0);
     // The same list again changes nothing.

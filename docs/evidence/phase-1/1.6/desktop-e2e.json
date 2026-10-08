@@ -1,0 +1,220 @@
+{
+  "date": "2026-10-08T11:59:06.430Z",
+  "offlineSeconds": 20,
+  "kiosk": false,
+  "latencyMs": {
+    "start": 1761,
+    "pause": 118,
+    "resume": 186,
+    "message": 59,
+    "add_time": 27,
+    "reply": 413,
+    "end": 196
+  },
+  "functionMs": {
+    "pause": 125,
+    "resume": 205,
+    "message": 60,
+    "add_time": 30
+  },
+  "commandRetries": {},
+  "checkAgainPresses": 0,
+  "pairing": {
+    "code": "6 digits",
+    "helloStudent": "Madina Tulegenova",
+    "paired": true
+  },
+  "offline": {
+    "cutSeconds": 20,
+    "bannerAfterMs": 5477,
+    "queuedAnswers": 5,
+    "recoveredAfterMs": 87,
+    "syncedAfterMs": 403,
+    "answersLocal": 9,
+    "answersServer": 9,
+    "answersWaitingAtReconnect": 5,
+    "eventsWaitingAtReconnect": 6,
+    "appEventsServer": 15,
+    "seqRange": [
+      0,
+      14
+    ],
+    "duplicates": 0,
+    "netOffline": {
+      "queued": 11,
+      "offline_ms": 20053
+    },
+    "netOfflineEvents": [
+      {
+        "queued": 1,
+        "offline_ms": 17469
+      },
+      {
+        "queued": 11,
+        "offline_ms": 20053
+      }
+    ],
+    "framesDuringCut": [
+      "1s 2.1",
+      "5s 2.1a"
+    ],
+    "requestsThroughDuringCut": []
+  },
+  "identity": {
+    "recoveredAfterMs": 6329,
+    "event": {
+      "score": 0.93,
+      "tries": 5
+    }
+  },
+  "identityHelp": {
+    "cardNumberShown": "another student's (20230912)",
+    "helpFrameAfterMs": 8966,
+    "helpEventsOnServer": 1,
+    "helpEvent": {
+      "type": "student.help_requested",
+      "source": "app",
+      "review": "log",
+      "data": {
+        "topic": "identity"
+      }
+    },
+    "sessionStateDuringHelp": "identity",
+    "matchedOnTry": 5
+  },
+  "rules": {
+    "stamp": {
+      "rules_accepted_at": "2026-10-08T11:59:45.29274+00:00",
+      "rules_locale": "en"
+    },
+    "afterLanguageSwitches": {
+      "rules_accepted_at": "2026-10-08T11:59:45.29274+00:00",
+      "rules_locale": "en"
+    }
+  },
+  "askProctor": {
+    "request": {
+      "topic": "question",
+      "text": "Q 8: is the angle in radians or degrees?",
+      "done": false
+    },
+    "sendToServerMs": 1622,
+    "replyToScreenMs": 413
+  },
+  "phone": {
+    "stillsConfirmed": 3,
+    "examPhoneScore": 0.7,
+    "scores": [
+      0,
+      0.76953125,
+      0.76953125,
+      0.76953125,
+      0.76953125,
+      0.76953125,
+      0.76953125,
+      0.76953125
+    ],
+    "phoneMs": [
+      75.3,
+      63.4,
+      63.4,
+      60.2,
+      72.1,
+      298.3,
+      104.5,
+      100.1
+    ],
+    "phoneChecksPerS": [
+      2,
+      2.5,
+      2.5,
+      2,
+      2,
+      2.5,
+      2.5,
+      2
+    ],
+    "fps": [
+      14,
+      14,
+      14,
+      9,
+      9,
+      8,
+      7,
+      12
+    ],
+    "rulesPaused": false,
+    "warningAfterMs": 721,
+    "review": "flag",
+    "data": {
+      "score": 0.77,
+      "held_ms": 462
+    },
+    "frameCount": 3
+  },
+  "receipt": {
+    "receiptId": "UKI-204-7909-MT",
+    "pdfBytes": 27180,
+    "timeUsedS": 71
+  },
+  "frames": [
+    "1.1-kk",
+    "1.1-ru",
+    "1.1-en",
+    "1.1a-en",
+    "1.1a-kk",
+    "1.1a-ru",
+    "1.2-en",
+    "1.2-kk",
+    "1.2-ru",
+    "E.3-app-en",
+    "E.3-app-kk",
+    "E.3-app-ru",
+    "1.3-checking-en",
+    "1.3a-en",
+    "1.3a-kk",
+    "1.3a-ru",
+    "1.3-en",
+    "1.3-kk",
+    "1.3-ru",
+    "1.4-en",
+    "1.4-kk",
+    "1.4-ru",
+    "1.4a-en",
+    "1.4a-kk",
+    "1.4a-ru",
+    "2.1-en",
+    "2.1-kk",
+    "2.1-ru",
+    "2.1a-en",
+    "2.1a-kk",
+    "2.1a-ru",
+    "2.1c-en",
+    "2.1c-kk",
+    "2.1c-ru",
+    "2.1e-en",
+    "2.1e-kk",
+    "2.1e-ru",
+    "2.1e-time-en",
+    "2.1-ask-en",
+    "2.1-ask-kk",
+    "2.1-ask-ru",
+    "2.1-help-requested-en",
+    "2.1e-reply-en",
+    "2.1e-reply-kk",
+    "2.1e-reply-ru",
+    "2.2-en",
+    "2.2-kk",
+    "2.2-ru",
+    "2.3-en",
+    "2.3-kk",
+    "2.3-ru",
+    "3.1-en",
+    "3.1-kk",
+    "3.1-ru",
+    "2.1d-en",
+    "2.1d-kk",
+    "2.1d-ru"
+  ]
+}

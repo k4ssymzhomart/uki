@@ -2,7 +2,7 @@
 // broadcast on exam:{exam_id} and the wall's catch-up reads. A request leaves the list when a `help`
 // message carries its done_at (Mark done or Reply on any proctor's wall), and a later read never
 // brings it back.
-import { type HelpRequest, type HelpTopic, sortHelpRequests } from "@uki/contracts";
+import { type HelpRequest, type HelpTopic, toMs } from "@uki/contracts";
 import type { HelpReasonTone } from "@uki/ui";
 
 export interface HelpState {
@@ -78,11 +78,16 @@ function sameRequest(a: HelpRequest, b: HelpRequest): boolean {
 
 const sortedCache = new WeakMap<object, HelpRequest[]>();
 
-/** Open requests, oldest first: the order of 2.4d. Cached per state. */
+/**
+ * Open requests, newest first, as 2.4d lists them (Kamila's 10:46 above Saule's 10:44). Cached per
+ * state.
+ */
 export function openRequests(state: HelpState): HelpRequest[] {
   const hit = sortedCache.get(state.open);
   if (hit) return hit;
-  const sorted = sortHelpRequests(Object.values(state.open));
+  const sorted = Object.values(state.open).sort(
+    (a, b) => toMs(b.created_at) - toMs(a.created_at) || (a.id < b.id ? 1 : -1),
+  );
   sortedCache.set(state.open, sorted);
   return sorted;
 }
