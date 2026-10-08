@@ -68,10 +68,11 @@ describe("createScreenlessLockdown", () => {
 });
 
 describe("hasDevEscape", () => {
-  it("keeps the escape in development builds and the lab zip only", () => {
+  it("keeps the escape in development builds and the lab and smoke zips only", () => {
     expect(hasDevEscape(false, "development")).toBe(true);
     expect(hasDevEscape(false, "e2e")).toBe(true);
     expect(hasDevEscape(true, "lab")).toBe(true);
+    expect(hasDevEscape(true, "smoke")).toBe(true);
     // The shipped zip, the installer and the MacBook's dmg.
     expect(hasDevEscape(true, "production")).toBe(false);
     expect(hasDevEscape(true, "e2e")).toBe(false);

@@ -12,15 +12,24 @@ export type WindowOptions = {
   preloadPath: string;
   /** Development: the electron-vite dev server that serves the renderer pages. */
   devServerUrl?: string | undefined;
-  /** Content protection stays on unless this is a development build run with UKI_ALLOW_CAPTURE=1. */
+  /**
+   * Content protection stays on unless this is a development build run with UKI_ALLOW_CAPTURE=1, or the
+   * smoke build.
+   */
   allowCapture: boolean;
   /** DevTools only in development builds. */
   devTools: boolean;
+  /** The smoke build only: a window title that names the build. Otherwise the app's name, Üki. */
+  title?: string | undefined;
 };
 
-/** Content protection is skipped only in an unpackaged (development) build with UKI_ALLOW_CAPTURE=1. */
-export function shouldAllowCapture(isPackaged: boolean, env: NodeJS.ProcessEnv): boolean {
-  return !isPackaged && env.UKI_ALLOW_CAPTURE === "1";
+/**
+ * Content protection is skipped only in an unpackaged (development) build with UKI_ALLOW_CAPTURE=1, and in
+ * the smoke build (`electron-vite build --mode smoke`, never shipped), whose window must show over Remote
+ * Desktop and in screenshots of the smoke box. `mode` is Vite's build mode, fixed at build time.
+ */
+export function shouldAllowCapture(isPackaged: boolean, env: NodeJS.ProcessEnv, mode: string): boolean {
+  return mode === "smoke" || (!isPackaged && env.UKI_ALLOW_CAPTURE === "1");
 }
 
 export function createMainWindow(options: WindowOptions): BrowserWindow {
@@ -28,6 +37,7 @@ export function createMainWindow(options: WindowOptions): BrowserWindow {
     ...WINDOW_SIZE,
     show: false,
     backgroundColor: colour("bg-canvas"),
+    ...(options.title ? { title: options.title } : {}),
     // macOS: the native traffic lights sit inside App/Title bar (packages/ui AppTitleBar).
     ...(process.platform === "darwin" ? { titleBarStyle: "hiddenInset" as const } : {}),
     webPreferences: {

@@ -11,6 +11,7 @@ import { PACKAGED_KOFFI_DIR } from "./keyboard-hook-win32.ts";
 const yml = readFileSync(new URL("../../electron-builder.yml", import.meta.url), "utf8");
 const afterPack = readFileSync(new URL("../../build/after-pack.cjs", import.meta.url), "utf8");
 const labYml = readFileSync(new URL("../../electron-builder.lab.yml", import.meta.url), "utf8");
+const smokeYml = readFileSync(new URL("../../electron-builder.smoke.yml", import.meta.url), "utf8");
 const pkg = JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8")) as {
   scripts: Record<string, string>;
   dependencies: Record<string, string>;
@@ -88,6 +89,32 @@ describe("electron-builder.lab.yml", () => {
     );
     // The shipped build never uses lab mode.
     expect(scripts.dist).not.toMatch(/--mode|lab/);
+  });
+});
+
+describe("electron-builder.smoke.yml", () => {
+  it("builds the smoke zip from the same config under its own name and folder", () => {
+    expect(/^extends:\s*(.+)$/m.exec(smokeYml)?.[1]?.trim()).toBe("./electron-builder.yml");
+    expect(/^artifactName:\s*(.+)$/m.exec(smokeYml)?.[1]?.trim()).toBe(
+      // biome-ignore lint/suspicious/noTemplateCurlyInString: electron-builder's own ${macro} syntax
+      "Uki-smoke-${version}-${arch}.${ext}",
+    );
+    expect(/^\s+output:\s*(.+)$/m.exec(smokeYml)?.[1]?.trim()).toBe("release/smoke");
+    // Nothing else changes: the same app id, product name, files, fuses hook and Windows resources.
+    const keys = [...smokeYml.matchAll(/^(\w+):/gm)].map(([, key]) => key);
+    expect(keys).toEqual(["extends", "artifactName", "directories"]);
+  });
+
+  it("is built in smoke mode as the Windows x64 zip only, by its own script", () => {
+    expect(scripts["dist:smoke"]).toBe(
+      "electron-vite build --mode smoke && electron-builder --config electron-builder.smoke.yml --win zip --x64",
+    );
+    // The shipped build never uses smoke mode, and no other script builds it.
+    expect(scripts.dist).not.toMatch(/--mode|smoke/);
+    const smokeScripts = Object.entries(scripts).filter(([, command]) =>
+      /--mode smoke|smoke\.yml/.test(command),
+    );
+    expect(smokeScripts.map(([name]) => name)).toEqual(["dist:smoke"]);
   });
 });
 

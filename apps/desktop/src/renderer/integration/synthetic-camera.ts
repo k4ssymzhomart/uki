@@ -1,9 +1,9 @@
-// A synthetic camera for development and e2e builds only (camera-mode.ts): a 640 × 480 canvas stream
-// drawn from the brand kit's evidence pictures, fed to the same detection pipeline as a real camera.
-// Production builds never import this module.
+// A synthetic camera for development, e2e and smoke builds only (camera-mode.ts): a 640 × 480 canvas
+// stream drawn from the brand kit's evidence pictures, fed to the same detection pipeline as a real
+// camera. Production builds never import this module.
 //
-// The picture follows a scene the test (or a developer in DevTools) sets through
-// window.ukiSyntheticCamera.set({ ... }):
+// The picture follows a scene the test (or a developer in DevTools, or Ctrl+Shift+S in the smoke build:
+// overlay/smoke-marker.dev.tsx) sets through window.ukiSyntheticCamera.set({ ... }):
 //   subject  "present" (one student looking at the screen), "phone" (the same student holding a phone),
 //            "absent" (the empty seat)
 //   card     "auto" shows a student card in the 1.3 card frame while the identity check runs, with the
@@ -34,7 +34,7 @@ export interface SyntheticCameraControl {
 
 declare global {
   interface Window {
-    /** Development and e2e builds with the synthetic camera only. */
+    /** Development, e2e and smoke builds with the synthetic camera only. */
     ukiSyntheticCamera?: SyntheticCameraControl;
   }
 }
