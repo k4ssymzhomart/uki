@@ -713,8 +713,8 @@
     "ru": "Windows: если SmartScreen предупреждает, выберите «Подробнее», затем «Выполнить в любом случае». Перед распаковкой архива отметьте «Разблокировать» в его свойствах."
   },
   "dashboard.landing.download.note.lock": {
-    "en": "Üki Lock: open chrome://extensions or edge://extensions, turn on Developer mode and drag the zip onto the page. Then start the Üki app and pair with the 6-digit code it shows.",
-    "ru": "Üki Lock: откройте chrome://extensions или edge://extensions, включите режим разработчика и перетащите архив на страницу. Затем запустите приложение Üki и подключитесь по 6-значному коду, который оно покажет."
+    "en": "Üki Lock: unzip it into a folder you keep. Open chrome://extensions or edge://extensions, turn on Developer mode, choose Load unpacked and pick that folder. Then start the Üki app and pair with the 6-digit code it shows.",
+    "ru": "Üki Lock: распакуйте архив в папку, которую не будете удалять. Откройте chrome://extensions или edge://extensions, включите режим разработчика, нажмите «Загрузить распакованное расширение» и выберите эту папку. Затем запустите приложение Üki и подключитесь по 6-значному коду, который оно покажет."
   },
   "dashboard.landing.download.all": {
     "en": "All files and checksums on GitHub",

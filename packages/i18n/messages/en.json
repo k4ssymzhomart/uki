@@ -97,7 +97,7 @@
           "title": "macOS · Intel"
         },
         "note": {
-          "lock": "Üki Lock: open chrome://extensions or edge://extensions, turn on Developer mode and drag the zip onto the page. Then start the Üki app and pair with the 6-digit code it shows.",
+          "lock": "Üki Lock: unzip it into a folder you keep. Open chrome://extensions or edge://extensions, turn on Developer mode, choose Load unpacked and pick that folder. Then start the Üki app and pair with the 6-digit code it shows.",
           "mac": "macOS: drag Üki to Applications, then right-click it and choose Open. On macOS 15 and later, choose Open Anyway in System Settings › Privacy & Security.",
           "windows": "Windows: if SmartScreen warns you, choose More info, then Run anyway. Before unzipping the zip, tick Unblock in its Properties."
         },
