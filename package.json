@@ -31,7 +31,7 @@
     "seed:staff": "tsx scripts/seed-staff.ts",
     "demo:reset": "tsx scripts/demo-reset.ts",
     "demo:simulate": "tsx scripts/demo-simulate.ts",
-    "typecheck:functions": "tsc --noEmit -p supabase/functions/tsconfig.json && tsc --noEmit -p test/integration/tsconfig.json",
+    "typecheck:functions": "(tsx scripts/sync-contracts.ts --check || pnpm functions:sync) && tsc --noEmit -p supabase/functions/tsconfig.json && tsc --noEmit -p test/integration/tsconfig.json",
     "typecheck:scripts": "tsc --noEmit -p scripts/lib/tsconfig.json",
     "typecheck:e2e": "tsc --noEmit -p e2e/tsconfig.json",
     "test:scripts": "vitest run -c scripts/lib/vitest.config.ts",
