@@ -1,0 +1,1255 @@
+{
+  "$comment": "Landing site strings (WP 1.13): key to { en, ru }. English from the Figma Landing frames (114:2039, 192:3586, 194:4014, 195:4090, 196:4125, 197:4144); drafts for your read-through on Monday 12. FAQ answers 2 to 6, the pilot form's role and size options and its error lines have no frame: drafted from the other frames' copy, review needed. The Russian is a first pass by the agent (WP 1.13): native review needed, P.18.",
+  "dashboard.landing.meta.home.title": {
+    "en": "Üki · Proctoring that never leaves the laptop",
+    "ru": "Üki · Прокторинг, который не покидает ноутбук"
+  },
+  "dashboard.landing.meta.home.description": {
+    "en": "Browser lock, gaze control and phone detection run on the student’s device. Proctors get flagged moments, never video.",
+    "ru": "Блокировка браузера, контроль взгляда и поиск телефона работают на устройстве студента. Прокторы получают отмеченные моменты, а не видео."
+  },
+  "dashboard.landing.meta.pilot.title": {
+    "en": "Book a pilot · Üki",
+    "ru": "Заявка на пилот · Üki"
+  },
+  "dashboard.landing.meta.privacy.title": {
+    "en": "Privacy policy · Üki",
+    "ru": "Политика конфиденциальности · Üki"
+  },
+  "dashboard.landing.meta.terms.title": {
+    "en": "Terms of use · Üki",
+    "ru": "Условия использования · Üki"
+  },
+  "dashboard.landing.nav.label": {
+    "en": "Site",
+    "ru": "Сайт"
+  },
+  "dashboard.landing.nav.home": {
+    "en": "Üki home",
+    "ru": "Üki, главная"
+  },
+  "dashboard.landing.nav.product": {
+    "en": "Product",
+    "ru": "Продукт"
+  },
+  "dashboard.landing.nav.howItWorks": {
+    "en": "How it works",
+    "ru": "Как это работает"
+  },
+  "dashboard.landing.nav.privacy": {
+    "en": "Privacy",
+    "ru": "Приватность"
+  },
+  "dashboard.landing.nav.universities": {
+    "en": "Universities",
+    "ru": "Университетам"
+  },
+  "dashboard.landing.nav.faq": {
+    "en": "FAQ",
+    "ru": "Вопросы"
+  },
+  "dashboard.landing.nav.signIn": {
+    "en": "Sign in",
+    "ru": "Войти"
+  },
+  "dashboard.landing.nav.bookPilot": {
+    "en": "Book a pilot",
+    "ru": "Заказать пилот"
+  },
+  "dashboard.landing.nav.openMenu": {
+    "en": "Open the menu",
+    "ru": "Открыть меню"
+  },
+  "dashboard.landing.nav.closeMenu": {
+    "en": "Close the menu",
+    "ru": "Закрыть меню"
+  },
+  "dashboard.landing.lang.label": {
+    "en": "Language",
+    "ru": "Язык"
+  },
+  "dashboard.landing.hero.badge": {
+    "en": "New",
+    "ru": "Новое"
+  },
+  "dashboard.landing.hero.announcement": {
+    "en": "Üki Lock for LMS exams",
+    "ru": "Üki Lock для экзаменов в LMS"
+  },
+  "dashboard.landing.hero.title.line1": {
+    "en": "Proctoring that never",
+    "ru": "Прокторинг, который никогда"
+  },
+  "dashboard.landing.hero.title.line2": {
+    "en": "leaves <accent>the laptop.</accent>",
+    "ru": "не покидает <accent>ноутбук.</accent>"
+  },
+  "dashboard.landing.hero.title.mobile": {
+    "en": "Proctoring that never leaves the laptop.",
+    "ru": "Прокторинг, который никогда не покидает ноутбук."
+  },
+  "dashboard.landing.hero.lead": {
+    "en": "Browser lock, gaze control and phone detection run on the student’s device. Proctors get flagged moments, never video.",
+    "ru": "Блокировка браузера, контроль взгляда и поиск телефона работают на устройстве студента. Прокторы получают отмеченные моменты, а не видео."
+  },
+  "dashboard.landing.hero.bookPilot": {
+    "en": "Book a pilot",
+    "ru": "Заказать пилот"
+  },
+  "dashboard.landing.hero.seeDemo": {
+    "en": "See the demo",
+    "ru": "Смотреть демо"
+  },
+  "dashboard.landing.hero.case": {
+    "en": "KRU × Qostanai Hub · Case 3",
+    "ru": "КРУ × Qostanai Hub · Кейс 3"
+  },
+  "dashboard.landing.hero.shotAlt": {
+    "en": "The live wall in the Üki dashboard: Mathematics 2 with 125 students, flagged students first.",
+    "ru": "Экран наблюдения в панели Üki: «Математика 2», 125 студентов, отмеченные сверху."
+  },
+  "dashboard.landing.hero.watchElapsed": {
+    "en": "00:42:17",
+    "ru": "00:42:17"
+  },
+  "dashboard.landing.hero.toast": {
+    "en": "New tabs are off during the exam.",
+    "ru": "Во время экзамена новые вкладки отключены."
+  },
+  "dashboard.landing.hero.toastTime": {
+    "en": "10:44",
+    "ru": "10:44"
+  },
+  "dashboard.landing.hero.report.title": {
+    "en": "Integrity report",
+    "ru": "Отчёт о честности"
+  },
+  "dashboard.landing.hero.report.ready": {
+    "en": "Ready",
+    "ru": "Готов"
+  },
+  "dashboard.landing.hero.report.student": {
+    "en": "Madina T. · Mathematics 2",
+    "ru": "Мадина Т. · Математика 2"
+  },
+  "dashboard.landing.hero.report.meta": {
+    "en": "3 flags · reviewed by Aigerim S.",
+    "ru": "3 отметки · проверила Айгерим С."
+  },
+  "dashboard.landing.hero.report.flag1.time": {
+    "en": "10:43:02",
+    "ru": "10:43:02"
+  },
+  "dashboard.landing.hero.report.flag1.label": {
+    "en": "Looked away · 2.3 s",
+    "ru": "Отвела взгляд · 2,3 с"
+  },
+  "dashboard.landing.hero.report.flag2.time": {
+    "en": "10:47:10",
+    "ru": "10:47:10"
+  },
+  "dashboard.landing.hero.report.flag2.label": {
+    "en": "Phone in frame · 0.94",
+    "ru": "Телефон в кадре · 0,94"
+  },
+  "dashboard.landing.hero.report.flag3.time": {
+    "en": "10:58:40",
+    "ru": "10:58:40"
+  },
+  "dashboard.landing.hero.report.flag3.label": {
+    "en": "Looked down · 3.1 s",
+    "ru": "Смотрела вниз · 3,1 с"
+  },
+  "dashboard.landing.hero.report.decision": {
+    "en": "Decision",
+    "ru": "Решение"
+  },
+  "dashboard.landing.hero.report.talk": {
+    "en": "Talk to student",
+    "ru": "Поговорить со студентом"
+  },
+  "dashboard.landing.hero.report.video": {
+    "en": "Video uploaded",
+    "ru": "Загружено видео"
+  },
+  "dashboard.landing.hero.report.videoValue": {
+    "en": "0 MB",
+    "ru": "0 МБ"
+  },
+  "dashboard.landing.proof.video.value": {
+    "en": "0 MB",
+    "ru": "0 МБ"
+  },
+  "dashboard.landing.proof.video.caption": {
+    "en": "video uploaded, ever",
+    "ru": "видео загружено, никогда"
+  },
+  "dashboard.landing.proof.languages.value": {
+    "en": "3",
+    "ru": "3"
+  },
+  "dashboard.landing.proof.languages.caption": {
+    "en": "languages: ҚАЗ, РУС, ENG",
+    "ru": "языка: ҚАЗ, РУС, ENG"
+  },
+  "dashboard.landing.proof.checks.value": {
+    "en": "4",
+    "ru": "4"
+  },
+  "dashboard.landing.proof.checks.caption": {
+    "en": "checks: browser, gaze, phone, ID",
+    "ru": "проверки: браузер, взгляд, телефон, документ"
+  },
+  "dashboard.landing.proof.report.value": {
+    "en": "1",
+    "ru": "1"
+  },
+  "dashboard.landing.proof.report.caption": {
+    "en": "report per student, moments only",
+    "ru": "отчёт на студента, только моменты"
+  },
+  "dashboard.landing.pillars.overline": {
+    "en": "What Üki does",
+    "ru": "Что делает Üki"
+  },
+  "dashboard.landing.pillars.title": {
+    "en": "Sees. Protects. Proves.",
+    "ru": "Видит. Защищает. Доказывает."
+  },
+  "dashboard.landing.pillars.lead": {
+    "en": "Three jobs, done on the student’s laptop. The server gets events and a few flagged frames, never a video stream.",
+    "ru": "Три задачи, и все на ноутбуке студента. Сервер получает события и несколько отмеченных кадров, но никогда не видеопоток."
+  },
+  "dashboard.landing.pillars.sees.kazakh": {
+    "en": "Көреді",
+    "ru": "Көреді"
+  },
+  "dashboard.landing.pillars.sees.title": {
+    "en": "Sees.",
+    "ru": "Видит."
+  },
+  "dashboard.landing.pillars.sees.body": {
+    "en": "Gaze and phones are checked on the laptop. Nothing streams out.",
+    "ru": "Взгляд и телефоны проверяются на ноутбуке. Ничего не транслируется наружу."
+  },
+  "dashboard.landing.pillars.protects.kazakh": {
+    "en": "Қорғайды",
+    "ru": "Қорғайды"
+  },
+  "dashboard.landing.pillars.protects.title": {
+    "en": "Protects.",
+    "ru": "Защищает."
+  },
+  "dashboard.landing.pillars.protects.body": {
+    "en": "The browser locks to the exam. Other tabs, apps and copy stay closed.",
+    "ru": "Браузер закрепляется на экзамене. Другие вкладки, приложения и копирование закрыты."
+  },
+  "dashboard.landing.pillars.proves.kazakh": {
+    "en": "Дәлелдейді",
+    "ru": "Дәлелдейді"
+  },
+  "dashboard.landing.pillars.proves.title": {
+    "en": "Proves.",
+    "ru": "Доказывает."
+  },
+  "dashboard.landing.pillars.proves.body": {
+    "en": "Every flag is a moment with a time and a frame. A proctor decides.",
+    "ru": "Каждая отметка — это момент со временем и кадром. Решает проктор."
+  },
+  "dashboard.landing.features.liveWall.overline": {
+    "en": "For proctors",
+    "ru": "Для прокторов"
+  },
+  "dashboard.landing.features.liveWall.title": {
+    "en": "One wall for a whole group.",
+    "ru": "Один экран на всю группу."
+  },
+  "dashboard.landing.features.liveWall.body": {
+    "en": "Flagged students rise to the top. Act from the tile without leaving the wall.",
+    "ru": "Отмеченные студенты поднимаются наверх. Действуйте прямо с плитки, не покидая экран."
+  },
+  "dashboard.landing.features.liveWall.bullet1": {
+    "en": "Flags first, then everyone on screen",
+    "ru": "Сначала отмеченные, затем все на экране"
+  },
+  "dashboard.landing.features.liveWall.bullet2": {
+    "en": "Messages go out in ҚАЗ, РУС or ENG",
+    "ru": "Сообщения уходят на ҚАЗ, РУС или ENG"
+  },
+  "dashboard.landing.features.liveWall.bullet3": {
+    "en": "Add time for the group or one student",
+    "ru": "Добавьте время группе или одному студенту"
+  },
+  "dashboard.landing.features.liveWall.link": {
+    "en": "See the live wall",
+    "ru": "Посмотреть экран наблюдения"
+  },
+  "dashboard.landing.features.liveWall.alt": {
+    "en": "The live wall with a student’s tile menu open: open timeline, message, pause, mark reviewed.",
+    "ru": "Экран наблюдения с открытым меню плитки студента: хронология, сообщение, пауза, отметка о проверке."
+  },
+  "dashboard.landing.features.lock.overline": {
+    "en": "Üki Lock · Browser extension",
+    "ru": "Üki Lock · Расширение браузера"
+  },
+  "dashboard.landing.features.lock.title": {
+    "en": "Exams in your LMS, locked.",
+    "ru": "Экзамены в вашей LMS под замком."
+  },
+  "dashboard.landing.features.lock.body": {
+    "en": "Any exam that opens in a browser. Students see why an action is blocked; proctors see every attempt.",
+    "ru": "Любой экзамен, который открывается в браузере. Студенты видят, почему действие заблокировано; прокторы видят каждую попытку."
+  },
+  "dashboard.landing.features.lock.bullet1": {
+    "en": "Chrome, Edge, Yandex Browser, Opera",
+    "ru": "Chrome, Edge, Яндекс Браузер, Opera"
+  },
+  "dashboard.landing.features.lock.bullet2": {
+    "en": "Only the exam and allowed sites stay open",
+    "ru": "Открыты только экзамен и разрешённые сайты"
+  },
+  "dashboard.landing.features.lock.bullet3": {
+    "en": "Tabs come back after submit",
+    "ru": "Вкладки возвращаются после сдачи"
+  },
+  "dashboard.landing.features.lock.link": {
+    "en": "See Üki Lock",
+    "ru": "Посмотреть Üki Lock"
+  },
+  "dashboard.landing.features.lock.alt": {
+    "en": "A quiz in the KRU exam portal, locked by Üki Lock, with the copy-blocked notice and the Watching widget.",
+    "ru": "Тест в экзаменационном портале КРУ под Üki Lock: уведомление о запрете копирования и виджет наблюдения."
+  },
+  "dashboard.landing.features.review.overline": {
+    "en": "After the exam",
+    "ru": "После экзамена"
+  },
+  "dashboard.landing.features.review.title": {
+    "en": "Review flags, not footage.",
+    "ru": "Проверяйте отметки, а не записи."
+  },
+  "dashboard.landing.features.review.body": {
+    "en": "Each flag is a moment with a frame. Decide: no issue, talk to the student, or send to the committee.",
+    "ru": "Каждая отметка — это момент с кадром. Решите: нарушения нет, поговорить со студентом или передать комиссии."
+  },
+  "dashboard.landing.features.review.bullet1": {
+    "en": "Queue sorted by flags, filter by type",
+    "ru": "Очередь по числу отметок, фильтр по типу"
+  },
+  "dashboard.landing.features.review.bullet2": {
+    "en": "Hover a flag to see its frame",
+    "ru": "Наведите на отметку, чтобы увидеть кадр"
+  },
+  "dashboard.landing.features.review.bullet3": {
+    "en": "Report with moments, not verdicts",
+    "ru": "Отчёт с моментами, а не приговорами"
+  },
+  "dashboard.landing.features.review.link": {
+    "en": "See a report",
+    "ru": "Посмотреть отчёт"
+  },
+  "dashboard.landing.features.review.alt": {
+    "en": "The review queue for Mathematics 2 with a flagged frame previewed: phone in frame, 0.94.",
+    "ru": "Очередь проверки по «Математике 2» с превью отмеченного кадра: телефон в кадре, 0,94."
+  },
+  "dashboard.landing.how.overline": {
+    "en": "How it works",
+    "ru": "Как это работает"
+  },
+  "dashboard.landing.how.title": {
+    "en": "From invite to report in four steps.",
+    "ru": "От приглашения до отчёта за четыре шага."
+  },
+  "dashboard.landing.how.setUp.title": {
+    "en": "Set up.",
+    "ru": "Настройка."
+  },
+  "dashboard.landing.how.setUp.body": {
+    "en": "The exam office picks checks, imports the roster and assigns proctors.",
+    "ru": "Экзаменационный отдел выбирает проверки, загружает список и назначает прокторов."
+  },
+  "dashboard.landing.how.checkIn.title": {
+    "en": "Check in.",
+    "ru": "Вход."
+  },
+  "dashboard.landing.how.checkIn.body": {
+    "en": "Students join with a code, fix their laptop and show their ID once.",
+    "ru": "Студенты входят по коду, готовят ноутбук и один раз показывают документ."
+  },
+  "dashboard.landing.how.write.title": {
+    "en": "Write.",
+    "ru": "Экзамен."
+  },
+  "dashboard.landing.how.write.body": {
+    "en": "The browser locks. Üki watches gaze and phones on the laptop.",
+    "ru": "Браузер блокируется. Üki следит за взглядом и телефонами на ноутбуке."
+  },
+  "dashboard.landing.how.review.title": {
+    "en": "Review.",
+    "ru": "Проверка."
+  },
+  "dashboard.landing.how.review.body": {
+    "en": "Proctors decide each flag. The exam office exports the report.",
+    "ru": "Прокторы решают по каждой отметке. Экзаменационный отдел выгружает отчёт."
+  },
+  "dashboard.landing.flag.overline": {
+    "en": "Moments, not verdicts",
+    "ru": "Моменты, а не приговоры"
+  },
+  "dashboard.landing.flag.title": {
+    "en": "Flag ≠ fail.",
+    "ru": "Отметка ≠ провал."
+  },
+  "dashboard.landing.flag.body": {
+    "en": "A flag is a moment with a time and a frame. A person decides what it means, and the report shows who decided.",
+    "ru": "Отметка — это момент со временем и кадром. Что он значит, решает человек, а отчёт показывает, кто решил."
+  },
+  "dashboard.landing.flag.phone.chip": {
+    "en": "phone 0.94",
+    "ru": "телефон 0,94"
+  },
+  "dashboard.landing.flag.phone.time": {
+    "en": "10:47:10",
+    "ru": "10:47:10"
+  },
+  "dashboard.landing.flag.phone.title": {
+    "en": "Phone in frame",
+    "ru": "Телефон в кадре"
+  },
+  "dashboard.landing.flag.phone.detail": {
+    "en": "Held 6 s. Put away after the warning.",
+    "ru": "Держала 6 с. Убрала после предупреждения."
+  },
+  "dashboard.landing.flag.phone.alt": {
+    "en": "A student at her desk holding a phone in front of the camera.",
+    "ru": "Студентка за столом держит телефон перед камерой."
+  },
+  "dashboard.landing.flag.gaze.chip": {
+    "en": "gaze 2.3 s",
+    "ru": "взгляд 2,3 с"
+  },
+  "dashboard.landing.flag.gaze.time": {
+    "en": "10:43:02",
+    "ru": "10:43:02"
+  },
+  "dashboard.landing.flag.gaze.title": {
+    "en": "Looked away",
+    "ru": "Отвела взгляд"
+  },
+  "dashboard.landing.flag.gaze.detail": {
+    "en": "2.3 s, to the left.",
+    "ru": "2,3 с, влево."
+  },
+  "dashboard.landing.flag.gaze.alt": {
+    "en": "A student looking away from the screen, to the left.",
+    "ru": "Студентка смотрит в сторону от экрана, влево."
+  },
+  "dashboard.landing.flag.face.chip": {
+    "en": "second face",
+    "ru": "второе лицо"
+  },
+  "dashboard.landing.flag.face.time": {
+    "en": "10:45:52",
+    "ru": "10:45:52"
+  },
+  "dashboard.landing.flag.face.title": {
+    "en": "Second face",
+    "ru": "Второе лицо"
+  },
+  "dashboard.landing.flag.face.detail": {
+    "en": "Someone leaned in for 4 s.",
+    "ru": "Кто-то заглянул в кадр на 4 с."
+  },
+  "dashboard.landing.flag.face.alt": {
+    "en": "A second person leaning into the camera frame next to the student.",
+    "ru": "Второй человек заглядывает в кадр рядом со студенткой."
+  },
+  "dashboard.landing.privacy.overline": {
+    "en": "Privacy by design",
+    "ru": "Приватность по умолчанию"
+  },
+  "dashboard.landing.privacy.big": {
+    "en": "0 MB",
+    "ru": "0 МБ"
+  },
+  "dashboard.landing.privacy.title": {
+    "en": "of video leaves the laptop.",
+    "ru": "видео покидает ноутбук."
+  },
+  "dashboard.landing.privacy.body": {
+    "en": "Üki checks every frame on the student’s device. The server gets events and a few flagged frames, stored in Kazakhstan and deleted after 90 days.",
+    "ru": "Üki проверяет каждый кадр на устройстве студента. Сервер получает события и несколько отмеченных кадров; они хранятся в Казахстане и удаляются через 90 дней."
+  },
+  "dashboard.landing.privacy.video.title": {
+    "en": "Webcam video",
+    "ru": "Видео с камеры"
+  },
+  "dashboard.landing.privacy.video.caption": {
+    "en": "Stays on the laptop",
+    "ru": "Остаётся на ноутбуке"
+  },
+  "dashboard.landing.privacy.frames.title": {
+    "en": "Flagged frames",
+    "ru": "Отмеченные кадры"
+  },
+  "dashboard.landing.privacy.frames.caption": {
+    "en": "90 days, then deleted",
+    "ru": "90 дней, затем удаляются"
+  },
+  "dashboard.landing.privacy.audio.title": {
+    "en": "Audio",
+    "ru": "Звук"
+  },
+  "dashboard.landing.privacy.audio.caption": {
+    "en": "Never recorded",
+    "ru": "Никогда не записывается"
+  },
+  "dashboard.landing.privacy.link": {
+    "en": "Read the data map",
+    "ru": "Карта данных"
+  },
+  "dashboard.landing.universities.overline": {
+    "en": "For Kazakh universities",
+    "ru": "Для университетов Казахстана"
+  },
+  "dashboard.landing.universities.title": {
+    "en": "Built for how your exams run.",
+    "ru": "Сделано под то, как проходят ваши экзамены."
+  },
+  "dashboard.landing.universities.body": {
+    "en": "Your rooms, your LMS, your languages. No new hardware.",
+    "ru": "Ваши аудитории, ваша LMS, ваши языки. Без нового оборудования."
+  },
+  "dashboard.landing.universities.bullet1": {
+    "en": "Kazakh, Russian and English, everywhere",
+    "ru": "Казахский, русский и английский везде"
+  },
+  "dashboard.landing.universities.bullet2": {
+    "en": "Data stays in Kazakhstan",
+    "ru": "Данные остаются в Казахстане"
+  },
+  "dashboard.landing.universities.bullet3": {
+    "en": "Works with your LMS and the dean’s office roster",
+    "ru": "Работает с вашей LMS и списками деканата"
+  },
+  "dashboard.landing.universities.bullet4": {
+    "en": "Pilot: one faculty, one exam week",
+    "ru": "Пилот: один факультет, одна экзаменационная неделя"
+  },
+  "dashboard.landing.universities.bookPilot": {
+    "en": "Book a pilot",
+    "ru": "Заказать пилот"
+  },
+  "dashboard.landing.universities.tag": {
+    "en": "Group 204 · 125 writing · 2 proctors",
+    "ru": "Группа 204 · 125 пишут · 2 проктора"
+  },
+  "dashboard.landing.universities.labAlt": {
+    "en": "Students writing an exam on laptops in a university computer lab.",
+    "ru": "Студенты пишут экзамен на ноутбуках в компьютерном классе университета."
+  },
+  "dashboard.landing.universities.lecturerAlt": {
+    "en": "A lecturer reviewing exam results on a laptop.",
+    "ru": "Преподаватель просматривает результаты экзамена на ноутбуке."
+  },
+  "dashboard.landing.faq.overline": {
+    "en": "FAQ",
+    "ru": "Вопросы"
+  },
+  "dashboard.landing.faq.title": {
+    "en": "Questions, answered.",
+    "ru": "Вопросы и ответы."
+  },
+  "dashboard.landing.faq.body": {
+    "en": "Anything else? Ask us on Demo Day or write to the team.",
+    "ru": "Остались вопросы? Спросите нас на Demo Day или напишите команде."
+  },
+  "dashboard.landing.faq.write": {
+    "en": "Write to the team",
+    "ru": "Написать команде"
+  },
+  "dashboard.landing.faq.video.question": {
+    "en": "Does Üki record video?",
+    "ru": "Üki записывает видео?"
+  },
+  "dashboard.landing.faq.video.answer": {
+    "en": "No. Video is checked on the laptop and never uploaded. Only events and flagged frames are sent.",
+    "ru": "Нет. Видео проверяется на ноутбуке и никогда не загружается. Отправляются только события и отмеченные кадры."
+  },
+  "dashboard.landing.faq.flagged.question": {
+    "en": "What happens when a student is flagged?",
+    "ru": "Что происходит, когда студента отмечают?"
+  },
+  "dashboard.landing.faq.flagged.answer": {
+    "en": "Nothing automatic. The flag is a moment with a time and a frame. A proctor reviews it and decides: no issue, talk to the student, or send to the committee. The report shows who decided.",
+    "ru": "Ничего автоматически. Отметка — это момент со временем и кадром. Проктор её проверяет и решает: нарушения нет, поговорить со студентом или передать комиссии. Отчёт показывает, кто решил."
+  },
+  "dashboard.landing.faq.browsers.question": {
+    "en": "Which browsers work with Üki Lock?",
+    "ru": "Какие браузеры работают с Üki Lock?"
+  },
+  "dashboard.landing.faq.browsers.answer": {
+    "en": "Chrome, Edge, Yandex Browser and Opera. Only the exam and allowed sites stay open, and tabs come back after submit.",
+    "ru": "Chrome, Edge, Яндекс Браузер и Opera. Открыты только экзамен и разрешённые сайты, а вкладки возвращаются после сдачи."
+  },
+  "dashboard.landing.faq.lms.question": {
+    "en": "Does it work with our LMS?",
+    "ru": "Работает ли это с нашей LMS?"
+  },
+  "dashboard.landing.faq.lms.answer": {
+    "en": "Yes. Any exam that opens in a browser works with Üki Lock, and the roster comes from the dean’s office.",
+    "ru": "Да. С Üki Lock работает любой экзамен, который открывается в браузере, а список студентов приходит из деканата."
+  },
+  "dashboard.landing.faq.retention.question": {
+    "en": "How long is data kept?",
+    "ru": "Сколько хранятся данные?"
+  },
+  "dashboard.landing.faq.retention.answer": {
+    "en": "Flagged frames and events: 90 days, then deleted. Integrity reports: 1 year, or longer while an appeal is open. All of it stays in Kazakhstan.",
+    "ru": "Отмеченные кадры и события — 90 дней, затем удаляются. Отчёты о честности — 1 год или дольше, пока идёт апелляция. Всё хранится в Казахстане."
+  },
+  "dashboard.landing.faq.student.question": {
+    "en": "What does a student need?",
+    "ru": "Что нужно студенту?"
+  },
+  "dashboard.landing.faq.student.answer": {
+    "en": "A laptop with a webcam, macOS 12+ or Windows 10+, the Üki app, and Üki Lock for exams in the LMS. No account: students join with a code and their student ID.",
+    "ru": "Ноутбук с камерой на macOS 12+ или Windows 10+, приложение Üki и Üki Lock для экзаменов в LMS. Аккаунт не нужен: студенты входят по коду и студенческому номеру."
+  },
+  "dashboard.landing.cta.overline": {
+    "en": "Demo Day · 16 October 2026 · Qostanai Hub",
+    "ru": "Demo Day · 16 октября 2026 · Qostanai Hub"
+  },
+  "dashboard.landing.cta.title": {
+    "en": "Run your next exam with Üki.",
+    "ru": "Проведите следующий экзамен с Üki."
+  },
+  "dashboard.landing.cta.bookPilot": {
+    "en": "Book a pilot",
+    "ru": "Заказать пилот"
+  },
+  "dashboard.landing.cta.seeDemo": {
+    "en": "See the demo",
+    "ru": "Смотреть демо"
+  },
+  "dashboard.landing.footer.tagline": {
+    "en": "Көреді. Қорғайды. Дәлелдейді.",
+    "ru": "Көреді. Қорғайды. Дәлелдейді."
+  },
+  "dashboard.landing.footer.line": {
+    "en": "Local proctoring for university exams.",
+    "ru": "Локальный прокторинг для университетских экзаменов."
+  },
+  "dashboard.landing.footer.product": {
+    "en": "Product",
+    "ru": "Продукт"
+  },
+  "dashboard.landing.footer.app": {
+    "en": "Üki app",
+    "ru": "Приложение Üki"
+  },
+  "dashboard.landing.footer.lock": {
+    "en": "Üki Lock",
+    "ru": "Üki Lock"
+  },
+  "dashboard.landing.footer.liveWall": {
+    "en": "Live wall",
+    "ru": "Экран наблюдения"
+  },
+  "dashboard.landing.footer.reports": {
+    "en": "Reports",
+    "ru": "Отчёты"
+  },
+  "dashboard.landing.footer.trust": {
+    "en": "Trust",
+    "ru": "Доверие"
+  },
+  "dashboard.landing.footer.privacy": {
+    "en": "Privacy",
+    "ru": "Приватность"
+  },
+  "dashboard.landing.footer.dataMap": {
+    "en": "Data map",
+    "ru": "Карта данных"
+  },
+  "dashboard.landing.footer.auditLog": {
+    "en": "Audit log",
+    "ru": "Журнал аудита"
+  },
+  "dashboard.landing.footer.security": {
+    "en": "Security",
+    "ru": "Безопасность"
+  },
+  "dashboard.landing.footer.terms": {
+    "en": "Terms",
+    "ru": "Условия"
+  },
+  "dashboard.landing.footer.about": {
+    "en": "About",
+    "ru": "О нас"
+  },
+  "dashboard.landing.footer.case": {
+    "en": "Case 3 · KRU × Qostanai Hub",
+    "ru": "Кейс 3 · КРУ × Qostanai Hub"
+  },
+  "dashboard.landing.footer.caseShort": {
+    "en": "Case 3",
+    "ru": "Кейс 3"
+  },
+  "dashboard.landing.footer.team": {
+    "en": "Team",
+    "ru": "Команда"
+  },
+  "dashboard.landing.footer.contact": {
+    "en": "Contact",
+    "ru": "Контакты"
+  },
+  "dashboard.landing.footer.copyright": {
+    "en": "© 2026 Üki · Kostanay, Kazakhstan",
+    "ru": "© 2026 Üki · Костанай, Казахстан"
+  },
+  "dashboard.landing.footer.copyrightShort": {
+    "en": "© 2026 Üki · Kostanay",
+    "ru": "© 2026 Üki · Костанай"
+  },
+  "dashboard.landing.pilot.overline": {
+    "en": "Book a pilot",
+    "ru": "Заявка на пилот"
+  },
+  "dashboard.landing.pilot.title": {
+    "en": "One faculty. One exam week.",
+    "ru": "Один факультет. Одна экзаменационная неделя."
+  },
+  "dashboard.landing.pilot.lead": {
+    "en": "We set up Üki with your exam office, run the exams with your proctors and hand over the reports.",
+    "ru": "Мы настраиваем Üki вместе с вашим экзаменационным отделом, проводим экзамены с вашими прокторами и передаём отчёты."
+  },
+  "dashboard.landing.pilot.plan.title": {
+    "en": "What the pilot looks like",
+    "ru": "Как проходит пилот"
+  },
+  "dashboard.landing.pilot.plan.week": {
+    "en": "Week {n}",
+    "ru": "Неделя {n}"
+  },
+  "dashboard.landing.pilot.plan.call.title": {
+    "en": "30-minute call",
+    "ru": "Звонок на 30 минут"
+  },
+  "dashboard.landing.pilot.plan.call.body": {
+    "en": "Pick the faculty, the exams and the checks.",
+    "ru": "Выбираем факультет, экзамены и проверки."
+  },
+  "dashboard.landing.pilot.plan.setup.title": {
+    "en": "Setup",
+    "ru": "Настройка"
+  },
+  "dashboard.landing.pilot.plan.setup.body": {
+    "en": "Roster import, proctor accounts and a test exam with 10 students.",
+    "ru": "Загрузка списка, аккаунты прокторов и тестовый экзамен на 10 студентов."
+  },
+  "dashboard.landing.pilot.plan.examWeek.title": {
+    "en": "Exam week",
+    "ru": "Экзаменационная неделя"
+  },
+  "dashboard.landing.pilot.plan.examWeek.body": {
+    "en": "Your proctors run the exams. We’re on call during every one.",
+    "ru": "Ваши прокторы проводят экзамены. Мы на связи во время каждого."
+  },
+  "dashboard.landing.pilot.plan.report.title": {
+    "en": "Report",
+    "ru": "Отчёт"
+  },
+  "dashboard.landing.pilot.plan.report.body": {
+    "en": "Integrity reports and a one-page pilot summary for the dean.",
+    "ru": "Отчёты о честности и итог пилота на одной странице для декана."
+  },
+  "dashboard.landing.pilot.need.title": {
+    "en": "What you need",
+    "ru": "Что нужно от вас"
+  },
+  "dashboard.landing.pilot.need.contact": {
+    "en": "One contact in the exam office",
+    "ru": "Один контакт в экзаменационном отделе"
+  },
+  "dashboard.landing.pilot.need.laptops": {
+    "en": "Student laptops with a webcam: macOS 12+ or Windows 10+",
+    "ru": "Ноутбуки студентов с камерой: macOS 12+ или Windows 10+"
+  },
+  "dashboard.landing.pilot.need.lms": {
+    "en": "Your LMS, if the exam runs there",
+    "ru": "Ваша LMS, если экзамен проходит в ней"
+  },
+  "dashboard.landing.pilot.form.title": {
+    "en": "Tell us about your exams",
+    "ru": "Расскажите о ваших экзаменах"
+  },
+  "dashboard.landing.pilot.form.name": {
+    "en": "Full name",
+    "ru": "Имя и фамилия"
+  },
+  "dashboard.landing.pilot.form.namePlaceholder": {
+    "en": "Dana Akhmetova",
+    "ru": "Дана Ахметова"
+  },
+  "dashboard.landing.pilot.form.email": {
+    "en": "Work email",
+    "ru": "Рабочая почта"
+  },
+  "dashboard.landing.pilot.form.emailPlaceholder": {
+    "en": "dana.akhmetova@kru.test",
+    "ru": "dana.akhmetova@kru.test"
+  },
+  "dashboard.landing.pilot.form.university": {
+    "en": "University",
+    "ru": "Университет"
+  },
+  "dashboard.landing.pilot.form.universityPlaceholder": {
+    "en": "KRU · Kostanay",
+    "ru": "КРУ · Костанай"
+  },
+  "dashboard.landing.pilot.form.role": {
+    "en": "Your role",
+    "ru": "Ваша роль"
+  },
+  "dashboard.landing.pilot.form.roles.exam_office": {
+    "en": "Exam office",
+    "ru": "Экзаменационный отдел"
+  },
+  "dashboard.landing.pilot.form.roles.deans_office": {
+    "en": "Dean’s office",
+    "ru": "Деканат"
+  },
+  "dashboard.landing.pilot.form.roles.teacher": {
+    "en": "Teacher",
+    "ru": "Преподаватель"
+  },
+  "dashboard.landing.pilot.form.roles.it": {
+    "en": "IT department",
+    "ru": "IT-отдел"
+  },
+  "dashboard.landing.pilot.form.roles.other": {
+    "en": "Other",
+    "ru": "Другое"
+  },
+  "dashboard.landing.pilot.form.students": {
+    "en": "Students in one exam",
+    "ru": "Студентов на одном экзамене"
+  },
+  "dashboard.landing.pilot.form.studentRanges.under100": {
+    "en": "Under 100",
+    "ru": "До 100"
+  },
+  "dashboard.landing.pilot.form.studentRanges.from100": {
+    "en": "100–300",
+    "ru": "100–300"
+  },
+  "dashboard.landing.pilot.form.studentRanges.from300": {
+    "en": "300–1,000",
+    "ru": "300–1000"
+  },
+  "dashboard.landing.pilot.form.studentRanges.over1000": {
+    "en": "Over 1,000",
+    "ru": "Более 1000"
+  },
+  "dashboard.landing.pilot.form.when": {
+    "en": "When",
+    "ru": "Когда"
+  },
+  "dashboard.landing.pilot.form.message": {
+    "en": "Anything we should know",
+    "ru": "Что нам стоит знать"
+  },
+  "dashboard.landing.pilot.form.messageHelper": {
+    "en": "Optional · {count}/{max}",
+    "ru": "Необязательно · {count}/{max}"
+  },
+  "dashboard.landing.pilot.form.demoDay": {
+    "en": "Send me the Demo Day invite for 16 October.",
+    "ru": "Пришлите мне приглашение на Demo Day 16 октября."
+  },
+  "dashboard.landing.pilot.form.submit": {
+    "en": "Book a pilot",
+    "ru": "Заказать пилот"
+  },
+  "dashboard.landing.pilot.form.note": {
+    "en": "We reply within 2 working days. Only the Üki team sees this form.",
+    "ru": "Мы ответим в течение 2 рабочих дней. Эту форму видит только команда Üki."
+  },
+  "dashboard.landing.pilot.form.error.nameRequired": {
+    "en": "Enter your full name.",
+    "ru": "Введите имя и фамилию."
+  },
+  "dashboard.landing.pilot.form.error.emailInvalid": {
+    "en": "Enter a work email, like name@university.kz.",
+    "ru": "Введите рабочую почту, например name@university.kz."
+  },
+  "dashboard.landing.pilot.form.error.universityRequired": {
+    "en": "Enter your university.",
+    "ru": "Введите университет."
+  },
+  "dashboard.landing.pilot.form.error.tooLong": {
+    "en": "Keep it under {max} characters.",
+    "ru": "Не больше {max} символов."
+  },
+  "dashboard.landing.pilot.form.error.rateLimited": {
+    "en": "This email has sent three requests today. Write to us again tomorrow.",
+    "ru": "С этой почты сегодня уже отправлено три заявки. Напишите нам завтра."
+  },
+  "dashboard.landing.pilot.form.error.failed": {
+    "en": "The request did not go through. Try again in a moment.",
+    "ru": "Заявка не отправилась. Попробуйте ещё раз чуть позже."
+  },
+  "dashboard.landing.pilot.sent.title": {
+    "en": "Request sent.",
+    "ru": "Заявка отправлена."
+  },
+  "dashboard.landing.pilot.sent.body": {
+    "en": "We’ll write to {email} within 2 working days to set up the 30-minute call.",
+    "ru": "Мы напишем на {email} в течение 2 рабочих дней, чтобы договориться о 30-минутном звонке."
+  },
+  "dashboard.landing.pilot.sent.university": {
+    "en": "University",
+    "ru": "Университет"
+  },
+  "dashboard.landing.pilot.sent.students": {
+    "en": "Students in one exam",
+    "ru": "Студентов на одном экзамене"
+  },
+  "dashboard.landing.pilot.sent.when": {
+    "en": "When",
+    "ru": "Когда"
+  },
+  "dashboard.landing.pilot.sent.request": {
+    "en": "Request",
+    "ru": "Заявка"
+  },
+  "dashboard.landing.pilot.sent.calendar": {
+    "en": "Add Demo Day to calendar",
+    "ru": "Добавить Demo Day в календарь"
+  },
+  "dashboard.landing.pilot.sent.back": {
+    "en": "Back to the site",
+    "ru": "Вернуться на сайт"
+  },
+  "dashboard.landing.pilot.sent.overline": {
+    "en": "Demo Day · 16 October 2026 · Qostanai Hub",
+    "ru": "Demo Day · 16 октября 2026 · Qostanai Hub"
+  },
+  "dashboard.landing.pilot.sent.calendarTitle": {
+    "en": "Üki · Demo Day",
+    "ru": "Üki · Demo Day"
+  },
+  "dashboard.landing.pilot.sent.calendarPlace": {
+    "en": "Qostanai Hub, Kostanay",
+    "ru": "Qostanai Hub, Костанай"
+  },
+  "dashboard.landing.legal.overline": {
+    "en": "Legal",
+    "ru": "Документы"
+  },
+  "dashboard.landing.legal.draft": {
+    "en": "Draft for legal review",
+    "ru": "Черновик для юристов"
+  },
+  "dashboard.landing.legal.meta": {
+    "en": "Effective 1 November 2026 · Version 0.9 · Last updated 7 October 2026",
+    "ru": "Действует с 1 ноября 2026 · Версия 0.9 · Обновлено 7 октября 2026"
+  },
+  "dashboard.landing.legal.onThisPage": {
+    "en": "On this page",
+    "ru": "На этой странице"
+  },
+  "dashboard.landing.legal.inShort": {
+    "en": "In short",
+    "ru": "Коротко"
+  },
+  "dashboard.landing.privacyPolicy.title": {
+    "en": "Privacy policy",
+    "ru": "Политика конфиденциальности"
+  },
+  "dashboard.landing.privacyPolicy.short1": {
+    "en": "Video and audio stay on your laptop. Üki never uploads them.",
+    "ru": "Видео и звук остаются на вашем ноутбуке. Üki никогда их не загружает."
+  },
+  "dashboard.landing.privacyPolicy.short2": {
+    "en": "Üki keeps events and a few flagged frames for 90 days, in Kazakhstan.",
+    "ru": "Üki хранит события и несколько отмеченных кадров 90 дней, в Казахстане."
+  },
+  "dashboard.landing.privacyPolicy.short3": {
+    "en": "Your university decides how exams run. Üki processes data for it.",
+    "ru": "Как проходят экзамены, решает ваш университет. Üki обрабатывает данные по его поручению."
+  },
+  "dashboard.landing.privacyPolicy.short4": {
+    "en": "Ask for a copy or deletion at any time.",
+    "ru": "Запросить копию или удаление можно в любое время."
+  },
+  "dashboard.landing.privacyPolicy.whoWeAre.title": {
+    "en": "Who we are",
+    "ru": "Кто мы"
+  },
+  "dashboard.landing.privacyPolicy.whoWeAre.p1": {
+    "en": "Üki is an online proctoring service for university exams, made by the Üki team in Kostanay, Kazakhstan. When your university runs an exam with Üki, the university decides how your data is used, and Üki processes it on the university’s behalf.",
+    "ru": "Üki — сервис онлайн-прокторинга для университетских экзаменов, его делает команда Üki в Костанае, Казахстан. Когда ваш университет проводит экзамен с Üki, университет решает, как используются ваши данные, а Üki обрабатывает их по его поручению."
+  },
+  "dashboard.landing.privacyPolicy.staysOnLaptop.title": {
+    "en": "What stays on your laptop",
+    "ru": "Что остаётся на вашем ноутбуке"
+  },
+  "dashboard.landing.privacyPolicy.staysOnLaptop.li1": {
+    "en": "Webcam video. Üki checks it frame by frame on your laptop and never uploads it.",
+    "ru": "Видео с камеры. Üki проверяет его кадр за кадром на вашем ноутбуке и никогда не загружает."
+  },
+  "dashboard.landing.privacyPolicy.staysOnLaptop.li2": {
+    "en": "Audio. Üki never records it.",
+    "ru": "Звук. Üki никогда его не записывает."
+  },
+  "dashboard.landing.privacyPolicy.staysOnLaptop.li3": {
+    "en": "The photo of your student card and your face. Üki compares them on your laptop and deletes them after the check.",
+    "ru": "Фото студенческого билета и вашего лица. Üki сравнивает их на ноутбуке и удаляет после проверки."
+  },
+  "dashboard.landing.privacyPolicy.collect.title": {
+    "en": "What we collect",
+    "ru": "Что мы собираем"
+  },
+  "dashboard.landing.privacyPolicy.collect.p1": {
+    "en": "For students:",
+    "ru": "О студентах:"
+  },
+  "dashboard.landing.privacyPolicy.collect.li1": {
+    "en": "Name, student ID and email, from your university’s roster.",
+    "ru": "Имя, студенческий номер и почту из списка вашего университета."
+  },
+  "dashboard.landing.privacyPolicy.collect.li2": {
+    "en": "Exam events: what happened and when, like “looked away, 2.3 s, 10:43”.",
+    "ru": "События экзамена: что и когда произошло, например «отвёл взгляд, 2,3 с, 10:43»."
+  },
+  "dashboard.landing.privacyPolicy.collect.li3": {
+    "en": "Flagged frames: single still images taken at the moment of a flag.",
+    "ru": "Отмеченные кадры: отдельные снимки в момент отметки."
+  },
+  "dashboard.landing.privacyPolicy.collect.li4": {
+    "en": "The identity check result: matched, or needs help.",
+    "ru": "Результат проверки личности: совпало или нужна помощь."
+  },
+  "dashboard.landing.privacyPolicy.collect.li5": {
+    "en": "Laptop details: operating system, Üki version and system check results.",
+    "ru": "Данные ноутбука: операционная система, версия Üki и результаты проверки системы."
+  },
+  "dashboard.landing.privacyPolicy.collect.p2": {
+    "en": "For staff: name, email, role and actions in the dashboard. The audit log records them.",
+    "ru": "О сотрудниках: имя, почту, роль и действия в панели. Их записывает журнал аудита."
+  },
+  "dashboard.landing.privacyPolicy.why.title": {
+    "en": "Why we use it",
+    "ru": "Зачем мы это используем"
+  },
+  "dashboard.landing.privacyPolicy.why.li1": {
+    "en": "To run the exam your university set up.",
+    "ru": "Чтобы провести экзамен, который настроил ваш университет."
+  },
+  "dashboard.landing.privacyPolicy.why.li2": {
+    "en": "To show proctors the moments that need a decision.",
+    "ru": "Чтобы показать прокторам моменты, по которым нужно решение."
+  },
+  "dashboard.landing.privacyPolicy.why.li3": {
+    "en": "To produce integrity reports that a person signs off.",
+    "ru": "Чтобы готовить отчёты о честности, которые подписывает человек."
+  },
+  "dashboard.landing.privacyPolicy.why.li4": {
+    "en": "To keep the service secure and fix problems.",
+    "ru": "Чтобы сервис был защищён и чтобы исправлять проблемы."
+  },
+  "dashboard.landing.privacyPolicy.why.p1": {
+    "en": "Üki doesn’t sell data.",
+    "ru": "Üki не продаёт данные."
+  },
+  "dashboard.landing.privacyPolicy.retention.title": {
+    "en": "How long we keep it",
+    "ru": "Сколько мы храним"
+  },
+  "dashboard.landing.privacyPolicy.retention.li1": {
+    "en": "Flagged frames and events: 90 days, then deleted.",
+    "ru": "Отмеченные кадры и события: 90 дней, затем удаляются."
+  },
+  "dashboard.landing.privacyPolicy.retention.li2": {
+    "en": "Integrity reports: 1 year, or longer while an appeal is open.",
+    "ru": "Отчёты о честности: 1 год или дольше, пока идёт апелляция."
+  },
+  "dashboard.landing.privacyPolicy.retention.li3": {
+    "en": "Staff accounts: until the university closes them.",
+    "ru": "Аккаунты сотрудников: пока университет их не закроет."
+  },
+  "dashboard.landing.privacyPolicy.storage.title": {
+    "en": "Where it is stored",
+    "ru": "Где хранятся данные"
+  },
+  "dashboard.landing.privacyPolicy.storage.p1": {
+    "en": "On servers in Kazakhstan. Üki doesn’t transfer exam data abroad.",
+    "ru": "На серверах в Казахстане. Üki не передаёт данные экзаменов за границу."
+  },
+  "dashboard.landing.privacyPolicy.access.title": {
+    "en": "Who can see it",
+    "ru": "Кто их видит"
+  },
+  "dashboard.landing.privacyPolicy.access.li1": {
+    "en": "Proctors, for the groups they supervise.",
+    "ru": "Прокторы — по группам, которые они ведут."
+  },
+  "dashboard.landing.privacyPolicy.access.li2": {
+    "en": "The exam office, for its faculty.",
+    "ru": "Экзаменационный отдел — по своему факультету."
+  },
+  "dashboard.landing.privacyPolicy.access.li3": {
+    "en": "An exam committee, through a read-only link the exam office shares.",
+    "ru": "Экзаменационная комиссия — по ссылке только для чтения от экзаменационного отдела."
+  },
+  "dashboard.landing.privacyPolicy.access.li4": {
+    "en": "Üki support staff, only to fix a problem you reported. Each view is logged.",
+    "ru": "Поддержка Üki — только чтобы исправить проблему, о которой вы сообщили. Каждый просмотр записывается."
+  },
+  "dashboard.landing.privacyPolicy.rights.title": {
+    "en": "Your rights",
+    "ru": "Ваши права"
+  },
+  "dashboard.landing.privacyPolicy.rights.p1": {
+    "en": "You can ask for a copy of your data, a correction or deletion. Use the Privacy centre through your exam office, or write to privacy@uki.test. Each request gets a due date and a record. You can also complain to the authorised body for personal data protection in Kazakhstan.",
+    "ru": "Вы можете запросить копию своих данных, исправление или удаление. Обратитесь в центр приватности через экзаменационный отдел или напишите на privacy@uki.test. У каждого запроса есть срок и запись. Вы также можете пожаловаться в уполномоченный орган по защите персональных данных Казахстана."
+  },
+  "dashboard.landing.privacyPolicy.changes.title": {
+    "en": "Changes and contact",
+    "ru": "Изменения и контакты"
+  },
+  "dashboard.landing.privacyPolicy.changes.p1": {
+    "en": "Üki announces changes 30 days ahead, in the app and by email. Questions: privacy@uki.test · Üki, Kostanay, Kazakhstan.",
+    "ru": "Üki сообщает об изменениях за 30 дней — в приложении и по почте. Вопросы: privacy@uki.test · Üki, Костанай, Казахстан."
+  },
+  "dashboard.landing.termsOfUse.title": {
+    "en": "Terms of use",
+    "ru": "Условия использования"
+  },
+  "dashboard.landing.termsOfUse.short1": {
+    "en": "Your university signs the agreement with Üki. These terms cover how people use Üki.",
+    "ru": "Договор с Üki подписывает ваш университет. Эти условия описывают, как люди пользуются Üki."
+  },
+  "dashboard.landing.termsOfUse.short2": {
+    "en": "Use Üki only for exams your university set up.",
+    "ru": "Используйте Üki только для экзаменов, которые настроил ваш университет."
+  },
+  "dashboard.landing.termsOfUse.short3": {
+    "en": "A flag isn’t a verdict. People decide, and the report shows who.",
+    "ru": "Отметка — не приговор. Решают люди, а отчёт показывает, кто именно."
+  },
+  "dashboard.landing.termsOfUse.short4": {
+    "en": "Don’t try to get around the lock or change the app.",
+    "ru": "Не пытайтесь обойти блокировку или изменить приложение."
+  },
+  "dashboard.landing.termsOfUse.audience.title": {
+    "en": "Who these terms are for",
+    "ru": "Для кого эти условия"
+  },
+  "dashboard.landing.termsOfUse.audience.p1": {
+    "en": "Students, proctors and exam office staff at universities that use Üki. If anything here differs from the agreement between your university and Üki, the agreement wins.",
+    "ru": "Для студентов, прокторов и сотрудников экзаменационных отделов университетов, которые используют Üki. Если что-то здесь расходится с договором между вашим университетом и Üki, действует договор."
+  },
+  "dashboard.landing.termsOfUse.accounts.title": {
+    "en": "Accounts",
+    "ru": "Аккаунты"
+  },
+  "dashboard.landing.termsOfUse.accounts.li1": {
+    "en": "Staff accounts start from an invitation by the exam office.",
+    "ru": "Аккаунты сотрудников создаются по приглашению экзаменационного отдела."
+  },
+  "dashboard.landing.termsOfUse.accounts.li2": {
+    "en": "Students join an exam with a code and their student ID. No account needed.",
+    "ru": "Студенты входят на экзамен по коду и студенческому номеру. Аккаунт не нужен."
+  },
+  "dashboard.landing.termsOfUse.accounts.li3": {
+    "en": "Keep your password to yourself. Tell your exam office if someone else used it.",
+    "ru": "Никому не сообщайте пароль. Если им воспользовался кто-то другой, сообщите в экзаменационный отдел."
+  },
+  "dashboard.landing.termsOfUse.exam.title": {
+    "en": "Using Üki in an exam",
+    "ru": "Üki на экзамене"
+  },
+  "dashboard.landing.termsOfUse.exam.li1": {
+    "en": "Install Üki and Üki Lock on the laptop you write on.",
+    "ru": "Установите Üki и Üki Lock на ноутбук, на котором пишете."
+  },
+  "dashboard.landing.termsOfUse.exam.li2": {
+    "en": "Run the system check before exam day.",
+    "ru": "Пройдите проверку системы до дня экзамена."
+  },
+  "dashboard.landing.termsOfUse.exam.li3": {
+    "en": "Follow the rules your university set for the exam. Üki shows them before the start.",
+    "ru": "Соблюдайте правила, которые университет установил для экзамена. Üki показывает их перед началом."
+  },
+  "dashboard.landing.termsOfUse.mustNot.title": {
+    "en": "What you must not do",
+    "ru": "Чего делать нельзя"
+  },
+  "dashboard.landing.termsOfUse.mustNot.li1": {
+    "en": "Get around Üki Lock, the camera checks or the timer.",
+    "ru": "Обходить Üki Lock, проверки камеры или таймер."
+  },
+  "dashboard.landing.termsOfUse.mustNot.li2": {
+    "en": "Change, copy or reverse-engineer the app.",
+    "ru": "Изменять, копировать или декомпилировать приложение."
+  },
+  "dashboard.landing.termsOfUse.mustNot.li3": {
+    "en": "Use Üki to watch anyone outside an exam.",
+    "ru": "Использовать Üki, чтобы наблюдать за кем-либо вне экзамена."
+  },
+  "dashboard.landing.termsOfUse.mustNot.li4": {
+    "en": "Share exam content your university marked as confidential.",
+    "ru": "Распространять материалы экзамена, которые университет отметил как конфиденциальные."
+  },
+  "dashboard.landing.termsOfUse.flags.title": {
+    "en": "Flags and decisions",
+    "ru": "Отметки и решения"
+  },
+  "dashboard.landing.termsOfUse.flags.p1": {
+    "en": "Üki marks moments, like a phone in the frame. It doesn’t decide what they mean. A proctor reviews each flag, and the report records the decision and who made it. Students can ask the exam office to look at a decision again.",
+    "ru": "Üki отмечает моменты, например телефон в кадре. Что они значат, Üki не решает. Проктор проверяет каждую отметку, а отчёт записывает решение и того, кто его принял. Студенты могут попросить экзаменационный отдел пересмотреть решение."
+  },
+  "dashboard.landing.termsOfUse.availability.title": {
+    "en": "Availability",
+    "ru": "Доступность"
+  },
+  "dashboard.landing.termsOfUse.availability.p1": {
+    "en": "During the pilot, the Üki team is on call for every scheduled exam. If Üki stops during an exam, answers saved on the laptop are kept and the exam office decides what happens next.",
+    "ru": "Во время пилота команда Üki на связи на каждом запланированном экзамене. Если Üki остановится во время экзамена, ответы, сохранённые на ноутбуке, сохраняются, а что делать дальше, решает экзаменационный отдел."
+  },
+  "dashboard.landing.termsOfUse.data.title": {
+    "en": "Data",
+    "ru": "Данные"
+  },
+  "dashboard.landing.termsOfUse.data.p1": {
+    "en": "The Privacy policy explains what Üki collects, where it’s stored and for how long.",
+    "ru": "Политика конфиденциальности объясняет, что собирает Üki, где и сколько это хранится."
+  },
+  "dashboard.landing.termsOfUse.liability.title": {
+    "en": "Liability",
+    "ru": "Ответственность"
+  },
+  "dashboard.landing.termsOfUse.liability.p1": {
+    "en": "Üki’s responsibility is set in the agreement with your university. Nothing here limits rights you have under the law of the Republic of Kazakhstan.",
+    "ru": "Ответственность Üki определяется договором с вашим университетом. Ничто здесь не ограничивает ваши права по законодательству Республики Казахстан."
+  },
+  "dashboard.landing.termsOfUse.ending.title": {
+    "en": "Ending use",
+    "ru": "Прекращение использования"
+  },
+  "dashboard.landing.termsOfUse.ending.p1": {
+    "en": "Your university can close accounts at any time. Data is then deleted on the schedule in the Privacy policy.",
+    "ru": "Ваш университет может закрыть аккаунты в любое время. Затем данные удаляются по графику из политики конфиденциальности."
+  },
+  "dashboard.landing.termsOfUse.law.title": {
+    "en": "Law and contact",
+    "ru": "Право и контакты"
+  },
+  "dashboard.landing.termsOfUse.law.p1": {
+    "en": "These terms follow the law of the Republic of Kazakhstan. Questions: legal@uki.test · Üki, Kostanay, Kazakhstan.",
+    "ru": "Эти условия регулируются законодательством Республики Казахстан. Вопросы: legal@uki.test · Üki, Костанай, Казахстан."
+  }
+}

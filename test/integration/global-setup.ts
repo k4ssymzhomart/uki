@@ -9,7 +9,7 @@ declare module "vitest" {
   }
 }
 
-export const FUNCTIONS = ["ingest", "frames", "command", "stills", "send-invites"] as const;
+export const FUNCTIONS = ["ingest", "frames", "command", "stills", "send-invites", "pilot-notify"] as const;
 
 /** How long to wait for the Edge Runtime, which restarts whenever a file under supabase/functions changes. */
 const READY_TIMEOUT_MS = 180_000;

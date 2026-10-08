@@ -70,6 +70,487 @@
       "todayTime": "Today · {time}",
       "withDetail": "{main} · {detail}"
     },
+    "landing": {
+      "cta": {
+        "bookPilot": "Book a pilot",
+        "overline": "Demo Day · 16 October 2026 · Qostanai Hub",
+        "seeDemo": "See the demo",
+        "title": "Run your next exam with Üki."
+      },
+      "faq": {
+        "body": "Anything else? Ask us on Demo Day or write to the team.",
+        "browsers": {
+          "answer": "Chrome, Edge, Yandex Browser and Opera. Only the exam and allowed sites stay open, and tabs come back after submit.",
+          "question": "Which browsers work with Üki Lock?"
+        },
+        "flagged": {
+          "answer": "Nothing automatic. The flag is a moment with a time and a frame. A proctor reviews it and decides: no issue, talk to the student, or send to the committee. The report shows who decided.",
+          "question": "What happens when a student is flagged?"
+        },
+        "lms": {
+          "answer": "Yes. Any exam that opens in a browser works with Üki Lock, and the roster comes from the dean’s office.",
+          "question": "Does it work with our LMS?"
+        },
+        "overline": "FAQ",
+        "retention": {
+          "answer": "Flagged frames and events: 90 days, then deleted. Integrity reports: 1 year, or longer while an appeal is open. All of it stays in Kazakhstan.",
+          "question": "How long is data kept?"
+        },
+        "student": {
+          "answer": "A laptop with a webcam, macOS 12+ or Windows 10+, the Üki app, and Üki Lock for exams in the LMS. No account: students join with a code and their student ID.",
+          "question": "What does a student need?"
+        },
+        "title": "Questions, answered.",
+        "video": {
+          "answer": "No. Video is checked on the laptop and never uploaded. Only events and flagged frames are sent.",
+          "question": "Does Üki record video?"
+        },
+        "write": "Write to the team"
+      },
+      "features": {
+        "liveWall": {
+          "alt": "The live wall with a student’s tile menu open: open timeline, message, pause, mark reviewed.",
+          "body": "Flagged students rise to the top. Act from the tile without leaving the wall.",
+          "bullet1": "Flags first, then everyone on screen",
+          "bullet2": "Messages go out in ҚАЗ, РУС or ENG",
+          "bullet3": "Add time for the group or one student",
+          "link": "See the live wall",
+          "overline": "For proctors",
+          "title": "One wall for a whole group."
+        },
+        "lock": {
+          "alt": "A quiz in the KRU exam portal, locked by Üki Lock, with the copy-blocked notice and the Watching widget.",
+          "body": "Any exam that opens in a browser. Students see why an action is blocked; proctors see every attempt.",
+          "bullet1": "Chrome, Edge, Yandex Browser, Opera",
+          "bullet2": "Only the exam and allowed sites stay open",
+          "bullet3": "Tabs come back after submit",
+          "link": "See Üki Lock",
+          "overline": "Üki Lock · Browser extension",
+          "title": "Exams in your LMS, locked."
+        },
+        "review": {
+          "alt": "The review queue for Mathematics 2 with a flagged frame previewed: phone in frame, 0.94.",
+          "body": "Each flag is a moment with a frame. Decide: no issue, talk to the student, or send to the committee.",
+          "bullet1": "Queue sorted by flags, filter by type",
+          "bullet2": "Hover a flag to see its frame",
+          "bullet3": "Report with moments, not verdicts",
+          "link": "See a report",
+          "overline": "After the exam",
+          "title": "Review flags, not footage."
+        }
+      },
+      "flag": {
+        "body": "A flag is a moment with a time and a frame. A person decides what it means, and the report shows who decided.",
+        "face": {
+          "alt": "A second person leaning into the camera frame next to the student.",
+          "chip": "second face",
+          "detail": "Someone leaned in for 4 s.",
+          "time": "10:45:52",
+          "title": "Second face"
+        },
+        "gaze": {
+          "alt": "A student looking away from the screen, to the left.",
+          "chip": "gaze 2.3 s",
+          "detail": "2.3 s, to the left.",
+          "time": "10:43:02",
+          "title": "Looked away"
+        },
+        "overline": "Moments, not verdicts",
+        "phone": {
+          "alt": "A student at her desk holding a phone in front of the camera.",
+          "chip": "phone 0.94",
+          "detail": "Held 6 s. Put away after the warning.",
+          "time": "10:47:10",
+          "title": "Phone in frame"
+        },
+        "title": "Flag ≠ fail."
+      },
+      "footer": {
+        "about": "About",
+        "app": "Üki app",
+        "auditLog": "Audit log",
+        "case": "Case 3 · KRU × Qostanai Hub",
+        "caseShort": "Case 3",
+        "contact": "Contact",
+        "copyright": "© 2026 Üki · Kostanay, Kazakhstan",
+        "copyrightShort": "© 2026 Üki · Kostanay",
+        "dataMap": "Data map",
+        "line": "Local proctoring for university exams.",
+        "liveWall": "Live wall",
+        "lock": "Üki Lock",
+        "privacy": "Privacy",
+        "product": "Product",
+        "reports": "Reports",
+        "security": "Security",
+        "tagline": "Көреді. Қорғайды. Дәлелдейді.",
+        "team": "Team",
+        "terms": "Terms",
+        "trust": "Trust"
+      },
+      "hero": {
+        "announcement": "Üki Lock for LMS exams",
+        "badge": "New",
+        "bookPilot": "Book a pilot",
+        "case": "KRU × Qostanai Hub · Case 3",
+        "lead": "Browser lock, gaze control and phone detection run on the student’s device. Proctors get flagged moments, never video.",
+        "report": {
+          "decision": "Decision",
+          "flag1": {
+            "label": "Looked away · 2.3 s",
+            "time": "10:43:02"
+          },
+          "flag2": {
+            "label": "Phone in frame · 0.94",
+            "time": "10:47:10"
+          },
+          "flag3": {
+            "label": "Looked down · 3.1 s",
+            "time": "10:58:40"
+          },
+          "meta": "3 flags · reviewed by Aigerim S.",
+          "ready": "Ready",
+          "student": "Madina T. · Mathematics 2",
+          "talk": "Talk to student",
+          "title": "Integrity report",
+          "video": "Video uploaded",
+          "videoValue": "0 MB"
+        },
+        "seeDemo": "See the demo",
+        "shotAlt": "The live wall in the Üki dashboard: Mathematics 2 with 125 students, flagged students first.",
+        "title": {
+          "line1": "Proctoring that never",
+          "line2": "leaves <accent>the laptop.</accent>",
+          "mobile": "Proctoring that never leaves the laptop."
+        },
+        "toast": "New tabs are off during the exam.",
+        "toastTime": "10:44",
+        "watchElapsed": "00:42:17"
+      },
+      "how": {
+        "checkIn": {
+          "body": "Students join with a code, fix their laptop and show their ID once.",
+          "title": "Check in."
+        },
+        "overline": "How it works",
+        "review": {
+          "body": "Proctors decide each flag. The exam office exports the report.",
+          "title": "Review."
+        },
+        "setUp": {
+          "body": "The exam office picks checks, imports the roster and assigns proctors.",
+          "title": "Set up."
+        },
+        "title": "From invite to report in four steps.",
+        "write": {
+          "body": "The browser locks. Üki watches gaze and phones on the laptop.",
+          "title": "Write."
+        }
+      },
+      "lang": {
+        "label": "Language"
+      },
+      "legal": {
+        "draft": "Draft for legal review",
+        "inShort": "In short",
+        "meta": "Effective 1 November 2026 · Version 0.9 · Last updated 7 October 2026",
+        "onThisPage": "On this page",
+        "overline": "Legal"
+      },
+      "meta": {
+        "home": {
+          "description": "Browser lock, gaze control and phone detection run on the student’s device. Proctors get flagged moments, never video.",
+          "title": "Üki · Proctoring that never leaves the laptop"
+        },
+        "pilot": {
+          "title": "Book a pilot · Üki"
+        },
+        "privacy": {
+          "title": "Privacy policy · Üki"
+        },
+        "terms": {
+          "title": "Terms of use · Üki"
+        }
+      },
+      "nav": {
+        "bookPilot": "Book a pilot",
+        "closeMenu": "Close the menu",
+        "faq": "FAQ",
+        "home": "Üki home",
+        "howItWorks": "How it works",
+        "label": "Site",
+        "openMenu": "Open the menu",
+        "privacy": "Privacy",
+        "product": "Product",
+        "signIn": "Sign in",
+        "universities": "Universities"
+      },
+      "pillars": {
+        "lead": "Three jobs, done on the student’s laptop. The server gets events and a few flagged frames, never a video stream.",
+        "overline": "What Üki does",
+        "protects": {
+          "body": "The browser locks to the exam. Other tabs, apps and copy stay closed.",
+          "kazakh": "Қорғайды",
+          "title": "Protects."
+        },
+        "proves": {
+          "body": "Every flag is a moment with a time and a frame. A proctor decides.",
+          "kazakh": "Дәлелдейді",
+          "title": "Proves."
+        },
+        "sees": {
+          "body": "Gaze and phones are checked on the laptop. Nothing streams out.",
+          "kazakh": "Көреді",
+          "title": "Sees."
+        },
+        "title": "Sees. Protects. Proves."
+      },
+      "pilot": {
+        "form": {
+          "demoDay": "Send me the Demo Day invite for 16 October.",
+          "email": "Work email",
+          "emailPlaceholder": "dana.akhmetova@kru.test",
+          "error": {
+            "emailInvalid": "Enter a work email, like name@university.kz.",
+            "failed": "The request did not go through. Try again in a moment.",
+            "nameRequired": "Enter your full name.",
+            "rateLimited": "This email has sent three requests today. Write to us again tomorrow.",
+            "tooLong": "Keep it under {max} characters.",
+            "universityRequired": "Enter your university."
+          },
+          "message": "Anything we should know",
+          "messageHelper": "Optional · {count}/{max}",
+          "name": "Full name",
+          "namePlaceholder": "Dana Akhmetova",
+          "note": "We reply within 2 working days. Only the Üki team sees this form.",
+          "role": "Your role",
+          "roles": {
+            "deans_office": "Dean’s office",
+            "exam_office": "Exam office",
+            "it": "IT department",
+            "other": "Other",
+            "teacher": "Teacher"
+          },
+          "studentRanges": {
+            "from100": "100–300",
+            "from300": "300–1,000",
+            "over1000": "Over 1,000",
+            "under100": "Under 100"
+          },
+          "students": "Students in one exam",
+          "submit": "Book a pilot",
+          "title": "Tell us about your exams",
+          "university": "University",
+          "universityPlaceholder": "KRU · Kostanay",
+          "when": "When"
+        },
+        "lead": "We set up Üki with your exam office, run the exams with your proctors and hand over the reports.",
+        "need": {
+          "contact": "One contact in the exam office",
+          "laptops": "Student laptops with a webcam: macOS 12+ or Windows 10+",
+          "lms": "Your LMS, if the exam runs there",
+          "title": "What you need"
+        },
+        "overline": "Book a pilot",
+        "plan": {
+          "call": {
+            "body": "Pick the faculty, the exams and the checks.",
+            "title": "30-minute call"
+          },
+          "examWeek": {
+            "body": "Your proctors run the exams. We’re on call during every one.",
+            "title": "Exam week"
+          },
+          "report": {
+            "body": "Integrity reports and a one-page pilot summary for the dean.",
+            "title": "Report"
+          },
+          "setup": {
+            "body": "Roster import, proctor accounts and a test exam with 10 students.",
+            "title": "Setup"
+          },
+          "title": "What the pilot looks like",
+          "week": "Week {n}"
+        },
+        "sent": {
+          "back": "Back to the site",
+          "body": "We’ll write to {email} within 2 working days to set up the 30-minute call.",
+          "calendar": "Add Demo Day to calendar",
+          "calendarPlace": "Qostanai Hub, Kostanay",
+          "calendarTitle": "Üki · Demo Day",
+          "overline": "Demo Day · 16 October 2026 · Qostanai Hub",
+          "request": "Request",
+          "students": "Students in one exam",
+          "title": "Request sent.",
+          "university": "University",
+          "when": "When"
+        },
+        "title": "One faculty. One exam week."
+      },
+      "privacy": {
+        "audio": {
+          "caption": "Never recorded",
+          "title": "Audio"
+        },
+        "big": "0 MB",
+        "body": "Üki checks every frame on the student’s device. The server gets events and a few flagged frames, stored in Kazakhstan and deleted after 90 days.",
+        "frames": {
+          "caption": "90 days, then deleted",
+          "title": "Flagged frames"
+        },
+        "link": "Read the data map",
+        "overline": "Privacy by design",
+        "title": "of video leaves the laptop.",
+        "video": {
+          "caption": "Stays on the laptop",
+          "title": "Webcam video"
+        }
+      },
+      "privacyPolicy": {
+        "access": {
+          "li1": "Proctors, for the groups they supervise.",
+          "li2": "The exam office, for its faculty.",
+          "li3": "An exam committee, through a read-only link the exam office shares.",
+          "li4": "Üki support staff, only to fix a problem you reported. Each view is logged.",
+          "title": "Who can see it"
+        },
+        "changes": {
+          "p1": "Üki announces changes 30 days ahead, in the app and by email. Questions: privacy@uki.test · Üki, Kostanay, Kazakhstan.",
+          "title": "Changes and contact"
+        },
+        "collect": {
+          "li1": "Name, student ID and email, from your university’s roster.",
+          "li2": "Exam events: what happened and when, like “looked away, 2.3 s, 10:43”.",
+          "li3": "Flagged frames: single still images taken at the moment of a flag.",
+          "li4": "The identity check result: matched, or needs help.",
+          "li5": "Laptop details: operating system, Üki version and system check results.",
+          "p1": "For students:",
+          "p2": "For staff: name, email, role and actions in the dashboard. The audit log records them.",
+          "title": "What we collect"
+        },
+        "retention": {
+          "li1": "Flagged frames and events: 90 days, then deleted.",
+          "li2": "Integrity reports: 1 year, or longer while an appeal is open.",
+          "li3": "Staff accounts: until the university closes them.",
+          "title": "How long we keep it"
+        },
+        "rights": {
+          "p1": "You can ask for a copy of your data, a correction or deletion. Use the Privacy centre through your exam office, or write to privacy@uki.test. Each request gets a due date and a record. You can also complain to the authorised body for personal data protection in Kazakhstan.",
+          "title": "Your rights"
+        },
+        "short1": "Video and audio stay on your laptop. Üki never uploads them.",
+        "short2": "Üki keeps events and a few flagged frames for 90 days, in Kazakhstan.",
+        "short3": "Your university decides how exams run. Üki processes data for it.",
+        "short4": "Ask for a copy or deletion at any time.",
+        "staysOnLaptop": {
+          "li1": "Webcam video. Üki checks it frame by frame on your laptop and never uploads it.",
+          "li2": "Audio. Üki never records it.",
+          "li3": "The photo of your student card and your face. Üki compares them on your laptop and deletes them after the check.",
+          "title": "What stays on your laptop"
+        },
+        "storage": {
+          "p1": "On servers in Kazakhstan. Üki doesn’t transfer exam data abroad.",
+          "title": "Where it is stored"
+        },
+        "title": "Privacy policy",
+        "whoWeAre": {
+          "p1": "Üki is an online proctoring service for university exams, made by the Üki team in Kostanay, Kazakhstan. When your university runs an exam with Üki, the university decides how your data is used, and Üki processes it on the university’s behalf.",
+          "title": "Who we are"
+        },
+        "why": {
+          "li1": "To run the exam your university set up.",
+          "li2": "To show proctors the moments that need a decision.",
+          "li3": "To produce integrity reports that a person signs off.",
+          "li4": "To keep the service secure and fix problems.",
+          "p1": "Üki doesn’t sell data.",
+          "title": "Why we use it"
+        }
+      },
+      "proof": {
+        "checks": {
+          "caption": "checks: browser, gaze, phone, ID",
+          "value": "4"
+        },
+        "languages": {
+          "caption": "languages: ҚАЗ, РУС, ENG",
+          "value": "3"
+        },
+        "report": {
+          "caption": "report per student, moments only",
+          "value": "1"
+        },
+        "video": {
+          "caption": "video uploaded, ever",
+          "value": "0 MB"
+        }
+      },
+      "termsOfUse": {
+        "accounts": {
+          "li1": "Staff accounts start from an invitation by the exam office.",
+          "li2": "Students join an exam with a code and their student ID. No account needed.",
+          "li3": "Keep your password to yourself. Tell your exam office if someone else used it.",
+          "title": "Accounts"
+        },
+        "audience": {
+          "p1": "Students, proctors and exam office staff at universities that use Üki. If anything here differs from the agreement between your university and Üki, the agreement wins.",
+          "title": "Who these terms are for"
+        },
+        "availability": {
+          "p1": "During the pilot, the Üki team is on call for every scheduled exam. If Üki stops during an exam, answers saved on the laptop are kept and the exam office decides what happens next.",
+          "title": "Availability"
+        },
+        "data": {
+          "p1": "The Privacy policy explains what Üki collects, where it’s stored and for how long.",
+          "title": "Data"
+        },
+        "ending": {
+          "p1": "Your university can close accounts at any time. Data is then deleted on the schedule in the Privacy policy.",
+          "title": "Ending use"
+        },
+        "exam": {
+          "li1": "Install Üki and Üki Lock on the laptop you write on.",
+          "li2": "Run the system check before exam day.",
+          "li3": "Follow the rules your university set for the exam. Üki shows them before the start.",
+          "title": "Using Üki in an exam"
+        },
+        "flags": {
+          "p1": "Üki marks moments, like a phone in the frame. It doesn’t decide what they mean. A proctor reviews each flag, and the report records the decision and who made it. Students can ask the exam office to look at a decision again.",
+          "title": "Flags and decisions"
+        },
+        "law": {
+          "p1": "These terms follow the law of the Republic of Kazakhstan. Questions: legal@uki.test · Üki, Kostanay, Kazakhstan.",
+          "title": "Law and contact"
+        },
+        "liability": {
+          "p1": "Üki’s responsibility is set in the agreement with your university. Nothing here limits rights you have under the law of the Republic of Kazakhstan.",
+          "title": "Liability"
+        },
+        "mustNot": {
+          "li1": "Get around Üki Lock, the camera checks or the timer.",
+          "li2": "Change, copy or reverse-engineer the app.",
+          "li3": "Use Üki to watch anyone outside an exam.",
+          "li4": "Share exam content your university marked as confidential.",
+          "title": "What you must not do"
+        },
+        "short1": "Your university signs the agreement with Üki. These terms cover how people use Üki.",
+        "short2": "Use Üki only for exams your university set up.",
+        "short3": "A flag isn’t a verdict. People decide, and the report shows who.",
+        "short4": "Don’t try to get around the lock or change the app.",
+        "title": "Terms of use"
+      },
+      "universities": {
+        "body": "Your rooms, your LMS, your languages. No new hardware.",
+        "bookPilot": "Book a pilot",
+        "bullet1": "Kazakh, Russian and English, everywhere",
+        "bullet2": "Data stays in Kazakhstan",
+        "bullet3": "Works with your LMS and the dean’s office roster",
+        "bullet4": "Pilot: one faculty, one exam week",
+        "labAlt": "Students writing an exam on laptops in a university computer lab.",
+        "lecturerAlt": "A lecturer reviewing exam results on a laptop.",
+        "overline": "For Kazakh universities",
+        "tag": "Group 204 · 125 writing · 2 proctors",
+        "title": "Built for how your exams run."
+      }
+    },
     "lobby": {
       "banner": {
         "joined": "{joined} of {total} students are in.",

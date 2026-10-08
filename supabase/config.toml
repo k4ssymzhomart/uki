@@ -437,3 +437,7 @@ verify_jwt = false
 # The dashboard calls it with the staff member's token, which withSupabase verifies itself (WP 1.4).
 [functions.send-invites]
 verify_jwt = false
+
+# Called by the pilot_requests trigger through pg_net with the secret key (WP 1.13).
+[functions.pilot-notify]
+verify_jwt = false

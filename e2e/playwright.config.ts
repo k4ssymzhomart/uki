@@ -19,6 +19,7 @@ export default defineConfig({
     "review.spec.ts",
     "proctor.spec.ts",
     "students.spec.ts",
+    "landing.spec.ts",
   ],
   // One worker: the tests share the seeded staff accounts, and latency figures stay honest.
   fullyParallel: false,
@@ -42,6 +43,12 @@ export default defineConfig({
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } },
+    },
+    {
+      // The public pages at the Mobile 390 frame's width (WP 1.13).
+      name: "landing-390",
+      testMatch: ["landing.spec.ts"],
+      use: { ...devices["Desktop Chrome"], viewport: { width: 390, height: 844 } },
     },
   ],
   webServer,

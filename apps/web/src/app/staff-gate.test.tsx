@@ -1,7 +1,8 @@
 // What every dashboard entry point does when the staff lookup failed twice (lib/auth.ts): pages show the
 // error with Try again and load nothing, the (app) layout shows it without the shell, Start exam answers
-// `failed`, and nothing sends the proctor to sign-in. Without a staff session, `/` still goes to sign-in.
+// `failed`, and nothing sends the proctor to sign-in. Without a staff session, `/` shows the landing page.
 import { screen } from "@testing-library/react";
+import { redirect } from "next/navigation";
 import type { ReactElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithIntl } from "../../test/render.tsx";
@@ -17,7 +18,7 @@ import LobbyPage from "./(app)/exams/[examId]/lobby/page.tsx";
 import AppLayout from "./(app)/layout.tsx";
 import OverviewPage from "./(app)/overview/page.tsx";
 import SignInPage from "./(auth)/sign-in/page.tsx";
-import HomePage from "./page.tsx";
+import HomePage from "./(marketing)/page.tsx";
 
 const location = vi.hoisted(() => ({ pathname: "/overview" }));
 
@@ -30,7 +31,7 @@ vi.mock("next/navigation", async (importOriginal) => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 vi.mock("next/image", () => import("../../test/next-image-mock.tsx"));
-vi.mock("next-intl/server", () => ({ getTranslations: vi.fn() }));
+vi.mock("next-intl/server", () => ({ getTranslations: vi.fn(), getLocale: vi.fn(async () => "en-GB") }));
 vi.mock("../lib/auth.ts", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../lib/auth.ts")>()),
   getStaffMember: vi.fn(),
@@ -96,8 +97,9 @@ describe("a failed staff lookup", () => {
     expect((await SignInPage()).type).toBe(SignInScreen);
   });
 
-  it("still sends `/` to sign-in when there is no staff session", async () => {
+  it("shows visitors without a staff session the landing page instead of redirecting", async () => {
     vi.mocked(getStaffMember).mockResolvedValue({ status: "none" });
-    await expect(HomePage()).rejects.toThrow("redirect /sign-in");
+    await expect(HomePage()).resolves.toBeTruthy();
+    expect(redirect).not.toHaveBeenCalled();
   });
 });
