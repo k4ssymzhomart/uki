@@ -8,6 +8,7 @@
     "./**/*.ts",
     "../demo-reset.ts",
     "../demo-simulate.ts",
+    "../judge-setup.ts",
     "../release-assets.ts",
     "../dev.ts",
     "../seed-term.ts",
