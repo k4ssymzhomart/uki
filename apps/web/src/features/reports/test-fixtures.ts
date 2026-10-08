@@ -64,6 +64,16 @@ export const FRAME_DATA: ReportsData = {
   reviewTimes: REVIEW_TIMES,
 };
 
+/** The frame's sidebar: Dana of the exam office, Exams 4, Live 86 and Review 7 (the dev route /reports/frame). */
+export const FRAME_STAFF = {
+  fullName: "Dana Akhmetova",
+  email: "dana.akhmetova@kru.test",
+  role: "exam_office",
+  workspaceName: "KRU · Kostanay",
+  facultyName: "Faculty of Mathematics",
+} as const;
+export const FRAME_NAV = { examsCount: 4, liveCount: 86, liveHref: "/overview", reviewCount: 7 } as const;
+
 /** A term with no exams yet: every view empty. */
 export const EMPTY_DATA: ReportsData = {
   terms: [],
