@@ -37,6 +37,8 @@ describe("WP 1.10 A.1 in Russian", () => {
     expect(text).toContain("В комиссию0,5 %23 из 4 912 сеансов");
     expect(text).toContain("Снижение с 11,6 до 8,4 за шесть недель");
     expect(text).toContain("Взгляд в сторону — почти половина");
+    // The bars' 140 px label column holds the longest Russian type in one line (A.1-ru evidence).
+    expect(text).toContain("Вкладка или сайт14 %");
     expect(text).toContain("Решения · 298 сеансов с отметками");
     expect(text).toContain("Чаще всего нарушения нет");
     expect(text).toContain("Беседа со студентом61 · 20 %");

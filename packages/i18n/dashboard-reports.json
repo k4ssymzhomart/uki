@@ -138,7 +138,7 @@
   },
   "dashboard.reports.types.tab_or_site": {
     "en": "Tab or site blocked",
-    "ru": "Вкладка или сайт заблокированы"
+    "ru": "Вкладка или сайт"
   },
   "dashboard.reports.weekly.headline": {
     "en": "{kind, select, down {Down from {first} to {last} in {weeks, plural, =1 {one week} =2 {two weeks} =3 {three weeks} =4 {four weeks} =5 {five weeks} =6 {six weeks} =7 {seven weeks} =8 {eight weeks} =9 {nine weeks} other {# weeks}}} up {Up from {first} to {last} in {weeks, plural, =1 {one week} =2 {two weeks} =3 {three weeks} =4 {four weeks} =5 {five weeks} =6 {six weeks} =7 {seven weeks} =8 {eight weeks} =9 {nine weeks} other {# weeks}}} flat {Steady at {last} for {weeks, plural, =1 {one week} =2 {two weeks} =3 {three weeks} =4 {four weeks} =5 {five weeks} =6 {six weeks} =7 {seven weeks} =8 {eight weeks} =9 {nine weeks} other {# weeks}}} single {{last} in the week of {week}} other {No exams yet this term}}",
