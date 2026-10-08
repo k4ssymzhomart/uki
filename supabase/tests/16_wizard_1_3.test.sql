@@ -1,4 +1,4 @@
--- WP 1.3, the exam wizard through the API (20261010010000_assign_proctors_safeupdate.sql): PostgREST
+-- WP 1.3, the exam wizard through the API (20261011090000_assign_proctors_safeupdate.sql): PostgREST
 -- loads pg-safeupdate, which refuses a DELETE without WHERE, so no function in public may hold one;
 -- assign_proctors runs twice in one session; and the demo roster (demo/roster.csv after the six fixes
 -- 0.3a asks for) imports twice without a duplicate, takes Aigerim and Nurlan on seats 1 to 12 and 13
