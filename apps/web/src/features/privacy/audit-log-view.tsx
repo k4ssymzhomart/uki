@@ -54,9 +54,12 @@ export type AuditLogViewProps = {
 
 const AUDIT_LOG = "/privacy-centre/audit-log";
 
-/** Column widths of A.6's table (108:11553): time 160, who 230, action 400, object the rest. */
+/**
+ * Column widths of A.6's table (108:11553): time 160 after the card's 20 px inset, who 230, action 400,
+ * object the rest. A cell's width includes its padding, so the time cell is 180 wide.
+ */
 const columns = {
-  time: "w-40 pl-5",
+  time: "w-45 pl-5",
   who: "w-57.5",
   action: "w-100",
   object: "pr-5",
