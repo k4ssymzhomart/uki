@@ -34,3 +34,4 @@
 *.dmg binary
 *.exe binary
 *.pdf binary
+*.xlsx binary

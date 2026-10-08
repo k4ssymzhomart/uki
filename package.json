@@ -17,6 +17,8 @@
     "format": "biome check --write .",
     "tokens": "pnpm --filter @uki/tokens build",
     "i18n:build": "pnpm --filter @uki/i18n build",
+    "i18n:export": "tsx packages/i18n/scripts/export.ts",
+    "i18n:import": "tsx packages/i18n/scripts/import.ts",
     "db:start": "supabase start",
     "db:reset": "supabase db reset",
     "db:types": "supabase gen types typescript --local > packages/db/src/database.types.ts",

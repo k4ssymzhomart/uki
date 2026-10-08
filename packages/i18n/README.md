@@ -13,6 +13,20 @@ Student app and Üki Lock strings in Kazakh, Russian and English, plus the dashb
 
 `pnpm i18n:build` regenerates `messages/` and fails, writing nothing, on: a missing or empty message (a dashboard message needs both `en` and `ru`), an ICU parse error, a plural without `other` or with an arm the language does not have, argument names that differ between en, kk and ru (en and ru for the dashboard), a key that is both a message and a namespace, a dashboard key defined in two files, a bad rename, and a count message whose en or ru text has no plural block. `pnpm --filter @uki/i18n build:check` only checks that `messages/` is up to date.
 
+## Review sheets (P.18)
+
+`pnpm i18n:export` writes every string into `docs/i18n/` for the Kazakh and Russian read-through:
+
+| File | Rows | Columns |
+| --- | --- | --- |
+| `strings-review.csv` | Every message of `catalog.json` and of every `dashboard*.json`, sorted by where, then key | key, where (student app, Üki Lock, email, dashboard, landing), en, ru, kk, source, notes |
+| `strings-review-kk.csv` | Only the rows that have Kazakh (the catalog) | key, where, en, kk, ru, notes |
+| `strings-review.xlsx` | The same two tables as the sheets "Russian review" and "Kazakh review" | Header row frozen and filterable, text wrapped, every cell stored as text |
+
+The CSVs are UTF-8 with a byte order mark, so Excel and Numbers read the Cyrillic. The dashboard and the landing site have no Kazakh, so their kk cell is empty. `notes` holds the catalog's group and notes, or the dashboard file the key lives in. `--out <dir>` writes somewhere else. Run it again after strings change; the files are committed.
+
+`pnpm i18n:import <file.csv>` takes an edited sheet back: either CSV, or the `.xlsx` saved as "CSV UTF-8" from Excel (Numbers: Export To > CSV, Unicode UTF-8). It reads commas, semicolons or tabs, with or without the byte order mark. Only the `ru` and `kk` cells that changed are written, into `catalog.json` or the dashboard file the key lives in; English is never imported. Then it runs `pnpm i18n:build`. The whole sheet is refused, and nothing is written, for an unknown or repeated key, a short row, Kazakh on a dashboard row, a file that is not UTF-8, or an edited string that fails the build's checks: a renamed or missing placeholder such as `{minutes}`, a plural arm the language does not have, broken ICU syntax, an emptied cell. `--dry-run` lists the changes and writes nothing. Edit in the `.xlsx` rather than opening the CSV in Excel: Excel reads a CSV cell such as `+{minutes} min` as a formula.
+
 ## Use
 
 ```ts
