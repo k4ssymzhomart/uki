@@ -10,6 +10,7 @@
     "UKI_*",
     "LOCK_*",
     "SEED_*",
+    "RESEND_*",
     "CI",
     "NEXT_TELEMETRY_DISABLED"
   ],
