@@ -231,6 +231,159 @@
       },
       "title": "Overview"
     },
+    "review": {
+      "breadcrumb": {
+        "exam": "Review / {exam}",
+        "exams": "Review / {count, plural, one {# exam} other {# exams}}",
+        "root": "Review"
+      },
+      "column": {
+        "flags": "Flags",
+        "open": "Open",
+        "status": "Status",
+        "student": "Student",
+        "time": "Time"
+      },
+      "duration": {
+        "days": "{days} d {hours} h",
+        "hours": "{hours} h {minutes} min",
+        "minutes": "{minutes} min {seconds} s",
+        "seconds": "{seconds} s"
+      },
+      "empty": {
+        "filtered": "No sessions match.",
+        "to_review": "Nothing to review. Every flag has a decision."
+      },
+      "error": "{code, select, forbidden {You can’t review this session.} not_found {That session no longer exists.} bad_request {That was not accepted. Check the note.} other {Could not reach Üki. Try again.}}",
+      "examLine": "{exam} · {state, select, live {live now} other {finished {time}}}",
+      "filter": {
+        "button": "Flag type",
+        "clear": "Clear",
+        "header": "Flag type",
+        "show": "{count, plural, one {Show # flag} other {Show # flags}}"
+      },
+      "flag": {
+        "camera_lost": "Camera lost",
+        "face_missing": "No face",
+        "face_second": "Second face",
+        "gaze_down": "Looked down",
+        "gaze_off_screen": "Looked away",
+        "lock_app_disconnected": "App closed",
+        "lock_fullscreen_exit": "Left full screen",
+        "phone_detected": "Phone in frame",
+        "proctor_ended": "Ended by the proctor",
+        "tab_blocked": "Tab blocked"
+      },
+      "preview": {
+        "open": "Open review",
+        "still": "Frame at {time}",
+        "title": "{name} · {what}"
+      },
+      "principle": {
+        "body": "Each flag is a moment with a time and a frame. You decide what it means.",
+        "title": "Flag ≠ fail."
+      },
+      "row": {
+        "noTime": "—",
+        "review": "Review"
+      },
+      "search": {
+        "label": "Find a student"
+      },
+      "session": {
+        "breadcrumb": "Review / {exam} / {index} of {total}",
+        "chip": {
+          "camera_lost": "camera lost",
+          "face_missing": "{seconds, select, none {no face} other {no face {seconds, number, ::.#} s}}",
+          "face_second": "{seconds, select, none {second face} other {second face {seconds, number, ::.#} s}}",
+          "flags": "{count, plural, one {# flag} other {# flags}}",
+          "gaze_down": "{seconds, select, none {gaze} other {gaze {seconds, number, ::.#} s}}",
+          "gaze_off_screen": "{seconds, select, none {gaze} other {gaze {seconds, number, ::.#} s}}",
+          "identity": "{result, select, matched {identity matched} other {identity not checked}}",
+          "lock_app_disconnected": "app closed",
+          "lock_fullscreen_exit": "full screen",
+          "noVideo": "no video stored",
+          "phone_detected": "{score, select, none {phone} other {phone {score, number, ::.00}}}",
+          "proctor_ended": "ended",
+          "tab_blocked": "tab blocked",
+          "time": "{used} of {duration} min"
+        },
+        "decision": {
+          "committee": {
+            "detail": "{count, plural, =0 {Attach this report and its flags.} one {Attach this report and the frame.} other {Attach this report and the # frames.}}",
+            "title": "Send to the exam committee"
+          },
+          "no_issue": {
+            "detail": "Close the flags. Nothing goes to the student.",
+            "title": "No issue"
+          },
+          "talk": {
+            "detail": "{what, select, none {Ask what happened.} other {Ask about the {what} at {time}.}}",
+            "title": "Talk to the student"
+          },
+          "title": "Your decision"
+        },
+        "flags": "Flags",
+        "note": "Note",
+        "save": "Save and next",
+        "showFlag": "Show {flag} at {time}",
+        "skip": "Skip",
+        "stamp": "{time} · {flag} · {count, plural, =0 {no frame kept} other {frame {index} of {count}}}",
+        "still": "Frame {index} of {count} at {time}",
+        "timeline": "Timeline"
+      },
+      "sessions": {
+        "title": "Sessions"
+      },
+      "stat": {
+        "median": {
+          "caption": "per flagged session",
+          "label": "Median review",
+          "none": "—"
+        },
+        "noFlags": {
+          "caption": "nothing to look at",
+          "label": "No flags"
+        },
+        "reviewed": {
+          "caption": "{when, select, today {today, } other {}}by {count, plural, one {# proctor} other {# proctors}}",
+          "label": "Reviewed",
+          "none": "no decisions yet"
+        },
+        "toReview": {
+          "caption": "{count, plural, one {# flag in total} other {# flags in total}}",
+          "label": "To review"
+        }
+      },
+      "status": {
+        "committee": "Committee",
+        "no_flags": "No flags",
+        "no_issue": "No issue",
+        "talk": "Talk to student",
+        "to_review": "Needs review"
+      },
+      "tab": {
+        "all": "All · {count}",
+        "reviewed": "Reviewed · {count}",
+        "to_review": "To review · {count}"
+      },
+      "tabs": {
+        "label": "Show sessions"
+      },
+      "title": "Review",
+      "top": {
+        "camera_lost": "Camera lost",
+        "face_missing": "{seconds, select, none {Paused · no face} other {Paused · no face {seconds, number, ::.#} s}}",
+        "face_second": "{seconds, select, none {Second face} other {Second face · {seconds, number, ::.#} s}}",
+        "gaze_down": "{count, plural, one {Looked down · {seconds, number, ::.#} s} other {Looked down · {seconds, number, ::.#} s in total}}",
+        "gaze_off_screen": "{count, plural, one {Looked away · {seconds, number, ::.#} s} other {Looked away · {seconds, number, ::.#} s in total}}",
+        "lock_app_disconnected": "App closed while the Lock was on",
+        "lock_fullscreen_exit": "Left full screen",
+        "phone_detected": "{score, select, none {Phone in frame} other {Phone in frame · {score, number, ::.00}}}",
+        "proctor_ended": "Ended by the proctor",
+        "tab_blocked": "New tab blocked"
+      }
+    },
     "shell": {
       "account": {
         "language": "Language"
@@ -308,6 +461,7 @@
       "action": {
         "end": "End session",
         "header": "{name} · {number}",
+        "markReviewed": "Mark reviewed",
         "message": "Message",
         "pause": "Pause exam",
         "resume": "Resume exam",
@@ -315,10 +469,12 @@
       },
       "breadcrumb": "Live / {exam} · {left} left",
       "drawer": {
+        "addNote": "Add note",
         "close": "Close timeline",
         "loading": "Loading the timeline",
         "messageLabel": "{pronoun, select, he {Quick message · sent in his language} she {Quick message · sent in her language} other {Quick message · sent in their language}}",
         "meta": "{number}{seat, select, none {} other { · seat {seat}}}{os, select, macos { · macOS} windows { · Windows} other {}}",
+        "noteLabel": "Note",
         "phoneChip": "phone {score, number, ::.00}",
         "question": "Q {question} of {total}",
         "questionNoTotal": "Q {question}",

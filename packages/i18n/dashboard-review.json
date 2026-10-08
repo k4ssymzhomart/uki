@@ -1,0 +1,411 @@
+{
+  "$comment": "WP 1.8 Review: 3.2, 3.2a, 3.2b, 3.3, Mark reviewed (2.4a) and Add note (2.5). English from the Figma frames; keys without a Figma source are listed in docs/decisions.md. The Russian is a first pass by the agent: native review needed, P.18.",
+  "dashboard.review.title": {
+    "en": "Review",
+    "ru": "Проверка"
+  },
+  "dashboard.review.breadcrumb.root": {
+    "en": "Review",
+    "ru": "Проверка"
+  },
+  "dashboard.review.breadcrumb.exam": {
+    "en": "Review / {exam}",
+    "ru": "Проверка / {exam}"
+  },
+  "dashboard.review.breadcrumb.exams": {
+    "en": "Review / {count, plural, one {# exam} other {# exams}}",
+    "ru": "Проверка / {count, plural, one {# экзамен} few {# экзамена} many {# экзаменов} other {# экзамена}}"
+  },
+  "dashboard.review.examLine": {
+    "en": "{exam} · {state, select, live {live now} other {finished {time}}}",
+    "ru": "{exam} · {state, select, live {идёт сейчас} other {завершён в {time}}}"
+  },
+  "dashboard.review.stat.toReview.label": {
+    "en": "To review",
+    "ru": "К проверке"
+  },
+  "dashboard.review.stat.toReview.caption": {
+    "en": "{count, plural, one {# flag in total} other {# flags in total}}",
+    "ru": "{count, plural, one {всего # отметка} few {всего # отметки} many {всего # отметок} other {всего # отметки}}"
+  },
+  "dashboard.review.stat.reviewed.label": {
+    "en": "Reviewed",
+    "ru": "Проверено"
+  },
+  "dashboard.review.stat.reviewed.caption": {
+    "en": "{when, select, today {today, } other {}}by {count, plural, one {# proctor} other {# proctors}}",
+    "ru": "{when, select, today {сегодня, } other {}}{count, plural, one {# проверяющий} few {# проверяющих} many {# проверяющих} other {# проверяющего}}"
+  },
+  "dashboard.review.stat.reviewed.none": {
+    "en": "no decisions yet",
+    "ru": "решений пока нет"
+  },
+  "dashboard.review.stat.noFlags.label": {
+    "en": "No flags",
+    "ru": "Без отметок"
+  },
+  "dashboard.review.stat.noFlags.caption": {
+    "en": "nothing to look at",
+    "ru": "смотреть нечего"
+  },
+  "dashboard.review.stat.median.label": {
+    "en": "Median review",
+    "ru": "Медиана проверки"
+  },
+  "dashboard.review.stat.median.caption": {
+    "en": "per flagged session",
+    "ru": "на сессию с отметками"
+  },
+  "dashboard.review.stat.median.none": {
+    "en": "—",
+    "ru": "—"
+  },
+  "dashboard.review.duration.seconds": {
+    "en": "{seconds} s",
+    "ru": "{seconds} с"
+  },
+  "dashboard.review.duration.minutes": {
+    "en": "{minutes} min {seconds} s",
+    "ru": "{minutes} мин {seconds} с"
+  },
+  "dashboard.review.duration.hours": {
+    "en": "{hours} h {minutes} min",
+    "ru": "{hours} ч {minutes} мин"
+  },
+  "dashboard.review.duration.days": {
+    "en": "{days} d {hours} h",
+    "ru": "{days} д {hours} ч"
+  },
+  "dashboard.review.principle.title": {
+    "en": "Flag ≠ fail.",
+    "ru": "Отметка ≠ нарушение."
+  },
+  "dashboard.review.principle.body": {
+    "en": "Each flag is a moment with a time and a frame. You decide what it means.",
+    "ru": "Каждая отметка — это момент со временем и кадром. Что он значит, решаете вы."
+  },
+  "dashboard.review.sessions.title": {
+    "en": "Sessions",
+    "ru": "Сессии"
+  },
+  "dashboard.review.tabs.label": {
+    "en": "Show sessions",
+    "ru": "Показать сессии"
+  },
+  "dashboard.review.tab.to_review": {
+    "en": "To review · {count}",
+    "ru": "К проверке · {count}"
+  },
+  "dashboard.review.tab.reviewed": {
+    "en": "Reviewed · {count}",
+    "ru": "Проверено · {count}"
+  },
+  "dashboard.review.tab.all": {
+    "en": "All · {count}",
+    "ru": "Все · {count}"
+  },
+  "dashboard.review.filter.button": {
+    "en": "Flag type",
+    "ru": "Тип отметки"
+  },
+  "dashboard.review.filter.header": {
+    "en": "Flag type",
+    "ru": "Тип отметки"
+  },
+  "dashboard.review.filter.clear": {
+    "en": "Clear",
+    "ru": "Сбросить"
+  },
+  "dashboard.review.filter.show": {
+    "en": "{count, plural, one {Show # flag} other {Show # flags}}",
+    "ru": "{count, plural, one {Показать # отметку} few {Показать # отметки} many {Показать # отметок} other {Показать # отметки}}"
+  },
+  "dashboard.review.flag.phone_detected": {
+    "en": "Phone in frame",
+    "ru": "Телефон в кадре"
+  },
+  "dashboard.review.flag.face_second": {
+    "en": "Second face",
+    "ru": "Второе лицо"
+  },
+  "dashboard.review.flag.proctor_ended": {
+    "en": "Ended by the proctor",
+    "ru": "Завершено проктором"
+  },
+  "dashboard.review.flag.lock_app_disconnected": {
+    "en": "App closed",
+    "ru": "Приложение закрыто"
+  },
+  "dashboard.review.flag.gaze_off_screen": {
+    "en": "Looked away",
+    "ru": "Взгляд в сторону"
+  },
+  "dashboard.review.flag.gaze_down": {
+    "en": "Looked down",
+    "ru": "Взгляд вниз"
+  },
+  "dashboard.review.flag.tab_blocked": {
+    "en": "Tab blocked",
+    "ru": "Вкладка заблокирована"
+  },
+  "dashboard.review.flag.face_missing": {
+    "en": "No face",
+    "ru": "Нет лица"
+  },
+  "dashboard.review.flag.camera_lost": {
+    "en": "Camera lost",
+    "ru": "Камера отключилась"
+  },
+  "dashboard.review.flag.lock_fullscreen_exit": {
+    "en": "Left full screen",
+    "ru": "Выход из полноэкранного режима"
+  },
+  "dashboard.review.top.phone_detected": {
+    "en": "{score, select, none {Phone in frame} other {Phone in frame · {score, number, ::.00}}}",
+    "ru": "{score, select, none {Телефон в кадре} other {Телефон в кадре · {score, number, ::.00}}}"
+  },
+  "dashboard.review.top.face_second": {
+    "en": "{seconds, select, none {Second face} other {Second face · {seconds, number, ::.#} s}}",
+    "ru": "{seconds, select, none {Второе лицо} other {Второе лицо · {seconds, number, ::.#} с}}"
+  },
+  "dashboard.review.top.proctor_ended": {
+    "en": "Ended by the proctor",
+    "ru": "Завершено проктором"
+  },
+  "dashboard.review.top.lock_app_disconnected": {
+    "en": "App closed while the Lock was on",
+    "ru": "Приложение закрылось при включённом Lock"
+  },
+  "dashboard.review.top.gaze_off_screen": {
+    "en": "{count, plural, one {Looked away · {seconds, number, ::.#} s} other {Looked away · {seconds, number, ::.#} s in total}}",
+    "ru": "{count, plural, one {Взгляд в сторону · {seconds, number, ::.#} с} few {Взгляд в сторону · всего {seconds, number, ::.#} с} many {Взгляд в сторону · всего {seconds, number, ::.#} с} other {Взгляд в сторону · всего {seconds, number, ::.#} с}}"
+  },
+  "dashboard.review.top.gaze_down": {
+    "en": "{count, plural, one {Looked down · {seconds, number, ::.#} s} other {Looked down · {seconds, number, ::.#} s in total}}",
+    "ru": "{count, plural, one {Взгляд вниз · {seconds, number, ::.#} с} few {Взгляд вниз · всего {seconds, number, ::.#} с} many {Взгляд вниз · всего {seconds, number, ::.#} с} other {Взгляд вниз · всего {seconds, number, ::.#} с}}"
+  },
+  "dashboard.review.top.tab_blocked": {
+    "en": "New tab blocked",
+    "ru": "Новая вкладка заблокирована"
+  },
+  "dashboard.review.top.face_missing": {
+    "en": "{seconds, select, none {Paused · no face} other {Paused · no face {seconds, number, ::.#} s}}",
+    "ru": "{seconds, select, none {Пауза · нет лица} other {Пауза · нет лица {seconds, number, ::.#} с}}"
+  },
+  "dashboard.review.top.camera_lost": {
+    "en": "Camera lost",
+    "ru": "Камера отключилась"
+  },
+  "dashboard.review.top.lock_fullscreen_exit": {
+    "en": "Left full screen",
+    "ru": "Выход из полноэкранного режима"
+  },
+  "dashboard.review.search.label": {
+    "en": "Find a student",
+    "ru": "Найти студента"
+  },
+  "dashboard.review.column.student": {
+    "en": "Student",
+    "ru": "Студент"
+  },
+  "dashboard.review.column.flags": {
+    "en": "Flags",
+    "ru": "Отметки"
+  },
+  "dashboard.review.column.time": {
+    "en": "Time",
+    "ru": "Время"
+  },
+  "dashboard.review.column.status": {
+    "en": "Status",
+    "ru": "Статус"
+  },
+  "dashboard.review.column.open": {
+    "en": "Open",
+    "ru": "Открыть"
+  },
+  "dashboard.review.status.to_review": {
+    "en": "Needs review",
+    "ru": "Нужна проверка"
+  },
+  "dashboard.review.status.no_issue": {
+    "en": "No issue",
+    "ru": "Без нарушений"
+  },
+  "dashboard.review.status.talk": {
+    "en": "Talk to student",
+    "ru": "Беседа"
+  },
+  "dashboard.review.status.committee": {
+    "en": "Committee",
+    "ru": "Комиссия"
+  },
+  "dashboard.review.status.no_flags": {
+    "en": "No flags",
+    "ru": "Без отметок"
+  },
+  "dashboard.review.row.review": {
+    "en": "Review",
+    "ru": "Проверить"
+  },
+  "dashboard.review.row.noTime": {
+    "en": "—",
+    "ru": "—"
+  },
+  "dashboard.review.empty.to_review": {
+    "en": "Nothing to review. Every flag has a decision.",
+    "ru": "Проверять нечего. По каждой отметке есть решение."
+  },
+  "dashboard.review.empty.filtered": {
+    "en": "No sessions match.",
+    "ru": "Подходящих сессий нет."
+  },
+  "dashboard.review.preview.title": {
+    "en": "{name} · {what}",
+    "ru": "{name} · {what}"
+  },
+  "dashboard.review.preview.open": {
+    "en": "Open review",
+    "ru": "Открыть проверку"
+  },
+  "dashboard.review.preview.still": {
+    "en": "Frame at {time}",
+    "ru": "Кадр в {time}"
+  },
+  "dashboard.review.session.breadcrumb": {
+    "en": "Review / {exam} / {index} of {total}",
+    "ru": "Проверка / {exam} / {index} из {total}"
+  },
+  "dashboard.review.session.chip.flags": {
+    "en": "{count, plural, one {# flag} other {# flags}}",
+    "ru": "{count, plural, one {# отметка} few {# отметки} many {# отметок} other {# отметки}}"
+  },
+  "dashboard.review.session.chip.identity": {
+    "en": "{result, select, matched {identity matched} other {identity not checked}}",
+    "ru": "{result, select, matched {личность подтверждена} other {личность не проверена}}"
+  },
+  "dashboard.review.session.chip.time": {
+    "en": "{used} of {duration} min",
+    "ru": "{used} из {duration} мин"
+  },
+  "dashboard.review.session.chip.noVideo": {
+    "en": "no video stored",
+    "ru": "видео не хранится"
+  },
+  "dashboard.review.session.stamp": {
+    "en": "{time} · {flag} · {count, plural, =0 {no frame kept} other {frame {index} of {count}}}",
+    "ru": "{time} · {flag} · {count, plural, =0 {кадр не сохранён} one {кадр {index} из {count}} few {кадр {index} из {count}} many {кадр {index} из {count}} other {кадр {index} из {count}}}"
+  },
+  "dashboard.review.session.still": {
+    "en": "Frame {index} of {count} at {time}",
+    "ru": "Кадр {index} из {count} в {time}"
+  },
+  "dashboard.review.session.flags": {
+    "en": "Flags",
+    "ru": "Отметки"
+  },
+  "dashboard.review.session.showFlag": {
+    "en": "Show {flag} at {time}",
+    "ru": "Показать «{flag}» в {time}"
+  },
+  "dashboard.review.session.chip.phone_detected": {
+    "en": "{score, select, none {phone} other {phone {score, number, ::.00}}}",
+    "ru": "{score, select, none {телефон} other {телефон {score, number, ::.00}}}"
+  },
+  "dashboard.review.session.chip.face_second": {
+    "en": "{seconds, select, none {second face} other {second face {seconds, number, ::.#} s}}",
+    "ru": "{seconds, select, none {второе лицо} other {второе лицо {seconds, number, ::.#} с}}"
+  },
+  "dashboard.review.session.chip.proctor_ended": {
+    "en": "ended",
+    "ru": "завершено"
+  },
+  "dashboard.review.session.chip.lock_app_disconnected": {
+    "en": "app closed",
+    "ru": "приложение закрыто"
+  },
+  "dashboard.review.session.chip.gaze_off_screen": {
+    "en": "{seconds, select, none {gaze} other {gaze {seconds, number, ::.#} s}}",
+    "ru": "{seconds, select, none {взгляд} other {взгляд {seconds, number, ::.#} с}}"
+  },
+  "dashboard.review.session.chip.gaze_down": {
+    "en": "{seconds, select, none {gaze} other {gaze {seconds, number, ::.#} s}}",
+    "ru": "{seconds, select, none {взгляд} other {взгляд {seconds, number, ::.#} с}}"
+  },
+  "dashboard.review.session.chip.tab_blocked": {
+    "en": "tab blocked",
+    "ru": "вкладка"
+  },
+  "dashboard.review.session.chip.face_missing": {
+    "en": "{seconds, select, none {no face} other {no face {seconds, number, ::.#} s}}",
+    "ru": "{seconds, select, none {нет лица} other {нет лица {seconds, number, ::.#} с}}"
+  },
+  "dashboard.review.session.chip.camera_lost": {
+    "en": "camera lost",
+    "ru": "камера"
+  },
+  "dashboard.review.session.chip.lock_fullscreen_exit": {
+    "en": "full screen",
+    "ru": "полный экран"
+  },
+  "dashboard.review.session.timeline": {
+    "en": "Timeline",
+    "ru": "Хронология"
+  },
+  "dashboard.review.session.decision.title": {
+    "en": "Your decision",
+    "ru": "Ваше решение"
+  },
+  "dashboard.review.session.decision.no_issue.title": {
+    "en": "No issue",
+    "ru": "Нарушений нет"
+  },
+  "dashboard.review.session.decision.no_issue.detail": {
+    "en": "Close the flags. Nothing goes to the student.",
+    "ru": "Закрыть отметки. Студенту ничего не отправляется."
+  },
+  "dashboard.review.session.decision.talk.title": {
+    "en": "Talk to the student",
+    "ru": "Поговорить со студентом"
+  },
+  "dashboard.review.session.decision.talk.detail": {
+    "en": "{what, select, none {Ask what happened.} other {Ask about the {what} at {time}.}}",
+    "ru": "{what, select, none {Спросите, что произошло.} other {Спросите про «{what}» в {time}.}}"
+  },
+  "dashboard.review.session.decision.committee.title": {
+    "en": "Send to the exam committee",
+    "ru": "Передать в экзаменационную комиссию"
+  },
+  "dashboard.review.session.decision.committee.detail": {
+    "en": "{count, plural, =0 {Attach this report and its flags.} one {Attach this report and the frame.} other {Attach this report and the # frames.}}",
+    "ru": "{count, plural, =0 {Приложить этот отчёт и его отметки.} one {Приложить этот отчёт и # кадр.} few {Приложить этот отчёт и # кадра.} many {Приложить этот отчёт и # кадров.} other {Приложить этот отчёт и # кадра.}}"
+  },
+  "dashboard.review.session.note": {
+    "en": "Note",
+    "ru": "Заметка"
+  },
+  "dashboard.review.session.skip": {
+    "en": "Skip",
+    "ru": "Пропустить"
+  },
+  "dashboard.review.session.save": {
+    "en": "Save and next",
+    "ru": "Сохранить и дальше"
+  },
+  "dashboard.review.error": {
+    "en": "{code, select, forbidden {You can’t review this session.} not_found {That session no longer exists.} bad_request {That was not accepted. Check the note.} other {Could not reach Üki. Try again.}}",
+    "ru": "{code, select, forbidden {Вы не можете проверять эту сессию.} not_found {Этой сессии больше нет.} bad_request {Не принято. Проверьте заметку.} other {Не удалось связаться с Üki. Попробуйте ещё раз.}}"
+  },
+  "dashboard.wall.action.markReviewed": {
+    "en": "Mark reviewed",
+    "ru": "Отметить как проверено"
+  },
+  "dashboard.wall.drawer.addNote": {
+    "en": "Add note",
+    "ru": "Добавить заметку"
+  },
+  "dashboard.wall.drawer.noteLabel": {
+    "en": "Note",
+    "ru": "Заметка"
+  }
+}
