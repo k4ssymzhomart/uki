@@ -2075,6 +2075,19 @@ export type Database = {
       exam_code_latin: { Args: { p: string }; Returns: string }
       exam_draft_json: { Args: { p_exam_id: string }; Returns: Json }
       exam_has_open_flags: { Args: { p_exam_id: string }; Returns: boolean }
+      exam_overview_counts: {
+        Args: { p_exam_id: string }
+        Returns: {
+          flagged_events: number
+          groups: string[]
+          joined: number
+          paused: number
+          proctor_count: number
+          roster_size: number
+          sessions_final: number
+          writing: number
+        }[]
+      }
       exam_question_count: { Args: { exam_id: string }; Returns: number }
       exam_started: { Args: { p_exam_id: string }; Returns: boolean }
       exam_workspace: { Args: { p_exam_id: string }; Returns: string }
