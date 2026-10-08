@@ -341,6 +341,34 @@ select is((select expires_at from public.report_shares where id = (select (s ->>
   now() + interval '30 days', 'and the share row says so');
 
 -- ---------------------------------------------------------------------------
+-- staff_may_share: the roles that may make or withdraw links (a read-only role may not)
+-- ---------------------------------------------------------------------------
+select t.put('admin', t.new_staff('admin@verify.test', 'Admin', 'admin'));
+select t.put('nobody', t.new_user('nobody@verify.test'));
+select t.login(t.id('office'));
+select ok(public.staff_may_share(), 'the exam office may share');
+reset role;
+select t.login(t.id('aigerim'));
+select ok(public.staff_may_share(), 'a proctor may share');
+reset role;
+select t.login(t.id('admin'));
+select ok(public.staff_may_share(), 'an admin may share');
+reset role;
+select t.login(t.id('nobody'));
+select ok(not public.staff_may_share(), 'a signed-in user who is not staff may not');
+reset role;
+select t.login(t.id('s7_uid'));
+select ok(not public.staff_may_share(), 'nor may a student');
+reset role;
+select t.anon();
+select throws_ok($$ select public.staff_may_share() $$, '42501', null, 'anon cannot call staff_may_share');
+reset role;
+select ok(pg_get_functiondef('public.create_share(uuid)'::regprocedure) ~ 'staff_may_share\(\)',
+  'create_share asks staff_may_share');
+select ok(pg_get_functiondef('public.revoke_share(uuid)'::regprocedure) ~ 'staff_may_share\(\)',
+  'and so does revoke_share');
+
+-- ---------------------------------------------------------------------------
 -- revoke_share for each role
 -- ---------------------------------------------------------------------------
 create table t.sid as select (s ->> 'share_id')::uuid as id, encode(sha256(convert_to(s ->> 'token', 'UTF8')), 'hex') as h

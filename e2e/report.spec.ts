@@ -284,7 +284,8 @@ test("review to report to share: 3.4 prints and exports, 3.5 opens without sign-
   await expect(page.getByTestId("share-link")).toHaveCount(0);
   await expect(page.getByText("1 active link")).toBeVisible();
   await page.getByRole("button", { name: message("dashboard.report.share.revokeLabel") }).click();
-  await expect(page.getByText("1 link revoked")).toBeVisible();
+  // The toast, not the screen reader's copy of it in the notifications region.
+  await expect(page.getByText("1 link revoked", { exact: true })).toBeVisible();
   await expect(page.getByTestId("share-revoke")).toHaveCount(0);
   const { data: revokedRow } = await adminClient()
     .from("report_shares")

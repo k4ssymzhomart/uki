@@ -2247,6 +2247,7 @@ export type Database = {
         Returns: Json
       }
       session_tick: { Args: never; Returns: Json }
+      staff_may_share: { Args: never; Returns: boolean }
       start_exam: { Args: { exam_id: string }; Returns: Json }
       submit_session: { Args: { session_id: string }; Returns: Json }
       term_key: { Args: { d: string }; Returns: string }

@@ -12,7 +12,9 @@
 --     11th is refused with rate_limited and SQLSTATE PT429, which PostgREST answers with HTTP 429. The
 --     one-argument verify_report is dropped, so the limit cannot be stepped around through it.
 --  3. Share links: revoke_share(share_id) for staff of the exam sets revoked_at and writes an audit row
---     (report.share_revoke); create_share's links last 30 days instead of 7.
+--     (report.share_revoke); create_share's links last 30 days instead of 7. Both refuse a staff role
+--     that is not the exam office, an admin or a proctor (staff_may_share), so a read-only role cannot
+--     change sharing.
 
 -- ---------------------------------------------------------------------------
 -- 1. Verify codes
@@ -246,6 +248,23 @@ $$;
 -- 3. Share links: 30 days, and revoke_share
 -- ---------------------------------------------------------------------------
 
+-- Whether the signed-in staff member has a role that may make or withdraw share links: the exam office,
+-- an admin or a proctor. A read-only staff role (judge mode's observer) is refused even when it is
+-- assigned to the exam, so is_exam_staff alone is not enough. The role is compared as text, so this
+-- holds before and after such a role joins the staff_role enum.
+create or replace function public.staff_may_share()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select not public.is_anonymous() and exists (
+    select 1 from public.staff s
+    where s.id = (select auth.uid()) and s.role::text in ('exam_office', 'admin', 'proctor')
+  )
+$$;
+
 -- create_share(report_id): Share link on 3.4, for staff of the exam. A random 32-byte token,
 -- base64url (43 characters), returned only here; report_shares keeps its SHA-256 (hex) and an
 -- expiry 30 days ahead. Audit row without the token. Returns {share_id, token, path, expires_at}.
@@ -270,7 +289,7 @@ begin
   if not found then
     raise exception using message = 'not_found', errcode = 'P0002';
   end if;
-  if not public.is_exam_staff(v_r.exam_id) then
+  if not public.is_exam_staff(v_r.exam_id) or not public.staff_may_share() then
     raise exception using message = 'forbidden', errcode = '42501';
   end if;
   v_token := rtrim(translate(encode(extensions.gen_random_bytes(32), 'base64'), '+/', '-_'), '=');
@@ -309,7 +328,7 @@ begin
     raise exception using message = 'not_found', errcode = 'P0002';
   end if;
   select r.exam_id into v_exam from public.reports r where r.id = v_share.report_id;
-  if not public.is_exam_staff(v_exam) then
+  if not public.is_exam_staff(v_exam) or not public.staff_may_share() then
     raise exception using message = 'forbidden', errcode = '42501';
   end if;
   if v_share.revoked_at is null then
@@ -331,6 +350,7 @@ revoke execute on function public.unused_verify_code() from public, anon, authen
 revoke execute on function public.convert_verify_codes() from public, anon, authenticated;
 revoke execute on function public.verify_report(text, text) from public, anon, authenticated;
 revoke execute on function public.revoke_share(uuid) from public, anon, authenticated;
+revoke execute on function public.staff_may_share() from public, anon, authenticated;
 
 grant execute on function public.new_verify_code() to service_role;
 grant execute on function public.unused_verify_code() to service_role;
@@ -339,3 +359,4 @@ grant execute on function public.convert_verify_codes() to service_role;
 grant execute on function public.verify_report(text, text) to anon, authenticated, service_role;
 -- Staff RPC (checks the caller).
 grant execute on function public.revoke_share(uuid) to authenticated;
+grant execute on function public.staff_may_share() to authenticated, service_role;
