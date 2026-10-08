@@ -8,8 +8,9 @@
 #             desktop flow against the stack; the dashboard smoke test (Playwright Chromium); the demo
 #             scripts against the real schema; then send-invites (WP 1.4) and pilot-notify (WP 1.13) again
 #             with UKI_EMAIL_SINK set
-#   build     web, the mock portal and Üki Lock (Chrome and Edge zips, uploaded as the uki-lock artifact),
-#             then the Üki Lock smoke test in headless Chrome for Testing
+#   build     web (with the /try models, checked against the SHA-256 manifest), the mock portal and Üki
+#             Lock (Chrome and Edge zips, uploaded as the uki-lock artifact), then the Üki Lock smoke test
+#             in headless Chrome for Testing and the /try demo with Chromium's fake camera
 #   windows   WP 0.12 on windows-latest: pnpm check, the x64 zip, the NSIS installer, the launch test of
 #             the packaged Uki.exe from the zip and from a current-user install, and the lab zip; WP 0.13:
 #             the real keyboard hook installed and removed, Koffi in every Windows build, and the
@@ -169,7 +170,14 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Web dashboard
+      # The /try demo's models (apps/web/scripts/detection-models.ts): the build verifies cached files
+      # against the desktop's SHA-256 manifest and fetches whatever is missing or different.
+      - name: Detection models for /try cache
+        uses: actions/cache@v4
+        with:
+          path: apps/web/public/models
+          key: web-models-${{ hashFiles('apps/desktop/resources/models/manifest.json', 'packages/detection/scripts/model-files.ts') }}
+      - name: Web dashboard (fetches and verifies the /try models first)
         run: pnpm --filter web build
       - name: Mock exam portal
         run: pnpm --filter lms-mock build
@@ -195,6 +203,18 @@ jobs:
           PW_CHROMIUM="$(node --input-type=module -e "import { chromium } from '@playwright/test'; console.log(chromium.executablePath())")"
           export PW_CHROMIUM
           SMOKE_SHOTS="$RUNNER_TEMP/lock-smoke" pnpm --filter lock smoke
+      - name: /try detection demo with Chromium's fake camera (no database; next start on the build)
+        run: UKI_TRY_START=1 pnpm e2e:try
+      - name: /try test results on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: try-e2e
+          path: |
+            test-results/e2e-try/
+            e2e/try/playwright-report/
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Üki Lock smoke screenshots
         if: always()
         uses: actions/upload-artifact@v4
