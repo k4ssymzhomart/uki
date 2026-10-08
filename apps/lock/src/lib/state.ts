@@ -3,10 +3,13 @@
 // popup and the block page, `bar` for the content script on the exam portal. Every read goes through Zod;
 // anything that fails parses as missing.
 import {
+  BrowserRules,
   ClockOffsetMs,
+  CopyKind,
   DesktopOs,
   ExamMode,
   ExamStatePhase,
+  Host,
   Locale,
   LockEvent,
   LockExam,
@@ -42,6 +45,25 @@ export type ExamStateMessage = z.infer<typeof ExamStateMessage>;
 
 const Count = z.number().int().nonnegative();
 
+/** The attempts E.8 lists and E.9 counts: the Lock's three "blocked" events. */
+export const NOTED_TYPES = ["tab.blocked", "site.closed", "copy.blocked"] as const;
+
+/**
+ * Phase 1, E.8: one attempt the Lock noted (an event it sent to the app), on the laptop's clock. `host` for
+ * tab.blocked and site.closed (null when focus left the browser or a browser page opened), `kind` for
+ * copy.blocked.
+ */
+export const NotedAttempt = z.object({
+  id: Uuid,
+  type: z.enum(NOTED_TYPES),
+  at: z.number(),
+  host: Host.nullable().optional(),
+  kind: CopyKind.optional(),
+});
+export type NotedAttempt = z.infer<typeof NotedAttempt>;
+/** The latest attempts kept for E.8; `blocked_count` keeps the total. */
+export const NOTED_KEEP = 20;
+
 /** The running lock. Saved before any tab closes, so a crash never loses the student's tabs. */
 export const LockRecord = z.object({
   mode: ExamMode,
@@ -55,6 +77,8 @@ export const LockRecord = z.object({
   blocked_count: Count,
   /** Server time minus the laptop's clock, from the app's latest exam.state for this exam. */
   clock_offset_ms: ClockOffsetMs.default(0),
+  /** Phase 1, E.8: the latest noted attempts, oldest first (at most NOTED_KEEP). */
+  noted: z.array(NotedAttempt).default([]),
 });
 export type LockRecord = z.infer<typeof LockRecord>;
 
@@ -94,7 +118,17 @@ export const LockView = z.object({
   pair: z.object({ code: z.string(), expires_at: z.string() }).nullable(),
   pair_error: PairFailReason.nullable(),
   exam_state: ExamStateMessage.nullable(),
-  locked: z.object({ mode: ExamMode, exam: LockExam, started_at: z.number(), locale: Locale }).nullable(),
+  locked: z
+    .object({
+      mode: ExamMode,
+      exam: LockExam,
+      started_at: z.number(),
+      locale: Locale,
+      /** Phase 1, E.8: how many attempts the Lock noted, and the latest of them. */
+      blocked_count: Count.default(0),
+      noted: z.array(NotedAttempt).default([]),
+    })
+    .nullable(),
   released: ReleasedSummary.nullable(),
 });
 export type LockView = z.infer<typeof LockView>;
@@ -128,6 +162,18 @@ export const BarState = z.object({
    * help.queued (it is in the app's outbox). `at` is on the laptop's clock.
    */
   help: z.object({ id: Uuid, at: z.number(), queued: z.boolean() }).nullable().optional(),
+  /**
+   * Phase 1, E.1: the rules in force (effectiveBrowserRules), so the copy guard, the print style and the
+   * Calculator tab follow them. Missing from a Lock before Phase 1: every rule on.
+   */
+  browser_rules: BrowserRules.optional(),
+  /** Phase 1, E.5b: the student's name from the app's hello, for the calculator page's header. */
+  student_name: z.string().nullable().optional(),
+  /**
+   * Phase 1, E.8: when the popup's Ask proctor was last pressed (laptop clock). The bar opens E.5a's sheet
+   * when it changes after the page loaded.
+   */
+  ask_at: z.number().nullable().optional(),
 });
 export type BarState = z.infer<typeof BarState>;
 

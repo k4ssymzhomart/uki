@@ -1218,6 +1218,141 @@
       "notes": "Phase 1"
     },
     {
+      "key": "lock.app.watching",
+      "group": "E.8 Lock status",
+      "source": "figma",
+      "en": "Üki app · watching · camera on",
+      "kk": "Üki қолданбасы · бақылауда · камера қосулы",
+      "ru": "Приложение Üki · наблюдает · камера включена",
+      "notes": "Phase 1. Popup footer in E.8 (98:9927) while the app is paired."
+    },
+    {
+      "key": "lock.calc.clear",
+      "group": "E.5b Calculator",
+      "source": "figma",
+      "en": "C",
+      "kk": "C",
+      "ru": "C",
+      "notes": "Phase 1. The clear key of E.5b's keypad (153:11875). The other keys are digits and symbols, not strings."
+    },
+    {
+      "key": "lock.calc.error",
+      "group": "E.5b Calculator",
+      "source": "added-not-in-figma",
+      "en": "Can’t divide by 0",
+      "kk": "0-ге бөлуге болмайды",
+      "ru": "На 0 делить нельзя",
+      "notes": "Phase 1. E.5b's value after a division by zero; no frame draws it."
+    },
+    {
+      "key": "lock.noted.copy",
+      "group": "E.8 Lock status",
+      "source": "figma",
+      "en": "Copy blocked",
+      "kk": "Көшіру бұғатталды",
+      "ru": "Копирование заблокировано",
+      "notes": "Phase 1. E.8 noted row for copy.blocked (any kind)."
+    },
+    {
+      "key": "lock.noted.kind.copy",
+      "group": "E.8 Lock status",
+      "source": "added-not-in-figma",
+      "en": "Copy",
+      "kk": "Көшіру",
+      "ru": "Копирование",
+      "notes": "Phase 1. E.8 detail under lock.noted.copy for kind copy. Figma shows the question (“Question 4”), which the Lock cannot know."
+    },
+    {
+      "key": "lock.noted.kind.cut",
+      "group": "E.8 Lock status",
+      "source": "added-not-in-figma",
+      "en": "Cut",
+      "kk": "Қиып алу",
+      "ru": "Вырезание",
+      "notes": "Phase 1. E.8 detail under lock.noted.copy for kind cut."
+    },
+    {
+      "key": "lock.noted.kind.paste",
+      "group": "E.8 Lock status",
+      "source": "added-not-in-figma",
+      "en": "Paste",
+      "kk": "Қою",
+      "ru": "Вставка",
+      "notes": "Phase 1. E.8 detail under lock.noted.copy for kind paste."
+    },
+    {
+      "key": "lock.noted.kind.print",
+      "group": "E.8 Lock status",
+      "source": "added-not-in-figma",
+      "en": "Print",
+      "kk": "Басып шығару",
+      "ru": "Печать",
+      "notes": "Phase 1. E.8 detail under lock.noted.copy for kind print."
+    },
+    {
+      "key": "lock.noted.outside",
+      "group": "E.8 Lock status",
+      "source": "added-not-in-figma",
+      "en": "Outside the exam window",
+      "kk": "Емтихан терезесінен тыс",
+      "ru": "Вне окна экзамена",
+      "notes": "Phase 1. E.8 detail of tab.blocked without a host: focus left the browser, or a browser page opened. Figma shows the key pressed (“Ctrl+T pressed”), which the Lock does not see."
+    },
+    {
+      "key": "lock.noted.site",
+      "group": "E.8 Lock status",
+      "source": "figma",
+      "en": "Site closed",
+      "kk": "Сайт жабылды",
+      "ru": "Сайт закрыт",
+      "notes": "Phase 1. E.8 noted row for site.closed; the detail is the host."
+    },
+    {
+      "key": "lock.noted.tab",
+      "group": "E.8 Lock status",
+      "source": "figma",
+      "en": "New tab blocked",
+      "kk": "Жаңа бет бұғатталды",
+      "ru": "Новая вкладка заблокирована",
+      "notes": "Phase 1. E.8 noted row for tab.blocked; the detail is the host, or lock.noted.outside."
+    },
+    {
+      "key": "lock.status.built_in",
+      "group": "E.8 Lock status",
+      "source": "figma",
+      "en": "built in",
+      "kk": "кіріктірілген",
+      "ru": "встроен",
+      "notes": "Phase 1. E.8: the Calculator row under lock.status.open."
+    },
+    {
+      "key": "lock.status.ends",
+      "group": "E.8 Lock status",
+      "source": "figma",
+      "en": "left · ends {time}",
+      "kk": "қалды · аяқталуы {time}",
+      "ru": "осталось · окончание в {time}",
+      "notes": "Value. Phase 1. E.8, after the time left."
+    },
+    {
+      "key": "lock.status.noted",
+      "group": "E.8 Lock status",
+      "source": "figma",
+      "en": "NOTED · {count}",
+      "kk": "БЕЛГІЛЕНДІ · {count}",
+      "ru": "ОТМЕЧЕНО · {count}",
+      "notes": "Value. Phase 1. E.8: the attempts the Lock noted (tab.blocked, copy.blocked, site.closed); the rows show the latest three."
+    },
+    {
+      "key": "lock.status.open",
+      "group": "E.8 Lock status",
+      "source": "figma",
+      "en": "OPEN DURING THE EXAM",
+      "kk": "ЕМТИХАН КЕЗІНДЕ АШЫҚ",
+      "ru": "ОТКРЫТО ВО ВРЕМЯ ЭКЗАМЕНА",
+      "notes": "Phase 1. E.8: the allowed sites and the calculator."
+    },
+    {
       "key": "done.title",
       "group": "3.1 Submitted",
       "source": "figma",

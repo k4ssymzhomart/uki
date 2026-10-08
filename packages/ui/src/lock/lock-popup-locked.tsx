@@ -40,18 +40,19 @@ export interface LockPopupLockedProps extends LockPopupFrameProps {
   progressLabel?: string;
   /** "OPEN DURING THE EXAM". */
   allowedLabel: ReactNode;
+  /** The sites open during the exam; the section is hidden when empty (exams in the app). */
   allowed: readonly LockAllowedSite[];
   /** "NOTED · 3". The list is hidden when empty. */
   notedLabel?: ReactNode;
   noted?: readonly LockNotedEvent[];
-  /** "Ask proctor"; hidden in Phase 0 until its phase. */
+  /** "Ask proctor": opens E.5a's sheet in the bar (browser exams); hidden without it. */
   action?: LockPopupAction;
   className?: string;
 }
 
 /**
  * During the exam: time left, what is open, what was blocked, a way to reach the proctor
- * (Figma Ext/Popup · Locked 93:2626, E.8). The plan switches the popup off while locked until Phase 1.
+ * (Figma Ext/Popup · Locked 93:2626, E.8). Phase 0 switched the popup off while locked; Phase 1 shows it.
  */
 export function LockPopupLocked({
   time,
@@ -83,23 +84,25 @@ export function LockPopupLocked({
       >
         <div className="h-full rounded-pill bg-brand" style={{ width: `${value}%` }} />
       </div>
-      <section className="flex flex-col items-stretch gap-0.5">
-        <h2 className="type-mono-tag opacity-50">{allowedLabel}</h2>
-        <ul className="flex flex-col">
-          {allowed.map((site) => {
-            const Icon = icons[site.icon];
-            return (
-              <li key={site.id} className="flex items-center gap-2.5 py-1.75">
-                <Icon aria-hidden="true" className="size-4 shrink-0 text-icon-primary" />
-                <span className="type-ui-label min-w-0 flex-1">{site.label}</span>
-                {site.meta ? (
-                  <span className="type-ui-mono whitespace-nowrap opacity-50">{site.meta}</span>
-                ) : null}
-              </li>
-            );
-          })}
-        </ul>
-      </section>
+      {allowed.length > 0 ? (
+        <section className="flex flex-col items-stretch gap-0.5">
+          <h2 className="type-mono-tag opacity-50">{allowedLabel}</h2>
+          <ul className="flex flex-col gap-0.5">
+            {allowed.map((site) => {
+              const Icon = icons[site.icon];
+              return (
+                <li key={site.id} className="flex items-center gap-2.5 py-1.75">
+                  <Icon aria-hidden="true" className="size-4 shrink-0 text-icon-primary" />
+                  <span className="type-ui-label min-w-0 flex-1">{site.label}</span>
+                  {site.meta ? (
+                    <span className="type-ui-mono whitespace-nowrap opacity-50">{site.meta}</span>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
       {noted.length > 0 ? (
         <section className="flex flex-col items-stretch">
           {notedLabel ? <h2 className="type-mono-tag opacity-50">{notedLabel}</h2> : null}

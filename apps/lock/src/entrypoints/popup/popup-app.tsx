@@ -1,5 +1,8 @@
+import { effectiveBrowserRules } from "@uki/contracts";
 import { formatTime, type Locale } from "@uki/i18n";
 import {
+  type LockAllowedSite,
+  type LockNotedEvent,
   type LockPopupCheck,
   LockPopupLocked,
   LockPopupPair,
@@ -8,8 +11,9 @@ import {
 } from "@uki/ui";
 import { useTranslations } from "use-intl";
 import { groupCode, OS_KEYS } from "../../lib/os-name.ts";
-import type { LockView } from "../../lib/state.ts";
-import { elapsedShare, formatTimeLeft, timeLeftMs, wholeMinutes } from "../../lib/time-left.ts";
+import type { LockView, NotedAttempt } from "../../lib/state.ts";
+import { elapsedShare, formatTimeLeft, wholeMinutes } from "../../lib/time-left.ts";
+import { useTimeLeft } from "../../lib/time-left-hook.ts";
 
 export interface PopupActions {
   /** Ask the app for a pairing code. */
@@ -20,6 +24,8 @@ export interface PopupActions {
   lock(): void;
   /** Close on E.9. */
   dismiss(): void;
+  /** Phase 1, E.8: Ask proctor, which opens E.5a's sheet in the exam tab. */
+  ask(): void;
 }
 
 export interface PopupAppProps {
@@ -56,10 +62,37 @@ function hostOf(url: string | null, fallback: string | undefined): string {
   return fallback ?? "";
 }
 
+/** E.8 lists this many of the latest noted attempts; NOTED · n counts them all. */
+export const NOTED_SHOWN = 3;
+
+const NOTED_TITLES = {
+  "tab.blocked": "lock.noted.tab",
+  "site.closed": "lock.noted.site",
+  "copy.blocked": "lock.noted.copy",
+} as const satisfies Record<NotedAttempt["type"], string>;
+
+const COPY_KINDS = {
+  copy: "lock.noted.kind.copy",
+  cut: "lock.noted.kind.cut",
+  paste: "lock.noted.kind.paste",
+  print: "lock.noted.kind.print",
+} as const;
+
+/** The phase the app reports for the locked exam; the time left stands still while it is paused. */
+function lockedPhase(view: LockView) {
+  const locked = view.locked;
+  const state = view.exam_state;
+  return locked && state?.exam?.session_id === locked.exam.session_id ? state.phase : "writing";
+}
+
 /** The 360 px toolbar popup: one Ext/Popup state per screen, every string from the catalog. */
 export function PopupApp({ view, otherTabs, nowMs, locale, actions }: PopupAppProps) {
   const t = useTranslations();
   const screen = popupScreen(view);
+  const left = useTimeLeft(
+    { ends_at: view.locked?.exam.ends_at ?? new Date(nowMs).toISOString(), phase: lockedPhase(view) },
+    nowMs,
+  );
   const frame = { headerTitle: t("lock.name"), framed: false } as const;
   // E.3: "Windows · Aliya S.", or the OS alone before the student joins.
   const device = (app: NonNullable<LockView["app"]>) => {
@@ -115,6 +148,7 @@ export function PopupApp({ view, otherTabs, nowMs, locale, actions }: PopupAppPr
       const exam = state?.exam;
       if (!state || !exam) return null;
       const canLock = state.phase === "ready" || state.phase === "writing";
+      const calculator = effectiveBrowserRules(exam.browser_rules).calculator;
       return (
         <LockPopupReady
           {...frame}
@@ -142,30 +176,54 @@ export function PopupApp({ view, otherTabs, nowMs, locale, actions }: PopupAppPr
             },
           ]}
           action={{ label: t("lock.ready.start"), onClick: actions.lock, disabled: !canLock }}
-          note={t("lock.ready.note.portal_only")}
+          note={t(calculator ? "lock.ready.note.full" : "lock.ready.note.portal_only")}
           footer={t("lock.app.connected")}
         />
       );
     }
     case "locked": {
+      // E.8 (98:9927): time left, what is open, the attempts the Lock noted, and Ask proctor.
       const locked = view.locked;
       if (!locked) return null;
+      const browser = locked.mode === "browser";
       const host = hostOf(locked.exam.lms_url, locked.exam.allowed_hosts[0]);
+      const allowed: LockAllowedSite[] = browser
+        ? [{ id: "portal", icon: "globe", label: t("lock.tab.portal"), meta: host }]
+        : [];
+      if (browser && effectiveBrowserRules(locked.exam.browser_rules).calculator)
+        allowed.push({
+          id: "calculator",
+          icon: "app-window",
+          label: t("lock.tab.calculator"),
+          meta: t("lock.status.built_in"),
+        });
+      const noted: LockNotedEvent[] = locked.noted.slice(-NOTED_SHOWN).map((attempt) => ({
+        id: attempt.id,
+        time: formatTime(attempt.at, locale, { seconds: true }),
+        dateTime: new Date(attempt.at).toISOString(),
+        title: t(NOTED_TITLES[attempt.type]),
+        detail:
+          attempt.type === "copy.blocked"
+            ? attempt.kind
+              ? t(COPY_KINDS[attempt.kind])
+              : undefined
+            : (attempt.host ?? t("lock.noted.outside")),
+      }));
+      const paired = view.link === "paired";
       return (
         <LockPopupLocked
           {...frame}
           badge={t("lock.badge")}
-          time={formatTimeLeft(timeLeftMs(locked.exam.ends_at, nowMs))}
-          timeMeta={t("exam.timer.left")}
+          time={formatTimeLeft(left)}
+          timeMeta={t("lock.status.ends", { time: formatTime(locked.exam.ends_at, locale) })}
           progress={elapsedShare(locked.exam.starts_at, locked.exam.ends_at, nowMs)}
-          allowedLabel={null}
-          allowed={
-            locked.mode === "browser"
-              ? [{ id: "portal", icon: "globe", label: t("lock.tab.portal"), meta: host }]
-              : []
-          }
-          footer={t("lock.app.connected")}
-          footerDotTone={view.link === "paired" ? "ok" : "warn"}
+          allowedLabel={t("lock.status.open")}
+          allowed={allowed}
+          notedLabel={t("lock.status.noted", { count: locked.blocked_count })}
+          noted={noted}
+          action={browser ? { label: t("action.ask_proctor"), onClick: actions.ask } : undefined}
+          footer={paired ? t("lock.app.watching") : t("lock.pair.open_app.title")}
+          footerDotTone={paired ? "ok" : "warn"}
         />
       );
     }

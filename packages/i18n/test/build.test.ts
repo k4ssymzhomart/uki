@@ -26,7 +26,7 @@ describe("i18n build on the shipped catalog", () => {
   it("passes with no problems", () => {
     expect(result.problems).toEqual([]);
     expect(result.messages).not.toBeNull();
-    expect(result.counts.catalog).toBe(239);
+    expect(result.counts.catalog).toBe(254);
   });
 
   it("matches the committed messages files, so the build is deterministic and up to date", () => {

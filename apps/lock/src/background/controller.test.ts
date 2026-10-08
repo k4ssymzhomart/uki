@@ -1,7 +1,7 @@
-import type { AppToLock, LockExam } from "@uki/contracts";
+import { type AppToLock, type BrowserRules, DEFAULT_BROWSER_RULES, type LockExam } from "@uki/contracts";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { REDIRECT_RULE_ID } from "../lib/rules.ts";
-import { STORAGE_KEYS } from "../lib/state.ts";
+import { type BarState, type LockView, NOTED_KEEP, STORAGE_KEYS } from "../lib/state.ts";
 import {
   CONTENT_SCRIPT_FILE,
   CONTENT_SCRIPT_ID,
@@ -190,7 +190,8 @@ describe("exams in the app", () => {
     expect(fake.rules).toHaveLength(1);
     expect(fake.rules[0]?.condition).not.toHaveProperty("excludedRequestDomains");
     expect(fake.scripts).toEqual([]);
-    expect(fake.popup).toBe("");
+    // Phase 1: the popup shows E.8 while locked.
+    expect(fake.popup).toBe("popup.html");
     expect(fake.icon?.["32"]).toBe("/icons/locked-32.png");
     expect(fake.windows.every((w) => w.state !== "fullscreen")).toBe(true);
   });
@@ -373,6 +374,56 @@ describe("exams in the browser", () => {
         ok: false,
       },
     );
+  });
+
+  it("E.8: notes each blocked attempt with its host or kind, counts them, and keeps the popup on", async () => {
+    const { h, fake, socket, main, portal } = await locked();
+    expect(fake.popup).toBe("popup.html");
+    const blocked = await fake.api.tabs.create({
+      windowId: main,
+      url: "https://wikipedia.org/wiki/Kinematics",
+    });
+    await h.controller.onTabCreated(blocked);
+    await h.controller.handleRuntimeMessage({ type: "content.blocked", kind: "paste" }, PORTAL);
+    vi.setSystemTime(START + 60_000);
+    const closed = `${BLOCKED}?host=vk.com`;
+    await h.controller.onTabUpdated(portal.id, { url: closed }, { ...portal, url: closed });
+    await h.settle();
+    const view = h.controller.view().locked;
+    expect(view?.blocked_count).toBe(3);
+    expect(view?.noted.map(({ type, host, kind }) => ({ type, host, kind }))).toEqual([
+      { type: "tab.blocked", host: "wikipedia.org", kind: undefined },
+      { type: "copy.blocked", host: undefined, kind: "paste" },
+      { type: "site.closed", host: "vk.com", kind: undefined },
+    ]);
+    expect(view?.noted.map((n) => n.at)).toEqual([START, START, START + 60_000]);
+    // The ids are the events' ids, as the app files them.
+    expect(view?.noted.map((n) => n.id)).toEqual(lockEvents(socket).map((e) => e.id));
+    expect((fake.store.get(STORAGE_KEYS.view) as LockView).locked?.blocked_count).toBe(3);
+  });
+
+  it(`E.8: keeps the latest ${NOTED_KEEP} attempts and counts them all`, async () => {
+    const { h } = await locked();
+    for (let i = 0; i < NOTED_KEEP + 5; i += 1) {
+      vi.setSystemTime(START + i * 11_000);
+      await h.controller.handleRuntimeMessage({ type: "content.blocked", kind: "copy" }, PORTAL);
+    }
+    const view = h.controller.view().locked;
+    expect(view?.blocked_count).toBe(NOTED_KEEP + 5);
+    expect(view?.noted).toHaveLength(NOTED_KEEP);
+    expect(view?.noted[0]?.at).toBe(START + 5 * 11_000);
+  });
+
+  it("E.8: Ask proctor in the popup brings the exam tab back and asks its bar for E.5a's sheet", async () => {
+    const { h, fake, main, portal } = await locked();
+    const other = fake.addWindow(["https://chat.example/"], { focused: true });
+    vi.setSystemTime(START + 5000);
+    expect(await h.controller.handleRuntimeMessage({ type: "popup.ask" })).toEqual({ ok: true });
+    await h.settle();
+    expect((fake.store.get(STORAGE_KEYS.bar) as BarState).ask_at).toBe(START + 5000);
+    expect(fake.windows.find((w) => w.id === main)?.focused).toBe(true);
+    expect(fake.windows.find((w) => w.id === other)?.focused).toBe(false);
+    expect(fake.tabs.find((t) => t.id === portal.id)?.active).toBe(true);
   });
 
   it("asks for full screen again after an exit and counts the exits", async () => {
@@ -563,7 +614,7 @@ describe("exams in the browser", () => {
     expect(fake.rules.map((r) => r.id)).toEqual([REDIRECT_RULE_ID]);
     expect(fake.scripts.map((s) => s.id)).toEqual([CONTENT_SCRIPT_ID]);
     expect(fake.tabs.some((t) => t.id === stray.id)).toBe(false);
-    expect(fake.popup).toBe("");
+    expect(fake.popup).toBe("popup.html");
     expect(restarted.controller.view().locked?.mode).toBe("browser");
   });
 
@@ -653,6 +704,135 @@ describe("exams in the browser", () => {
     await vi.advanceTimersByTimeAsync(3000);
     await h.settle();
     expect(lockEvents(socket)).toHaveLength(1);
+  });
+});
+
+describe("E.1 browser rules", () => {
+  async function lockedWith(rules: BrowserRules, windowState: "normal" | "maximized" = "normal") {
+    const fake = new FakeBrowser();
+    const main = fake.addWindow([PORTAL, "https://chat.example/"], { focused: true, state: windowState });
+    const h = setup(fake);
+    const socket = await connected(h, true);
+    const exam = { ...browserExam, browser_rules: rules };
+    socket.receive(examState(exam, "ready"));
+    await h.settle();
+    const portal = fake.tabs.find((t) => t.url === PORTAL);
+    if (!portal) throw new Error("no portal tab");
+    await h.controller.handleRuntimeMessage({ type: "popup.lock", tab_id: portal.id });
+    await h.settle();
+    const window = fake.windows.find((w) => w.id === main);
+    if (!window) throw new Error("no window");
+    return { h, fake, socket, main, portal, window, exam };
+  }
+
+  const ALL_OFF: BrowserRules = {
+    ...DEFAULT_BROWSER_RULES,
+    copy_paste: false,
+    print: false,
+    full_screen: false,
+    calculator: false,
+  };
+
+  it("with every switch off: no full screen, no exits, no copy or print attempts; the bar carries the rules", async () => {
+    const { h, socket, window, portal, fake } = await lockedWith(ALL_OFF, "maximized");
+    expect(window.state).toBe("maximized");
+    expect((fake.store.get(STORAGE_KEYS.bar) as BarState).browser_rules).toEqual(ALL_OFF);
+    expect(
+      await h.controller.handleRuntimeMessage({ type: "content.blocked", kind: "copy" }, PORTAL),
+    ).toEqual({
+      ok: false,
+    });
+    expect(
+      await h.controller.handleRuntimeMessage({ type: "content.blocked", kind: "print" }, PORTAL),
+    ).toEqual({
+      ok: false,
+    });
+    window.state = "normal";
+    h.controller.onWindowBoundsChanged({ id: window.id });
+    await vi.advanceTimersByTimeAsync(5000);
+    await h.settle();
+    expect(window.state).toBe("normal");
+    expect(lockEvents(socket)).toEqual([]);
+    expect(h.controller.view().locked?.blocked_count).toBe(0);
+    // One tab and allowed sites stay: they are not E.1 switches.
+    expect(fake.tabs.map((t) => t.id)).toEqual([portal.id]);
+    expect(fake.rules).toHaveLength(1);
+    // The release leaves the window as the student had it.
+    window.state = "maximized";
+    socket.receive({ type: "lock.release", reason: "submitted" });
+    await h.settle();
+    expect(window.state).toBe("maximized");
+  });
+
+  it("copy and paste off, print on: copy goes through, print is still blocked and noted", async () => {
+    const { h, socket } = await lockedWith({ ...DEFAULT_BROWSER_RULES, copy_paste: false });
+    for (const kind of ["copy", "cut", "paste"] as const)
+      expect(await h.controller.handleRuntimeMessage({ type: "content.blocked", kind }, PORTAL)).toEqual({
+        ok: false,
+      });
+    expect(
+      await h.controller.handleRuntimeMessage({ type: "content.blocked", kind: "print" }, PORTAL),
+    ).toEqual({
+      ok: true,
+      noted: true,
+    });
+    expect(lockEvents(socket).map((e) => [e.type, e.data])).toEqual([["copy.blocked", { kind: "print" }]]);
+  });
+
+  it("print off, copy and paste on: print goes through, copy is still blocked and noted", async () => {
+    const { h, socket } = await lockedWith({ ...DEFAULT_BROWSER_RULES, print: false });
+    expect(
+      await h.controller.handleRuntimeMessage({ type: "content.blocked", kind: "print" }, PORTAL),
+    ).toEqual({
+      ok: false,
+    });
+    expect(
+      await h.controller.handleRuntimeMessage({ type: "content.blocked", kind: "copy" }, PORTAL),
+    ).toEqual({
+      ok: true,
+      noted: true,
+    });
+    expect(lockEvents(socket).map((e) => [e.type, e.data])).toEqual([["copy.blocked", { kind: "copy" }]]);
+  });
+
+  it("full screen on (the default) asks for it and notes an exit; switched on mid-exam it asks at once", async () => {
+    const on = await lockedWith(DEFAULT_BROWSER_RULES);
+    expect(on.window.state).toBe("fullscreen");
+    const later = await lockedWith({ ...DEFAULT_BROWSER_RULES, full_screen: false });
+    expect(later.window.state).toBe("normal");
+    later.socket.receive(examState({ ...later.exam, browser_rules: DEFAULT_BROWSER_RULES }, "writing"));
+    await later.h.settle();
+    expect(later.window.state).toBe("fullscreen");
+    await vi.advanceTimersByTimeAsync(2000);
+    later.window.state = "normal";
+    later.h.controller.onWindowBoundsChanged({ id: later.window.id });
+    await vi.advanceTimersByTimeAsync(500);
+    await later.h.settle();
+    expect(lockEvents(later.socket).map((e) => [e.type, e.data])).toEqual([
+      ["lock.fullscreen_exit", { count: 1 }],
+    ]);
+  });
+
+  it("an app without browser_rules (before Phase 1) gets every rule on", async () => {
+    const { fake, window } = await lockedWith(DEFAULT_BROWSER_RULES);
+    expect(window.state).toBe("fullscreen");
+    expect((fake.store.get(STORAGE_KEYS.bar) as BarState).browser_rules).toEqual(DEFAULT_BROWSER_RULES);
+  });
+
+  it("gives the bar the student's name from the app's hello for E.5b's header", async () => {
+    const { fake } = await lockedWith(DEFAULT_BROWSER_RULES);
+    expect((fake.store.get(STORAGE_KEYS.bar) as BarState).student_name).toBe("Aliya S.");
+  });
+
+  it("refuses the popup's Ask proctor in an exam in the app, which has its own button", async () => {
+    const fake = new FakeBrowser();
+    fake.addWindow(["https://mail.example/"], { focused: true });
+    const h = setup(fake);
+    const socket = await connected(h, true);
+    socket.receive(examState(appExam, "writing"));
+    socket.receive({ type: "lock.start" });
+    await h.settle();
+    expect(await h.controller.handleRuntimeMessage({ type: "popup.ask" })).toEqual({ ok: false });
   });
 });
 

@@ -9,12 +9,18 @@
 // puts the tabs back. State lives in chrome.storage.local, so a restarted worker or browser picks up a
 // running lock again.
 //
+// Rules (Phase 1, E.1): the exam's browser_rules come with exam.state. Copy and paste, print and full screen
+// follow them: with a rule off the Lock skips that guard and its event. The calculator rule shows the bar's
+// Calculator tab (E.5b). Developer tools and screen sharing stay as Phase 0 decided.
+//
 // Time: the exam's times are server time. The app sends its clock offset with exam.state, and the deadline
 // and the countdowns read the server's clock through it, never the bare laptop clock. While the app is
 // here and says the exam runs, the app decides when it ends; the deadline is for an absent app.
 import {
   type AppToLock,
+  type BrowserRules,
   type CopyKind,
+  effectiveBrowserRules,
   type LockEvent,
   LockEvent as LockEventSchema,
   type LockEventType,
@@ -42,6 +48,8 @@ import {
   type LinkState,
   LockRecord,
   type LockView,
+  NOTED_KEEP,
+  type NotedAttempt,
   Outbox,
   type OutboxEntry,
   ReleasedSummary,
@@ -78,8 +86,15 @@ const MAX_FULLSCREEN_RETRIES = 3;
 /** The longest timer browsers accept. */
 const MAX_TIMER_MS = 2_147_483_647;
 
-/** Blocked attempts counted on E.9. */
-const BLOCKED_TYPES: ReadonlySet<LockEventType> = new Set(["tab.blocked", "site.closed", "copy.blocked"]);
+/** The rules the locked exam runs under: its own, or every rule on when the app sent none. */
+export function lockRules(record: Pick<LockRecord, "exam">): BrowserRules {
+  return effectiveBrowserRules(record.exam.browser_rules);
+}
+
+/** Which rule a copy guard attempt falls under (E.1): print has its own switch, the rest are copy and paste. */
+export function copyRuleOn(rules: BrowserRules, kind: CopyKind): boolean {
+  return kind === "print" ? rules.print : rules.copy_paste;
+}
 
 type ExamState = Extract<AppToLock, { type: "exam.state" }>;
 type AppHello = Extract<AppToLock, { type: "hello" }>;
@@ -147,6 +162,10 @@ export function createLockController(deps: LockControllerDeps): LockController {
   let outbox: OutboxEntry[] = [];
   /** E.5a: the bar's latest Ask proctor request, until the lock ends (laptop clock). */
   let help: { id: string; at: number; queued: boolean; session_id: string } | null = null;
+  /** E.8: when the popup's Ask proctor was last pressed (laptop clock); the bar opens E.5a's sheet. */
+  let askAt: number | null = null;
+  /** The student's name from the app's latest hello, kept while the link is down (E.5b's header). */
+  let studentName: string | null = null;
   const sentThisLink = new Set<string>();
   const copyThrottle = createKindThrottle<CopyKind>();
   const written = new Map<string, string>();
@@ -234,7 +253,14 @@ export function createLockController(deps: LockControllerDeps): LockController {
       pair_error: pairError,
       exam_state: examState,
       locked: lock
-        ? { mode: lock.mode, exam: onLaptopClock(lock), started_at: lock.started_at, locale: currentLocale() }
+        ? {
+            mode: lock.mode,
+            exam: onLaptopClock(lock),
+            started_at: lock.started_at,
+            locale: currentLocale(),
+            blocked_count: lock.blocked_count,
+            noted: lock.noted,
+          }
         : null,
       released,
     };
@@ -258,6 +284,9 @@ export function createLockController(deps: LockControllerDeps): LockController {
         help && help.session_id === lock.exam.session_id
           ? { id: help.id, at: help.at, queued: help.queued }
           : null,
+      browser_rules: lockRules(lock),
+      student_name: studentName,
+      ask_at: askAt,
     };
   }
 
@@ -351,9 +380,27 @@ export function createLockController(deps: LockControllerDeps): LockController {
     }
     outbox.push({ event: parsed.data, queued_at: now(), session_id: sessionId });
     trimOutbox();
-    if (lock && BLOCKED_TYPES.has(type)) lock.blocked_count += 1;
+    // tab.blocked, site.closed and copy.blocked are the attempts E.9 counts and E.8 lists.
+    const noted = notedOf(parsed.data);
+    if (lock && noted) {
+      lock.blocked_count += 1;
+      lock.noted = [...lock.noted, noted].slice(-NOTED_KEEP);
+    }
     flush();
     return parsed.data;
+  }
+
+  /** E.8's row for an event: the host of a tab or site, the kind of a copy. */
+  function notedOf(event: LockEvent): NotedAttempt | null {
+    switch (event.type) {
+      case "tab.blocked":
+      case "site.closed":
+        return { id: event.id, type: event.type, at: now(), host: event.data.host };
+      case "copy.blocked":
+        return { id: event.id, type: event.type, at: now(), kind: event.data.kind };
+      default:
+        return null;
+    }
   }
 
   function sendToApp(message: LockToApp): void {
@@ -366,6 +413,7 @@ export function createLockController(deps: LockControllerDeps): LockController {
     switch (message.type) {
       case "hello":
         app = message;
+        if (message.student_name) studentName = message.student_name;
         paired = message.paired;
         link = message.paired ? "paired" : "connected";
         if (paired) pairError = null;
@@ -415,15 +463,31 @@ export function createLockController(deps: LockControllerDeps): LockController {
     flush();
     if (!lock) return;
     if (message.exam && message.exam.session_id === lock.exam.session_id) {
+      const fullScreenBefore = lockRules(lock).full_screen;
       lock.exam = message.exam;
       lock.locale = message.locale;
       if (message.clock_offset_ms !== undefined) lock.clock_offset_ms = message.clock_offset_ms;
+      followFullScreenRule(lock, fullScreenBefore);
     }
     if (isExamDone(message, lock.exam.session_id)) await release("exam_done");
     else scheduleDeadline();
   }
 
   // ---- lock ----
+
+  /** The full screen rule changed during the lock: ask for full screen now, or stop watching for exits. */
+  function followFullScreenRule(record: LockRecord, before: boolean): void {
+    const after = lockRules(record).full_screen;
+    if (after === before || record.mode !== "browser" || !record.keep) return;
+    if (after) {
+      fullScreenSeen = false;
+      fullScreenRetries = 0;
+      void goFullScreen(record.keep.window_id);
+    } else if (boundsTimer !== null) {
+      timers.clearTimeout(boundsTimer);
+      boundsTimer = null;
+    }
+  }
 
   function blockedPageUrl(host?: string): string {
     const base = api.runtime.getURL(`/${BLOCKED_PAGE}`);
@@ -456,11 +520,14 @@ export function createLockController(deps: LockControllerDeps): LockController {
       await api.scripting.unregisterContentScripts({ ids: [CONTENT_SCRIPT_ID] });
   }
 
-  /** The rule, the scripts and the switched-off popup. Safe to run again after a restart. */
+  /**
+   * The rule, the scripts and the popup. Phase 0 switched the popup off while locked; from Phase 1 it shows
+   * E.8. Safe to run again after a restart.
+   */
   async function enforce(record: LockRecord): Promise<void> {
     await api.rules.updateSessionRules(lockRulesUpdate(allowedHosts(record), extensionId));
     await registerScripts(record);
-    await api.action.setPopup({ popup: "" });
+    await api.action.setPopup({ popup: POPUP_PAGE });
   }
 
   async function injectInto(tabId: number): Promise<void> {
@@ -506,7 +573,7 @@ export function createLockController(deps: LockControllerDeps): LockController {
     const tab = created?.tabs?.[0];
     if (created?.id !== undefined && tab?.id !== undefined) {
       record.keep = { tab_id: tab.id, window_id: created.id, url: null };
-      await goFullScreen(created.id);
+      if (lockRules(record).full_screen) await goFullScreen(created.id);
     }
   }
 
@@ -535,9 +602,11 @@ export function createLockController(deps: LockControllerDeps): LockController {
       fullscreen_exits: 0,
       blocked_count: 0,
       clock_offset_ms: state.clock_offset_ms ?? 0,
+      noted: [],
     };
     lock = record;
     released = null;
+    askAt = null;
     keepOutboxOf(exam.session_id);
     copyThrottle.reset();
     fullScreenSeen = false;
@@ -553,7 +622,7 @@ export function createLockController(deps: LockControllerDeps): LockController {
       if (isAllowedUrl(keep.url, allowed)) await injectInto(keep.tab_id);
       else await api.tabs.update(keep.tab_id, { url: exam.lms_url ?? undefined, active: true });
       await api.tabs.update(keep.tab_id, { active: true });
-      await goFullScreen(keep.window_id);
+      if (lockRules(record).full_screen) await goFullScreen(keep.window_id);
     } else {
       await reopenPortal(record);
     }
@@ -580,6 +649,7 @@ export function createLockController(deps: LockControllerDeps): LockController {
     }
     lock = null;
     help = null;
+    askAt = null;
     clearLockTimers();
     await api.rules
       .updateSessionRules(releaseRulesUpdate())
@@ -587,7 +657,8 @@ export function createLockController(deps: LockControllerDeps): LockController {
     await unregisterScripts().catch((error: unknown) =>
       log(`could not remove the scripts: ${String(error)}`),
     );
-    if (record.mode === "browser" && record.keep)
+    // Full screen was the Lock's only under the full screen rule; otherwise the window stays as the student set it.
+    if (record.mode === "browser" && record.keep && lockRules(record).full_screen)
       await api.windows.update(record.keep.window_id, { state: "normal" }).catch(() => {});
 
     const open = await api.windows.getAll({ populate: false, windowTypes: ["normal"] }).catch(() => []);
@@ -755,7 +826,7 @@ export function createLockController(deps: LockControllerDeps): LockController {
    */
   async function checkFullScreen(): Promise<void> {
     const record = lock;
-    if (record?.mode !== "browser" || !record.keep) return;
+    if (record?.mode !== "browser" || !record.keep || !lockRules(record).full_screen) return;
     if (now() < ignoreBoundsUntil) {
       scheduleBoundsCheck(ignoreBoundsUntil - now() + BOUNDS_SETTLE_MS);
       return;
@@ -782,7 +853,8 @@ export function createLockController(deps: LockControllerDeps): LockController {
   }
 
   function onWindowBoundsChanged(window: { id?: number }): void {
-    if (lock?.mode !== "browser" || window.id !== lock.keep?.window_id) return;
+    if (lock?.mode !== "browser" || window.id !== lock.keep?.window_id || !lockRules(lock).full_screen)
+      return;
     scheduleBoundsCheck(Math.max(BOUNDS_SETTLE_MS, ignoreBoundsUntil - now() + BOUNDS_SETTLE_MS));
   }
 
@@ -860,7 +932,7 @@ export function createLockController(deps: LockControllerDeps): LockController {
           .filter((id): id is number => id !== undefined);
         if (strays.length > 0) await api.tabs.remove(strays).catch(() => {});
         await injectInto(exam.id);
-        await goFullScreen(exam.windowId);
+        if (lockRules(record).full_screen) await goFullScreen(exam.windowId);
       } else {
         await reopenPortal(record);
       }
@@ -909,10 +981,21 @@ export function createLockController(deps: LockControllerDeps): LockController {
           released = null;
           await publish();
           return { ok: true };
+        case "popup.ask": {
+          // E.8's Ask proctor: back to the exam tab, where the bar opens E.5a's sheet.
+          const record = lock;
+          if (record?.mode !== "browser" || !record.keep) return { ok: false };
+          askAt = now();
+          focusExam(record, { window: true });
+          await publish();
+          return { ok: true };
+        }
         case "content.blocked": {
           const record = lock;
           if (record?.mode !== "browser") return { ok: false };
           if (!isAllowedUrl(senderUrl, record.exam.allowed_hosts)) return { ok: false };
+          // E.1: with the rule off the guard does not run, and no event goes out even if a page asks.
+          if (!copyRuleOn(lockRules(record), request.kind)) return { ok: false };
           const noted = copyThrottle.take(request.kind, now());
           if (noted) {
             emit("copy.blocked", { kind: request.kind });

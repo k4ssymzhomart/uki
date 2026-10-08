@@ -13,6 +13,8 @@ export const RuntimeRequest = z.discriminatedUnion("type", [
   z.object({ type: z.literal("popup.lock"), tab_id: z.number().int().nonnegative().optional() }),
   /** E.9: Close. */
   z.object({ type: z.literal("popup.dismiss") }),
+  /** Phase 1, E.8: Ask proctor in the locked popup opens E.5a's sheet in the exam tab's bar. */
+  z.object({ type: z.literal("popup.ask") }),
   /** The content script cancelled a copy, cut, paste or print. */
   z.object({ type: z.literal("content.blocked"), kind: CopyKind }),
   /** Phase 1, E.5a: Send to proctor on the bar's Ask proctor sheet. */

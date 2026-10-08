@@ -1,4 +1,4 @@
-import { IngestStatus } from "@uki/contracts";
+import { AppToLock, DEFAULT_BROWSER_RULES, IngestStatus } from "@uki/contracts";
 import { describe, expect, it } from "vitest";
 import type { FlowCommand } from "../services/commands.ts";
 import { JoinFailure } from "../services/student-api.ts";
@@ -809,7 +809,12 @@ describe("browser exams", () => {
     expect(wantsLockdown(snapshot)).toBe(false);
     expect(lockExamState(snapshot)).toMatchObject({
       phase: "ready",
-      exam: { mode: "browser", allowed_hosts: ["localhost:5180"], done_path: "/physics-1/quiz-3/review" },
+      exam: {
+        mode: "browser",
+        allowed_hosts: ["localhost:5180"],
+        done_path: "/physics-1/quiz-3/review",
+        browser_rules: null,
+      },
     });
     expect(events(flow.effects)).not.toContain("exam.started");
     expect(flow.effects).not.toContainEqual({ type: "effect.lockStart" });
@@ -824,6 +829,16 @@ describe("browser exams", () => {
       browserLocked: { tabsClosed: 3 },
       titleBar: { variant: "locked" },
     });
+  });
+
+  it("sends the exam's browser rules (E.1) to Üki Lock in exam.state", async () => {
+    const rules = { ...DEFAULT_BROWSER_RULES, copy_paste: false, full_screen: false, calculator: false };
+    const join = joinOutput({ mode: "browser" });
+    const flow = startFlow({ join: async () => ({ ...join, exam: { ...join.exam, browser_rules: rules } }) });
+    await settle();
+    await toBrowserExam(flow);
+    const message = AppToLock.parse(lockExamState(flow.actor.getSnapshot()));
+    expect(message).toMatchObject({ type: "exam.state", phase: "ready", exam: { browser_rules: rules } });
   });
 
   it("does not pause on a missing face, and brings the window back for pause and message", async () => {

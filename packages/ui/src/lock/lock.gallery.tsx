@@ -11,7 +11,9 @@ import figmaReady from "./figma/92-2592.png";
 import figmaCheck from "./figma/92-9352.png";
 import figmaLocked from "./figma/93-2626.png";
 import figmaReleased from "./figma/93-2688.png";
+import figmaCalculator from "./figma/153-11869.png";
 import { LockBar } from "./lock-bar.tsx";
+import { LockCalculator } from "./lock-calculator.tsx";
 import { LOCK_CHECK_STATUSES, LockCheck } from "./lock-check.tsx";
 import { LockPopupFooter } from "./lock-popup-footer.tsx";
 import { LockPopupHeader } from "./lock-popup-header.tsx";
@@ -123,6 +125,15 @@ export default function LockGallery() {
         />
       </Pair>
 
+      <Pair name="E.5b Calculator 153:11869" figma={figmaCalculator}>
+        <LockCalculator
+          expression="2 × 25 ÷ 2"
+          value="25"
+          clearLabel="C"
+          note="Works offline. Keeps no history after you submit."
+          onKey={noop}
+        />
+      </Pair>
       <Pair name="Ext/Popup · Locked 93:2626" figma={figmaLocked}>
         <LockPopupLocked
           {...frame}
