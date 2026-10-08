@@ -109,7 +109,12 @@ export async function outboxRows<T>(page: Page, table: "answers" | "events" | "s
 /** Sets the synthetic camera's scene (integration/synthetic-camera.ts). */
 export async function setScene(
   page: Page,
-  scene: { subject?: "present" | "phone" | "absent"; card?: "auto" | "shown" | "hidden" },
+  scene: {
+    subject?: "present" | "phone" | "absent";
+    card?: "auto" | "shown" | "hidden";
+    /** The number printed on the card; null prints the joined student's. */
+    cardNumber?: string | null;
+  },
 ): Promise<void> {
   await page.waitForFunction(() => "ukiSyntheticCamera" in window, undefined, { timeout: 30_000 });
   await page.evaluate((patch) => {

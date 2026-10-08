@@ -1,6 +1,6 @@
 import type { DesktopOs } from "@uki/contracts";
 import { formatTime, type Locale } from "@uki/i18n";
-import { Banner, Button, CheckRow, type CheckRowStatus } from "@uki/ui";
+import { Banner, Button, CheckRow, type CheckRowStatus, shortName } from "@uki/ui";
 import { type ReactNode, useId } from "react";
 import { useTranslations } from "use-intl";
 import type { IdentityModel, IdentityRowState } from "../../flow/view-model.ts";
@@ -147,7 +147,9 @@ export function IdentityScreen({
           <div className="flex shrink-0 gap-3 overflow-clip pt-2.5">
             {helpMode ? (
               <Button variant="secondary" loading>
-                {proctor === null ? t("identity.help.title") : t("identity.help.waiting", { proctor })}
+                {proctor === null
+                  ? t("identity.help.title")
+                  : t("identity.help.waiting", { proctor: shortName(proctor) })}
               </Button>
             ) : (
               <Button variant="ghost" onClick={onAskProctor}>

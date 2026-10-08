@@ -254,6 +254,8 @@ describe("1.3 Identity and 1.3a Proctor help", () => {
       score: null,
     });
     expect(events(flow.effects).filter((t) => t === "student.help_requested")).toHaveLength(1);
+    // Later tries keep the frame's count: "3 of 3 tries", not "4 of 3".
+    expect(selectScreen(flow.actor.getSnapshot())).toMatchObject({ frame: "1.3a", tries: 3, maxTries: 3 });
     flow.actor.send({
       type: "IDENTITY_VERDICT",
       kind: "matched",
