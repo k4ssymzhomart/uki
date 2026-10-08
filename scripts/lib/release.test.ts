@@ -59,9 +59,11 @@ describe("pickSource", () => {
     "Uki-0.1.7-x64.exe.blockmap",
     "Uki-0.1.7-x64.zip",
     "Uki-lab-0.1.7-x64.zip",
+    "Uki-smoke-0.1.7-x64.zip",
     "builder-debug.yml",
     "lab",
     "mac",
+    "smoke",
     "win-unpacked",
   ];
 
@@ -71,9 +73,10 @@ describe("pickSource", () => {
     expect(pickSource(asset("Uki-Setup-win-x64.exe"), desktop)).toBe("Uki-0.1.7-x64.exe");
   });
 
-  it("never takes the lab zip for the Windows zip", () => {
+  it("never takes the lab or smoke zip for the Windows zip", () => {
     expect(pickSource(asset("Uki-win-x64.zip"), desktop)).toBe("Uki-0.1.7-x64.zip");
     expect(() => pickSource(asset("Uki-win-x64.zip"), ["Uki-lab-0.1.7-x64.zip"])).toThrow(/found none/);
+    expect(() => pickSource(asset("Uki-win-x64.zip"), ["Uki-smoke-0.1.7-x64.zip"])).toThrow(/found none/);
   });
 
   it("finds the Lock zips from wxt zip", () => {
@@ -93,9 +96,11 @@ describe("stagePlatform", () => {
   it("copies one platform's files under the stable names and leaves the others", async () => {
     const root = await tempDir();
     await mkdir(join(root, "apps/desktop/release/lab"), { recursive: true });
+    await mkdir(join(root, "apps/desktop/release/smoke"), { recursive: true });
     await writeFile(join(root, "apps/desktop/release/Uki-0.1.7-x64.exe"), "installer");
     await writeFile(join(root, "apps/desktop/release/Uki-0.1.7-x64.zip"), "zip");
     await writeFile(join(root, "apps/desktop/release/lab/Uki-lab-0.1.7-x64.zip"), "lab");
+    await writeFile(join(root, "apps/desktop/release/smoke/Uki-smoke-0.1.7-x64.zip"), "smoke");
     const out = join(root, "out");
 
     expect(await stagePlatform(root, "win", out)).toEqual(["Uki-Setup-win-x64.exe", "Uki-win-x64.zip"]);

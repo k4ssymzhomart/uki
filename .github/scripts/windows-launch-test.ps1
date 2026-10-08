@@ -8,14 +8,22 @@
 # hook's Koffi loaded ("[desktop] keyboard hook ready"; src/main/keyboard-hook.ts) and must not say that
 # it failed, so a packaging fault in the hook shows here and not in an exam.
 #
+# A variant build names what it must show: -ExpectTitle is text the window title must contain, and each
+# -ExpectLog line must appear in the main process log. The smoke zip passes "SMOKE BUILD" and
+# "[desktop] smoke build" (src/main/index.ts).
+#
 #   pwsh .github/scripts/windows-launch-test.ps1 -Zip apps/desktop/release/Uki-0.0.0-x64.zip
 #   pwsh .github/scripts/windows-launch-test.ps1 -Exe "$env:LOCALAPPDATA\Programs\Uki\Uki.exe"
+#   pwsh .github/scripts/windows-launch-test.ps1 -Zip apps/desktop/release/smoke/Uki-smoke-0.0.0-x64.zip `
+#     -ExpectTitle 'SMOKE BUILD' -ExpectLog '[desktop] smoke build'
 [CmdletBinding()]
 param(
   [string]$Zip = '',
   [string]$Exe = '',
   [int]$Seconds = 20,
-  [string]$Screenshot = ''
+  [string]$Screenshot = '',
+  [string]$ExpectTitle = '',
+  [string[]]$ExpectLog = @()
 )
 $ErrorActionPreference = 'Stop'
 
@@ -74,9 +82,13 @@ try {
       Where-Object { $_.MainWindowHandle -ne [IntPtr]::Zero })
   if ($windowed.Count -eq 0) { throw "launch test: Uki.exe still runs after $Seconds s but shows no window" }
   $processes = @(Get-Process -Name 'Uki').Count
+  $title = $windowed[0].MainWindowTitle
   Write-Host ("launch test: Uki.exe (pid $($app.Id)) still runs after $Seconds s with a window " +
-    "titled '$($windowed[0].MainWindowTitle)' ($processes Uki processes)")
+    "titled '$title' ($processes Uki processes)")
   if ($Screenshot -ne '') { Save-Screen $Screenshot }
+  if ($ExpectTitle -ne '' -and -not $title.Contains($ExpectTitle)) {
+    throw "launch test: the window title '$title' does not contain '$ExpectTitle'"
+  }
 } catch {
   $failure = $_
 } finally {
@@ -95,6 +107,11 @@ if (@($log | Where-Object { $_.Contains($hookFailed) }).Count -gt 0) {
 }
 if (@($log | Where-Object { $_.Contains($hookReady) }).Count -eq 0) {
   throw "launch test: no '$hookReady' in the main process log"
+}
+foreach ($line in $ExpectLog) {
+  if (@($log | Where-Object { $_.Contains($line) }).Count -eq 0) {
+    throw "launch test: no '$line' in the main process log"
+  }
 }
 Write-Host 'launch test: passed, with the keyboard hook ready'
 

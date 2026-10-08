@@ -23,8 +23,9 @@ export type ReleaseAsset = {
   what: string;
 };
 
-// The version always starts with a digit, so `Uki-lab-<version>-x64.zip` (the lab zip, in release/lab and
-// never shipped) cannot match the Windows zip even if it were in the same folder.
+// The version always starts with a digit, so `Uki-lab-<version>-x64.zip` and `Uki-smoke-<version>-x64.zip`
+// (the lab and smoke zips, in release/lab and release/smoke and never shipped) cannot match the Windows zip
+// even if they were in the same folder.
 export const RELEASE_ASSETS: readonly ReleaseAsset[] = [
   {
     name: "Uki-mac-arm64.dmg",
