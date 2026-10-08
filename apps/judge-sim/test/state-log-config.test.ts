@@ -1,6 +1,6 @@
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { ConfigError, DEFAULT_STUDENTS, parseStudents, readConfig } from "../src/config.ts";
 import { RotatingLog, rotationNames } from "../src/log.ts";
@@ -109,8 +109,8 @@ describe("config", () => {
     expect(config.students).toHaveLength(5);
     expect(config.url).toBe("https://abc.supabase.co");
     expect(config.dailyMessageBudget).toBe(20_000);
-    expect(config.stateDir).toBe(join("/opt/uki", "state"));
-    expect(config.logDir).toBe(join("/opt/uki", "logs"));
+    expect(config.stateDir).toBe(resolve("/opt/uki", "state"));
+    expect(config.logDir).toBe(resolve("/opt/uki", "logs"));
     expect(existsSync(config.stateDir)).toBe(false);
   });
 });

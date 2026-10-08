@@ -92,16 +92,26 @@ const windowsCi = process.platform === "win32" && process.env.CI === "true";
 describe.runIf(windowsCi)("deploy/vps on Windows", () => {
   const root = `C:\\uki-ci-judge-${process.pid}`;
   const prefix = "uki-ci-";
-  const ps = (args: string[]) =>
-    spawnSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", ...args], {
-      encoding: "utf8",
-      timeout: 120_000,
-    });
+  // Each PowerShell start costs seconds on a CI runner; every step is timed in the test's output.
+  const ps = (args: string[]) => {
+    const started = Date.now();
+    const run = spawnSync(
+      "powershell.exe",
+      ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", ...args],
+      {
+        encoding: "utf8",
+        timeout: 240_000,
+      },
+    );
+    console.log(`powershell ${args.slice(0, 2).join(" ")}: exit ${run.status} in ${Date.now() - started} ms`);
+    return run;
+  };
   const query = (command: string) => ps(["-Command", command]).stdout.trim();
 
   afterAll(() => {
-    ps(["-File", join(dist, "uninstall.ps1"), "-InstallRoot", root, "-TaskPrefix", prefix, "-Purge"]);
-  });
+    if (existsSync(root))
+      ps(["-File", join(dist, "uninstall.ps1"), "-InstallRoot", root, "-TaskPrefix", prefix, "-Purge"]);
+  }, 300_000);
 
   it("install.ps1 registers both tasks, the simulator runs as LOCAL SERVICE, uninstall.ps1 removes it all", async () => {
     const install = ps([
@@ -176,5 +186,5 @@ describe.runIf(windowsCi)("deploy/vps on Windows", () => {
       ),
     ).toBe("0");
     expect(existsSync(root)).toBe(false);
-  });
+  }, 900_000);
 });

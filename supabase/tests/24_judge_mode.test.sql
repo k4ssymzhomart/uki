@@ -198,9 +198,11 @@ select ok(not public.is_observer(), 'nobody is an observer without a session');
 select t.login(t.id('judge'));
 select ok(public.is_observer(), 'is_observer() is true for the observer');
 reset role;
+select t.logout();
 select t.login(t.id('mirror'));
 select ok(not public.is_observer(), 'and false for a proctor');
 reset role;
+select t.logout();
 
 -- ---------------------------------------------------------------------------
 -- The mirror proctor's writes go through (so the observer's refusals below are about the role)
@@ -213,11 +215,13 @@ select is(t.err($$select public.decide_session(t.id('s1'), 'talk', 'Talk after t
 select is(t.err($$select public.close_help_request(t.id('h1'), 'Yes, question 2.')$$), null, 'the proctor answers a help request');
 select is(t.err($$select public.get_report(t.id('s1'))$$), null, 'the proctor opens s1''s report');
 reset role;
+select t.logout();
 select t.put('report1', (select id from public.reports where session_id = t.id('s1')));
 select t.login(t.id('mirror'));
 select is(t.err($$select public.create_share(t.id('report1'))$$), null, 'the proctor shares the report');
 select is(t.err($$select public.confirm_seats(t.id('demo'), null)$$), null, 'the proctor confirms the seats');
 reset role;
+select t.logout();
 
 -- ---------------------------------------------------------------------------
 -- The observer: every write RPC is refused, and nothing is written
@@ -259,6 +263,7 @@ select case
     'revoke_share refuses the observer')
 end;
 reset role;
+select t.logout();
 
 select is((select count(*) from public.session_commands where session_id = t.id('s2')), 0::bigint,
   'no command reached s2');
@@ -287,6 +292,7 @@ select is((select count(*) from public.frames where exam_id = t.id('demo')), 2::
 select is((select count(*) from public.exams), 1::bigint, 'and only the exam it is assigned to');
 select is((select count(*) from public.students), 5::bigint, 'and only that exam''s roster');
 reset role;
+select t.logout();
 select is((select count(*) from public.audit_log where actor_id = t.id('judge') and action = 'report.view'), 2::bigint,
   'each report the observer opens writes a report.view audit row');
 select is((select count(*) from public.audit_log where actor_id = t.id('judge') and action = 'session.view'), 1::bigint,
@@ -300,9 +306,11 @@ select is((select count(*) from public.reports where session_id = t.id('s2')), 1
 select t.login(t.id('mirror'));
 select t.count_rels('mirror');
 reset role;
+select t.logout();
 select t.login(t.id('judge'));
 select t.count_rels('observer');
 reset role;
+select t.logout();
 select is((
   select string_agg(m.rel || ' ' || m.n || '/' || o.n, ', ' order by m.rel)
   from t.counts m join t.counts o on o.rel = m.rel and o.who = 'observer'
@@ -331,6 +339,7 @@ select c.relname, t.err(format('delete from public.%I where false', c.relname))
 from pg_class c join pg_namespace n on n.oid = c.relnamespace
 where n.nspname = 'public' and c.relkind in ('r', 'p') and not c.relispartition;
 reset role;
+select t.logout();
 select is((select string_agg(rel, ', ' order by rel) from t.direct where err is null), null,
   'a delete statement by the observer fails on every table in public');
 
@@ -338,12 +347,14 @@ select t.login(t.id('mirror'));
 select is(t.err($$update public.session_commands set acked_at = acked_at where false$$), null,
   'a proctor''s statement on session_commands runs (row-level security filters it)');
 reset role;
+select t.logout();
 select t.login(t.id('judge'));
 select is(t.err($$update public.session_commands set acked_at = acked_at where false$$), 'forbidden:read_only',
   'the same statement by the observer fails on the guard');
 select is(t.err($$update public.exams set title = title where false$$), 'forbidden:read_only',
   'as does an update of exams');
 reset role;
+select t.logout();
 
 -- ---------------------------------------------------------------------------
 -- session_heartbeat
@@ -355,6 +366,7 @@ select t.put('s4_uid', t.uid_of(t.id('s4')));
 select t.login(t.id('s4_uid'));
 select is(public.session_heartbeat(t.id('s4')) ->> 'state', 'writing', 'the owner''s heartbeat answers the state');
 reset role;
+select t.logout();
 select is((select last_seen_at from public.sessions where id = t.id('s4')), now(),
   'and writes last_seen_at when the stored one is 10 s old or more');
 select is(t.messages('exam:' || t.id('demo'), 'session', jsonb_build_object('id', t.id('s4'))) - (select n from t.tiles),
@@ -364,6 +376,7 @@ update t.tiles set n = t.messages('exam:' || t.id('demo'), 'session', jsonb_buil
 select t.login(t.id('s4_uid'));
 select ok((public.session_heartbeat(t.id('s4')) -> 'server_time') is not null, 'a heartbeat within 10 s answers too');
 reset role;
+select t.logout();
 select is((select last_seen_at from public.sessions where id = t.id('s4')), now() - interval '5 seconds',
   'but writes nothing (the throttle)');
 select is(t.messages('exam:' || t.id('demo'), 'session', jsonb_build_object('id', t.id('s4'))) - (select n from t.tiles),
@@ -374,13 +387,16 @@ select alike(t.err($$select public.session_heartbeat(t.id('s4'))$$), 'forbidden%
 select alike(t.err(format('select public.session_heartbeat(%L)', gen_random_uuid())), 'not_found%',
   'an unknown session is not_found');
 reset role;
+select t.logout();
 select t.login(t.id('mirror'));
 select alike(t.err($$select public.session_heartbeat(t.id('s4'))$$), 'forbidden%', 'a proctor is refused');
 reset role;
+select t.logout();
 select t.anon();
 select alike(t.err($$select public.session_heartbeat(t.id('s4'))$$), 'permission denied%',
   'a visitor with only the publishable key cannot call it');
 reset role;
+select t.logout();
 
 -- ---------------------------------------------------------------------------
 -- demo_live_seen and demo_live_status
@@ -390,32 +406,41 @@ select is((public.demo_live_status() -> 'exam' ->> 'id')::uuid, t.id('demo'), 'a
 select is((public.demo_live_status() ->> 'viewers')::int, 0, 'nobody watches yet');
 select alike(t.err($$select public.demo_live_seen(t.id('demo'))$$), 'forbidden%', 'a student cannot mark the wall as watched');
 reset role;
+select t.logout();
 select t.login(t.id('judge'));
 select is((public.demo_live_seen(t.id('demo')) ->> 'duration_min')::int, 720, 'the observer''s open wall marks itself');
 reset role;
+select t.logout();
 select t.login(t.id('mirror'));
 select is(t.err($$select public.demo_live_seen(t.id('demo'))$$), null, 'so does a proctor''s');
 reset role;
+select t.logout();
 select t.login(t.id('outsider'));
 select alike(t.err($$select public.demo_live_seen(t.id('demo'))$$), 'forbidden%', 'a proctor of another exam is refused');
 reset role;
+select t.logout();
 select t.login(t.id('office'));
 select alike(t.err($$select public.demo_live_seen(t.id('math2'))$$), 'not_found%', 'any other exam is not_found');
 reset role;
+select t.logout();
 select t.login(t.id('s4_uid'));
 select is((public.demo_live_status() ->> 'viewers')::int, 2, 'the status counts the two open walls');
 reset role;
+select t.logout();
 update public.demo_live_views set seen_at = now() - interval '2 minutes' where staff_id = t.id('mirror');
 select t.login(t.id('s4_uid'));
 select is((public.demo_live_status() ->> 'viewers')::int, 1, 'a wall not seen for 90 s no longer counts');
 reset role;
+select t.logout();
 select t.anon();
 select alike(t.err($$select public.demo_live_status()$$), 'permission denied%', 'a visitor cannot read the status');
 reset role;
+select t.logout();
 select t.login(t.id('judge'));
 select alike(t.err($$select count(*) from public.demo_live_views$$), 'permission denied%',
   'nobody reads demo_live_views directly');
 reset role;
+select t.logout();
 
 -- ---------------------------------------------------------------------------
 -- demo_live_orphans
@@ -433,6 +458,7 @@ select is((select array_agg(storage_path) from public.demo_live_orphans()),
 select t.login(t.id('judge'));
 select alike(t.err($$select * from public.demo_live_orphans()$$), 'permission denied%', 'staff cannot list them');
 reset role;
+select t.logout();
 
 -- ---------------------------------------------------------------------------
 -- demo_live_tick: 30 minutes or more left
@@ -490,6 +516,7 @@ select is(public.join_exam('DEMO-LIVE', '20249001', 'kk', '{"os":"windows","app_
 select is(jsonb_array_length(public.join_exam('DEMO-LIVE', '20249001', 'kk', '{"os":"windows","app_version":"0.1.0-judge-sim"}') -> 'questions'),
   2, 'and gets the questions at once: the exam is live');
 reset role;
+select t.logout();
 select is((select count(*) from public.sessions where exam_id = t.id('demo')), 1::bigint, 'one new session');
 
 -- ---------------------------------------------------------------------------
@@ -505,6 +532,7 @@ select is((select status::text from public.exams where id = t.id('demo')), 'live
 select t.login(t.id('judge'));
 select is(t.err($$select public.demo_live_tick()$$) like 'permission denied%', true, 'staff cannot run the tick');
 reset role;
+select t.logout();
 
 select * from finish();
 rollback;
