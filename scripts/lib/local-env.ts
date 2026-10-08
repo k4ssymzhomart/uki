@@ -74,7 +74,9 @@ function stackStatus(): z.infer<typeof StackStatus> {
       timeout: 60_000,
     });
   } catch {
-    throw new Error("`supabase status` failed: start the local stack first (supabase start, or pnpm dev)");
+    throw new Error(
+      "`supabase status` failed: start the local stack first (pnpm db:start, or pnpm dev:local)",
+    );
   }
   const vars: Record<string, string> = {};
   for (const line of out.split(/\r?\n/)) {

@@ -9,6 +9,7 @@
     "../demo-reset.ts",
     "../demo-simulate.ts",
     "../release-assets.ts",
+    "../dev.ts",
     "../guards/**/*.ts"
   ]
 }

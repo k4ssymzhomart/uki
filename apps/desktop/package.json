@@ -15,9 +15,9 @@
     "dist:lab": "electron-vite build --mode lab && electron-builder --config electron-builder.lab.yml --win zip --x64",
     "typecheck": "tsc --noEmit -p . && tsc --noEmit -p src/renderer && tsc --noEmit -p test",
     "test": "vitest run",
-    "e2e": "electron-vite build --mode e2e && playwright test -c test/playwright.config.ts",
-    "e2e:realtime": "electron-vite build --mode e2e && playwright test -c test/playwright.realtime.config.ts",
-    "e2e:cleanup": "tsx test/support/cleanup.ts"
+    "e2e": "node ../../scripts/lib/local-stack.ts desktop:e2e && electron-vite build --mode e2e && playwright test -c test/playwright.config.ts",
+    "e2e:realtime": "node ../../scripts/lib/local-stack.ts desktop:e2e:realtime && electron-vite build --mode e2e && playwright test -c test/playwright.realtime.config.ts",
+    "e2e:cleanup": "node ../../scripts/lib/local-stack.ts desktop:e2e:cleanup && tsx test/support/cleanup.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.2",
