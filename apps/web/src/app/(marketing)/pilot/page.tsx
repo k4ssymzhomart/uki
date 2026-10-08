@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { getLocale, getTranslations } from "next-intl/server";
 import { landingLocale } from "../../../features/landing/landing-model.ts";
 import { requestPilot } from "../../../features/landing/pilot-action.ts";
@@ -16,6 +17,8 @@ export async function generateMetadata(): Promise<Metadata> {
  * request_pilot as an anonymous visitor through its server action.
  */
 export default async function PilotPage() {
+  // Rendered per request: When lists the months from today, and the page follows the language cookie.
+  await connection();
   const locale = landingLocale(await getLocale());
   return (
     <PilotScreen

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { getLocale, getTranslations } from "next-intl/server";
 import { landingLocale } from "../../../features/landing/landing-model.ts";
 import { TERMS_OF_USE } from "../../../features/landing/legal-content.ts";
@@ -11,5 +12,6 @@ export async function generateMetadata(): Promise<Metadata> {
 
 /** `/terms`: the Terms of use (Figma 197:4144), a draft for legal review. Public, no session. */
 export default async function TermsOfUsePage() {
+  await connection(); // per request, in the visitor's language (the uki_locale cookie)
   return <LegalPage document={TERMS_OF_USE} locale={landingLocale(await getLocale())} />;
 }

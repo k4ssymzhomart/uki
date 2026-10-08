@@ -224,3 +224,26 @@ Branch `wp/1.11-students-settings` (PR #22). Ran on the development MacBook agai
 | Figma A.4 `106:10905` | pass | ![A.4](evidence/phase-1/1.11/A.4.jpg) Same card, head and caption, select fields 42 px high with their icons, and the five check rows 53 px apart with their toggles. A third row of selects (Default duration, Lobby opens), the fixed Rules language and the lighter fixed switches, and the empty right column in place of Integrations and Team (decisions) | 2026-10-08 |
 | Figma A.4 in Russian | pass | ![A.4 ru](evidence/phase-1/1.11/A.4-ru.jpg) «Настройки новых экзаменов», «за 20 мин до начала», «0,85» and the five checks fit |
 | A.2, A.3 and A.4 on the cloud project with seed v2 | pending | Waits for P.2 and WP 1.14 (programme and year for every seeded student); then the A.2 and A.3 comparisons again | |
+
+## 1.13 Landing site (in progress)
+
+Runs on one development Mac (macOS 15.6) against the local stack, `next dev` on port 3300. Branch `wp/1.13-landing`, PR #6 (draft).
+
+| Check | Status | Evidence | Date |
+| --- | --- | --- | --- |
+| `/` matches Landing 114:2039 at 1440 | pass | Playwright full page beside the frame: 8,796 px against 8,789. Differences: Sign in in the header and ҚАЗ hidden (`docs/decisions.md`). `docs/evidence/1.13-landing/landing-1440-figma-vs-web.webp` | 2026-10-08 |
+| `/` matches Mobile 390 192:3586 | pass | Full page beside the frame: 6,176 px against 6,158. `docs/evidence/1.13-landing/landing-390-figma-vs-web.webp` | 2026-10-08 |
+| `/pilot` matches Book a pilot 194:4014 at 1440 | pass | 1,656 px against 1,657; the frame's filled example values are placeholders. `docs/evidence/1.13-landing/pilot-1440-figma-vs-web.webp` | 2026-10-08 |
+| Sent matches 195:4090 | pending | Built and unit-tested (`pilot-screen.test.tsx`); its screenshot needs `request_pilot` from WP 1.1 | |
+| `/privacy` matches 196:4125 and `/terms` matches 197:4144 at 1440 | pass | 2,987 px against 2,985; 2,744 against 2,769 (one paragraph wraps a line shorter). `docs/evidence/1.13-landing/privacy-1440-figma-vs-web.webp`, `terms-1440-figma-vs-web.webp` | 2026-10-08 |
+| `/pilot`, `/privacy`, `/terms` at 390 | pass | No frame at 390; the pages stack in one column with no sideways scroll (Playwright, 390 to 1920) | 2026-10-08 |
+| Every background, image and animation is a generated asset exported from Figma | pass | 20 WebP files in `apps/web/public/landing/` (792 KB), each listed with its node in `.figma-cache/114-2039/design-context.md`; mascots from `@uki/ui`. Nothing drawn in CSS, SVG or canvas | 2026-10-08 |
+| Public pages need no session | pass | `e2e/landing.spec.ts` opens all four pages without cookies; `proxy.ts` passes requests without an auth cookie straight through; no `requireStaff` under `(marketing)`. Staff still land on `/overview` (`staff-gate.test.tsx`, `landing-model.test.ts`) | 2026-10-08 |
+| `pnpm e2e` landing tests at 1440 and 390 | pass | `UKI_E2E_BASE_URL=http://localhost:3300`: 12 landing tests passed in the `chromium` and `landing-390` projects (with the 4 dashboard tests); the pilot round trip skipped, see below | 2026-10-08 |
+| A pilot request is stored and emailed; a fourth from one address in a day is refused | pending | The e2e test is written and skips until `pilot_requests` exists (WP 1.1); `pilot-notify` and the inbox check follow | |
+| Unit and component tests | pass | `pnpm --filter web test`: 34 files, 183 tests, including `landing-model`, `pilot-model`, `pilot-action`, `pilot-screen` and `legal-content` (every legal key in English and Russian) | 2026-10-08 |
+| Strings | pass | `pnpm i18n:build`: 313 keys in `dashboard-landing.json`, English and Russian; no key shows raw on any page | 2026-10-08 |
+| Russian pages | pending | Strings in place; the pages render Russian once WP 1.2's cookie locale (`request.ts`) merges | |
+| Biome, guards, type check, `next build` | pass | Clean; `/`, `/pilot`, `/privacy` and `/terms` render per request | 2026-10-08 |
+| You read the landing copy | pending | Monday 12 | |
+| The landing page on your phone | pending | Hand check | |
