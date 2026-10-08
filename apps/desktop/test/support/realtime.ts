@@ -152,12 +152,15 @@ interface Reply {
   /** Chromium's timing: when the request left (laptop ms) and how long until its last byte. */
   startedAt: number | null;
   durationMs: number | null;
+  /** The HTTP status, or the network error of a request that failed. */
+  outcome: number | string;
 }
 
-/** One ingest call, from Chromium's timing. */
+/** One ingest call, from Chromium's timing, with its HTTP status or network error. */
 export interface IngestCall {
   startedAt: number;
   durationMs: number;
+  outcome: number | string;
 }
 
 /** Phoenix's v2 text frame: [join_ref, ref, topic, event, payload]. */
@@ -206,15 +209,28 @@ export class WindowNetwork {
       const timing = requestTiming(request);
       const read = request
         .response()
-        .then((response) => response?.text() ?? "")
+        .then(async (response) => ({ body: (await response?.text()) ?? "", status: response?.status() ?? 0 }))
         .then(
-          (body) => {
-            this.replies.push({ at, via, body, ...timing });
+          ({ body, status }) => {
+            this.replies.push({ at, via, body, ...timing, outcome: status });
           },
           () => {},
         )
         .finally(() => this.pending.delete(read));
       this.pending.add(read);
+    });
+    // An ingest call that never got a reply (reset, timeout): the app backs off and tries again.
+    page.on("requestfailed", (request) => {
+      if (!request.url().includes("/functions/v1/ingest")) return;
+      const timing = request.timing();
+      this.replies.push({
+        at: Date.now(),
+        via: "ingest",
+        body: "",
+        startedAt: timing.startTime > 0 ? timing.startTime : null,
+        durationMs: timing.startTime > 0 ? Date.now() - timing.startTime : null,
+        outcome: request.failure()?.errorText ?? "failed",
+      });
     });
   }
 
@@ -261,7 +277,7 @@ export class WindowNetwork {
     for (const reply of this.replies) {
       if (reply.via !== "ingest" || reply.startedAt === null || reply.durationMs === null) continue;
       if (reply.startedAt >= from && reply.startedAt <= to)
-        calls.push({ startedAt: reply.startedAt, durationMs: reply.durationMs });
+        calls.push({ startedAt: reply.startedAt, durationMs: reply.durationMs, outcome: reply.outcome });
     }
     return calls.sort((a, b) => a.startedAt - b.startedAt);
   }
@@ -283,7 +299,7 @@ export class WindowNetwork {
       .filter((r) => r.via === "ingest" && r.body.includes(commandId))
       .sort((a, b) => a.at - b.at)[0];
     return reply && reply.startedAt !== null && reply.durationMs !== null
-      ? { startedAt: reply.startedAt, durationMs: reply.durationMs }
+      ? { startedAt: reply.startedAt, durationMs: reply.durationMs, outcome: reply.outcome }
       : null;
   }
 

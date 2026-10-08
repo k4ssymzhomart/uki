@@ -23,6 +23,7 @@
 //
 //   pnpm --filter desktop e2e:realtime
 //   UKI_E2E_RT_ROUNDS=6   rounds, cycling stop, restart and reconnect (default 3, at most 12)
+//   UKI_E2E_RT_ONLY=stop  only one kind of round
 //
 // Writes test/results/realtime-restart-evidence.json.
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -62,7 +63,12 @@ const RESULTS = join(DESKTOP_DIR, "test", "results");
 const ROUNDS = Math.min(12, Math.max(1, Number(process.env.UKI_E2E_RT_ROUNDS ?? 3)));
 const ORDER = ["stop", "restart", "reconnect"] as const;
 type Variant = (typeof ORDER)[number];
-const VARIANTS: Variant[] = Array.from({ length: ROUNDS }, (_, i) => ORDER[i % ORDER.length] ?? "stop");
+/** UKI_E2E_RT_ONLY=stop runs only that kind of round. */
+const ONLY = ORDER.find((variant) => variant === process.env.UKI_E2E_RT_ONLY);
+const VARIANTS: Variant[] = Array.from(
+  { length: ROUNDS },
+  (_, i) => ONLY ?? ORDER[i % ORDER.length] ?? "stop",
+);
 const TITLES: Record<Variant, string> = {
   stop: "Realtime stopped, a pause right after a heartbeat and the resume each arrive with an ingest reply within about 10 s",
   restart: "Realtime restarting, a pause sent while it is down shows 2.1c within about 10 s",
@@ -135,7 +141,13 @@ interface RoundEvidence {
   resume: CommandTrip;
   /** The round's ingest calls: how many, the longest wait from a reply to the next call (the
    * heartbeat), and the longest round trip. */
-  ingest: { calls: number; maxIdleMs: number; maxCallMs: number };
+  ingest: {
+    calls: number;
+    maxIdleMs: number;
+    maxCallMs: number;
+    /** Each call: ms after the Docker command it left, its round trip, and its status or error. */
+    log: Array<[number, number, number | string]>;
+  };
   pauseAckedOnServer: boolean;
   heldOn21ForMs: number;
 }
@@ -470,6 +482,11 @@ for (const [index, variant] of VARIANTS.entries()) {
           calls: calls.length,
           maxIdleMs: Math.round(Math.max(0, ...idle)),
           maxCallMs: Math.round(Math.max(0, ...calls.map((call) => call.durationMs))),
+          log: calls.map((call) => [
+            Math.round(call.startedAt - t0),
+            Math.round(call.durationMs),
+            call.outcome,
+          ]),
         },
         pauseAckedOnServer: acked,
         heldOn21ForMs: HOLD_MS,
