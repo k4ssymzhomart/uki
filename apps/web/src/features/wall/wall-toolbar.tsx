@@ -3,6 +3,7 @@
 import { Button, Tab, TabGroup } from "@uki/ui";
 import { useTranslations } from "next-intl";
 import { formatGroupCodes } from "../../lib/format.ts";
+import { HelpRequestsButton } from "../help/help-requests.tsx";
 import { ExtendTime } from "./extend-time.tsx";
 import { QuickMessage } from "./quick-message.tsx";
 import { selectCounts } from "./tiles.ts";
@@ -15,7 +16,7 @@ export function isWallView(value: string): value is WallView {
   return value === "flags" || value === "seat" || value === "paused";
 }
 
-/** 2.4's toolbar: sort and filter tabs, Message group (2.4b) and Extend time (2.4c). */
+/** 2.4's toolbar: sort and filter tabs, Requests (2.4d), Message group (2.4b) and Extend time (2.4c). */
 export function WallToolbar({
   view,
   onViewChange,
@@ -45,6 +46,7 @@ export function WallToolbar({
         <Tab value="paused">{t("filter.paused", { count: paused })}</Tab>
       </TabGroup>
       <span aria-hidden="true" className="min-w-0 flex-1" />
+      <HelpRequestsButton />
       <QuickMessage
         target={{ scope: "group", examId, label: common("groups", { count: groupCount, codes: groups }) }}
         trigger={<Button variant="ghost">{t("messageGroup")}</Button>}

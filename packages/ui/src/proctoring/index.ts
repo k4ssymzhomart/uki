@@ -1,9 +1,11 @@
 // Proctoring components (Figma "Student status" and the live wall parts). One component per file.
 export * from "./action-menu.tsx";
+export * from "./ask-proctor-panel.tsx";
 export * from "./camera-tile.tsx";
 export * from "./extend-time-panel.tsx";
 export * from "./extend-time-popover.tsx";
 export type { Fact } from "./fact-list.tsx";
+export * from "./help-requests.tsx";
 export * from "./hud.tsx";
 export * from "./live-widget.tsx";
 export * from "./quick-message-menu.tsx";

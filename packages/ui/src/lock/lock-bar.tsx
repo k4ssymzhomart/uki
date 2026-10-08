@@ -33,6 +33,8 @@ export interface LockBarProps extends Omit<ComponentProps<"div">, "children"> {
   /** "Ask proctor". The button stays hidden until this and onAskProctor are given (hidden in Phase 0). */
   askProctorLabel?: ReactNode;
   onAskProctor?: () => void;
+  /** E.5a: the Ask proctor sheet is open, so the button shows lime (bg/brand, text/on-brand). */
+  askProctorActive?: boolean;
   /** Accessible name of the toolbar icon at the end, for example "Üki Lock · locked". */
   toolbarIconLabel?: string;
 }
@@ -50,6 +52,7 @@ export function LockBar({
   timeLabel,
   askProctorLabel,
   onAskProctor,
+  askProctorActive = false,
   toolbarIconLabel,
   className,
   ...props
@@ -104,10 +107,19 @@ export function LockBar({
         {askProctorLabel && onAskProctor ? (
           <button
             type="button"
+            aria-expanded={askProctorActive}
             onClick={onAskProctor}
-            className="flex items-center gap-1.5 rounded-pill border border-line-default py-1.75 pr-3 pl-2.5 outline-none hover:bg-hover active:bg-pressed focus-visible:shadow-focus"
+            className={cn(
+              "flex items-center gap-1.5 rounded-pill border border-line-default py-1.75 pr-3 pl-2.5 outline-none focus-visible:shadow-focus",
+              askProctorActive
+                ? "bg-brand text-fg-on-brand hover:bg-brand-hover active:bg-brand-pressed"
+                : "hover:bg-hover active:bg-pressed",
+            )}
           >
-            <Hand aria-hidden="true" className="size-4 shrink-0 text-icon-primary" />
+            <Hand
+              aria-hidden="true"
+              className={cn("size-4 shrink-0", askProctorActive ? "text-fg-on-brand" : "text-icon-primary")}
+            />
             <span className="type-ui-label whitespace-nowrap">{askProctorLabel}</span>
           </button>
         ) : null}

@@ -190,7 +190,8 @@ function detailOf(event: CompactEvent, context: EventCopyContext): WallMessage |
       return text === undefined ? undefined : message(key(event.type, "detail"), { text });
     }
     case "student.help_requested":
-      return message(key(event.type, "detail"), { topic: str(data, "topic") ?? "other" });
+      // The reason the student picked, as 2.4d names it (dashboard-help.json).
+      return message("help.topic", { topic: str(data, "topic") ?? "other" });
     case "lock.app_disconnected":
       return message(key(event.type, "detail"), { side: str(data, "side") ?? "other" });
     case "lock.fullscreen_exit": {

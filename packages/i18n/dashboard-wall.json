@@ -556,10 +556,6 @@
     "en": "asked for help",
     "ru": "просит помощи"
   },
-  "dashboard.wall.event.student_help_requested.detail": {
-    "en": "{topic, select, identity {Identity check} question {About a question} other {Technical problem}}",
-    "ru": "{topic, select, identity {Проверка личности} question {Вопрос по заданию} other {Техническая проблема}}"
-  },
   "dashboard.wall.event.lock_app_disconnected.title": {
     "en": "Üki app closed while Üki Lock was on",
     "ru": "Приложение Üki закрылось при включённом Üki Lock"

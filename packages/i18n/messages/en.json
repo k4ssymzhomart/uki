@@ -456,7 +456,6 @@
           "title": "Blocked site closed"
         },
         "student_help_requested": {
-          "detail": "{topic, select, identity {Identity check} question {About a question} other {Technical problem}}",
           "feed": "asked for help",
           "title": "Asked for help"
         },
@@ -485,6 +484,18 @@
       },
       "grid": {
         "label": "Students"
+      },
+      "help": {
+        "button": "Requests · {count}",
+        "done": "Mark done",
+        "footer": "Replies go to one student, in their language.",
+        "open": "{count} open",
+        "reply": "Reply",
+        "text": "“{text}”",
+        "tile": "raised hand · Q {question}",
+        "tileNoQuestion": "raised hand",
+        "title": "Requests",
+        "topic": "{topic, select, identity {Identity check} question {Question is unclear} technical {Technical problem} break {I need a break} other {Something else}}"
       },
       "message": {
         "cancel": "Cancel",
