@@ -78,13 +78,6 @@ export type Database = {
             referencedRelation: "sessions"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "answers_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "term_sessions"
-            referencedColumns: ["session_id"]
-          },
         ]
       }
       audit_log: {
@@ -286,13 +279,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "sessions"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "events_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "term_sessions"
-            referencedColumns: ["session_id"]
           },
         ]
       }
@@ -691,13 +677,6 @@ export type Database = {
             referencedRelation: "sessions"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "frames_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "term_sessions"
-            referencedColumns: ["session_id"]
-          },
         ]
       }
       groups: {
@@ -836,13 +815,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "sessions"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "help_requests_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "term_sessions"
-            referencedColumns: ["session_id"]
           },
         ]
       }
@@ -1212,13 +1184,6 @@ export type Database = {
             referencedRelation: "sessions"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "reports_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: true
-            referencedRelation: "term_sessions"
-            referencedColumns: ["session_id"]
-          },
         ]
       }
       review_decisions: {
@@ -1302,13 +1267,6 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "sessions"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "review_decisions_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: true
-            referencedRelation: "term_sessions"
-            referencedColumns: ["session_id"]
           },
         ]
       }
@@ -1408,13 +1366,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "sessions"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "session_commands_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "term_sessions"
-            referencedColumns: ["session_id"]
           },
         ]
       }
@@ -2141,6 +2092,7 @@ export type Database = {
         }
         Returns: Json
       }
+      invoker_bypasses_rls: { Args: never; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       is_anonymous: { Args: never; Returns: boolean }
       is_exam_staff: { Args: { p_exam_id: string }; Returns: boolean }
@@ -2250,6 +2202,22 @@ export type Database = {
       staff_may_share: { Args: never; Returns: boolean }
       start_exam: { Args: { exam_id: string }; Returns: Json }
       submit_session: { Args: { session_id: string }; Returns: Json }
+      term_exam_flag_types: {
+        Args: { p_exam_id: string }
+        Returns: {
+          flags: number
+          type: string
+        }[]
+      }
+      term_exam_sessions: {
+        Args: { p_exam_id: string }
+        Returns: {
+          decided_at: string
+          decision: Database["public"]["Enums"]["review_decision"]
+          flags: number
+          session_id: string
+        }[]
+      }
       term_key: { Args: { d: string }; Returns: string }
       term_start: { Args: { d: string }; Returns: string }
       try_uuid: { Args: { p: string }; Returns: string }

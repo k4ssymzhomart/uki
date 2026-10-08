@@ -1,0 +1,155 @@
+{
+  "$comment": "WP 1.10 Reports page: A.1 (Figma 102:10454). English from the frame; added, not in Figma: the headline and caption variants for other data (up, flat, a single week, no data), the Other flag type, Not decided yet, the pickers' names and the tooltips (docs/decisions.md, 1.10). The Russian is a first pass by the agent: native review needed, P.18.",
+  "dashboard.reports.breadcrumb": {
+    "en": "Reports / {term}",
+    "ru": "Отчёты / {term}"
+  },
+  "dashboard.reports.decisions.committee": {
+    "en": "Sent to the committee",
+    "ru": "Передано в комиссию"
+  },
+  "dashboard.reports.decisions.headline": {
+    "en": "{decision, select, no_issue {Most flags end as no issue} talk {Most flags end in a talk with the student} committee {Most flags go to the committee} other {No decisions yet this term}}",
+    "ru": "{decision, select, no_issue {Чаще всего нарушения нет} talk {Чаще всего со студентом проводят беседу} committee {Чаще всего дело передают в комиссию} other {В этом семестре решений ещё нет}}"
+  },
+  "dashboard.reports.decisions.no_issue": {
+    "en": "No issue",
+    "ru": "Нарушения нет"
+  },
+  "dashboard.reports.decisions.note": {
+    "en": "Flag ≠ fail. A proctor decides every flag.",
+    "ru": "Отметка ≠ нарушение. Каждую отметку рассматривает проктор."
+  },
+  "dashboard.reports.decisions.overline": {
+    "en": "Decisions · {count, plural, one {# flagged session} other {# flagged sessions}}",
+    "ru": "Решения · {count, plural, one {# сеанс с отметками} few {# сеанса с отметками} many {# сеансов с отметками} other {# сеанса с отметками}}"
+  },
+  "dashboard.reports.decisions.pending": {
+    "en": "Not decided yet",
+    "ru": "Решения ещё нет"
+  },
+  "dashboard.reports.decisions.talk": {
+    "en": "Talked to the student",
+    "ru": "Беседа со студентом"
+  },
+  "dashboard.reports.export": {
+    "en": "Export PDF",
+    "ru": "Экспорт в PDF"
+  },
+  "dashboard.reports.filter.faculty": {
+    "en": "Faculty",
+    "ru": "Факультет"
+  },
+  "dashboard.reports.filter.term": {
+    "en": "Term",
+    "ru": "Семестр"
+  },
+  "dashboard.reports.kpi.committee.caption": {
+    "en": "{count, number} of {total, plural, one {# session} other {# sessions}}",
+    "ru": "{count, number} из {total, plural, one {# сеанса} other {# сеансов}}"
+  },
+  "dashboard.reports.kpi.committee.label": {
+    "en": "To committee",
+    "ru": "В комиссию"
+  },
+  "dashboard.reports.kpi.exams.caption": {
+    "en": "since {date}",
+    "ru": "с {date}"
+  },
+  "dashboard.reports.kpi.exams.label": {
+    "en": "Exams run",
+    "ru": "Проведено экзаменов"
+  },
+  "dashboard.reports.kpi.rate.caption": {
+    "en": "{kind, select, down {down from {from} {month, select, feb {in Feb} other {in Sep}}} up {up from {from} {month, select, feb {in Feb} other {in Sep}}} same {same as {month, select, feb {in Feb} other {in Sep}}} other {week of {week}}}",
+    "ru": "{kind, select, down {меньше, чем {from} {month, select, feb {в феврале} other {в сентябре}}} up {больше, чем {from} {month, select, feb {в феврале} other {в сентябре}}} same {как и {month, select, feb {в феврале} other {в сентябре}}} other {неделя с {week}}}"
+  },
+  "dashboard.reports.kpi.rate.label": {
+    "en": "Flags per 100",
+    "ru": "Отметок на 100"
+  },
+  "dashboard.reports.kpi.sessions.caption": {
+    "en": "students × exams",
+    "ru": "студенты × экзамены"
+  },
+  "dashboard.reports.kpi.sessions.label": {
+    "en": "Sessions",
+    "ru": "Сеансы"
+  },
+  "dashboard.reports.none": {
+    "en": "–",
+    "ru": "–"
+  },
+  "dashboard.reports.review.headline": {
+    "en": "{kind, select, faster {Reviews got faster: {first} → {last}} slower {Reviews got slower: {first} → {last}} same {Reviews take {last}} other {No reviews yet this term}}",
+    "ru": "{kind, select, faster {Проверка ускорилась: {first} → {last}} slower {Проверка замедлилась: {first} → {last}} same {Проверка занимает {last}} other {В этом семестре проверок ещё не было}}"
+  },
+  "dashboard.reports.review.overline": {
+    "en": "Median review time · weekly",
+    "ru": "Медианное время проверки · по неделям"
+  },
+  "dashboard.reports.review.tooltip": {
+    "en": "Median {time}",
+    "ru": "Медиана {time}"
+  },
+  "dashboard.reports.term": {
+    "en": "{season, select, spring {Spring term {year}} other {Autumn term {year}}}",
+    "ru": "{season, select, spring {Весенний семестр {year}} other {Осенний семестр {year}}}"
+  },
+  "dashboard.reports.title": {
+    "en": "Reports",
+    "ru": "Отчёты"
+  },
+  "dashboard.reports.types.camera_lost": {
+    "en": "Camera lost",
+    "ru": "Камера отключилась"
+  },
+  "dashboard.reports.types.empty": {
+    "en": "No flags yet this term",
+    "ru": "В этом семестре отметок ещё нет"
+  },
+  "dashboard.reports.types.headline": {
+    "en": "{type, select, looked_away {Looking away} phone {A phone in frame} tab_or_site {A blocked tab or site} no_face {No face in frame} second_face {A second face} camera_lost {A lost camera} other {Other flags}} {size, select, majority {is more than half} half {is half} almost {is almost half} other {is flagged most}}",
+    "ru": "{type, select, looked_away {Взгляд в сторону} phone {Телефон в кадре} tab_or_site {Заблокированные вкладки и сайты} no_face {Отсутствие лица в кадре} second_face {Второе лицо} camera_lost {Потеря камеры} other {Другие отметки}} — {size, select, majority {больше половины} half {половина} almost {почти половина} other {чаще всего}}"
+  },
+  "dashboard.reports.types.looked_away": {
+    "en": "Looked away",
+    "ru": "Взгляд в сторону"
+  },
+  "dashboard.reports.types.no_face": {
+    "en": "No face",
+    "ru": "Нет лица"
+  },
+  "dashboard.reports.types.other": {
+    "en": "Other",
+    "ru": "Другое"
+  },
+  "dashboard.reports.types.overline": {
+    "en": "What gets flagged",
+    "ru": "Что отмечается"
+  },
+  "dashboard.reports.types.phone": {
+    "en": "Phone in frame",
+    "ru": "Телефон в кадре"
+  },
+  "dashboard.reports.types.second_face": {
+    "en": "Second face",
+    "ru": "Второе лицо"
+  },
+  "dashboard.reports.types.tab_or_site": {
+    "en": "Tab or site blocked",
+    "ru": "Вкладка или сайт"
+  },
+  "dashboard.reports.weekly.headline": {
+    "en": "{kind, select, down {Down from {first} to {last} in {weeks, plural, =1 {one week} =2 {two weeks} =3 {three weeks} =4 {four weeks} =5 {five weeks} =6 {six weeks} =7 {seven weeks} =8 {eight weeks} =9 {nine weeks} other {# weeks}}} up {Up from {first} to {last} in {weeks, plural, =1 {one week} =2 {two weeks} =3 {three weeks} =4 {four weeks} =5 {five weeks} =6 {six weeks} =7 {seven weeks} =8 {eight weeks} =9 {nine weeks} other {# weeks}}} flat {Steady at {last} for {weeks, plural, =1 {one week} =2 {two weeks} =3 {three weeks} =4 {four weeks} =5 {five weeks} =6 {six weeks} =7 {seven weeks} =8 {eight weeks} =9 {nine weeks} other {# weeks}}} single {{last} in the week of {week}} other {No exams yet this term}}",
+    "ru": "{kind, select, down {Снижение с {first} до {last} за {weeks, plural, =1 {одну неделю} =2 {две недели} =3 {три недели} =4 {четыре недели} =5 {пять недель} =6 {шесть недель} =7 {семь недель} =8 {восемь недель} =9 {девять недель} one {# неделю} few {# недели} many {# недель} other {# недели}}} up {Рост с {first} до {last} за {weeks, plural, =1 {одну неделю} =2 {две недели} =3 {три недели} =4 {четыре недели} =5 {пять недель} =6 {шесть недель} =7 {семь недель} =8 {восемь недель} =9 {девять недель} one {# неделю} few {# недели} many {# недель} other {# недели}}} flat {{last} без изменений уже {weeks, plural, =1 {одну неделю} =2 {две недели} =3 {три недели} =4 {четыре недели} =5 {пять недель} =6 {шесть недель} =7 {семь недель} =8 {восемь недель} =9 {девять недель} one {# неделю} few {# недели} many {# недель} other {# недели}}} single {{last} за неделю с {week}} other {В этом семестре экзаменов ещё не было}}"
+  },
+  "dashboard.reports.weekly.overline": {
+    "en": "Flags per 100 sessions · weekly",
+    "ru": "Отметок на 100 сеансов · по неделям"
+  },
+  "dashboard.reports.weekly.tooltip": {
+    "en": "{rate, plural, one {# flag} other {# flags}} per 100",
+    "ru": "{rate, plural, one {# отметка} few {# отметки} many {# отметок} other {# отметки}} на 100"
+  }
+}

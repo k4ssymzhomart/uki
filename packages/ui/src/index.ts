@@ -1,6 +1,7 @@
 // Public surface of @uki/ui. Each group keeps its own barrel; add new groups here.
 
 export * from "./art/index.ts";
+export * from "./charts/index.ts";
 export * from "./cn.ts";
 export * from "./controls/index.ts";
 export * from "./data/index.ts";

@@ -9,6 +9,7 @@
     "./icon": "./src/icon.tsx",
     "./art": "./src/art/index.ts",
     "./art/*": "./src/art/*",
+    "./charts/geometry": "./src/charts/chart-geometry.ts",
     "./gallery": "./src/gallery.tsx",
     "./*": "./src/*.tsx"
   },
