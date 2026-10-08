@@ -745,9 +745,9 @@
       "step_install": "Install Üki on the laptop you will use.",
       "step_join": "At {lobby}, join with your exam code and student ID.",
       "subject": "{exam}: your exam code",
-      "subtitle": "{exam} · {day} {month, select, jan {January} feb {February} mar {March} apr {April} may {May} jun {June} jul {July} aug {August} sep {September} oct {October} nov {November} dec {December} other {December}} · lobby opens {lobby}",
+      "subtitle": "{exam} · {day} {month, select, jan {January} feb {February} mar {March} apr {April} may {May} jun {June} jul {July} aug {August} sep {September} oct {October} nov {November} dec {December} other {December}} · lobby opens {lobby}",
       "test_subject": "Test invite · {exam}: your exam code",
-      "title": "Your exam is on {weekday, select, mon {Monday} tue {Tuesday} wed {Wednesday} thu {Thursday} fri {Friday} sat {Saturday} sun {Sunday} other {Sunday}} at {time}.",
+      "title": "Your exam is on {weekday, select, mon {Monday} tue {Tuesday} wed {Wednesday} thu {Thursday} fri {Friday} sat {Saturday} sun {Sunday} other {Sunday}} at {time}.",
       "wordmark_alt": "Üki"
     }
   },

@@ -745,9 +745,9 @@
       "step_install": "Установите Üki на ноутбук, с которого будете сдавать экзамен.",
       "step_join": "В {lobby} войдите по коду экзамена и ID студента.",
       "subject": "{exam}: ваш код экзамена",
-      "subtitle": "{exam} · {day} {month, select, jan {января} feb {февраля} mar {марта} apr {апреля} may {мая} jun {июня} jul {июля} aug {августа} sep {сентября} oct {октября} nov {ноября} dec {декабря} other {декабря}} · вход с {lobby}",
+      "subtitle": "{exam} · {day} {month, select, jan {января} feb {февраля} mar {марта} apr {апреля} may {мая} jun {июня} jul {июля} aug {августа} sep {сентября} oct {октября} nov {ноября} dec {декабря} other {декабря}} · вход с {lobby}",
       "test_subject": "Тестовое приглашение · {exam}: ваш код экзамена",
-      "title": "Ваш экзамен {weekday, select, mon {в понедельник} tue {во вторник} wed {в среду} thu {в четверг} fri {в пятницу} sat {в субботу} sun {в воскресенье} other {в воскресенье}} в {time}.",
+      "title": "Ваш экзамен {weekday, select, mon {в понедельник} tue {во вторник} wed {в среду} thu {в четверг} fri {в пятницу} sat {в субботу} sun {в воскресенье} other {в воскресенье}} в {time}.",
       "wordmark_alt": "Üki"
     }
   },

@@ -45,10 +45,10 @@ describe("formatEmailMessage", () => {
 
   it("names the weekday in each language's form", () => {
     expect(formatEmailMessage("en", "email.invite.title", { weekday: "fri", time: "10:00" })).toBe(
-      "Your exam is on Friday at 10:00.",
+      "Your exam is on Friday at\u00a010:00.",
     );
     expect(formatEmailMessage("ru", "email.invite.title", { weekday: "tue", time: "10:00" })).toBe(
-      "Ваш экзамен во вторник в 10:00.",
+      "Ваш экзамен во вторник в\u00a010:00.",
     );
     expect(formatEmailMessage("kk", "email.invite.step_check", { weekday: "fri" })).toBe(
       "Жүйені жұма күніне дейін тексеріңіз.",
@@ -60,7 +60,7 @@ describe("formatEmailMessage", () => {
 
   it("takes other for a value no arm names, and throws on a missing argument", () => {
     expect(formatEmailMessage("en", "email.invite.title", { weekday: "x", time: "10:00" })).toBe(
-      "Your exam is on Sunday at 10:00.",
+      "Your exam is on Sunday at\u00a010:00.",
     );
     expect(() => formatEmailMessage("en", "email.invite.title", { weekday: "fri" })).toThrow(
       /no value for \{time\}/,

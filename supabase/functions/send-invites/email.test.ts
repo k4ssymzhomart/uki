@@ -71,8 +71,8 @@ describe("renderInvite", () => {
 
   it("writes the Kazakh letters as text, with the system font stack around them", async () => {
     const email = await renderInvite("kk", EXAM, MADINA, SETTINGS);
-    expect(email.html).toContain("Емтиханыңыз жұма күні, сағат 10:00.");
-    expect(email.html).toContain("9 қазан");
+    expect(email.html).toContain("Емтиханыңыз жұма күні, сағат\u00a010:00.");
+    expect(email.html).toContain("9\u00a0қазан");
     expect(email.html).not.toMatch(/&#x4[0-9a-f]{2};/i); // no Cyrillic as character references
     expect(email.html).toContain("font-family:-apple-system, BlinkMacSystemFont");
     expect(SANS).toMatch(/Segoe UI.*Roboto.*Arial/);

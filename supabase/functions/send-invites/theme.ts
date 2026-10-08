@@ -64,7 +64,6 @@ export const type = {
 
 /** Phones (the 390 px check): a narrower card and smaller hero and code, as classes Gmail keeps. */
 export const PHONE_CSS = `@media only screen and (max-width: 480px) {
-  .uki-stage { padding: ${space["12"]}px 0 !important; }
   .uki-card { padding: ${space["20"]}px ${space["16"]}px !important; border-radius: ${radius.md}px !important; }
   .uki-hero { padding: ${space["16"]}px !important; }
   .uki-mascot { width: 64px !important; height: 64px !important; }

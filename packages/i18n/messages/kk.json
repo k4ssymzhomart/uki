@@ -93,9 +93,9 @@
       "step_install": "Üki-ді емтиханда қолданатын ноутбугыңызға орнатыңыз.",
       "step_join": "Сағат {lobby} болғанда емтихан коды мен студенттік ID арқылы кіріңіз.",
       "subject": "{exam}: емтихан кодыңыз",
-      "subtitle": "{exam} · {day} {month, select, jan {қаңтар} feb {ақпан} mar {наурыз} apr {сәуір} may {мамыр} jun {маусым} jul {шілде} aug {тамыз} sep {қыркүйек} oct {қазан} nov {қараша} dec {желтоқсан} other {желтоқсан}} · кіру уақыты: {lobby}",
+      "subtitle": "{exam} · {day} {month, select, jan {қаңтар} feb {ақпан} mar {наурыз} apr {сәуір} may {мамыр} jun {маусым} jul {шілде} aug {тамыз} sep {қыркүйек} oct {қазан} nov {қараша} dec {желтоқсан} other {желтоқсан}} · кіру уақыты: {lobby}",
       "test_subject": "Сынақ шақыру · {exam}: емтихан кодыңыз",
-      "title": "Емтиханыңыз {weekday, select, mon {дүйсенбі} tue {сейсенбі} wed {сәрсенбі} thu {бейсенбі} fri {жұма} sat {сенбі} sun {жексенбі} other {жексенбі}} күні, сағат {time}.",
+      "title": "Емтиханыңыз {weekday, select, mon {дүйсенбі} tue {сейсенбі} wed {сәрсенбі} thu {бейсенбі} fri {жұма} sat {сенбі} sun {жексенбі} other {жексенбі}} күні, сағат {time}.",
       "wordmark_alt": "Üki"
     }
   },

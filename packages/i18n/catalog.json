@@ -2409,10 +2409,10 @@
       "key": "email.invite.subtitle",
       "group": "0.8 Invite email",
       "source": "added",
-      "en": "{exam} · {day} {month, select, jan {January} feb {February} mar {March} apr {April} may {May} jun {June} jul {July} aug {August} sep {September} oct {October} nov {November} dec {December} other {December}} · lobby opens {lobby}",
-      "kk": "{exam} · {day} {month, select, jan {қаңтар} feb {ақпан} mar {наурыз} apr {сәуір} may {мамыр} jun {маусым} jul {шілде} aug {тамыз} sep {қыркүйек} oct {қазан} nov {қараша} dec {желтоқсан} other {желтоқсан}} · кіру уақыты: {lobby}",
-      "ru": "{exam} · {day} {month, select, jan {января} feb {февраля} mar {марта} apr {апреля} may {мая} jun {июня} jul {июля} aug {августа} sep {сентября} oct {октября} nov {ноября} dec {декабря} other {декабря}} · вход с {lobby}",
-      "notes": "0.8 hero, under the title. The date ({day} and {month}, jan to dec, in the workspace time zone) is added to the frame's line, because an invite can come more than a week early (decisions). The month is a select, not Intl: the Edge Runtime has no Kazakh month names. Kazakh and Russian are a first pass: a native speaker must review them (P.18)."
+      "en": "{exam} · {day} {month, select, jan {January} feb {February} mar {March} apr {April} may {May} jun {June} jul {July} aug {August} sep {September} oct {October} nov {November} dec {December} other {December}} · lobby opens {lobby}",
+      "kk": "{exam} · {day} {month, select, jan {қаңтар} feb {ақпан} mar {наурыз} apr {сәуір} may {мамыр} jun {маусым} jul {шілде} aug {тамыз} sep {қыркүйек} oct {қазан} nov {қараша} dec {желтоқсан} other {желтоқсан}} · кіру уақыты: {lobby}",
+      "ru": "{exam} · {day} {month, select, jan {января} feb {февраля} mar {марта} apr {апреля} may {мая} jun {июня} jul {июля} aug {августа} sep {сентября} oct {октября} nov {ноября} dec {декабря} other {декабря}} · вход с {lobby}",
+      "notes": "0.8 hero, under the title. The date ({day} and {month}, jan to dec, in the workspace time zone) is added to the frame's line, because an invite can come more than a week early (decisions). The month is a select, not Intl: the Edge Runtime has no Kazakh month names. Kazakh and Russian are a first pass: a native speaker must review them (P.18). A no-break space keeps the time (and the day with its month) on one line."
     },
     {
       "key": "email.invite.test_subject",
@@ -2427,10 +2427,10 @@
       "key": "email.invite.title",
       "group": "0.8 Invite email",
       "source": "added",
-      "en": "Your exam is on {weekday, select, mon {Monday} tue {Tuesday} wed {Wednesday} thu {Thursday} fri {Friday} sat {Saturday} sun {Sunday} other {Sunday}} at {time}.",
-      "kk": "Емтиханыңыз {weekday, select, mon {дүйсенбі} tue {сейсенбі} wed {сәрсенбі} thu {бейсенбі} fri {жұма} sat {сенбі} sun {жексенбі} other {жексенбі}} күні, сағат {time}.",
-      "ru": "Ваш экзамен {weekday, select, mon {в понедельник} tue {во вторник} wed {в среду} thu {в четверг} fri {в пятницу} sat {в субботу} sun {в воскресенье} other {в воскресенье}} в {time}.",
-      "notes": "0.8 hero title. {weekday} is the exam day in the workspace time zone (mon to sun); the select keeps each language grammatical. {time} is the start, like 10:00. Kazakh and Russian are a first pass: a native speaker must review them (P.18)."
+      "en": "Your exam is on {weekday, select, mon {Monday} tue {Tuesday} wed {Wednesday} thu {Thursday} fri {Friday} sat {Saturday} sun {Sunday} other {Sunday}} at {time}.",
+      "kk": "Емтиханыңыз {weekday, select, mon {дүйсенбі} tue {сейсенбі} wed {сәрсенбі} thu {бейсенбі} fri {жұма} sat {сенбі} sun {жексенбі} other {жексенбі}} күні, сағат {time}.",
+      "ru": "Ваш экзамен {weekday, select, mon {в понедельник} tue {во вторник} wed {в среду} thu {в четверг} fri {в пятницу} sat {в субботу} sun {в воскресенье} other {в воскресенье}} в {time}.",
+      "notes": "0.8 hero title. {weekday} is the exam day in the workspace time zone (mon to sun); the select keeps each language grammatical. {time} is the start, like 10:00. Kazakh and Russian are a first pass: a native speaker must review them (P.18). A no-break space keeps the time (and the day with its month) on one line."
     },
     {
       "key": "email.invite.wordmark_alt",

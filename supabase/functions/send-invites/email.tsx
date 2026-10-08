@@ -204,7 +204,7 @@ function InviteEmail({ locale, t, exam, student, settings }: InviteProps) {
         <style>{PHONE_CSS}</style>
       </Head>
       <Preview>{t("email.invite.preview", { code: exam.code, lobby: times.lobby })}</Preview>
-      <Body style={page} className="uki-stage">
+      <Body style={page}>
         <Container style={card} className="uki-card">
           {/* Top: the wordmark and the three languages */}
           <Row>
