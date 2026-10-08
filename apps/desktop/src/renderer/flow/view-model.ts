@@ -6,7 +6,7 @@
 // Times are epoch milliseconds on the server's clock (already corrected by the server time offset),
 // so a screen formats them with formatTime / formatDate from @uki/i18n in Asia/Almaty. Durations are
 // milliseconds.
-import type { ExamMode, Locale, MessagePreset } from "@uki/contracts";
+import type { AskReason, ExamMode, Locale, MessagePreset } from "@uki/contracts";
 
 /** Every student frame of Phase 0 (CLAUDE.md, "Phase 0 frames"). */
 export type Frame =
@@ -173,6 +173,11 @@ export interface IdentityModel extends ModelBase {
    * (identity.help.privacy, identity.help.waiting); null on 1.3.
    */
   help: { requestedAt: number; proctorName: string | null } | null;
+  /**
+   * Phase 1: a proctor's message (a reply or a 1.5b hint) shows as 2.1e's banner over 1.3 and 1.3a
+   * (message.title, message.body, Got it). Only `message` is set here; added time waits for 2.1.
+   */
+  notice?: NoticeModel | null;
 }
 
 // ---------------------------------------------------------------------------------------------------
@@ -336,6 +341,16 @@ export interface ExamModel extends ModelBase {
   proctorPause: { proctorName: string | null; text: string | null; since: number; pausedMs: number } | null;
   /** 2.1e: shown until Got it (ACK_NOTICE). */
   notice: NoticeModel | null;
+  /**
+   * Phase 1: Ask proctor in the footer of 2.1, 2.2 and 2.3 (action.ask_proctor) opens the sheet
+   * (lock.ask.*); false on 2.1c and while submitting.
+   */
+  canAskProctor?: boolean;
+  /**
+   * Phase 1: the request is queued (identity.help.requested {time}, lock.ask.body) until Got it or the
+   * proctor's message.
+   */
+  help?: { requestedAt: number } | null;
 }
 
 // ---------------------------------------------------------------------------------------------------
@@ -420,6 +435,10 @@ export type FlowUiEvent =
   | { type: "IM_HERE" }
   /** 2.1e Got it. */
   | { type: "ACK_NOTICE" }
+  /** 2.1 to 2.3 Send to proctor on the Ask proctor sheet: queues student.help_requested. */
+  | { type: "ASK_HELP"; topic: AskReason; text: string | null }
+  /** Got it on the help-requested banner. */
+  | { type: "ACK_HELP" }
   /** 2.1 Check again on the exam.questions.failed banner: load the questions now. */
   | { type: "RETRY_QUESTIONS" }
   /** 3.1 / 2.1d Save receipt. */

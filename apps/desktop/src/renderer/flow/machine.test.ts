@@ -308,7 +308,7 @@ describe("1.4 Rules and lobby", () => {
     await settle();
     await toRules(flow);
     flow.actor.send({ type: "SET_AGREED", agreed: true });
-    expect(ingestStatus(flow.actor.getSnapshot())).toEqual({ step: "ready" });
+    expect(ingestStatus(flow.actor.getSnapshot())).toEqual({ step: "ready", rules_locale: "kk" });
     flow.actor.send({ type: "COMMAND", command: command("start", {}, START - 5 * MIN) });
     await settle();
     expect(stageOf(flow.actor.getSnapshot())).toBe("writing");
@@ -596,6 +596,86 @@ describe("2.1 Exam and its states", () => {
       frame: "2.1",
       timer: { addedMinutes: null, remainingMs: 69 * MIN },
     });
+  });
+});
+
+describe("Phase 1: Ask proctor (1.6), the reply as 2.1e, and the rules language", () => {
+  function helpEvents(flow: Flow) {
+    return flow.effects.flatMap((e) =>
+      e.type === "effect.event" && e.eventType === "student.help_requested" ? [e.data] : [],
+    );
+  }
+
+  it("2.1: Send to proctor queues student.help_requested with the reason and the trimmed note", async () => {
+    const flow = startFlow();
+    await toExam(flow);
+    expect(selectScreen(flow.actor.getSnapshot())).toMatchObject({
+      frame: "2.1",
+      canAskProctor: true,
+      help: null,
+    });
+    flow.actor.send({ type: "TICK", now: START + 47 * MIN });
+    flow.actor.send({ type: "ASK_HELP", topic: "question", text: "  Q 8: radians or degrees?  " });
+    flow.actor.send({ type: "ASK_HELP", topic: "break", text: null });
+    expect(helpEvents(flow)).toEqual([
+      { topic: "question", text: "Q 8: radians or degrees?" },
+      { topic: "break" },
+    ]);
+    expect(selectScreen(flow.actor.getSnapshot())).toMatchObject({ help: { requestedAt: START + 47 * MIN } });
+    flow.actor.send({ type: "ACK_HELP" });
+    expect(selectScreen(flow.actor.getSnapshot())).toMatchObject({ help: null });
+  });
+
+  it("the proctor's reply arrives as a message: 2.1e takes the help banner's place", async () => {
+    const flow = startFlow();
+    await toExam(flow);
+    flow.actor.send({ type: "ASK_HELP", topic: "question", text: "Q 8?" });
+    flow.actor.send({ type: "COMMAND", command: command("message", { text: "Radians.", scope: "student" }) });
+    const model = selectScreen(flow.actor.getSnapshot());
+    expect(model).toMatchObject({ frame: "2.1e", help: null });
+    expect(model).toMatchObject({
+      notice: { message: { text: "Radians.", proctorName: "Aigerim Sadykova" } },
+    });
+  });
+
+  it("2.3 still lets the student ask; 2.1c does not", async () => {
+    const flow = startFlow();
+    await toExam(flow);
+    flow.actor.send({ type: "CUE_PAUSED", on: true, reason: "face_missing", at: START + MIN });
+    expect(selectScreen(flow.actor.getSnapshot())).toMatchObject({ frame: "2.3", canAskProctor: true });
+    flow.actor.send({ type: "ASK_HELP", topic: "technical", text: "The camera froze." });
+    expect(helpEvents(flow)).toEqual([{ topic: "technical", text: "The camera froze." }]);
+    flow.actor.send({ type: "COMMAND", command: command("pause", {}) });
+    expect(selectScreen(flow.actor.getSnapshot())).toMatchObject({ frame: "2.1c", canAskProctor: false });
+    flow.actor.send({ type: "ASK_HELP", topic: "other", text: null });
+    expect(helpEvents(flow)).toHaveLength(1);
+  });
+
+  it("a message on 1.3a (a reply or a hint) shows over it until Got it, and is not shown again on 2.1", async () => {
+    const flow = startFlow();
+    await joined(flow);
+    flow.actor.send({ type: "CHECK_ROWS", rows: READY_ROWS });
+    flow.actor.send({ type: "CONTINUE" });
+    flow.actor.send({ type: "ASK_PROCTOR" });
+    flow.actor.send({
+      type: "COMMAND",
+      command: command("message", { text: "Hold the card still.", scope: "student" }),
+    });
+    expect(selectScreen(flow.actor.getSnapshot())).toMatchObject({
+      frame: "1.3a",
+      notice: { message: { text: "Hold the card still." }, timeAdded: null },
+    });
+    flow.actor.send({ type: "ACK_NOTICE" });
+    expect(selectScreen(flow.actor.getSnapshot())).toMatchObject({ frame: "1.3a", notice: null });
+  });
+
+  it("ready carries the language the rules were read in", async () => {
+    const flow = startFlow();
+    await toRules(flow);
+    flow.actor.send({ type: "SET_LOCALE", locale: "ru" });
+    flow.actor.send({ type: "SET_AGREED", agreed: true });
+    expect(ingestStatus(flow.actor.getSnapshot())).toEqual({ step: "ready", rules_locale: "ru" });
+    expect(IngestStatus.safeParse(ingestStatus(flow.actor.getSnapshot())).success).toBe(true);
   });
 });
 

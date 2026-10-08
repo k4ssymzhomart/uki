@@ -162,6 +162,8 @@ function examModel(snapshot: FlowSnapshot): ExamModel {
         }
       : null,
     notice: context.notice,
+    canAskProctor: (stage === "writing" || stage === "selfPaused") && context.joined?.exam.mode !== "browser",
+    help: context.examHelp ? { requestedAt: context.examHelp.at } : null,
   };
 }
 
@@ -232,6 +234,7 @@ export function selectScreen(snapshot: FlowSnapshot): ScreenModel {
                 proctorName: context.joined?.proctor_name ?? null,
               }
             : null,
+        notice: context.notice?.message ? { message: context.notice.message, timeAdded: null } : null,
       };
     case "rules": {
       const startsAt = context.timer?.startsAt ?? context.now;

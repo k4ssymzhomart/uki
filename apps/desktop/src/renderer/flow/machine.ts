@@ -7,6 +7,7 @@
 import {
   type ClientEventType,
   type ExamMode,
+  HELP_NOTE_MAX,
   JOIN_ERROR_CODES,
   type JoinExamOutput,
   type Question,
@@ -183,6 +184,18 @@ export const studentFlowMachine = setup({
       enqueue.assign({ identity: { ...context.identity, helpRequestedAt: context.now } });
       enqueue.emit(event("student.help_requested", { topic: "identity" }));
     }),
+    /**
+     * Ask proctor on 2.1 to 2.3: student.help_requested with the reason and the note goes to the outbox
+     * (so it survives a network cut), and the help-requested banner shows until Got it or a message.
+     */
+    askHelp: enqueueActions(({ context, event: e, enqueue }) => {
+      if (e.type !== "ASK_HELP") return;
+      const text = (e.text ?? "").trim().slice(0, HELP_NOTE_MAX);
+      enqueue.assign({ examHelp: { at: context.now } });
+      enqueue.emit(
+        event("student.help_requested", text.length > 0 ? { topic: e.topic, text } : { topic: e.topic }),
+      );
+    }),
     /** 2.1c opens: the proctor's pause stops the timer until the resume command. */
     assignProctorPause: assign(({ context, event: e }) => {
       if (e.type !== "COMMAND" || e.command.type !== "pause") return {};
@@ -268,6 +281,7 @@ export const studentFlowMachine = setup({
     selfPause: null,
     proctorPause: null,
     notice: null,
+    examHelp: null,
     offline: null,
     log: [],
     finishing: null,
@@ -477,6 +491,12 @@ export const studentFlowMachine = setup({
         SESSION_SYNC: [
           { guard: "syncEnded", target: "ending", actions: ["assignSync", "assignEndedFromSync"] },
         ],
+        // Got it on the message over 1.3 or 1.3a (a reply or a 1.5b hint); added time waits for 2.1.
+        ACK_NOTICE: {
+          actions: assign(({ context }) => ({
+            notice: context.notice?.timeAdded ? { ...context.notice, message: null } : null,
+          })),
+        },
       },
       states: {
         system: {
@@ -638,10 +658,15 @@ export const studentFlowMachine = setup({
         LOCK_SUBMITTED: { target: "submitting", actions: assign({ finishing: "submitted" }) },
         COMMAND: [
           { guard: { type: "isCommand", params: { type: "end" } }, target: "ending", actions: "assignEnded" },
-          { guard: { type: "isCommand", params: { type: "message" } }, actions: "assignNotice" },
+          // The proctor's message answers a request: 2.1e takes the help-requested banner's place.
+          {
+            guard: { type: "isCommand", params: { type: "message" } },
+            actions: ["assignNotice", assign({ examHelp: null })],
+          },
           { guard: { type: "isCommand", params: { type: "add_time" } }, actions: "assignNotice" },
         ],
         ACK_NOTICE: { actions: assign({ notice: null }) },
+        ACK_HELP: { actions: assign({ examHelp: null }) },
       },
       states: {
         flow: {
@@ -705,6 +730,7 @@ export const studentFlowMachine = setup({
                   }),
                 },
                 SUBMIT: { target: "#flow.submitting", actions: assign({ finishing: "submitted" }) },
+                ASK_HELP: { actions: "askHelp" },
                 CUE_PAUSED: { guard: "selfPauseOn", target: "selfPaused" },
                 COMMAND: {
                   guard: { type: "isCommand", params: { type: "pause" } },
@@ -734,6 +760,8 @@ export const studentFlowMachine = setup({
               }),
               on: {
                 IM_HERE: { actions: emit({ type: "effect.resume" }) },
+                // 2.3: no face in view, the camera may be the problem; the proctor can still be asked.
+                ASK_HELP: { actions: "askHelp" },
                 CUE_PAUSED: { guard: "selfPauseOff", target: "writing" },
                 // The proctor paused too (the app was offline, or the server never saw session.paused):
                 // 2.1c, which only the resume command ends. I'm here must not end the proctor's pause.

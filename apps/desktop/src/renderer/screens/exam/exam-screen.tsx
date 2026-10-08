@@ -1,11 +1,12 @@
-import type { DesktopOs } from "@uki/contracts";
+import type { AskReason, DesktopOs } from "@uki/contracts";
 import type { Locale } from "@uki/i18n";
 import { Hud } from "@uki/ui";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { useTranslations } from "use-intl";
 import type { ExamModel } from "../../flow/view-model.ts";
 import { ScreenFrame } from "../shared/screen-frame.tsx";
 import { useScreenLocale } from "../shared/use-screen-env.ts";
+import { AskProctorSheet } from "./ask-proctor-sheet.tsx";
 import { PauseCard } from "./pause-card.tsx";
 import { QuestionPane } from "./question-pane.tsx";
 import { UkiPanel } from "./uki-panel.tsx";
@@ -25,6 +26,10 @@ export type ExamScreenProps = {
   onGotIt: () => void;
   /** 2.1 Check again when the questions did not load. */
   onRetryQuestions: () => void;
+  /** Send to proctor on the Ask proctor sheet (2.1 to 2.3). */
+  onAskHelp?: (topic: AskReason, text: string | null) => void;
+  /** Got it on the help-requested banner. */
+  onHelpGotIt?: () => void;
   onLanguage: (locale: Locale) => void;
   os?: DesktopOs;
 };
@@ -32,7 +37,8 @@ export type ExamScreenProps = {
 /**
  * 2.1 Exam and its states: 2.1a Offline, 2.1c Paused by proctor, 2.1e Message and new end time,
  * 2.2 Phone warning (the HUD) and 2.3 Paused (Figma 51:2074, 180:18130, 180:18517, 199:18883, 51:2076,
- * 51:2078). Every state is a layer on the same layout, so they combine as the model says.
+ * 51:2078). Every state is a layer on the same layout, so they combine as the model says. Phase 1 adds
+ * Ask proctor in the footer, which opens E.5a's sheet over the question column (also over 2.3's veil).
  */
 export function ExamScreen({
   model,
@@ -44,12 +50,20 @@ export function ExamScreen({
   onImHere,
   onGotIt,
   onRetryQuestions,
+  onAskHelp,
+  onHelpGotIt,
   onLanguage,
   os,
 }: ExamScreenProps) {
   const t = useTranslations();
   const locale = useScreenLocale(model.locale);
   const paused = model.proctorPause !== null || model.selfPause !== null;
+  const [asking, setAsking] = useState(false);
+  const canAsk = model.canAskProctor === true;
+  // The sheet goes when asking stops being possible (a proctor pause, submit, the end).
+  useEffect(() => {
+    if (!canAsk) setAsking(false);
+  }, [canAsk]);
 
   return (
     <ScreenFrame
@@ -71,8 +85,21 @@ export function ExamScreen({
           onSubmit={onSubmit}
           onGotIt={onGotIt}
           onRetryQuestions={onRetryQuestions}
+          onAskProctor={() => setAsking(true)}
+          onHelpGotIt={onHelpGotIt}
+          askAboveVeil={model.selfPause !== null && model.proctorPause === null}
         />
         <PauseCard selfPause={model.selfPause} proctorPause={model.proctorPause} onImHere={onImHere} />
+        {asking && canAsk ? (
+          <AskProctorSheet
+            className="absolute right-14 bottom-26 z-20"
+            onClose={() => setAsking(false)}
+            onSend={(topic, text) => {
+              setAsking(false);
+              onAskHelp?.(topic, text);
+            }}
+          />
+        ) : null}
         {model.phone !== null && !paused ? (
           <Hud
             kind="phone"

@@ -8,7 +8,7 @@ export function FaqDisclosure({ question, answer }: FaqDisclosureProps) {
   const [open, setOpen] = useState(false);
   const answerId = useId();
   return (
-    <div className="flex w-full shrink-0 flex-col items-start gap-2 rounded-md border border-line-default bg-surface px-5 py-4 text-fg-primary">
+    <div className="flex w-full shrink-0 flex-col items-start gap-2.5 rounded-md border border-line-default bg-surface px-5 py-4 text-fg-primary">
       <button
         type="button"
         aria-expanded={open}
@@ -20,7 +20,7 @@ export function FaqDisclosure({ question, answer }: FaqDisclosureProps) {
         <span className="min-w-0 flex-1 type-card-title">{question}</span>
         <Icon name={open ? "chevron-up" : "chevron-down"} className="size-5" />
       </button>
-      <p id={answerId} hidden={!open} className="pl-8 opacity-72 type-body-s">
+      <p id={answerId} hidden={!open} className="pl-8 opacity-70 type-body-s">
         {answer}
       </p>
     </div>
