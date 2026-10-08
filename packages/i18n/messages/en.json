@@ -870,12 +870,17 @@
         "title": "This link is not available"
       },
       "share": {
+        "active": "{count, plural, one {# active link} other {# active links}}",
         "copied": "Link copied",
         "copy": "Copy link",
         "failed": "The link could not be made. Try again.",
         "field": "Read-only link · expires in {days, plural, one {# day} other {# days}}",
         "label": "Share with the committee",
-        "once": "Shown only once. Copy it now; Üki keeps only a fingerprint of it."
+        "once": "Shown only once. Copy it now; Üki keeps only a fingerprint of it.",
+        "revoke": "Revoke",
+        "revokeFailed": "The links could not be revoked. Try again.",
+        "revokeLabel": "Revoke every link to this report",
+        "revoked": "{count, plural, one {# link revoked} other {# links revoked}}"
       },
       "shared": {
         "audit": "Opening this link is recorded in the {workspace} audit log.",
@@ -894,11 +899,13 @@
       },
       "title": "Integrity report",
       "verify": {
+        "limited": "Too many checks from this connection. Wait a minute, then try again.",
         "result": "{result, select, intact {This code belongs to an Üki integrity report that has not changed since it was issued.} other {This code does not match a current Üki integrity report. The printout may be of an older version.}}",
         "row": {
           "date": "Date",
           "exam": "Exam"
-        }
+        },
+        "tryAgain": "Try again"
       }
     },
     "review": {

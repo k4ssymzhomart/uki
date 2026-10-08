@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import { Field } from "./field.tsx";
 import { Input } from "./input.tsx";
 import { TextArea } from "./text-area.tsx";
 
@@ -79,5 +80,46 @@ describe("TextArea", () => {
     const textarea = screen.getByRole("textbox", { name: "Reason" }) as HTMLTextAreaElement;
     await user.type(textarea, "x");
     expect(textarea.value).toBe("");
+  });
+});
+
+describe("Field", () => {
+  it("puts an action at the end of the label row, outside the label", async () => {
+    const user = userEvent.setup();
+    const onRevoke = vi.fn();
+    render(
+      <Field
+        controlId="share"
+        messageId="share-message"
+        label="Share with the committee"
+        state="default"
+        action={
+          <button type="button" onClick={onRevoke}>
+            Revoke
+          </button>
+        }
+      >
+        <input id="share" readOnly value="https://uki.test/r/abc" />
+      </Field>,
+    );
+    const input = screen.getByRole("textbox", { name: "Share with the committee" });
+    const revoke = screen.getByRole("button", { name: "Revoke" });
+    expect(revoke.closest("label")).toBeNull();
+    expect(revoke.parentElement).toBe(screen.getByText("Share with the committee").parentElement);
+    expect(revoke.parentElement).not.toBe(input.parentElement);
+    await user.click(revoke);
+    expect(onRevoke).toHaveBeenCalledOnce();
+    expect(document.activeElement).not.toBe(input);
+  });
+
+  it("keeps the label alone when there is no action", () => {
+    render(
+      <Field controlId="share" messageId="share-message" label="Share with the committee" state="default">
+        <input id="share" readOnly />
+      </Field>,
+    );
+    const input = screen.getByRole("textbox", { name: "Share with the committee" });
+    expect(screen.getByText("Share with the committee").parentElement).toBe(input.parentElement);
+    expect(screen.queryByRole("button")).toBeNull();
   });
 });

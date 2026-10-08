@@ -11,9 +11,8 @@ import {
 import { TIME_ZONE } from "@uki/i18n";
 
 /**
- * How a verify code is printed on 3.4, 3.5 and /verify. WP 1.1 prints UKI-RPT-XXXX-XXXX-XXXX, where the
- * frames show UKI-RPT-0917-MT; the choice is open (docs/decisions.md, 1.9), so every printed code goes
- * through this one function.
+ * How a verify code is printed on 3.4, 3.5, /verify and the CSV's name: UKI-XXXX-XXXX, as the user decided
+ * on 8 Oct (docs/decisions.md, 1.9). Every printed code goes through this one function.
  */
 export function printedVerifyCode(code: string): string {
   return formatVerifyCode(code);
@@ -135,7 +134,7 @@ export function eventsCsv(events: readonly CompactEvent[]): string {
   return `${[CSV_COLUMNS.join(","), ...rows].join("\r\n")}\r\n`;
 }
 
-/** "uki-report-UKI-RPT-7K2M-9QXD-4HPA-events.csv", or without the code before the report exists. */
+/** "uki-report-UKI-7K2M-9QXD-events.csv", or without the code before the report exists. */
 export function csvFileName(code: string | null): string {
   return code === null ? "uki-report-events.csv" : `uki-report-${printedVerifyCode(code)}-events.csv`;
 }
@@ -149,7 +148,7 @@ export function shareUrl(origin: string, path: string): string {
   return new URL(path, origin).toString();
 }
 
-/** Whole days until the share expires, at least 1: the field's "expires in 7 days". */
+/** Whole days until the share expires, at least 1: the field's "expires in 30 days". */
 export function daysLeft(expiresAt: string, nowMs: number): number {
   return Math.max(1, Math.round((Date.parse(expiresAt) - nowMs) / 86_400_000));
 }

@@ -1,6 +1,7 @@
-// WP 1.9: 3.4 (the integrity report with Download PDF, Export CSV and Share link), 3.5 (the shared report),
-// /verify/[code] and the share link's not-found page, in English for behaviour and in Russian with no
-// next-intl error and no raw key (the Russian render check every new dashboard page gets).
+// WP 1.9: 3.4 (the integrity report with Download PDF, Export CSV, Share link and Revoke), 3.5 (the shared
+// report), /verify/[code] with its try-again state and the share link's not-found page, in English for
+// behaviour and in Russian with no next-intl error and no raw key (the Russian render check every new
+// dashboard page gets).
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import type { StillsRequest } from "@uki/contracts";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -18,7 +19,7 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
 }));
 vi.mock("next/image", () => import("./next-image-mock.tsx"));
-const actions = vi.hoisted(() => ({ createShareLink: vi.fn() }));
+const actions = vi.hoisted(() => ({ createShareLink: vi.fn(), revokeShareLinks: vi.fn() }));
 vi.mock("../src/features/report/report-actions.ts", () => actions);
 
 /** A share token's shape: 43 base64url characters. */
@@ -44,7 +45,14 @@ function functions() {
   return { api, stills };
 }
 
-function renderReport(locale: "en" | "ru" = "en") {
+/** A link of the report that still opens, as loadReport reads it. */
+const ACTIVE = {
+  id: "01900000-0000-7000-8000-0000000000b1",
+  created_at: "2026-10-09T06:52:00.000Z",
+  expires_at: "2026-11-08T06:52:00.000Z",
+};
+
+function renderReport(locale: "en" | "ru" = "en", shares: (typeof ACTIVE)[] = []) {
   const fn = functions();
   const report = reportFixture();
   const events = [
@@ -63,7 +71,7 @@ function renderReport(locale: "en" | "ru" = "en") {
   ];
   const view = renderWithIntl(
     <FunctionsClientContext value={() => fn.api}>
-      <ReportView report={report} events={events} />
+      <ReportView report={report} events={events} shares={shares} />
     </FunctionsClientContext>,
     DANA,
     locale,
@@ -73,6 +81,7 @@ function renderReport(locale: "en" | "ru" = "en") {
 
 beforeEach(() => {
   actions.createShareLink.mockReset();
+  actions.revokeShareLinks.mockReset();
 });
 
 afterEach(() => {
@@ -85,7 +94,7 @@ describe("3.4 Integrity report", () => {
     const { stills } = renderReport();
     expect(screen.getByText("Review / Mathematics 2 · Midterm / Madina Tulegenova")).toBeTruthy();
     const page = screen.getByRole("article");
-    expect(within(page).getByText("UKI-RPT-7K2M-9QXD-4HPA")).toBeTruthy();
+    expect(within(page).getByText("UKI-7K2M-9QXD")).toBeTruthy();
     expect(within(page).getByRole("heading", { level: 2, name: "Integrity report" })).toBeTruthy();
     expect(within(page).getByText("Mathematics 2 · Midterm · Fri 9 Oct 2026 · Group 204")).toBeTruthy();
     expect(within(page).getByText("Madina Tulegenova · 20231187")).toBeTruthy();
@@ -134,7 +143,7 @@ describe("3.4 Integrity report", () => {
       clicks.push(this.download);
     });
     fireEvent.click(screen.getByRole("button", { name: "Export CSV" }));
-    expect(clicks).toEqual(["uki-report-UKI-RPT-7K2M-9QXD-4HPA-events.csv"]);
+    expect(clicks).toEqual(["uki-report-UKI-7K2M-9QXD-events.csv"]);
     expect(saved).not.toBeNull();
     expect(await (saved as unknown as Blob).text()).toBe(eventsCsv(events));
   });
@@ -149,7 +158,8 @@ describe("3.4 Integrity report", () => {
     Object.assign(navigator, { clipboard: { writeText } });
     renderReport();
     const field = screen.getByRole("button", { name: "Share with the committee" });
-    expect(field.textContent).toBe("Read-only link · expires in 7 days");
+    expect(field.textContent).toBe("Read-only link · expires in 30 days");
+    expect(screen.queryByTestId("share-revoke")).toBeNull();
     await act(async () => {
       fireEvent.click(field);
     });
@@ -169,6 +179,55 @@ describe("3.4 Integrity report", () => {
     });
     expect(actions.createShareLink).toHaveBeenCalledTimes(1);
     expect(writeText).toHaveBeenCalledTimes(2);
+    expect(screen.getByRole("button", { name: "Revoke every link to this report" }).textContent).toBe(
+      "Revoke",
+    );
+  });
+
+  it("Revoke beside Share link withdraws the report's links and says how many", async () => {
+    actions.revokeShareLinks.mockResolvedValue({ ok: true, revoked: 2 });
+    renderReport("en", [ACTIVE, { ...ACTIVE, id: "01900000-0000-7000-8000-0000000000b2" }]);
+    expect(screen.getByText("2 active links")).toBeTruthy();
+    const revoke = screen.getByRole("button", { name: "Revoke every link to this report" });
+    expect(revoke.closest("label")).toBeNull();
+    await act(async () => {
+      fireEvent.click(revoke);
+    });
+    expect(actions.revokeShareLinks).toHaveBeenCalledWith({
+      report_id: "f0000000-0000-4000-8000-000000000917",
+    });
+    expect(await screen.findByText("2 links revoked")).toBeTruthy();
+    expect(screen.queryByTestId("share-revoke")).toBeNull();
+    expect(screen.queryByText("2 active links")).toBeNull();
+    expect(screen.getByRole("button", { name: "Share with the committee" }).textContent).toBe(
+      "Read-only link · expires in 30 days",
+    );
+  });
+
+  it("Revoke clears a link just made, and says when it failed", async () => {
+    actions.createShareLink.mockResolvedValue({
+      ok: true,
+      path: `/r/${TOKEN}`,
+      expiresAt: "2026-11-08T06:52:00.000Z",
+    });
+    Object.assign(navigator, { clipboard: { writeText: vi.fn(async () => {}) } });
+    actions.revokeShareLinks.mockResolvedValueOnce({ ok: false, code: "forbidden" });
+    renderReport();
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Share with the committee" }));
+    });
+    expect(screen.getByTestId("share-link")).toBeTruthy();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("share-revoke"));
+    });
+    expect(screen.getByText("The links could not be revoked. Try again.")).toBeTruthy();
+    expect(screen.getByTestId("share-link")).toBeTruthy();
+    actions.revokeShareLinks.mockResolvedValueOnce({ ok: true, revoked: 1 });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("share-revoke"));
+    });
+    expect(screen.queryByTestId("share-link")).toBeNull();
+    expect(await screen.findByText("1 link revoked")).toBeTruthy();
   });
 
   it("says when the link could not be made", async () => {
@@ -198,7 +257,7 @@ describe("3.5 Shared report", () => {
     );
     const copy = screen.getByRole("region", { name: "This copy" });
     expect(within(copy).getByText("9 Oct 2026 · 11:52 by Üki")).toBeTruthy();
-    expect(within(copy).getByText("UKI-RPT-7K2M-9QXD-4HPA")).toBeTruthy();
+    expect(within(copy).getByText("UKI-7K2M-9QXD")).toBeTruthy();
     expect(within(copy).getByText("0 MB")).toBeTruthy();
     expect(within(copy).getByText("3 of 61 in this exam")).toBeTruthy();
     expect(within(copy).getByText("412 for this session")).toBeTruthy();
@@ -218,10 +277,10 @@ describe("/verify/[code]", () => {
   it("confirms an unchanged report with its exam, date, initials and issue time", () => {
     renderWithIntl(
       <VerifyView
-        code="uki-rpt-7k2m-9qxd-4hpa"
+        code="uki-7k2m-9qxd"
         result={{
           found: true,
-          code: "7K2M9QXD4HPA",
+          code: "7K2M9QXD",
           exam_title: "Mathematics 2 · Midterm",
           exam_starts_at: "2026-10-09T05:00:00.000Z",
           timezone: "Asia/Almaty",
@@ -234,7 +293,7 @@ describe("/verify/[code]", () => {
     expect(screen.getByRole("status").textContent).toBe(
       "This code belongs to an Üki integrity report that has not changed since it was issued.",
     );
-    expect(screen.getByText("UKI-RPT-7K2M-9QXD-4HPA")).toBeTruthy();
+    expect(screen.getByText("UKI-7K2M-9QXD")).toBeTruthy();
     expect(screen.getByText("Mathematics 2 · Midterm")).toBeTruthy();
     expect(screen.getByText("Fri 9 Oct 2026")).toBeTruthy();
     expect(screen.getByText("MT")).toBeTruthy();
@@ -244,10 +303,10 @@ describe("/verify/[code]", () => {
   it("refuses a changed report and an unknown code with the same line and no details", () => {
     renderWithIntl(
       <VerifyView
-        code="7K2M9QXD4HPA"
+        code="7K2M9QXD"
         result={{
           found: true,
-          code: "7K2M9QXD4HPA",
+          code: "7K2M9QXD",
           exam_title: "Mathematics 2 · Midterm",
           exam_starts_at: "2026-10-09T05:00:00.000Z",
           timezone: "Asia/Almaty",
@@ -262,9 +321,20 @@ describe("/verify/[code]", () => {
     expect(screen.getByRole("status").textContent).toBe(line);
     expect(screen.queryByText("Mathematics 2 · Midterm")).toBeNull();
     document.body.innerHTML = "";
-    renderWithIntl(<VerifyView code="not-a-code" result={{ found: false }} />);
+    renderWithIntl(<VerifyView code="not-a-real-code" result={{ found: false }} />);
     expect(screen.getByRole("status").textContent).toBe(line);
-    expect(screen.getByText("not-a-code")).toBeTruthy();
+    expect(screen.getByText("not-a-real-code")).toBeTruthy();
+  });
+
+  it("after 10 lookups in a minute asks to wait, with Try again on the same code", () => {
+    renderWithIntl(<VerifyView code="uki-7k2m-9qxd" result="rate_limited" />);
+    const status = screen.getByRole("status");
+    expect(status.textContent).toBe("Too many checks from this connection. Wait a minute, then try again.");
+    expect(status.getAttribute("data-result")).toBe("rate-limited");
+    expect(screen.getByRole("link", { name: "Try again" }).getAttribute("href")).toBe(
+      "/verify/uki-7k2m-9qxd",
+    );
+    expect(screen.getByText("UKI-7K2M-9QXD")).toBeTruthy();
   });
 
   it("the share link's not-found page says the link is not available", () => {
@@ -275,7 +345,10 @@ describe("/verify/[code]", () => {
 
 describe("3.4, 3.5, /verify and the not-found page in Russian", () => {
   it("3.4 renders in Russian with no missing key", async () => {
-    const { view } = renderReport("ru");
+    const { view } = renderReport("ru", [ACTIVE]);
+    expect(screen.getByText("Ссылка для чтения · 30 дней")).toBeTruthy();
+    expect(screen.getByText("Отозвать")).toBeTruthy();
+    expect(screen.getByText("1 действующая ссылка")).toBeTruthy();
     expect(screen.getByRole("heading", { level: 1, name: "Отчёт о проверке" })).toBeTruthy();
     expect(screen.getByText("пт, 9 окт 2026", { exact: false })).toBeTruthy();
     expect(screen.getByText("87 из 90 мин")).toBeTruthy();
@@ -296,6 +369,12 @@ describe("3.4, 3.5, /verify and the not-found page in Russian", () => {
     const verify = renderWithIntl(<VerifyView code="x" result={{ found: false }} />, null, "ru");
     expect(screen.getByRole("status").textContent).toContain("Этот код не совпадает");
     expect(rawKeys(verify.container)).toEqual([]);
+    verify.unmount();
+    const limited = renderWithIntl(<VerifyView code="x" result="rate_limited" />, null, "ru");
+    expect(screen.getByRole("status").textContent).toContain("Слишком много проверок");
+    expect(screen.getByRole("link", { name: "Проверить снова" })).toBeTruthy();
+    expect(rawKeys(limited.container)).toEqual([]);
+    limited.unmount();
     const missing = renderWithIntl(<ShareNotFoundView />, null, "ru");
     expect(screen.getByText("Ссылка недоступна")).toBeTruthy();
     expect(rawKeys(missing.container)).toEqual([]);

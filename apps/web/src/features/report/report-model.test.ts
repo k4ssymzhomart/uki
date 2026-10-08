@@ -1,11 +1,4 @@
-import { createHash } from "node:crypto";
-import {
-  type CompactEvent,
-  formatVerifyCode,
-  normalizeVerifyCode,
-  verifyCodeFromDigest,
-  verifyCodeInput,
-} from "@uki/contracts";
+import { type CompactEvent, formatVerifyCode, normalizeVerifyCode } from "@uki/contracts";
 import { describe, expect, it } from "vitest";
 import {
   almatyStamp,
@@ -44,29 +37,16 @@ function event(overrides: Partial<CompactEvent>): CompactEvent {
 }
 
 describe("the verify code", () => {
-  it("prints the 12 characters as UKI-RPT-XXXX-XXXX-XXXX through one function", () => {
-    expect(printedVerifyCode("7K2M9QXD4HPA")).toBe("UKI-RPT-7K2M-9QXD-4HPA");
-    expect(printedVerifyCode("7K2M9QXD4HPA")).toBe(formatVerifyCode("7K2M9QXD4HPA"));
-  });
-
-  it("is cut from SHA-256 of '<report id>:<content hash>', as make_verify_code makes it", () => {
-    const reportId = "0f1e2d3c-4b5a-4968-8776-655443322110";
-    const contentHash = "a".repeat(64);
-    const digest = createHash("sha256").update(verifyCodeInput(reportId, contentHash), "utf8").digest("hex");
-    const code = verifyCodeFromDigest(digest);
-    expect(code).toMatch(/^[0-9A-HJKMNP-TV-Z]{12}$/);
-    // A changed content hash gives another code.
-    const other = createHash("sha256")
-      .update(verifyCodeInput(reportId, "b".repeat(64)), "utf8")
-      .digest("hex");
-    expect(verifyCodeFromDigest(other)).not.toBe(code);
+  it("prints the 8 characters as UKI-XXXX-XXXX through one function", () => {
+    expect(printedVerifyCode("7K2M9QXD")).toBe("UKI-7K2M-9QXD");
+    expect(printedVerifyCode("7K2M9QXD")).toBe(formatVerifyCode("7K2M9QXD"));
   });
 
   it("reads back from its printed form, in any case, with or without hyphens and the prefix", () => {
-    const printed = printedVerifyCode("7K2M9QXD4HPA");
-    expect(normalizeVerifyCode(printed)).toBe("7K2M9QXD4HPA");
-    expect(normalizeVerifyCode(printed.toLowerCase())).toBe("7K2M9QXD4HPA");
-    expect(normalizeVerifyCode("7k2m 9qxd 4hpa")).toBe("7K2M9QXD4HPA");
+    const printed = printedVerifyCode("7K2M9QXD");
+    expect(normalizeVerifyCode(printed)).toBe("7K2M9QXD");
+    expect(normalizeVerifyCode(printed.toLowerCase())).toBe("7K2M9QXD");
+    expect(normalizeVerifyCode("7k2m 9qxd")).toBe("7K2M9QXD");
     expect(normalizeVerifyCode("UKI-RPT-0917-MT")).toBeNull();
   });
 });
@@ -152,7 +132,7 @@ describe("Export CSV", () => {
   });
 
   it("names the file after the printed code", () => {
-    expect(csvFileName("7K2M9QXD4HPA")).toBe("uki-report-UKI-RPT-7K2M-9QXD-4HPA-events.csv");
+    expect(csvFileName("7K2M9QXD")).toBe("uki-report-UKI-7K2M-9QXD-events.csv");
     expect(csvFileName(null)).toBe("uki-report-events.csv");
   });
 
@@ -171,6 +151,7 @@ describe("the share link", () => {
 
   it("counts whole days left, at least one", () => {
     const now = Date.parse("2026-10-09T06:52:00Z");
+    expect(daysLeft("2026-11-08T06:52:00Z", now)).toBe(30);
     expect(daysLeft("2026-10-16T06:52:00Z", now)).toBe(7);
     expect(daysLeft("2026-10-09T07:00:00Z", now)).toBe(1);
   });

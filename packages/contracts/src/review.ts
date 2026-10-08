@@ -1,7 +1,7 @@
 // Help requests (2.4d), the review (3.2, 3.3, Mark reviewed in 2.4a, Add note in 2.5), the integrity
 // report (3.4, 3.5), its share link and the verify code: the shapes of close_help_request,
-// decide_session, add_session_note, get_report, create_share, open_shared_report and verify_report
-// (supabase/migrations/20261009000000_phase1.sql).
+// decide_session, add_session_note, get_report, create_share, revoke_share, open_shared_report and
+// verify_report (supabase/migrations/20261009000000_phase1.sql and 20261012160000_verify_codes_share_revoke.sql).
 import { z } from "zod";
 import { MessageText } from "./commands.ts";
 import { HelpTopic, SESSION_NOTE_TEXT_MAX } from "./events.ts";
@@ -126,44 +126,32 @@ export const AddSessionNoteOutput = Uuid;
 
 /** Crockford base32: no I, L, O or U. */
 export const VERIFY_CODE_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
-export const VERIFY_CODE_LENGTH = 12;
-/** How 3.4 and 3.5 print a code: UKI-RPT-7K2M-9QXD-4HPA. */
-export const VERIFY_CODE_PREFIX = "UKI-RPT";
-export const VerifyCode = z.string().regex(/^[0-9A-HJKMNP-TV-Z]{12}$/);
-
-/** The text whose SHA-256 the code is cut from: `<report id>:<content hash>`. */
-export function verifyCodeInput(reportId: string, contentHash: string): string {
-  return `${reportId.toLowerCase()}:${contentHash}`;
-}
-
 /**
- * The 12-character code from the hex SHA-256 of verifyCodeInput: its first 60 bits, 5 at a time, in
- * Crockford base32. public.make_verify_code makes the same code in the database.
+ * A report's code: 8 random characters of VERIFY_CODE_ALPHABET, drawn by public.unused_verify_code when
+ * the report is made and again for each new version of its content (the user's decision of 8 Oct).
  */
-export function verifyCodeFromDigest(hexDigest: string): string {
-  if (!/^[0-9a-f]{15,}$/i.test(hexDigest))
-    throw new RangeError("a hex digest of at least 15 digits is needed");
-  const bits = BigInt(`0x${hexDigest.slice(0, 15)}`);
-  let code = "";
-  for (let index = 0; index < VERIFY_CODE_LENGTH; index += 1) {
-    const shift = BigInt(55 - 5 * index);
-    code += VERIFY_CODE_ALPHABET[Number((bits >> shift) & BigInt(31))];
-  }
-  return code;
-}
+export const VERIFY_CODE_LENGTH = 8;
+/** How 3.4, 3.5 and /verify print a code: UKI-7K2M-9QXD. */
+export const VERIFY_CODE_PREFIX = "UKI";
+export const VerifyCode = z.string().regex(/^[0-9A-HJKMNP-TV-Z]{8}$/);
 
-/** UKI-RPT-XXXX-XXXX-XXXX for print. */
+/** UKI-XXXX-XXXX for print. */
 export function formatVerifyCode(code: string): string {
-  return `${VERIFY_CODE_PREFIX}-${code.slice(0, 4)}-${code.slice(4, 8)}-${code.slice(8, 12)}`;
+  return `${VERIFY_CODE_PREFIX}-${code.slice(0, 4)}-${code.slice(4, 8)}`;
 }
 
 /**
- * A typed or scanned code as stored, or null: case, spaces and hyphens do not matter, the UKI-RPT
- * prefix is optional, O reads as 0 and I or L as 1 (public.normalize_verify_code).
+ * A typed or scanned code as stored, or null: case, spaces and hyphens do not matter, the UKI prefix is
+ * optional, O reads as 0 and I or L as 1 (public.normalize_verify_code). U is never read as anything.
  */
 export function normalizeVerifyCode(input: string): string | null {
-  let code = input.toUpperCase().replace(/[^A-Z0-9]/g, "");
-  if (code.length === 18 && code.startsWith("UKIRPT")) code = code.slice(6);
+  let code = input
+    .slice(0, 64)
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "");
+  if (code.length === VERIFY_CODE_PREFIX.length + VERIFY_CODE_LENGTH && code.startsWith(VERIFY_CODE_PREFIX)) {
+    code = code.slice(VERIFY_CODE_PREFIX.length);
+  }
   code = code.replace(/O/g, "0").replace(/[IL]/g, "1");
   return VerifyCode.safeParse(code).success ? code : null;
 }
@@ -271,10 +259,11 @@ export const GetReportInput = z.object({ session_id: Uuid });
 export type GetReportInput = z.infer<typeof GetReportInput>;
 
 // ---------------------------------------------------------------------------------------------------
-// Share links: rpc create_share, the shared-report function, rpc verify_report
+// Share links: rpc create_share and revoke_share, the shared-report function, rpc verify_report
 // ---------------------------------------------------------------------------------------------------
 
-export const SHARE_TTL_DAYS = 7;
+/** create_share's links expire this many days after they are made (the user's decision of 8 Oct). */
+export const SHARE_TTL_DAYS = 30;
 export const SHARE_TOKEN_BYTES = 32;
 /** 32 random bytes in base64url without padding: 43 characters. */
 export const ShareToken = z.string().regex(/^[A-Za-z0-9_-]{43}$/);
@@ -314,7 +303,25 @@ export const SharedReportResponse = SharedReportPayload.extend({
 });
 export type SharedReportResponse = z.infer<typeof SharedReportResponse>;
 
-export const VerifyReportInput = z.object({ code: z.string().min(1).max(64) });
+/**
+ * rpc revoke_share: Revoke on 3.4, for staff of the exam. Sets `revoked_at`, after which the
+ * shared-report function answers the link as not found; revoking twice changes nothing.
+ */
+export const RevokeShareInput = z.object({ share_id: Uuid });
+export type RevokeShareInput = z.infer<typeof RevokeShareInput>;
+export const RevokeShareOutput = z.object({ share_id: Uuid, report_id: Uuid, revoked_at: Timestamp });
+export type RevokeShareOutput = z.infer<typeof RevokeShareOutput>;
+
+/** A link of the report that still opens, as 3.4 reads it from `report_shares` (never the token). */
+export const ActiveShare = z.object({ id: Uuid, created_at: Timestamp, expires_at: Timestamp });
+export type ActiveShare = z.infer<typeof ActiveShare>;
+
+/** /verify answers this many lookups per client in a minute; the next one is rate_limited (HTTP 429). */
+export const VERIFY_LOOKUPS_PER_MINUTE = 10;
+/** verify_report's client_hash: the SHA-256 of the visitor's IP, in lower-case hex. */
+export const VerifyClientHash = z.string().regex(/^[0-9a-f]{64}$/);
+
+export const VerifyReportInput = z.object({ code: z.string().min(1).max(64), client_hash: VerifyClientHash });
 export type VerifyReportInput = z.infer<typeof VerifyReportInput>;
 
 /**

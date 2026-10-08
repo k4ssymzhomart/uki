@@ -44,6 +44,8 @@ export type FieldProps = {
   gap?: "sm" | "md";
   /** Label opacity: Select draws its label at 70 %. */
   labelTone?: "default" | "muted";
+  /** A small control at the end of the label row, outside the label (3.4's Revoke beside Share link). */
+  action?: ReactNode;
   className?: string;
   children: ReactNode;
 };
@@ -58,23 +60,34 @@ export function Field({
   state,
   gap = "md",
   labelTone = "default",
+  action,
   className,
   children,
 }: FieldProps) {
   const message = state === "error" ? error : helper;
   const hasMessage = message !== undefined && message !== null && message !== false && message !== "";
+  const labelElement = (
+    <label
+      htmlFor={controlId}
+      className={cn(
+        "type-label-m text-fg-primary",
+        labelTone === "muted" && "opacity-70",
+        state === "disabled" && "opacity-55",
+      )}
+    >
+      {label}
+    </label>
+  );
   return (
     <div className={cn("flex w-full flex-col items-start", gap === "md" ? "gap-2" : "gap-1.5", className)}>
-      <label
-        htmlFor={controlId}
-        className={cn(
-          "type-label-m text-fg-primary",
-          labelTone === "muted" && "opacity-70",
-          state === "disabled" && "opacity-55",
-        )}
-      >
-        {label}
-      </label>
+      {action === undefined || action === null ? (
+        labelElement
+      ) : (
+        <div className="flex w-full items-center justify-between gap-3">
+          {labelElement}
+          {action}
+        </div>
+      )}
       {children}
       {hasMessage ? (
         <p

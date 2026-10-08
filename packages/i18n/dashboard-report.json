@@ -136,6 +136,26 @@
     "en": "The link could not be made. Try again.",
     "ru": "Не удалось создать ссылку. Попробуйте ещё раз."
   },
+  "dashboard.report.share.revoke": {
+    "en": "Revoke",
+    "ru": "Отозвать"
+  },
+  "dashboard.report.share.revokeLabel": {
+    "en": "Revoke every link to this report",
+    "ru": "Отозвать все ссылки на этот отчёт"
+  },
+  "dashboard.report.share.active": {
+    "en": "{count, plural, one {# active link} other {# active links}}",
+    "ru": "{count, plural, one {# действующая ссылка} few {# действующие ссылки} many {# действующих ссылок} other {# действующей ссылки}}"
+  },
+  "dashboard.report.share.revoked": {
+    "en": "{count, plural, one {# link revoked} other {# links revoked}}",
+    "ru": "{count, plural, one {# ссылка отозвана} few {# ссылки отозваны} many {# ссылок отозвано} other {# ссылки отозвано}}"
+  },
+  "dashboard.report.share.revokeFailed": {
+    "en": "The links could not be revoked. Try again.",
+    "ru": "Не удалось отозвать ссылки. Попробуйте ещё раз."
+  },
   "dashboard.report.kept.eyebrow": {
     "en": "This exam",
     "ru": "Этот экзамен"
@@ -227,6 +247,14 @@
   "dashboard.report.verify.row.date": {
     "en": "Date",
     "ru": "Дата"
+  },
+  "dashboard.report.verify.limited": {
+    "en": "Too many checks from this connection. Wait a minute, then try again.",
+    "ru": "Слишком много проверок с этого подключения. Подождите минуту и попробуйте снова."
+  },
+  "dashboard.report.verify.tryAgain": {
+    "en": "Try again",
+    "ru": "Проверить снова"
   },
   "dashboard.report.notFound.title": {
     "en": "This link is not available",

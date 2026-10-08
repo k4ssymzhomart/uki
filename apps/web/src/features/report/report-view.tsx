@@ -9,7 +9,7 @@ import shieldArt from "../../assets/uki-3d-laptop-shield.png";
 import { PageHeader } from "../shell/page-header.tsx";
 import { useFunctionsClient } from "../wall/use-command.ts";
 import { useStills } from "../wall/use-stills.ts";
-import { createShareLink } from "./report-actions.ts";
+import { createShareLink, revokeShareLinks } from "./report-actions.ts";
 import type { ReportData } from "./report-data.ts";
 import { ReportDocument } from "./report-document.tsx";
 import { csvFileName, eventsCsv, shareUrl } from "./report-model.ts";
@@ -47,14 +47,19 @@ function downloadCsv(csv: string, name: string): void {
   window.setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
-/** Share with the committee (Figma Input 69:5278): makes the link on the first click and shows it once. */
-function ShareField({ reportId }: { reportId: string | null }) {
+/**
+ * Share with the committee (Figma Input 69:5278): makes the link on the first click and shows it once.
+ * Revoke, at the end of the label row, withdraws every link of the report that still opens (the user's
+ * decision of 8 Oct; no frame draws it); it shows only while there is one, under a line that counts them.
+ */
+function ShareField({ reportId, initialActive }: { reportId: string | null; initialActive: number }) {
   const t = useTranslations("dashboard.report");
   const toast = useToast();
   const id = useId();
   const [link, setLink] = useState<string | null>(null);
+  const [active, setActive] = useState(initialActive);
   const [busy, setBusy] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState<"share" | "revoke" | null>(null);
 
   const copy = async (url: string) => {
     try {
@@ -68,35 +73,71 @@ function ShareField({ reportId }: { reportId: string | null }) {
   const create = async () => {
     if (reportId === null || busy) return;
     setBusy(true);
-    setFailed(false);
+    setFailed(null);
     const result = await createShareLink({ report_id: reportId });
     setBusy(false);
     if (!result.ok) {
-      setFailed(true);
+      setFailed("share");
       return;
     }
     const url = shareUrl(window.location.origin, result.path);
     setLink(url);
+    setActive((count) => count + 1);
     await copy(url);
   };
+
+  const revoke = async () => {
+    if (reportId === null || busy) return;
+    setBusy(true);
+    setFailed(null);
+    const result = await revokeShareLinks({ report_id: reportId });
+    setBusy(false);
+    if (!result.ok) {
+      setFailed("revoke");
+      return;
+    }
+    setLink(null);
+    setActive(0);
+    toast.show({ kind: "success", message: t("share.revoked", { count: result.revoked }) });
+  };
+
+  const helper =
+    link !== null ? t("share.once") : active > 0 ? t("share.active", { count: active }) : undefined;
+  const error =
+    failed === "share" ? t("share.failed") : failed === "revoke" ? t("share.revokeFailed") : undefined;
 
   return (
     <Field
       controlId={`${id}-share`}
       messageId={`${id}-share-message`}
       label={t("share.label")}
-      helper={link === null ? undefined : t("share.once")}
-      error={failed ? t("share.failed") : undefined}
-      state={failed ? "error" : "default"}
+      helper={helper}
+      error={error}
+      state={failed === null ? "default" : "error"}
+      action={
+        active > 0 ? (
+          <button
+            type="button"
+            aria-label={t("share.revokeLabel")}
+            disabled={reportId === null || busy}
+            onClick={() => void revoke()}
+            className="cursor-pointer rounded-sm text-fg-danger underline outline-none type-label-m focus-visible:shadow-focus disabled:cursor-not-allowed disabled:opacity-45"
+            data-testid="share-revoke"
+          >
+            {t("share.revoke")}
+          </button>
+        ) : undefined
+      }
       className="w-full"
     >
-      <div className={fieldBoxVariants({ state: failed ? "error" : "default" })}>
+      <div className={fieldBoxVariants({ state: failed === null ? "default" : "error" })}>
         {link === null ? (
           <button
             id={`${id}-share`}
             type="button"
             disabled={reportId === null}
             aria-busy={busy || undefined}
+            aria-describedby={helper === undefined && error === undefined ? undefined : `${id}-share-message`}
             onClick={() => void create()}
             className="min-w-0 flex-1 cursor-pointer truncate text-left type-body-s outline-none disabled:cursor-not-allowed"
           >
@@ -141,9 +182,10 @@ export type ReportViewProps = ReportData;
 /**
  * 3.4 Integrity report (Figma 51:2096): the report page on its grey preview, Export (Download PDF prints
  * the page through report-print.css, Export CSV builds the events file here, Share with the committee
- * calls create_share and shows the link once) and the exam's Data kept.
+ * calls create_share and shows the link once, Revoke withdraws the report's links) and the exam's Data
+ * kept.
  */
-export function ReportView({ report, events }: ReportViewProps) {
+export function ReportView({ report, events, shares }: ReportViewProps) {
   const t = useTranslations("dashboard.report");
   const [stills, setStills] = useState<Record<string, string>>({});
   const [onStill] = useState(
@@ -188,7 +230,7 @@ export function ReportView({ report, events }: ReportViewProps) {
             >
               {t("export.csv")}
             </Button>
-            <ShareField reportId={report.report?.id ?? null} />
+            <ShareField reportId={report.report?.id ?? null} initialActive={shares.length} />
           </section>
 
           <section
