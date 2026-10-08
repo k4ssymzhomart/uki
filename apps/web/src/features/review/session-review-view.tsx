@@ -9,11 +9,13 @@ import {
   type ChipStatus,
   EventRow,
   EvidenceCard,
+  Icon,
   Input,
   RadioGroup,
   RadioOption,
   useToast,
 } from "@uki/ui";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -106,6 +108,7 @@ export type SessionReviewViewProps = SessionReviewData;
  */
 export function SessionReviewView({ group, sessionId, events, staffNames }: SessionReviewViewProps) {
   const t = useTranslations("dashboard.review");
+  const report = useTranslations("dashboard.report");
   const router = useRouter();
   const toast = useToast();
   const { describe, text } = useEventCopy(staffNames);
@@ -182,6 +185,13 @@ export function SessionReviewView({ group, sessionId, events, staffNames }: Sess
               </Chip>
             )}
             <Chip status="ok">{t("session.chip.noVideo")}</Chip>
+            {/* WP 1.9: 3.4 opens from here; 3.3 draws no entry (docs/decisions.md, 1.9). */}
+            <Button variant="ghost" asChild className="ml-auto">
+              <Link href={`/review/${sessionId}/report`}>
+                <Icon name="report" className="size-5" />
+                {report("title")}
+              </Link>
+            </Button>
           </div>
 
           {selected === undefined ? null : (
