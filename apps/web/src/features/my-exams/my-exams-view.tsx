@@ -99,7 +99,12 @@ export function MyExamsView({ exams, nowMs, confirmAction }: MyExamsViewProps) {
         <div className="grid grid-cols-4 gap-4">
           <StatTile
             label={t("myExams.stat.next.label")}
-            value={stats.next ? nextValue(stats.next.exam.starts_at) : t("myExams.stat.next.none")}
+            value={
+              // One line, as 0.9 draws it: "Сегодня 22:00" is a few pixels wider than the tile's text box.
+              <span className="whitespace-nowrap">
+                {stats.next ? nextValue(stats.next.exam.starts_at) : t("myExams.stat.next.none")}
+              </span>
+            }
             caption={stats.next?.exam.title}
           />
           <StatTile

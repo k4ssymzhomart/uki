@@ -82,7 +82,7 @@
   },
   "dashboard.lobby.identityHelp.open": {
     "en": "Identity help",
-    "ru": "Помощь с личностью"
+    "ru": "Помочь"
   },
   "dashboard.lobby.identityHelp.send": {
     "en": "Send hint",
@@ -94,7 +94,7 @@
   },
   "dashboard.lobby.identityHelp.title": {
     "en": "Identity help",
-    "ru": "Помощь с проверкой личности"
+    "ru": "Помощь с личностью"
   },
   "dashboard.myExams.allSeats": {
     "en": "All seats",

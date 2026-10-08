@@ -203,8 +203,8 @@ describe("1.5a and 1.5b in Russian", () => {
     expect(within(card).getByText("Устройство")).toBeTruthy();
     expectClean();
 
-    fireEvent.click(within(card).getByRole("button", { name: "Помощь с личностью" }));
-    const drawer = await screen.findByRole("dialog", { name: "Помощь с проверкой личности" });
+    fireEvent.click(within(card).getByRole("button", { name: "Помочь" }));
+    const drawer = await screen.findByRole("dialog", { name: "Помощь с личностью" });
     await waitFor(() => expect(within(drawer).getByText("Просит помощи")).toBeTruthy());
     expect(within(drawer).getByRole("textbox", { name: "Подсказка для Madina" })).toBeTruthy();
     expect(within(drawer).getByText("Язык приложения Madina: английский · 0/200")).toBeTruthy();

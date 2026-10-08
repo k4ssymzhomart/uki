@@ -62,7 +62,7 @@ export function Drawer({
           )}
         >
           <div className="flex w-full items-center justify-between gap-3 pt-6 pr-6 pb-4 pl-7">
-            <DialogPrimitive.Title className="min-w-0 truncate type-ui-title">{title}</DialogPrimitive.Title>
+            <DialogPrimitive.Title className="min-w-0 flex-1 type-ui-title">{title}</DialogPrimitive.Title>
             <DialogPrimitive.Close
               aria-label={closeLabel}
               className="flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-pill outline-none transition-colors hover:bg-hover focus-visible:shadow-focus"

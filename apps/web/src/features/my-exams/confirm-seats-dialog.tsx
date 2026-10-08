@@ -95,6 +95,9 @@ export function ConfirmSeatsDialog({ exam, onOpenChange, action, onSaved }: Conf
       onOpenChange={(next) => {
         if (!next) close();
       }}
+      // 0.9a centres the dialog over the page beside the sidebar (628 + 220 = 256 + 1184 / 2), half the
+      // sidebar right of the window's centre: the 72 px rail from 1024 px, the 256 px sidebar from 1280.
+      className="ml-9 xl:ml-32"
       icon={changing ? "edit" : "info"}
       title={changing ? t("confirm.change") : t("confirm.title", { course })}
       body={changing ? t("change.body", { course }) : body}
