@@ -69,7 +69,7 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 -SupabaseUrl https://<ref
 | --- | --- | --- |
 | `-SupabaseUrl`, `-PublishableKey` | required | The cloud project and its publishable key. A secret key is refused, by the script and by the simulator |
 | `-ExamCode` | `DEMO-LIVE` | |
-| `-Students` | `20249001-20249024` | 24 of the 30; 20249025 to 20249030 stay free for a person with the real app |
+| `-Students` | `20249001-20249024` | 24 of the 30; 20249025 to 20249030 stay free for a person with the real app, such as the smoke box on the same VPS (`docs/runbooks/lab-session.md`, section 10, in `C:\apps\uki\smoke`, which these scripts never touch) |
 | `-InstallRoot` | `C:\apps\uki` | Everything of Üki on the VPS lives here |
 | `-TaskPrefix` | `uki-` | Task names: `uki-judge-sim`, `uki-judge-sim-watchdog` |
 | `-MemoryLimitMb` | `250` | The watchdog restarts the simulator above this |
