@@ -7,12 +7,12 @@ describe("the jury guide", () => {
     expect(GUIDE_STEPS.map((step) => step.id)).toEqual(["what", "signIn", "app", "lock", "look"]);
   });
 
-  it("sends Sign in to /sign-in and the app and Üki Lock to the download block", () => {
+  it("sends the second step to the Live demo and the app and Üki Lock to the download block", () => {
     const actions = Object.fromEntries(
       GUIDE_STEPS.flatMap((step) => ("action" in step ? [[step.id, step.action.href]] : [])),
     );
     expect(actions).toEqual({
-      signIn: "/sign-in",
+      signIn: "/sign-in?email=judge%40kru.test&next=/demo/live",
       app: sectionHref(SECTION.download),
       lock: sectionHref(SECTION.download),
     });
