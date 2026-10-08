@@ -149,6 +149,33 @@ describe("planExam", () => {
     expect(Math.round(total / 1000)).toBe(6);
   });
 
+  it("sends a student's help request at its time, as an event the contracts accept", () => {
+    const asker: CastMember = {
+      ...member("normal", "normal"),
+      help: {
+        atSimMs: 70_000,
+        topic: "technical",
+        text: "My camera froze for a second. Is my exam still running?",
+      },
+    };
+    const plan = planExam(asker, createRng(4), options);
+    validate(plan);
+    const help = plan.filter((s) => s.action.kind === "help");
+    expect(help).toEqual([
+      {
+        atSimMs: 70_000,
+        action: {
+          kind: "help",
+          topic: "technical",
+          text: "My camera froze for a second. Is my exam still running?",
+        },
+      },
+    ]);
+    expect(
+      planExam(member("normal", "normal"), createRng(4), options).some((s) => s.action.kind === "help"),
+    ).toBe(false);
+  });
+
   it("submits early students after four to seven minutes", () => {
     const at = planExam(member("normal", "early_submit"), createRng(9), options).at(-1)?.atSimMs ?? 0;
     expect(at).toBeGreaterThanOrEqual(4 * MIN);

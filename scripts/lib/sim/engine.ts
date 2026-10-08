@@ -145,6 +145,7 @@ const EXAM_ACTIONS = new Set([
   "phone",
   "second_face",
   "tab_blocked",
+  "help",
   "self_pause",
   "go_offline",
   "submit",
@@ -505,6 +506,11 @@ export class SimEngine {
       case "tab_blocked": {
         const drafts = draftsFor(action, ctx);
         await this.ingest(member, drafts, describeDrafts(drafts), true);
+        return;
+      }
+      case "help": {
+        // The help_from_event trigger makes the request and broadcasts `help` to the proctors' walls.
+        await this.ingest(member, draftsFor(action, ctx), `asks the proctor (${action.topic})`, true);
         return;
       }
       case "self_pause": {

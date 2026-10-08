@@ -7,7 +7,9 @@
 // (Telegram open, camera busy, card unreadable). When the exam starts (Start exam on the dashboard,
 // the clock, or --start-after), they open 2.1, answer questions, and play the wall's moments: looks
 // away, a tab blocked, a second face, a phone at 0.94, an empty seat and a lost camera that pause,
-// a student whose heartbeats stop (No signal), and two early submissions. Proctor commands to
+// a student whose heartbeats stop (No signal), and two early submissions. Seed v2 (WP 1.14) adds the
+// two Ask proctor requests 2.4d draws, both in the first 3 minutes: Saule T. about her camera, Kamila R.
+// about question 8 (--help-requests 0 leaves them out, as e2e:load does). Proctor commands to
 // simulated students are acknowledged and their effects followed. Writes use the secret key: see
 // scripts/lib/sim/engine.ts for each path. Madina's number (20231187) is skipped by default because
 // her real MacBook joins in the demo.
@@ -41,7 +43,7 @@ import {
 import { serverClock } from "./lib/clock.ts";
 import { DEMO_EXAMS } from "./lib/demo.ts";
 import { describeTarget, loadEnvFile, readScriptEnv, type ScriptEnv } from "./lib/env.ts";
-import { NAMED_PARTS, planCast, type RosterEntry } from "./lib/sim/cast.ts";
+import { HELP_PARTS, NAMED_PARTS, planCast, type RosterEntry } from "./lib/sim/cast.ts";
 import { type AdoptedSession, SimEngine, type SimExam, type SimQuestion } from "./lib/sim/engine.ts";
 import { BroadcastWatch } from "./lib/sim/watch.ts";
 import { adminClient, staffClient, type UkiClient } from "./lib/supabase.ts";
@@ -64,6 +66,7 @@ const USAGE = `Usage: pnpm demo:simulate [options]
   --heartbeat <s>      seconds between ingest calls per student, 2 to 10 (default 8)
   --concurrency <n>    calls in flight at once, 1 to 64 (default 8)
   --seed <n>           random seed for the script (default 1)
+  --help-requests <n>  Ask proctor requests in the first 3 minutes, 0 to 2 (default 2: 2.4d's two)
   --cleanup            delete the simulated sessions and their rows on exit
   --verbose            log every join, step and question
   --env-file <path>    read SUPABASE_URL and SUPABASE_SECRET_KEY from this file instead of .env`;
@@ -92,6 +95,7 @@ const Args = z.object({
   heartbeat: numberFlag(2, 10, 8),
   concurrency: numberFlag(1, 64, 8),
   seed: numberFlag(0, 2 ** 31, 1),
+  "help-requests": numberFlag(0, HELP_PARTS.length, HELP_PARTS.length),
   cleanup: z.boolean().default(false),
   verbose: z.boolean().default(false),
   "env-file": z.string().optional(),
@@ -277,6 +281,7 @@ async function main(): Promise<number> {
       heartbeat: { type: "string" },
       concurrency: { type: "string" },
       seed: { type: "string" },
+      "help-requests": { type: "string" },
       cleanup: { type: "boolean" },
       verbose: { type: "boolean", short: "v" },
       "env-file": { type: "string" },
@@ -347,6 +352,7 @@ async function main(): Promise<number> {
     skipNumbers: skip,
     takenStudentIds: new Set(real.map((row) => row.student_id)),
     seed: args.seed,
+    helpRequests: args["help-requests"],
   });
   if (cast.members.length < args.sessions) {
     log.warn(
@@ -385,11 +391,19 @@ async function main(): Promise<number> {
       `${real.length} real sessions, ${cast.notJoined.length} not joined; speed ${args.speed}x, seed ${args.seed}`,
   );
   for (const member of cast.members) {
-    if (member.lobby === "normal" && member.wall === "normal" && NAMED_PARTS[member.number] === undefined)
+    if (
+      member.lobby === "normal" &&
+      member.wall === "normal" &&
+      member.help === undefined &&
+      NAMED_PARTS[member.number] === undefined
+    )
       continue;
     const parts = [
       member.lobby !== "normal" ? `lobby ${member.lobby}` : "",
       member.wall !== "normal" ? `wall ${member.wall}` : "",
+      member.help
+        ? `asks the proctor (${member.help.topic}) ${member.help.atSimMs / 1000} s after the start`
+        : "",
     ]
       .filter(Boolean)
       .join(", ");
