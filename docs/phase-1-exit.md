@@ -225,11 +225,9 @@ Branch `wp/1.11-students-settings` (PR #22). Ran on the development MacBook agai
 | Figma A.4 in Russian | pass | ![A.4 ru](evidence/phase-1/1.11/A.4-ru.jpg) «Настройки новых экзаменов», «за 20 мин до начала», «0,85» and the five checks fit |
 | A.2, A.3 and A.4 on the cloud project with seed v2 | pending | Waits for P.2 and WP 1.14 (programme and year for every seeded student); then the A.2 and A.3 comparisons again | |
 
-## 1.13 Landing site (in progress)
-
 ## 1.13 Landing site
 
-Branch `wp/1.13-landing` (PR #6), rebased on `origin/main` at 9f075dd (WP 1.1, 1.2, 1.4, 1.5, 1.6, 1.7, 1.8 and P.10 merged). Ran on the development MacBook against a fourth local Supabase stack, project `uki-w113` on ports 551xx with CLI 2.107.0, so the main stack on 547xx stayed untouched; `supabase functions serve` with that stack's own copy of WP 1.4's `supabase/functions/local.env` (stub port 55190), with and without `UKI_EMAIL_SINK`, `next dev` on port 3313. The Figma comparisons put the frame on the left and the page on the right, both full page at the frame's width, scaled to fit (0.32 for the 1440 landing, 0.6 at 390, 0.45 to 0.5 for the others); the frames are the cached screenshots in `.figma-cache/`. The Russian comparisons put the English frame beside the Russian page, since the frames are English. Choices are logged in `docs/decisions.md` under "1.13 Landing site".
+Branch `wp/1.13-landing` (PR #6), rebased on `origin/main` at e15f477 (WP 1.1, 1.2, 1.4, 1.5, 1.6, 1.7, 1.8, 1.11 and P.10 merged). Ran on the development MacBook against a fourth local Supabase stack, project `uki-w113` on ports 551xx with CLI 2.107.0, so the main stack on 547xx stayed untouched; `supabase functions serve` with that stack's own copy of WP 1.4's `supabase/functions/local.env` (stub port 55190), with and without `UKI_EMAIL_SINK`, `next dev` on port 3313. The Figma comparisons put the frame on the left and the page on the right, both full page at the frame's width, scaled to fit (0.32 for the 1440 landing, 0.6 at 390, 0.45 to 0.5 for the others); the frames are the cached screenshots in `.figma-cache/`. The Russian comparisons put the English frame beside the Russian page, since the frames are English. Choices are logged in `docs/decisions.md` under "1.13 Landing site".
 
 | Check | Status | Evidence | Date |
 | --- | --- | --- | --- |
