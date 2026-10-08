@@ -69,6 +69,7 @@ const WRITTEN_ACTIONS = [
   "privacy_centre.read",
   "proctors.assign",
   "report.share",
+  "report.share_revoke",
   "report.share_view",
   "report.view",
   "retention.run",
@@ -203,7 +204,7 @@ describe("A.6 Audit log", () => {
     expect(settings?.actor).toEqual({ kind: "staff", id: DANA_ID, name: "Dana Akhmetova" });
     expect(settings?.object).toEqual({ kind: "settings" });
     expect(view?.actor).toEqual({ kind: "share" });
-    expect(view?.object).toEqual({ kind: "report", code: "0917MT3P8X1Z" });
+    expect(view?.object).toEqual({ kind: "report", code: "0917MT3P" });
     expect(decide?.object).toEqual({ kind: "session", student: "Madina Tulegenova", exam: "Mathematics 2" });
     expect(stills?.object).toEqual(decide?.object);
     expect(start?.object).toEqual({ kind: "exam", title: "Mathematics 2", examKind: "Midterm" });

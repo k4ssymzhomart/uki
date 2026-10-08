@@ -205,7 +205,7 @@ export type AuditTab = (typeof AUDIT_TABS)[number];
 /** The actions of each tab but All. */
 export const AUDIT_TAB_ACTIONS: Readonly<Record<Exclude<AuditTab, "all">, readonly string[]>> = {
   frames: ["still.viewed"],
-  exports: ["data_request.copy", "report.share", "report.share_view", "audit.export"],
+  exports: ["data_request.copy", "report.share", "report.share_view", "report.share_revoke", "audit.export"],
   settings: ["settings.update"],
   deletions: ["data_request.delete", "retention.run"],
 };
@@ -442,6 +442,7 @@ const ACTIONS = {
   "privacy_centre.read": { icon: "shield", key: "privacy_centre_read" },
   "proctors.assign": { icon: "users", key: "proctors_assign" },
   "report.share": { icon: "link", key: "report_share" },
+  "report.share_revoke": { icon: "link", key: "report_share_revoke" },
   "report.share_view": { icon: "link", key: "report_share_view" },
   "report.view": { icon: "file-text", key: "report_view" },
   "retention.run": { icon: "trash", key: "retention_run" },

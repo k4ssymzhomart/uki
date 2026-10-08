@@ -848,6 +848,7 @@
           "privacy_centre_read": "Opened the privacy centre",
           "proctors_assign": "Assigned proctors",
           "report_share": "Shared the report",
+          "report_share_revoke": "Revoked a share link",
           "report_share_view": "Opened through a share link",
           "report_view": "Opened the report",
           "retention_run": "Deleted {count, plural, one {# frame} other {# frames}} older than {days} days",

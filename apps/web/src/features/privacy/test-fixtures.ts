@@ -125,7 +125,7 @@ export const AUDIT_NAMES: AuditNames = {
   students: { [MADINA_ID]: "Madina Tulegenova" },
   sessions: { [SESSION]: { student: "Madina Tulegenova", exam: "Mathematics 2" } },
   exams: { [EXAM]: { title: "Mathematics 2", kind: "Midterm" } },
-  reports: { [REPORT]: "0917MT3P8X1Z" },
+  reports: { [REPORT]: "0917MT3P" },
 };
 
 export const AUDIT_ENTRIES: AuditEntry[] = auditEntries(AUDIT_ROWS, AUDIT_NAMES);
@@ -152,7 +152,7 @@ const COUNTS = {
   appVersion: "1.4.2",
   consents: 2,
   receipts: 2,
-  reports: ["0922YT7K4M2Q"],
+  reports: ["0922YT7K"],
 };
 
 /** A.5a: Yerlan's delete request, open. */

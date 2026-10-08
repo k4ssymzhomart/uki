@@ -131,7 +131,7 @@ describe("A.5a and A.5b reads", () => {
         frames: () => ok(null, 4),
         events: (call) =>
           ok(null, call.ops.some(([op, args]) => op === "eq" && args[0] === "review") ? 3 : 1206),
-        reports: () => ok([{ verify_code: "0922YT7K4M2Q" }]),
+        reports: () => ok([{ verify_code: "0922YT7K" }]),
       },
       auditOk,
     );
@@ -164,7 +164,7 @@ describe("A.5a and A.5b reads", () => {
       appVersion: "1.4.2",
       consents: 1,
       receipts: 1,
-      reports: ["0922YT7K4M2Q"],
+      reports: ["0922YT7K"],
     });
   });
 

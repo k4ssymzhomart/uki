@@ -848,6 +848,7 @@
           "privacy_centre_read": "Открыт центр конфиденциальности",
           "proctors_assign": "Назначены прокторы",
           "report_share": "Отчёт отправлен по ссылке",
+          "report_share_revoke": "Ссылка для чтения отозвана",
           "report_share_view": "Открыт по ссылке",
           "report_view": "Открыт отчёт",
           "retention_run": "Удалено кадров старше {days} дн.: {count, number}",

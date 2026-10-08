@@ -100,6 +100,10 @@
     "en": "Shared the report",
     "ru": "Отчёт отправлен по ссылке"
   },
+  "dashboard.privacy.audit.action.report_share_revoke": {
+    "en": "Revoked a share link",
+    "ru": "Ссылка для чтения отозвана"
+  },
   "dashboard.privacy.audit.action.report_share_view": {
     "en": "Opened through a share link",
     "ru": "Открыт по ссылке"

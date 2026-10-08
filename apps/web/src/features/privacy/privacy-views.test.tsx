@@ -151,7 +151,7 @@ describe("A.5a Delete request", () => {
       "Event log1,206 events from 2 examsDelete",
       "Identity scores and devices2 card match scores, 2 device recordsDelete",
       "Answers and receipts2 exams. Kept as the exam result.Keep",
-      "Integrity reportUKI-RPT-0922-YT7K-4M2Q. Kept with the exam result.Keep",
+      "Integrity reportUKI-0922-YT7K. Kept with the exam result.Keep",
     ]);
     expect(drawer.textContent).toContain("The audit log keeps a record, not the data");
     fireEvent.click(within(drawer).getByRole("button", { name: "Delete 3 items" }));
@@ -320,7 +320,7 @@ describe("A.6 Audit log", () => {
     expect(rows).toEqual([
       "10 Oct · 03:00SystemDeleted 1,204 frames older than 90 daysWorkspace",
       "9 Oct · 15:10DADana AkhmetovaChanged retention from 120 to 90 daysWorkspace settings",
-      "9 Oct · 12:05Share linkOpened through a share linkUKI-RPT-0917-MT3P-8X1Z",
+      "9 Oct · 12:05Share linkOpened through a share linkUKI-0917-MT3P",
       "9 Oct · 11:52ASAigerim SadykovaDecided: talk to the studentMadina T. · Mathematics 2",
       "9 Oct · 11:41ASAigerim SadykovaViewed 3 flagged framesMadina T. · Mathematics 2",
       "9 Oct · 10:00ASAigerim SadykovaStarted the examMathematics 2 · Midterm",
