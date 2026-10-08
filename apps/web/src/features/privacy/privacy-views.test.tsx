@@ -11,8 +11,10 @@ import {
   DANA_ID,
   DELETE_REQUEST,
   NOW_MS,
+  YERLAN_DELETE,
   YERLAN_DETAIL,
   YERLAN_ID,
+  ZHANSAYA_COPY,
   ZHANSAYA_DETAIL,
 } from "./test-fixtures.ts";
 
@@ -214,7 +216,7 @@ describe("A.5a Delete request", () => {
       detail: {
         ...YERLAN_DETAIL,
         request: {
-          ...YERLAN_DETAIL.request!,
+          ...YERLAN_DELETE,
           status: "done",
           done_at: "2026-10-10T06:00:00Z",
           done_by: DANA_ID,
@@ -284,7 +286,7 @@ describe("A.5b Copy request", () => {
     centre({
       detail: {
         ...ZHANSAYA_DETAIL,
-        request: { ...ZHANSAYA_DETAIL.request!, status: "done", done_at: "2026-10-10T06:00:00Z" },
+        request: { ...ZHANSAYA_COPY, status: "done", done_at: "2026-10-10T06:00:00Z" },
         doneBy: "Dana Akhmetova",
       },
     });
@@ -353,11 +355,15 @@ describe("A.6 Audit log", () => {
     Object.assign(URL, { createObjectURL, revokeObjectURL });
     const recordExport = vi.fn().mockResolvedValueOnce({ ok: true }).mockResolvedValueOnce({ ok: false });
     auditLog({ recordExport });
-    fireEvent.click(screen.getByRole("button", { name: "Export CSV" }));
+    const button = screen.getByRole("button", { name: "Export CSV" });
+    fireEvent.click(button);
     await waitFor(() => expect(createObjectURL).toHaveBeenCalledTimes(1));
     expect(recordExport).toHaveBeenCalledTimes(1);
-    fireEvent.click(screen.getByRole("button", { name: "Export CSV" }));
-    await screen.findByText("Could not export. Try again.");
+    // A click while the first export is still busy is ignored, so wait for the button to settle.
+    await waitFor(() => expect(button.getAttribute("aria-busy")).toBeNull());
+    fireEvent.click(button);
+    await screen.findByText("Could not export. Try again.", undefined, { timeout: 5000 });
+    expect(recordExport).toHaveBeenCalledTimes(2);
     expect(createObjectURL).toHaveBeenCalledTimes(1);
   });
 
