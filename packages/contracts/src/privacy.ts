@@ -20,7 +20,7 @@ export type DataRequestStatus = z.infer<typeof DataRequestStatus>;
 
 /**
  * A request is due this many days after it arrives (`due_at`'s default): A.5a and A.5b draw 7 (asked
- * 7 Oct, due 14 Oct), where the plan started from 30 (20261012120000_privacy_requests.sql, WP 1.12).
+ * 7 Oct, due 14 Oct), where the plan started from 30 (20261012190000_privacy_requests.sql, WP 1.12).
  */
 export const DATA_REQUEST_DUE_DAYS = 7;
 export const DATA_REQUEST_REPLY_MAX = 2000;
@@ -84,7 +84,7 @@ export const DataRequestActionOutput = z.object({
 export type DataRequestActionOutput = z.infer<typeof DataRequestActionOutput>;
 export type DataRequestActionReply = z.input<typeof DataRequestActionOutput>;
 
-// WP 1.12: the database half of the data-request function (20261012120000_privacy_requests.sql), for the
+// WP 1.12: the database half of the data-request function (20261012190000_privacy_requests.sql), for the
 // secret key only.
 
 /** `privacy_delete_plan`: the still folders (`<exam_id>/<session_id>`) and paths to remove first. */

@@ -1,4 +1,4 @@
--- WP 1.12, data requests (20261012120000_privacy_requests.sql): a request is due 7 days after it
+-- WP 1.12, data requests (20261012190000_privacy_requests.sql): a request is due 7 days after it
 -- arrives; the data-request function's database half (privacy_delete_plan, privacy_delete_student,
 -- privacy_export, privacy_export_done, privacy_reply) runs for the secret key only and for the exam
 -- office of the request's workspace as the actor; a delete removes the student's frames and events,
