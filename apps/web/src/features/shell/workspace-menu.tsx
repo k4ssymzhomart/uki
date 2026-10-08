@@ -60,7 +60,7 @@ export function WorkspaceMenu({
           aria-busy={pending || undefined}
         />
       </MenuTrigger>
-      <MenuContent side="bottom" align="start" container={container} className="w-70">
+      <MenuContent side="bottom" align="start" sideOffset={4} container={container} className="w-70">
         <MenuLabel>{workspaceName}</MenuLabel>
         {faculties.map((faculty) => (
           <MenuItem

@@ -1,15 +1,18 @@
 import { DEFAULT_EXAM_CHECKS } from "@uki/contracts";
 import { describe, expect, it } from "vitest";
 import {
+  almatyWeekDays,
   coversAllGroups,
   examChecks,
   examPhase,
+  examsThisWeekByFaculty,
   filterExams,
   liveStudentCount,
   liveTarget,
   type OverviewRow,
   overviewStats,
   parseOverviewRows,
+  rowsInFaculty,
   statusChip,
 } from "./overview-model.ts";
 
@@ -152,5 +155,44 @@ describe("the sidebar's Live count", () => {
       exam(9, "scheduled", "2026-10-07T12:00:00+00:00", { joined: 3 }),
     ]);
     expect(liveStudentCount([...rows, ...lobby], now)).toBe(82 + 121);
+  });
+});
+
+describe("the workspace menu's faculty filter (0.1c)", () => {
+  const math = "fa000000-0000-4000-8000-000000000001";
+  const physics = "fa000000-0000-4000-8000-000000000002";
+  // Wednesday 7 October 2026, 14:00 in Almaty; the week runs from Monday 5 to Sunday 11 October.
+  const wednesday = Date.parse("2026-10-07T09:00:00Z");
+  const rows = parseOverviewRows([
+    exam(1, "scheduled", "2026-10-09T05:00:00Z", { faculty_id: math }),
+    exam(2, "live", "2026-10-07T09:00:00Z", { faculty_id: physics }),
+    exam(3, "to_review", "2026-10-04T18:59:00Z", { faculty_id: math }),
+    exam(4, "draft", "2026-10-11T18:30:00Z", { faculty_id: math }),
+    exam(5, "cancelled", "2026-10-08T05:00:00Z", { faculty_id: physics }),
+    exam(6, "scheduled", "2026-10-08T05:00:00Z", { faculty_id: null }),
+  ]);
+
+  it("keeps one faculty's rows, or all of them", () => {
+    expect(rowsInFaculty(rows, math).map((row) => row.title)).toEqual(["Exam 1", "Exam 3", "Exam 4"]);
+    expect(rowsInFaculty(rows, null)).toHaveLength(6);
+  });
+
+  it("counts each faculty's exams this Monday-to-Sunday week in Asia/Almaty, without cancelled ones", () => {
+    expect([...almatyWeekDays(wednesday)]).toEqual([
+      "2026-10-05",
+      "2026-10-06",
+      "2026-10-07",
+      "2026-10-08",
+      "2026-10-09",
+      "2026-10-10",
+      "2026-10-11",
+    ]);
+    // Exam 3 starts Sunday 4 October at 23:59 in Almaty (last week); exam 4 on Sunday 11 at 23:30.
+    expect(examsThisWeekByFaculty(rows, wednesday)).toEqual({ [math]: 2, [physics]: 1 });
+  });
+
+  it("starts the week on Monday in Almaty even when UTC is still on Sunday", () => {
+    // Sunday 11 October, 20:30 UTC is Monday 12 October, 01:30 in Almaty.
+    expect([...almatyWeekDays(Date.parse("2026-10-11T20:30:00Z"))][0]).toBe("2026-10-12");
   });
 });

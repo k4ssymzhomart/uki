@@ -1,25 +1,31 @@
-// The dashboard's English strings from the generated messages (pnpm i18n:build), so selectors follow
-// the catalog instead of repeating copy. Only plain messages are read; ICU templates are cut at their
-// first argument with `prefix`.
+// The dashboard's strings from the generated messages (pnpm i18n:build), English unless a test asks for
+// Russian, so selectors follow the catalog instead of repeating copy. Only plain messages are read; ICU
+// templates are cut at their first argument with `prefix`.
 import { readFileSync } from "node:fs";
 import { ROOT } from "./env.ts";
 
 type Tree = { [key: string]: string | Tree };
+export type DashboardLocale = "en" | "ru";
 
-let messages: Tree | null = null;
+const messages = new Map<DashboardLocale, Tree>();
 
-function load(): Tree {
-  messages ??= JSON.parse(readFileSync(`${ROOT}packages/i18n/messages/en.json`, "utf8")) as Tree;
-  return messages;
+function load(locale: DashboardLocale): Tree {
+  let tree = messages.get(locale);
+  if (!tree) {
+    tree = JSON.parse(readFileSync(`${ROOT}packages/i18n/messages/${locale}.json`, "utf8")) as Tree;
+    messages.set(locale, tree);
+  }
+  return tree;
 }
 
 /** The message at a dotted key, for example `dashboard.signIn.submit`. */
-export function message(key: string): string {
-  let node: string | Tree | undefined = load();
+export function message(key: string, locale: DashboardLocale = "en"): string {
+  let node: string | Tree | undefined = load(locale);
   for (const part of key.split(".")) {
     node = typeof node === "object" ? node[part] : undefined;
   }
-  if (typeof node !== "string") throw new Error(`e2e: no message ${key} in packages/i18n/messages/en.json`);
+  if (typeof node !== "string")
+    throw new Error(`e2e: no message ${key} in packages/i18n/messages/${locale}.json`);
   return node;
 }
 
