@@ -57,6 +57,10 @@ tasks-vision 1.1 loads its Emscripten loader with `importScripts`, which throws 
 
 Checked in Chrome 152 in development and production (Rollup) builds: both tasks load in one module worker, with the Face Landmarker on the GPU delegate. Frames from `MediaStreamTrackProcessor` keep flowing in a hidden page.
 
+## In the browser: /try
+
+`apps/web` runs the same worker on a visitor's camera at `/try` (judge mode), with `stills: false` in `init`, so the still requests arrive but no JPEG is made. Next.js (Turbopack) starts the worker as a classic script, and `visionFileset` then picks tasks-vision's classic build (`isModuleWorkerScope`). The web app serves `WEB_DEMO_MODEL_PATHS` from its own `public/models/`, checked against `manifest.json` by `apps/web/scripts/detection-models.ts` before every build.
+
 ## Rules
 
 `createRules(checks, { mode, newId })` is a pure state machine with no clock; the header of `src/rules.ts` lists every rule. The numbers come from `exams.checks` (`ExamChecks`) and `THRESHOLDS` in `@uki/contracts`. An event's `at` is the moment its threshold was crossed, which is also when its first still is taken. gaze.off_screen and gaze.down are sent when the look ends, with the full duration.

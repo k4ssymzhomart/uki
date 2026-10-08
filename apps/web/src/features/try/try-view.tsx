@@ -152,7 +152,9 @@ export function TryView({ state, onStart, onStop, onResume, videoRef }: TryViewP
   const active = isActive(status);
   const faces = debug?.faces ?? 0;
   const look = lookOf(debug);
-  const timers = ruleTimers(rules);
+  // The worker posts the rule state when it changes, and a fresh copy with every overlay message, so
+  // the running timers come from the overlay's copy.
+  const timers = ruleTimers(debug?.rules ?? rules);
   const none = t("overlay.none");
   const number = (value: number | null | undefined, render: (value: number) => string): string =>
     value === null || value === undefined ? none : render(value);
