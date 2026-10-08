@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { StaffLookup } from "../../lib/auth.ts";
+import { PROCTORS_LAND_ON_MY_EXAMS, staffHomePath } from "../shell/shell-model.ts";
 import {
   homeRedirect,
   landingLocale,
@@ -16,6 +17,7 @@ const staff = (role: "exam_office" | "proctor" | "admin"): StaffLookup => ({
     email: "dana.akhmetova@kru.test",
     fullName: "Dana Akhmetova",
     role,
+    languages: ["ru"],
     workspaceName: "KRU · Kostanay",
     facultyName: null,
   },
@@ -26,10 +28,12 @@ describe("where / sends people", () => {
     expect(homeRedirect({ status: "none" })).toBeNull();
   });
 
-  it("sends the exam office, admins and, until WP 1.5 adds /my-exams, proctors to the overview", () => {
+  it("sends staff to their home: the overview, and proctors wherever staffHomePath says", () => {
     expect(homeRedirect(staff("exam_office"))).toBe("/overview");
     expect(homeRedirect(staff("admin"))).toBe("/overview");
-    expect(homeRedirect(staff("proctor"))).toBe("/overview");
+    expect(homeRedirect(staff("proctor"))).toBe(staffHomePath("proctor"));
+    // Until WP 1.5 adds /my-exams, that is the overview too.
+    expect(homeRedirect(staff("proctor"))).toBe(PROCTORS_LAND_ON_MY_EXAMS ? "/my-exams" : "/overview");
   });
 
   it("sends a failed lookup to the overview, which looks again instead of showing marketing", () => {
