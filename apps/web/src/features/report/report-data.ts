@@ -7,6 +7,7 @@
 // which checks the token's hash and expiry and audits the view (CLAUDE.md, Rules); verify_report is
 // open to anonymous callers. Both use the publishable key only.
 import {
+  ApiError,
   CompactEvent,
   ReportPayload,
   SharedReportResponse,
@@ -64,9 +65,9 @@ export type SharedReportResult = { ok: true; report: SharedReportResponse } | { 
 
 /**
  * 3.5: the shared-report Edge Function, called from the Next.js server with the publishable key and no
- * session. A malformed token never leaves the server; a 404 (unknown, revoked or expired) and a 400 are
- * both "not found". Any other failure throws, so the visitor sees the error page rather than a page
- * that pretends the link does not exist.
+ * session. A malformed token never leaves the server; the function's own `not_found` (unknown, revoked
+ * or expired) and `bad_request` are both "not found". Any other failure throws, a gateway's 404 included,
+ * so the visitor sees the error page rather than a page that pretends the link does not exist.
  */
 export async function loadSharedReport(
   token: string,
@@ -83,15 +84,15 @@ export async function loadSharedReport(
       cache: "no-store",
     },
   );
-  if (response.status === 404 || response.status === 400) {
-    await response.body?.cancel();
+  const body: unknown = await response.json().catch(() => null);
+  if (response.ok) return { ok: true, report: SharedReportResponse.parse(body) };
+  // Only the function's own refusal is "not found". A 404 from the gateway (the function not deployed
+  // or not served) has another body and is an outage, which must not pass for an expired link.
+  const refusal = ApiError.safeParse(body);
+  if (refusal.success && (refusal.data.error === "not_found" || refusal.data.error === "bad_request")) {
     return { ok: false };
   }
-  if (!response.ok) {
-    await response.body?.cancel();
-    throw new Error(`shared-report answered ${response.status}`);
-  }
-  return { ok: true, report: SharedReportResponse.parse(await response.json()) };
+  throw new Error(`shared-report answered ${response.status}`);
 }
 
 /** /verify/[code]: verify_report as an anonymous caller; it reads nothing beyond the code's report. */
