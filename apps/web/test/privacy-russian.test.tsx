@@ -1,9 +1,11 @@
 // WP 1.12: A.5 Privacy centre with A.5a and A.5b open over it, and A.6 Audit log, render in Russian with no
-// missing key, like every other dashboard page (WP 1.2's russian.test.tsx). Each test fails on any
-// next-intl error and on any raw dashboard.* key left in the page.
-import { screen } from "@testing-library/react";
+// missing key, like every other dashboard page (WP 1.2's russian.test.tsx); 0.1b's "Open privacy centre"
+// shows now that the page exists. Each test fails on any next-intl error and on any raw dashboard.* key
+// left in the page.
+import { act, fireEvent, screen } from "@testing-library/react";
 import { loadMessages } from "@uki/i18n";
 import { describe, expect, it, vi } from "vitest";
+import { DataKeptTile } from "../src/features/overview/data-kept-popover.tsx";
 import { AuditLogView } from "../src/features/privacy/audit-log-view.tsx";
 import { PrivacyCentreView } from "../src/features/privacy/privacy-centre-view.tsx";
 import { DEFAULT_AUDIT_FILTERS } from "../src/features/privacy/privacy-model.ts";
@@ -44,6 +46,12 @@ vi.mock("../src/features/privacy/privacy-actions.ts", () => ({
   recordAuditExport: vi.fn(),
 }));
 vi.mock("../src/features/settings/settings-actions.ts", () => ({ saveWorkspaceSettings: vi.fn() }));
+// 0.1b counts the stills and events under RLS when it opens.
+vi.mock("../src/lib/supabase/browser.ts", () => ({
+  createSupabaseBrowserClient: () => ({
+    from: () => ({ select: () => ({ in: async () => ({ count: 0, error: null }) }) }),
+  }),
+}));
 
 const ru = loadMessages("ru").dashboard;
 
@@ -129,6 +137,18 @@ describe("WP 1.12 pages in Russian", () => {
     expect(text).toContain("Решение: поговорить со студентом");
     expect(text).toContain("Ссылка для чтения");
     expect(text).toContain("Последние 7 дней");
+    expectRussian();
+  });
+});
+
+describe("0.1b in Russian", () => {
+  it("leads to the privacy centre", async () => {
+    renderWithIntl(<DataKeptTile examIds={[]} />, DANA, "ru");
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: ru.overview.stat.video.label }));
+    });
+    const link = await screen.findByRole("link", { name: ru.overview.dataKept.privacyCentre });
+    expect(link.getAttribute("href")).toBe("/privacy-centre");
     expectRussian();
   });
 });
