@@ -6,18 +6,22 @@ import { createSupabaseServerClient } from "../../lib/supabase/server.ts";
 import { checkPilotValues, type PilotForm, type PilotFormState, pilotValues } from "./pilot-model.ts";
 
 /**
- * request_pilot's answer (Phase 1 plan, RPCs): "ok", or "rate_limited" for a fourth request from one
- * address in a day. Anything else is a failure.
+ * request_pilot's answer (20261009000000_phase1.sql, WP 1.1): `{ status: "ok" }`, or
+ * `{ status: "rate_limited" }` for a fourth request from one address within 24 hours. Anything else,
+ * including its `bad_request` error, is a failure.
  */
-const RequestPilotReply = z.enum(["ok", "rate_limited"]);
+const RequestPilotReply = z.object({ status: z.enum(["ok", "rate_limited"]) });
 
-/** The RPC's arguments: the plan's five, with the frame's size, month and Demo Day choice in `message`. */
+/** The RPC's arguments: the plan's five, plus the frame's size, month and Demo Day choice. */
 export type RequestPilotArgs = {
   name: string;
   email: string;
   university: string;
   role: string;
-  message: string;
+  message: string | null;
+  exam_size: string;
+  pilot_month: string;
+  demo_invite: boolean;
 };
 
 /**
@@ -31,8 +35,8 @@ export async function requestPilot(_previous: PilotFormState, form: FormData): P
   if (!checked.ok) return { status: "editing", values, errors: checked.errors };
   try {
     const supabase = await createSupabaseServerClient();
-    // request_pilot arrives with WP 1.1 (20261009000000_phase1.sql); until its types are generated the
-    // call is untyped, and the reply is checked here.
+    // request_pilot arrives with WP 1.1; until its types are generated the call is untyped, and the
+    // reply is checked here.
     const rpc = supabase.rpc as unknown as (
       fn: "request_pilot",
       args: RequestPilotArgs,
@@ -40,7 +44,7 @@ export async function requestPilot(_previous: PilotFormState, form: FormData): P
     const { data, error } = await rpc.call(supabase, "request_pilot", requestPilotArgs(checked.request));
     const reply = RequestPilotReply.safeParse(data);
     if (error || !reply.success) return { status: "failed", values, errors: {} };
-    if (reply.data === "rate_limited") return { status: "rateLimited", values, errors: {} };
+    if (reply.data.status === "rate_limited") return { status: "rateLimited", values, errors: {} };
     return { status: "sent", request: checked.request, reference: null };
   } catch (error) {
     unstable_rethrow(error);
@@ -48,18 +52,16 @@ export async function requestPilot(_previous: PilotFormState, form: FormData): P
   }
 }
 
-/** The plan's five arguments. The frame's three extra choices travel in the message, one per line. */
+/** The form as request_pilot's arguments: size and month as their stable values ("from100", "2026-11"). */
 function requestPilotArgs(request: PilotForm): RequestPilotArgs {
-  const details = [
-    `students=${request.students}`,
-    `when=${request.when}`,
-    `demo_day=${request.demoDay ? "yes" : "no"}`,
-  ];
   return {
     name: request.name,
     email: request.email,
     university: request.university,
     role: request.role,
-    message: [request.message, ...details].filter((line) => line !== "").join("\n"),
+    message: request.message === "" ? null : request.message,
+    exam_size: request.students,
+    pilot_month: request.when,
+    demo_invite: request.demoDay,
   };
 }

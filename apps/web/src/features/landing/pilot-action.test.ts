@@ -32,20 +32,33 @@ beforeEach(() => {
 
 describe("Book a pilot's server action", () => {
   it("calls request_pilot with the plan's five arguments and shows Sent", async () => {
-    rpc.mockResolvedValue({ data: "ok", error: null });
+    rpc.mockResolvedValue({ data: { status: "ok" }, error: null });
     const state = await requestPilot(INITIAL, form(FILLED));
     expect(rpc).toHaveBeenCalledWith("request_pilot", {
       name: "Dana Akhmetova",
       email: "dana.akhmetova@kru.test",
       university: "KRU · Kostanay",
       role: "exam_office",
-      message: "Midterms, 4 groups.\nstudents=from100\nwhen=2026-11\ndemo_day=yes",
+      message: "Midterms, 4 groups.",
+      exam_size: "from100",
+      pilot_month: "2026-11",
+      demo_invite: true,
     });
     expect(state).toMatchObject({ status: "sent", request: { email: "dana.akhmetova@kru.test" } });
   });
 
+  it("sends no message when none was typed, and the invite as unticked", async () => {
+    rpc.mockResolvedValue({ data: { status: "ok" }, error: null });
+    const { demoDay: _ticked, ...unticked } = FILLED;
+    await requestPilot(INITIAL, form({ ...unticked, message: "  " }));
+    expect(rpc).toHaveBeenCalledWith(
+      "request_pilot",
+      expect.objectContaining({ message: null, demo_invite: false }),
+    );
+  });
+
   it("shows the refusal and keeps what was typed when the address hit the daily limit", async () => {
-    rpc.mockResolvedValue({ data: "rate_limited", error: null });
+    rpc.mockResolvedValue({ data: { status: "rate_limited" }, error: null });
     const state = await requestPilot(INITIAL, form(FILLED));
     expect(state).toMatchObject({ status: "rateLimited", values: { name: "Dana Akhmetova", demoDay: true } });
   });
@@ -53,7 +66,7 @@ describe("Book a pilot's server action", () => {
   it("says the request failed on a database error or an unknown reply", async () => {
     rpc.mockResolvedValue({ data: null, error: { message: "function request_pilot does not exist" } });
     expect((await requestPilot(INITIAL, form(FILLED))).status).toBe("failed");
-    rpc.mockResolvedValue({ data: { surprise: true }, error: null });
+    rpc.mockResolvedValue({ data: "ok", error: null });
     expect((await requestPilot(INITIAL, form(FILLED))).status).toBe("failed");
     rpc.mockRejectedValue(new Error("fetch failed"));
     expect((await requestPilot(INITIAL, form(FILLED))).status).toBe("failed");
