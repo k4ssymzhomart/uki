@@ -1836,6 +1836,7 @@
           "when": "{weekday} {time}"
         },
         "people": {
+          "changeRequested": "просит изменить: «{request}»",
           "confirmed": "подтверждено",
           "noProctors": "Прокторов пока нет",
           "proctorValue": "Места {from}–{to} · {languages} · {state}",

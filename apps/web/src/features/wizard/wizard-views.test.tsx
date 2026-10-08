@@ -518,6 +518,29 @@ describe("0.5 and E.1 behaviour", () => {
     ).toBeTruthy();
   });
 
+  it("shows a proctor's change request from 0.9a on 0.5, in English and Russian", () => {
+    const asked = assignments.map((row) =>
+      row.full_name === "Nurlan Bekov" ? { ...row, change_request: "Only seats 13 to 20, please." } : row,
+    );
+    const props = {
+      exam,
+      settings: DEFAULT_WORKSPACE_SETTINGS,
+      groupCodes: ["204"],
+      rosterSize: 24,
+      assignments: asked,
+    };
+    const view = renderWithIntl(<ReviewView {...props} />, DANA);
+    expect(
+      screen.getByText("Seats 13–24 · Russian, English · change requested: “Only seats 13 to 20, please.”"),
+    ).toBeTruthy();
+    view.unmount();
+    renderWithIntl(<ReviewView {...props} />, DANA, "ru");
+    expect(
+      screen.getByText("Места 13–24 · русский, английский · просит изменить: «Only seats 13 to 20, please.»"),
+    ).toBeTruthy();
+    expectRussian();
+  });
+
   it("says when the test invite did not go out", async () => {
     actions.sendTestInvite.mockResolvedValue({ ok: false, error: "failed" });
     renderWithIntl(

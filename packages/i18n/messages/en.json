@@ -1836,6 +1836,7 @@
           "when": "{weekday} {time}"
         },
         "people": {
+          "changeRequested": "change requested: “{request}”",
           "confirmed": "confirmed",
           "noProctors": "No proctors yet",
           "proctorValue": "Seats {from}–{to} · {languages} · {state}",

@@ -1020,6 +1020,10 @@
     "en": "waiting for confirmation",
     "ru": "ждёт подтверждения"
   },
+  "dashboard.wizard.review.people.changeRequested": {
+    "en": "change requested: “{request}”",
+    "ru": "просит изменить: «{request}»"
+  },
   "dashboard.wizard.review.people.noProctors": {
     "en": "No proctors yet",
     "ru": "Прокторов пока нет"

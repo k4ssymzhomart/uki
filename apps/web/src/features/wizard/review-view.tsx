@@ -74,7 +74,8 @@ function SummaryRow({ label, children }: { label: string; children: ReactNode })
  * happens when the exam is scheduled, and Send a test invite to me. Schedule exam runs schedule_exam:
  * a problem shows with a link to the step that fixes it; success sends the invites (send-invites, WP
  * 1.4) and returns to 0.1 with the exam code. The test invite is written for the roster's first
- * student, so it waits for the roster.
+ * student, so it waits for the roster. A proctor's change request from 0.9a (WP 1.5) shows on their
+ * row in place of "waiting for confirmation".
  */
 export function ReviewView({ exam, settings, groupCodes, rosterSize, assignments }: ReviewViewProps) {
   const t = useTranslations("dashboard.wizard");
@@ -247,7 +248,11 @@ export function ReviewView({ exam, settings, groupCodes, rosterSize, assignments
                       from: row.seat_from ?? 0,
                       to: row.seat_to ?? 0,
                       languages: sortLocales(row.languages).map(language).join(", "),
-                      state: row.confirmed_at ? t("review.people.confirmed") : t("review.people.waiting"),
+                      state: row.change_request
+                        ? t("review.people.changeRequested", { request: row.change_request })
+                        : row.confirmed_at
+                          ? t("review.people.confirmed")
+                          : t("review.people.waiting"),
                     })}
                   </SummaryRow>
                 ))
