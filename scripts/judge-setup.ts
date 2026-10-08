@@ -64,7 +64,8 @@ const Args = z.object({
 });
 
 const WORKSPACE_SLUG = "kru";
-const FACULTY = "Faculty of Mathematics";
+// Its own faculty, so the always-live exam never counts in a real faculty's numbers on A.1.
+const FACULTY = "Demo";
 const SOURCE_EXAM = "MATH2-204-FRI";
 const QUESTIONS = 20;
 
@@ -135,15 +136,23 @@ async function main(): Promise<void> {
     await admin.from("workspaces").select("id").eq("slug", WORKSPACE_SLUG).maybeSingle(),
     "workspace kru (load supabase/seed.sql first)",
   );
-  const faculty = must(
-    await admin
-      .from("faculties")
-      .select("id")
-      .eq("workspace_id", workspace.id)
-      .eq("name", FACULTY)
-      .maybeSingle(),
-    FACULTY,
-  );
+  const existingFaculty = await admin
+    .from("faculties")
+    .select("id")
+    .eq("workspace_id", workspace.id)
+    .eq("name", FACULTY)
+    .maybeSingle();
+  if (existingFaculty.error) throw new Error(`judge:setup: ${FACULTY}: ${existingFaculty.error.message}`);
+  const faculty =
+    existingFaculty.data ??
+    must(
+      await admin
+        .from("faculties")
+        .insert({ workspace_id: workspace.id, name: FACULTY })
+        .select("id")
+        .single(),
+      `faculty ${FACULTY}`,
+    );
   const group = must(
     await admin
       .from("groups")
