@@ -5,7 +5,7 @@
 // back in `to_review`.
 import { randomUUID } from "node:crypto";
 import { expect, type Page, test } from "@playwright/test";
-import { signIn, wallTile } from "./support/dashboard.ts";
+import { pageStatus, signIn, wallTile } from "./support/dashboard.ts";
 import { message, prefix } from "./support/messages.ts";
 import { EXAMS, STAFF } from "./support/seed.ts";
 import { adminClient, cleanUp, userIdsByEmail } from "./support/supabase.ts";
@@ -215,4 +215,15 @@ test("History of Kazakhstan's 7 flags review to reviewed; a new flag reopens a s
   );
   expect(viewed.has(historySession(7))).toBe(true);
   expect(viewed.has(historySession(21))).toBe(true);
+});
+
+test("a proctor reviews only the exams assigned to them", async ({ page }) => {
+  // Aigerim proctors Mathematics 2 only; History of Kazakhstan's flags are not hers to see.
+  await signIn(page, STAFF.aigerim);
+  await page.goto("/review");
+  await expect(
+    page.getByRole("heading", { level: 1, name: message("dashboard.review.title") }),
+  ).toBeVisible();
+  await expect(page.locator(`tbody[data-exam-id="${HISTORY}"]`)).toHaveCount(0);
+  expect(await pageStatus(page, `/review/${historySession(7)}`)).toBe(404);
 });
