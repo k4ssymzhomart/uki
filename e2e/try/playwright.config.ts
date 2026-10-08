@@ -1,7 +1,8 @@
 // `pnpm e2e:try`: the /try detection demo (judge mode) in Chromium with a fake camera
-// (--use-fake-device-for-media-stream). It needs no database and no Supabase: the page makes no call
-// to either, and try.spec.ts fails if it requests anything outside the web app's own origin. The web
-// app serves the models from apps/web/public/models (`pnpm --filter web models`, or the build).
+// (--use-fake-device-for-media-stream), and the dashboard PWA (pwa.spec.ts, production builds only).
+// It needs no database and no Supabase: the page makes no call to either, and try.spec.ts fails if it
+// requests anything outside the web app's own origin. The web app serves the models from
+// apps/web/public/models (`pnpm --filter web models`, or the build).
 //
 //   pnpm e2e:try                          `next dev` on 3430, or reuse one already running there
 //   UKI_TRY_START=1 pnpm e2e:try          `next start` on 3430 after `pnpm --filter web build` (CI)
@@ -16,7 +17,7 @@ const mode = process.env.UKI_TRY_START === "1" ? "start" : "dev";
 
 export default defineConfig({
   testDir: ".",
-  testMatch: ["try.spec.ts"],
+  testMatch: ["try.spec.ts", "pwa.spec.ts"],
   fullyParallel: false,
   workers: 1,
   forbidOnly: CI,

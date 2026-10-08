@@ -1,0 +1,31 @@
+{
+  "$comment": "Dashboard PWA strings (judge mode): the web app manifest and the offline page, key to { en, ru }. No Figma frame: drafted, review needed. The Russian is a first pass by the agent: native review needed, P.18.",
+  "dashboard.pwa.name": {
+    "en": "Üki · Exam office and proctors",
+    "ru": "Üki · Экзаменационный отдел и прокторы"
+  },
+  "dashboard.pwa.shortName": {
+    "en": "Üki",
+    "ru": "Üki"
+  },
+  "dashboard.pwa.description": {
+    "en": "The Üki dashboard: exams, the live wall, review and reports.",
+    "ru": "Панель Üki: экзамены, экран наблюдения, проверка и отчёты."
+  },
+  "dashboard.pwa.offline.meta": {
+    "en": "Offline · Üki",
+    "ru": "Нет подключения · Üki"
+  },
+  "dashboard.pwa.offline.title": {
+    "en": "You are offline",
+    "ru": "Нет подключения"
+  },
+  "dashboard.pwa.offline.body": {
+    "en": "The dashboard needs the network. Students’ answers and events wait on their laptops and arrive when the connection is back.",
+    "ru": "Панели нужна сеть. Ответы и события студентов ждут на их ноутбуках и придут, когда связь вернётся."
+  },
+  "dashboard.pwa.offline.retry": {
+    "en": "Try again",
+    "ru": "Попробовать снова"
+  }
+}

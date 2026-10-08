@@ -1271,6 +1271,17 @@
       },
       "title": "Privacy"
     },
+    "pwa": {
+      "description": "The Üki dashboard: exams, the live wall, review and reports.",
+      "name": "Üki · Exam office and proctors",
+      "offline": {
+        "body": "The dashboard needs the network. Students’ answers and events wait on their laptops and arrive when the connection is back.",
+        "meta": "Offline · Üki",
+        "retry": "Try again",
+        "title": "You are offline"
+      },
+      "shortName": "Üki"
+    },
     "report": {
       "breadcrumb": "Review / {exam} / {student}",
       "doc": {
