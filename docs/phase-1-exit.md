@@ -243,7 +243,7 @@ Runs on one development Mac (macOS 15.6) against the local stack, `next dev` on 
 | A pilot request is stored and emailed; a fourth from one address in a day is refused | pending | The e2e test is written and skips until `pilot_requests` exists (WP 1.1); `pilot-notify` and the inbox check follow | |
 | Unit and component tests | pass | `pnpm --filter web test`: 34 files, 183 tests, including `landing-model`, `pilot-model`, `pilot-action`, `pilot-screen` and `legal-content` (every legal key in English and Russian) | 2026-10-08 |
 | Strings | pass | `pnpm i18n:build`: 313 keys in `dashboard-landing.json`, English and Russian; no key shows raw on any page | 2026-10-08 |
-| Russian pages | pending | Strings in place; the pages render Russian once WP 1.2's cookie locale (`request.ts`) merges | |
+| Russian pages | pending | Previewed with a local, uncommitted cookie patch to `request.ts`: `/` and `/pilot` in Russian at 1440 and 390, no key raw and nothing scrolls sideways; the hero's Lock toast now grows leftwards so the longer Russian line fits. The real check follows WP 1.2's cookie locale | 2026-10-08 |
 | Biome, guards, type check, `next build` | pass | Clean; `/`, `/pilot`, `/privacy` and `/terms` render per request | 2026-10-08 |
 | You read the landing copy | pending | Monday 12 | |
 | The landing page on your phone | pending | Hand check | |

@@ -81,7 +81,7 @@ export async function Hero({ locale }: { locale: LandingLocale }) {
           detail={tCatalog("exam.watch.status", { elapsed: t("watchElapsed") })}
           className="absolute top-[64%] left-[-1.75%] origin-top-left scale-70 whitespace-nowrap lg:top-[17.44%] lg:left-[-9.84%] lg:scale-100"
         />
-        <div data-theme="dark" className="absolute top-[-3.66%] left-[73.42%] hidden lg:block">
+        <div data-theme="dark" className="absolute top-[-3.66%] right-[-11.16%] hidden lg:block">
           <LockToast
             message={t("toast")}
             time={tCatalog("lock.copy.noted", { time: t("toastTime") })}
