@@ -820,6 +820,302 @@
       },
       "title": "Overview"
     },
+    "privacy": {
+      "audit": {
+        "action": {
+          "audit_export": "Exported the audit log",
+          "audit_read": "Opened the audit log",
+          "command_add_time": "Added time",
+          "command_end": "Ended",
+          "command_message": "Sent a message",
+          "command_pause": "Paused",
+          "command_resume": "Resumed",
+          "command_start": "Started",
+          "data_request_copy": "Made a copy of a student’s data",
+          "data_request_delete": "Deleted a student’s data on request",
+          "data_request_read": "Opened a data request",
+          "data_request_received": "Entered a {kind, select, delete {delete} copy {copy} other {data}} request",
+          "data_request_reply": "Replied to a data request",
+          "exam_draft_created": "Created a draft exam",
+          "exam_schedule": "Scheduled the exam",
+          "help_close": "Closed a help request",
+          "help_read": "Read help requests",
+          "identity_help_read": "Opened identity help",
+          "invites_send": "Sent invites",
+          "invites_test": "Sent a test invite",
+          "join_exam": "Joined the exam",
+          "join_exam_refused": "Could not join the exam",
+          "privacy_centre_read": "Opened the privacy centre",
+          "proctors_assign": "Assigned proctors",
+          "report_share": "Shared the report",
+          "report_share_view": "Opened through a share link",
+          "report_view": "Opened the report",
+          "retention_run": "Deleted {count, plural, one {# frame} other {# frames}} older than {days} days",
+          "review_decide": "Decided: {decision, select, no_issue {no issue} talk {talk to the student} committee {send to the committee} other {{decision}}}",
+          "review_queue_viewed": "Opened the review queue",
+          "review_session_viewed": "Opened the session",
+          "roster_import": "Imported the roster",
+          "roster_view": "Opened the roster",
+          "seats_change_request": "Asked to change seats",
+          "seats_confirm": "Confirmed seats",
+          "session_note": "Added a note",
+          "settings_retention": "Changed retention from {before} to {after} days",
+          "settings_update": "Changed the settings",
+          "start_exam": "Started the exam",
+          "still_viewed": "Viewed {count, plural, one {# flagged frame} other {# flagged frames}}",
+          "student_read": "Opened a student profile",
+          "students_list": "Opened the student list"
+        },
+        "breadcrumb": "Admin / Privacy / Audit log",
+        "column": {
+          "action": "Action",
+          "object": "Object",
+          "time": "Time",
+          "who": "Who"
+        },
+        "empty": "No entries in this range.",
+        "emptyFiltered": "No entries match.",
+        "exportFailed": "Could not export. Try again.",
+        "footer": {
+          "export": "Export CSV",
+          "next": "Next page",
+          "note": "Entries can’t be edited or deleted.",
+          "previous": "Previous page",
+          "range": "{from}–{to} of {total}"
+        },
+        "object": {
+          "auditLog": "Audit log",
+          "none": "—",
+          "pair": "{first} · {second}",
+          "privacy": "Privacy centre",
+          "settings": "Workspace settings",
+          "workspace": "Workspace"
+        },
+        "range": {
+          "1d": "Last 24 hours",
+          "30d": "Last 30 days",
+          "7d": "Last 7 days",
+          "90d": "Last 90 days",
+          "label": "Time range"
+        },
+        "search": {
+          "label": "Search the audit log",
+          "placeholder": "Person, exam or report"
+        },
+        "tab": {
+          "all": "All",
+          "deletions": "Deletions",
+          "exports": "Exports",
+          "frames": "Frames viewed",
+          "settings": "Settings"
+        },
+        "tabs": "Kind of entry",
+        "time": "{day} · {time}",
+        "title": "Audit log",
+        "truncated": "Showing the newest {count} entries. Pick a shorter range or a tab for the rest.",
+        "who": {
+          "share": "Share link",
+          "staff": "Staff member",
+          "student": "Student",
+          "system": "System"
+        }
+      },
+      "banner": {
+        "body": "0 MB uploaded this term. {count, plural, one {# session} other {# sessions}} checked on device.",
+        "title": "Video never leaves student laptops."
+      },
+      "breadcrumb": "Admin / Privacy",
+      "copy": {
+        "action": {
+          "include": "Include"
+        },
+        "again": "Create a new link",
+        "banner": {
+          "body": "Üki writes the file and a secure link. Send the link to {name}; it expires in 7 days.",
+          "title": "One JSON file, linked for 7 days"
+        },
+        "button": "Create secure link",
+        "cancel": "Cancel",
+        "copied": "Link copied",
+        "copyLink": "Copy link",
+        "done": {
+          "body": "{name} made the copy on {date}. The link was shown once; make a new one if it is needed again.",
+          "title": "Copy made"
+        },
+        "item": {
+          "consent": {
+            "detail": "{count, plural, one {# rule acceptance} other {# rule acceptances}}",
+            "title": "Consent records"
+          },
+          "devices": {
+            "detail": "{count, plural, one {# laptop} other {# laptops}}, Üki {version}",
+            "none": "No devices",
+            "title": "Devices"
+          },
+          "flags": {
+            "detail": "{flags, plural, one {# flag} other {# flags}}, {frames, plural, one {# frame} other {# frames}}",
+            "title": "Flags and frames"
+          },
+          "history": {
+            "detail": "{count, plural, one {# exam} other {# exams}} with times and decisions",
+            "title": "Exam history"
+          }
+        },
+        "label": "What goes in the package",
+        "link": "Secure link",
+        "ready": {
+          "body": "Send this link to {name}. It expires on {date}, and is shown only now.",
+          "title": "Package ready"
+        }
+      },
+      "delete": {
+        "action": {
+          "delete": "Delete",
+          "keep": "Keep"
+        },
+        "banner": {
+          "body": "It notes who deleted what and when.",
+          "title": "The audit log keeps a record, not the data"
+        },
+        "button": "Delete {count, plural, one {# item} other {# items}}",
+        "done": {
+          "body": "{name} deleted the data on {date}.",
+          "title": "Deleted on request"
+        },
+        "item": {
+          "events": {
+            "detail": "{count, plural, one {# event} other {# events}} from {exams, plural, one {# exam} other {# exams}}",
+            "title": "Event log"
+          },
+          "frames": {
+            "detail": "{count, plural, one {# frame} other {# frames}} from {exams, plural, one {# exam} other {# exams}}",
+            "title": "Flagged frames"
+          },
+          "identity": {
+            "detail": "{scores, plural, one {# card match score} other {# card match scores}}, {devices, plural, one {# device record} other {# device records}}",
+            "title": "Identity scores and devices"
+          },
+          "reports": {
+            "detail": "{codes}. Kept with the exam result.",
+            "title": "Integrity report"
+          },
+          "results": {
+            "detail": "{count, plural, one {# exam} other {# exams}}. Kept as the exam result.",
+            "title": "Answers and receipts"
+          }
+        },
+        "label": "What Üki keeps about {name}",
+        "reply": "Reply with a reason",
+        "toast": "The data was deleted."
+      },
+      "drawer": {
+        "asked": "Asked on {date}",
+        "close": "Close",
+        "due": "Due {date}",
+        "notFound": "This request is not available.",
+        "status": {
+          "done": "Done {date}",
+          "replied": "Replied {date}"
+        },
+        "title": {
+          "copy": "Copy request",
+          "delete": "Delete request"
+        },
+        "who": "{name} · {number}"
+      },
+      "error": {
+        "done": "This request has been answered already.",
+        "failed": "Could not reach Üki. Try again.",
+        "forbidden": "Only the exam office of this workspace can do this.",
+        "in_exam": "{name} is writing an exam now. Delete the data once it ends.",
+        "invalid": "Check the reason and try again."
+      },
+      "map": {
+        "audio": {
+          "data": "Audio",
+          "where": "Not recorded"
+        },
+        "caption": "What Üki keeps, where, and for how long.",
+        "column": {
+          "data": "Data",
+          "kept": "Kept",
+          "where": "Where",
+          "who": "Who sees"
+        },
+        "events": {
+          "data": "Event log",
+          "kept": "Until a delete request"
+        },
+        "face": {
+          "data": "Face match",
+          "kept": "Deleted after check",
+          "where": "Student laptop",
+          "who": "No one"
+        },
+        "frames": {
+          "data": "Flagged frames",
+          "kept": "{days, plural, one {# day} other {# days}}"
+        },
+        "none": "—",
+        "reports": {
+          "data": "Integrity reports",
+          "kept": "With the exam result",
+          "where": "Exam office",
+          "who": "Committee, on request"
+        },
+        "server": "Üki server · Frankfurt",
+        "staff": "Proctor, exam office",
+        "title": "Data map",
+        "video": {
+          "data": "Webcam video",
+          "kept": "Not stored",
+          "where": "Student laptop only",
+          "who": "No one"
+        }
+      },
+      "profile": {
+        "export": "Export data"
+      },
+      "recent": {
+        "empty": "No access recorded yet.",
+        "open": "Open audit log",
+        "title": "Recent access"
+      },
+      "reply": {
+        "cancel": "Cancel",
+        "done": {
+          "body": "{name} replied on {date}: {reply}",
+          "title": "Answered with a reason"
+        },
+        "label": "Reason for the student",
+        "send": "Send reply",
+        "toast": "Reply saved."
+      },
+      "requests": {
+        "done": "{name} · done {date}",
+        "due": "{name} · due {date}",
+        "empty": "No data requests.",
+        "kind": {
+          "copy": "Copy of my data",
+          "delete": "Delete my data"
+        },
+        "replied": "{name} · replied {date}",
+        "review": "Review",
+        "title": "Requests"
+      },
+      "retention": {
+        "error": {
+          "failed": "Could not save. Try again.",
+          "forbidden": "Only the exam office can change retention.",
+          "invalid": "That value can’t be saved."
+        },
+        "frames": "Flagged frames",
+        "next": "Next cleanup tonight, {time} · {count, plural, one {# frame} other {# frames}}.",
+        "saved": "Retention saved",
+        "title": "Retention"
+      },
+      "title": "Privacy"
+    },
     "report": {
       "breadcrumb": "Review / {exam} / {student}",
       "doc": {

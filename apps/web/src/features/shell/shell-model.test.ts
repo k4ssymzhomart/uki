@@ -59,10 +59,21 @@ describe("shell", () => {
   it("hides every item whose page is not built yet, and the empty Admin section with them", () => {
     const built = (Object.keys(NAV) as NavId[]).filter((id) => NAV[id].built);
     // Each package turns its own item on with its page; Review landed with WP 1.8, Students and
-    // Settings with WP 1.11 and Reports with WP 1.10, the last three for the exam office only.
+    // Settings with WP 1.11, Reports with WP 1.10 and Privacy with WP 1.12, the last four for the exam office
+    // only.
     expect(built).toEqual(
-      expect.arrayContaining(["overview", "exams", "live", "review", "reports", "students", "settings"]),
+      expect.arrayContaining([
+        "overview",
+        "exams",
+        "live",
+        "review",
+        "reports",
+        "students",
+        "settings",
+        "privacy",
+      ]),
     );
+    expect(navSections("proctor").flatMap((section) => section.items)).not.toContain("privacy");
     expect(navSections("proctor").flatMap((section) => section.items)).not.toContain("students");
     expect(navSections("proctor").flatMap((section) => section.items)).not.toContain("reports");
     for (const role of ["exam_office", "proctor"] as const) {

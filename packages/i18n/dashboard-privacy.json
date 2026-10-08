@@ -1,0 +1,779 @@
+{
+  "$comment": "WP 1.12 Privacy: A.5 (Figma 107:11102), A.5a (165:14035), A.5b (165:16241) and A.6 (108:11296). English from the frames where they have it; added, not in Figma: the Data map's 'Until a delete request' and 'With the exam result', the delete list's identity, answers and reports rows, the copy and reply states, the errors, the audit log's range choices, who and object words, paging, the empty and truncated lines, and the action names Figma does not draw (docs/decisions.md, 1.12). The Russian is a first pass by the agent: native review needed, P.18.",
+  "dashboard.privacy.audit.action.audit_export": {
+    "en": "Exported the audit log",
+    "ru": "Экспорт журнала аудита"
+  },
+  "dashboard.privacy.audit.action.audit_read": {
+    "en": "Opened the audit log",
+    "ru": "Открыт журнал аудита"
+  },
+  "dashboard.privacy.audit.action.command_add_time": {
+    "en": "Added time",
+    "ru": "Добавлено время"
+  },
+  "dashboard.privacy.audit.action.command_end": {
+    "en": "Ended",
+    "ru": "Завершение"
+  },
+  "dashboard.privacy.audit.action.command_message": {
+    "en": "Sent a message",
+    "ru": "Сообщение"
+  },
+  "dashboard.privacy.audit.action.command_pause": {
+    "en": "Paused",
+    "ru": "Пауза"
+  },
+  "dashboard.privacy.audit.action.command_resume": {
+    "en": "Resumed",
+    "ru": "Продолжение"
+  },
+  "dashboard.privacy.audit.action.command_start": {
+    "en": "Started",
+    "ru": "Старт"
+  },
+  "dashboard.privacy.audit.action.data_request_copy": {
+    "en": "Made a copy of a student’s data",
+    "ru": "Создана копия данных студента"
+  },
+  "dashboard.privacy.audit.action.data_request_delete": {
+    "en": "Deleted a student’s data on request",
+    "ru": "Данные студента удалены по запросу"
+  },
+  "dashboard.privacy.audit.action.data_request_read": {
+    "en": "Opened a data request",
+    "ru": "Открыт запрос данных"
+  },
+  "dashboard.privacy.audit.action.data_request_received": {
+    "en": "Entered a {kind, select, delete {delete} copy {copy} other {data}} request",
+    "ru": "Принят запрос {kind, select, delete {на удаление} copy {копии} other {данных}}"
+  },
+  "dashboard.privacy.audit.action.data_request_reply": {
+    "en": "Replied to a data request",
+    "ru": "Дан ответ на запрос данных"
+  },
+  "dashboard.privacy.audit.action.exam_draft_created": {
+    "en": "Created a draft exam",
+    "ru": "Создан черновик экзамена"
+  },
+  "dashboard.privacy.audit.action.exam_schedule": {
+    "en": "Scheduled the exam",
+    "ru": "Экзамен запланирован"
+  },
+  "dashboard.privacy.audit.action.help_close": {
+    "en": "Closed a help request",
+    "ru": "Обращение закрыто"
+  },
+  "dashboard.privacy.audit.action.help_read": {
+    "en": "Read help requests",
+    "ru": "Просмотр обращений"
+  },
+  "dashboard.privacy.audit.action.identity_help_read": {
+    "en": "Opened identity help",
+    "ru": "Открыта помощь с проверкой личности"
+  },
+  "dashboard.privacy.audit.action.invites_send": {
+    "en": "Sent invites",
+    "ru": "Отправлены приглашения"
+  },
+  "dashboard.privacy.audit.action.invites_test": {
+    "en": "Sent a test invite",
+    "ru": "Отправлено тестовое приглашение"
+  },
+  "dashboard.privacy.audit.action.join_exam": {
+    "en": "Joined the exam",
+    "ru": "Вход на экзамен"
+  },
+  "dashboard.privacy.audit.action.join_exam_refused": {
+    "en": "Could not join the exam",
+    "ru": "Неудачный вход на экзамен"
+  },
+  "dashboard.privacy.audit.action.privacy_centre_read": {
+    "en": "Opened the privacy centre",
+    "ru": "Открыт центр конфиденциальности"
+  },
+  "dashboard.privacy.audit.action.proctors_assign": {
+    "en": "Assigned proctors",
+    "ru": "Назначены прокторы"
+  },
+  "dashboard.privacy.audit.action.report_share": {
+    "en": "Shared the report",
+    "ru": "Отчёт отправлен по ссылке"
+  },
+  "dashboard.privacy.audit.action.report_share_view": {
+    "en": "Opened through a share link",
+    "ru": "Открыт по ссылке"
+  },
+  "dashboard.privacy.audit.action.report_view": {
+    "en": "Opened the report",
+    "ru": "Открыт отчёт"
+  },
+  "dashboard.privacy.audit.action.retention_run": {
+    "en": "Deleted {count, plural, one {# frame} other {# frames}} older than {days} days",
+    "ru": "Удалено кадров старше {days} дн.: {count, number}"
+  },
+  "dashboard.privacy.audit.action.review_decide": {
+    "en": "Decided: {decision, select, no_issue {no issue} talk {talk to the student} committee {send to the committee} other {{decision}}}",
+    "ru": "Решение: {decision, select, no_issue {нарушений нет} talk {поговорить со студентом} committee {в экзаменационную комиссию} other {{decision}}}"
+  },
+  "dashboard.privacy.audit.action.review_queue_viewed": {
+    "en": "Opened the review queue",
+    "ru": "Открыта очередь проверки"
+  },
+  "dashboard.privacy.audit.action.review_session_viewed": {
+    "en": "Opened the session",
+    "ru": "Открыта сессия"
+  },
+  "dashboard.privacy.audit.action.roster_import": {
+    "en": "Imported the roster",
+    "ru": "Импортирован список экзамена"
+  },
+  "dashboard.privacy.audit.action.roster_view": {
+    "en": "Opened the roster",
+    "ru": "Открыт список экзамена"
+  },
+  "dashboard.privacy.audit.action.seats_change_request": {
+    "en": "Asked to change seats",
+    "ru": "Запрос на изменение мест"
+  },
+  "dashboard.privacy.audit.action.seats_confirm": {
+    "en": "Confirmed seats",
+    "ru": "Места подтверждены"
+  },
+  "dashboard.privacy.audit.action.session_note": {
+    "en": "Added a note",
+    "ru": "Добавлена заметка"
+  },
+  "dashboard.privacy.audit.action.settings_retention": {
+    "en": "Changed retention from {before} to {after} days",
+    "ru": "Срок хранения изменён: {before} → {after} дн."
+  },
+  "dashboard.privacy.audit.action.settings_update": {
+    "en": "Changed the settings",
+    "ru": "Изменены настройки"
+  },
+  "dashboard.privacy.audit.action.start_exam": {
+    "en": "Started the exam",
+    "ru": "Начало экзамена"
+  },
+  "dashboard.privacy.audit.action.still_viewed": {
+    "en": "Viewed {count, plural, one {# flagged frame} other {# flagged frames}}",
+    "ru": "Просмотр {count, plural, one {# отмеченного кадра} other {# отмеченных кадров}}"
+  },
+  "dashboard.privacy.audit.action.student_read": {
+    "en": "Opened a student profile",
+    "ru": "Открыт профиль студента"
+  },
+  "dashboard.privacy.audit.action.students_list": {
+    "en": "Opened the student list",
+    "ru": "Открыт список студентов"
+  },
+  "dashboard.privacy.audit.breadcrumb": {
+    "en": "Admin / Privacy / Audit log",
+    "ru": "Администрирование / Конфиденциальность / Журнал аудита"
+  },
+  "dashboard.privacy.audit.column.action": {
+    "en": "Action",
+    "ru": "Действие"
+  },
+  "dashboard.privacy.audit.column.object": {
+    "en": "Object",
+    "ru": "Объект"
+  },
+  "dashboard.privacy.audit.column.time": {
+    "en": "Time",
+    "ru": "Время"
+  },
+  "dashboard.privacy.audit.column.who": {
+    "en": "Who",
+    "ru": "Кто"
+  },
+  "dashboard.privacy.audit.empty": {
+    "en": "No entries in this range.",
+    "ru": "За этот период записей нет."
+  },
+  "dashboard.privacy.audit.emptyFiltered": {
+    "en": "No entries match.",
+    "ru": "Ничего не найдено."
+  },
+  "dashboard.privacy.audit.exportFailed": {
+    "en": "Could not export. Try again.",
+    "ru": "Не удалось экспортировать. Попробуйте ещё раз."
+  },
+  "dashboard.privacy.audit.footer.export": {
+    "en": "Export CSV",
+    "ru": "Экспорт CSV"
+  },
+  "dashboard.privacy.audit.footer.next": {
+    "en": "Next page",
+    "ru": "Следующая страница"
+  },
+  "dashboard.privacy.audit.footer.note": {
+    "en": "Entries can’t be edited or deleted.",
+    "ru": "Записи нельзя изменить или удалить."
+  },
+  "dashboard.privacy.audit.footer.previous": {
+    "en": "Previous page",
+    "ru": "Предыдущая страница"
+  },
+  "dashboard.privacy.audit.footer.range": {
+    "en": "{from}–{to} of {total}",
+    "ru": "{from}–{to} из {total}"
+  },
+  "dashboard.privacy.audit.object.auditLog": {
+    "en": "Audit log",
+    "ru": "Журнал аудита"
+  },
+  "dashboard.privacy.audit.object.none": {
+    "en": "—",
+    "ru": "—"
+  },
+  "dashboard.privacy.audit.object.pair": {
+    "en": "{first} · {second}",
+    "ru": "{first} · {second}"
+  },
+  "dashboard.privacy.audit.object.privacy": {
+    "en": "Privacy centre",
+    "ru": "Центр конфиденциальности"
+  },
+  "dashboard.privacy.audit.object.settings": {
+    "en": "Workspace settings",
+    "ru": "Настройки рабочего пространства"
+  },
+  "dashboard.privacy.audit.object.workspace": {
+    "en": "Workspace",
+    "ru": "Рабочее пространство"
+  },
+  "dashboard.privacy.audit.range.1d": {
+    "en": "Last 24 hours",
+    "ru": "Последние 24 часа"
+  },
+  "dashboard.privacy.audit.range.30d": {
+    "en": "Last 30 days",
+    "ru": "Последние 30 дней"
+  },
+  "dashboard.privacy.audit.range.7d": {
+    "en": "Last 7 days",
+    "ru": "Последние 7 дней"
+  },
+  "dashboard.privacy.audit.range.90d": {
+    "en": "Last 90 days",
+    "ru": "Последние 90 дней"
+  },
+  "dashboard.privacy.audit.range.label": {
+    "en": "Time range",
+    "ru": "Период"
+  },
+  "dashboard.privacy.audit.search.label": {
+    "en": "Search the audit log",
+    "ru": "Поиск по журналу аудита"
+  },
+  "dashboard.privacy.audit.search.placeholder": {
+    "en": "Person, exam or report",
+    "ru": "Человек, экзамен или отчёт"
+  },
+  "dashboard.privacy.audit.tab.all": {
+    "en": "All",
+    "ru": "Все"
+  },
+  "dashboard.privacy.audit.tab.deletions": {
+    "en": "Deletions",
+    "ru": "Удаления"
+  },
+  "dashboard.privacy.audit.tab.exports": {
+    "en": "Exports",
+    "ru": "Экспорт"
+  },
+  "dashboard.privacy.audit.tab.frames": {
+    "en": "Frames viewed",
+    "ru": "Просмотр кадров"
+  },
+  "dashboard.privacy.audit.tab.settings": {
+    "en": "Settings",
+    "ru": "Настройки"
+  },
+  "dashboard.privacy.audit.tabs": {
+    "en": "Kind of entry",
+    "ru": "Тип записи"
+  },
+  "dashboard.privacy.audit.time": {
+    "en": "{day} · {time}",
+    "ru": "{day} · {time}"
+  },
+  "dashboard.privacy.audit.title": {
+    "en": "Audit log",
+    "ru": "Журнал аудита"
+  },
+  "dashboard.privacy.audit.truncated": {
+    "en": "Showing the newest {count} entries. Pick a shorter range or a tab for the rest.",
+    "ru": "Показаны последние {count} записей. Выберите период короче или вкладку, чтобы увидеть остальные."
+  },
+  "dashboard.privacy.audit.who.share": {
+    "en": "Share link",
+    "ru": "Ссылка для чтения"
+  },
+  "dashboard.privacy.audit.who.staff": {
+    "en": "Staff member",
+    "ru": "Сотрудник"
+  },
+  "dashboard.privacy.audit.who.student": {
+    "en": "Student",
+    "ru": "Студент"
+  },
+  "dashboard.privacy.audit.who.system": {
+    "en": "System",
+    "ru": "Система"
+  },
+  "dashboard.privacy.banner.body": {
+    "en": "0 MB uploaded this term. {count, plural, one {# session} other {# sessions}} checked on device.",
+    "ru": "За семестр загружено 0 МБ. {count, plural, one {# сессия проверена} few {# сессии проверены} many {# сессий проверено} other {# сессии проверено}} на устройстве."
+  },
+  "dashboard.privacy.banner.title": {
+    "en": "Video never leaves student laptops.",
+    "ru": "Видео не покидает ноутбуки студентов."
+  },
+  "dashboard.privacy.breadcrumb": {
+    "en": "Admin / Privacy",
+    "ru": "Администрирование / Конфиденциальность"
+  },
+  "dashboard.privacy.copy.action.include": {
+    "en": "Include",
+    "ru": "Включить"
+  },
+  "dashboard.privacy.copy.again": {
+    "en": "Create a new link",
+    "ru": "Создать новую ссылку"
+  },
+  "dashboard.privacy.copy.banner.body": {
+    "en": "Üki writes the file and a secure link. Send the link to {name}; it expires in 7 days.",
+    "ru": "Üki создаст файл и защищённую ссылку. Отправьте ссылку студенту ({name}): она действует 7 дней."
+  },
+  "dashboard.privacy.copy.banner.title": {
+    "en": "One JSON file, linked for 7 days",
+    "ru": "Один файл JSON, ссылка на 7 дней"
+  },
+  "dashboard.privacy.copy.button": {
+    "en": "Create secure link",
+    "ru": "Создать защищённую ссылку"
+  },
+  "dashboard.privacy.copy.cancel": {
+    "en": "Cancel",
+    "ru": "Отмена"
+  },
+  "dashboard.privacy.copy.copied": {
+    "en": "Link copied",
+    "ru": "Ссылка скопирована"
+  },
+  "dashboard.privacy.copy.copyLink": {
+    "en": "Copy link",
+    "ru": "Скопировать ссылку"
+  },
+  "dashboard.privacy.copy.done.body": {
+    "en": "{name} made the copy on {date}. The link was shown once; make a new one if it is needed again.",
+    "ru": "{name} создал(а) копию {date}. Ссылка показывалась один раз; при необходимости создайте новую."
+  },
+  "dashboard.privacy.copy.done.title": {
+    "en": "Copy made",
+    "ru": "Копия создана"
+  },
+  "dashboard.privacy.copy.item.consent.detail": {
+    "en": "{count, plural, one {# rule acceptance} other {# rule acceptances}}",
+    "ru": "Принятий правил: {count}"
+  },
+  "dashboard.privacy.copy.item.consent.title": {
+    "en": "Consent records",
+    "ru": "Записи о согласии"
+  },
+  "dashboard.privacy.copy.item.devices.detail": {
+    "en": "{count, plural, one {# laptop} other {# laptops}}, Üki {version}",
+    "ru": "{count, plural, one {# ноутбук} few {# ноутбука} many {# ноутбуков} other {# ноутбука}}, Üki {version}"
+  },
+  "dashboard.privacy.copy.item.devices.none": {
+    "en": "No devices",
+    "ru": "Устройств нет"
+  },
+  "dashboard.privacy.copy.item.devices.title": {
+    "en": "Devices",
+    "ru": "Устройства"
+  },
+  "dashboard.privacy.copy.item.flags.detail": {
+    "en": "{flags, plural, one {# flag} other {# flags}}, {frames, plural, one {# frame} other {# frames}}",
+    "ru": "Отметок: {flags}, кадров: {frames}"
+  },
+  "dashboard.privacy.copy.item.flags.title": {
+    "en": "Flags and frames",
+    "ru": "Отметки и кадры"
+  },
+  "dashboard.privacy.copy.item.history.detail": {
+    "en": "{count, plural, one {# exam} other {# exams}} with times and decisions",
+    "ru": "{count, plural, one {# экзамен} few {# экзамена} many {# экзаменов} other {# экзамена}} со временем и решениями"
+  },
+  "dashboard.privacy.copy.item.history.title": {
+    "en": "Exam history",
+    "ru": "История экзаменов"
+  },
+  "dashboard.privacy.copy.label": {
+    "en": "What goes in the package",
+    "ru": "Что войдёт в пакет"
+  },
+  "dashboard.privacy.copy.link": {
+    "en": "Secure link",
+    "ru": "Защищённая ссылка"
+  },
+  "dashboard.privacy.copy.ready.body": {
+    "en": "Send this link to {name}. It expires on {date}, and is shown only now.",
+    "ru": "Отправьте эту ссылку студенту ({name}). Она действует до {date} и показывается только сейчас."
+  },
+  "dashboard.privacy.copy.ready.title": {
+    "en": "Package ready",
+    "ru": "Пакет готов"
+  },
+  "dashboard.privacy.delete.action.delete": {
+    "en": "Delete",
+    "ru": "Удалить"
+  },
+  "dashboard.privacy.delete.action.keep": {
+    "en": "Keep",
+    "ru": "Оставить"
+  },
+  "dashboard.privacy.delete.banner.body": {
+    "en": "It notes who deleted what and when.",
+    "ru": "В нём отмечено, кто, что и когда удалил."
+  },
+  "dashboard.privacy.delete.banner.title": {
+    "en": "The audit log keeps a record, not the data",
+    "ru": "Журнал аудита хранит запись, а не данные"
+  },
+  "dashboard.privacy.delete.button": {
+    "en": "Delete {count, plural, one {# item} other {# items}}",
+    "ru": "Удалить: {count, plural, one {# пункт} few {# пункта} many {# пунктов} other {# пункта}}"
+  },
+  "dashboard.privacy.delete.done.body": {
+    "en": "{name} deleted the data on {date}.",
+    "ru": "{name} удалил(а) данные {date}."
+  },
+  "dashboard.privacy.delete.done.title": {
+    "en": "Deleted on request",
+    "ru": "Удалено по запросу"
+  },
+  "dashboard.privacy.delete.item.events.detail": {
+    "en": "{count, plural, one {# event} other {# events}} from {exams, plural, one {# exam} other {# exams}}",
+    "ru": "{count, plural, one {# событие} few {# события} many {# событий} other {# события}} из {exams, plural, one {# экзамена} other {# экзаменов}}"
+  },
+  "dashboard.privacy.delete.item.events.title": {
+    "en": "Event log",
+    "ru": "Журнал событий"
+  },
+  "dashboard.privacy.delete.item.frames.detail": {
+    "en": "{count, plural, one {# frame} other {# frames}} from {exams, plural, one {# exam} other {# exams}}",
+    "ru": "{count, plural, one {# кадр} few {# кадра} many {# кадров} other {# кадра}} из {exams, plural, one {# экзамена} other {# экзаменов}}"
+  },
+  "dashboard.privacy.delete.item.frames.title": {
+    "en": "Flagged frames",
+    "ru": "Отмеченные кадры"
+  },
+  "dashboard.privacy.delete.item.identity.detail": {
+    "en": "{scores, plural, one {# card match score} other {# card match scores}}, {devices, plural, one {# device record} other {# device records}}",
+    "ru": "Оценок сверки с картой: {scores}, записей об устройствах: {devices}"
+  },
+  "dashboard.privacy.delete.item.identity.title": {
+    "en": "Identity scores and devices",
+    "ru": "Оценки сверки и устройства"
+  },
+  "dashboard.privacy.delete.item.reports.detail": {
+    "en": "{codes}. Kept with the exam result.",
+    "ru": "{codes}. Остаётся вместе с результатом экзамена."
+  },
+  "dashboard.privacy.delete.item.reports.title": {
+    "en": "Integrity report",
+    "ru": "Отчёт о честности"
+  },
+  "dashboard.privacy.delete.item.results.detail": {
+    "en": "{count, plural, one {# exam} other {# exams}}. Kept as the exam result.",
+    "ru": "{count, plural, one {# экзамен} few {# экзамена} many {# экзаменов} other {# экзамена}}. Остаются как результат экзамена."
+  },
+  "dashboard.privacy.delete.item.results.title": {
+    "en": "Answers and receipts",
+    "ru": "Ответы и квитанции"
+  },
+  "dashboard.privacy.delete.label": {
+    "en": "What Üki keeps about {name}",
+    "ru": "Что Üki хранит о студенте: {name}"
+  },
+  "dashboard.privacy.delete.reply": {
+    "en": "Reply with a reason",
+    "ru": "Ответить с причиной"
+  },
+  "dashboard.privacy.delete.toast": {
+    "en": "The data was deleted.",
+    "ru": "Данные удалены."
+  },
+  "dashboard.privacy.drawer.asked": {
+    "en": "Asked on {date}",
+    "ru": "Запрос от {date}"
+  },
+  "dashboard.privacy.drawer.close": {
+    "en": "Close",
+    "ru": "Закрыть"
+  },
+  "dashboard.privacy.drawer.due": {
+    "en": "Due {date}",
+    "ru": "Срок {date}"
+  },
+  "dashboard.privacy.drawer.notFound": {
+    "en": "This request is not available.",
+    "ru": "Этот запрос недоступен."
+  },
+  "dashboard.privacy.drawer.status.done": {
+    "en": "Done {date}",
+    "ru": "Выполнен {date}"
+  },
+  "dashboard.privacy.drawer.status.replied": {
+    "en": "Replied {date}",
+    "ru": "Ответ {date}"
+  },
+  "dashboard.privacy.drawer.title.copy": {
+    "en": "Copy request",
+    "ru": "Запрос копии"
+  },
+  "dashboard.privacy.drawer.title.delete": {
+    "en": "Delete request",
+    "ru": "Запрос на удаление"
+  },
+  "dashboard.privacy.drawer.who": {
+    "en": "{name} · {number}",
+    "ru": "{name} · {number}"
+  },
+  "dashboard.privacy.error.done": {
+    "en": "This request has been answered already.",
+    "ru": "На этот запрос уже ответили."
+  },
+  "dashboard.privacy.error.failed": {
+    "en": "Could not reach Üki. Try again.",
+    "ru": "Не удалось связаться с Üki. Попробуйте ещё раз."
+  },
+  "dashboard.privacy.error.forbidden": {
+    "en": "Only the exam office of this workspace can do this.",
+    "ru": "Это может сделать только экзаменационный отдел."
+  },
+  "dashboard.privacy.error.in_exam": {
+    "en": "{name} is writing an exam now. Delete the data once it ends.",
+    "ru": "Студент ({name}) сейчас пишет экзамен. Удалите данные после его окончания."
+  },
+  "dashboard.privacy.error.invalid": {
+    "en": "Check the reason and try again.",
+    "ru": "Проверьте причину и попробуйте ещё раз."
+  },
+  "dashboard.privacy.map.audio.data": {
+    "en": "Audio",
+    "ru": "Звук"
+  },
+  "dashboard.privacy.map.audio.where": {
+    "en": "Not recorded",
+    "ru": "Не записывается"
+  },
+  "dashboard.privacy.map.caption": {
+    "en": "What Üki keeps, where, and for how long.",
+    "ru": "Что хранит Üki, где и сколько."
+  },
+  "dashboard.privacy.map.column.data": {
+    "en": "Data",
+    "ru": "Данные"
+  },
+  "dashboard.privacy.map.column.kept": {
+    "en": "Kept",
+    "ru": "Хранится"
+  },
+  "dashboard.privacy.map.column.where": {
+    "en": "Where",
+    "ru": "Где"
+  },
+  "dashboard.privacy.map.column.who": {
+    "en": "Who sees",
+    "ru": "Кто видит"
+  },
+  "dashboard.privacy.map.events.data": {
+    "en": "Event log",
+    "ru": "Журнал событий"
+  },
+  "dashboard.privacy.map.events.kept": {
+    "en": "Until a delete request",
+    "ru": "До запроса на удаление"
+  },
+  "dashboard.privacy.map.face.data": {
+    "en": "Face match",
+    "ru": "Сверка лица"
+  },
+  "dashboard.privacy.map.face.kept": {
+    "en": "Deleted after check",
+    "ru": "Удаляется после проверки"
+  },
+  "dashboard.privacy.map.face.where": {
+    "en": "Student laptop",
+    "ru": "Ноутбук студента"
+  },
+  "dashboard.privacy.map.face.who": {
+    "en": "No one",
+    "ru": "Никто"
+  },
+  "dashboard.privacy.map.frames.data": {
+    "en": "Flagged frames",
+    "ru": "Отмеченные кадры"
+  },
+  "dashboard.privacy.map.frames.kept": {
+    "en": "{days, plural, one {# day} other {# days}}",
+    "ru": "{days, plural, one {# день} few {# дня} many {# дней} other {# дня}}"
+  },
+  "dashboard.privacy.map.none": {
+    "en": "—",
+    "ru": "—"
+  },
+  "dashboard.privacy.map.reports.data": {
+    "en": "Integrity reports",
+    "ru": "Отчёты о честности"
+  },
+  "dashboard.privacy.map.reports.kept": {
+    "en": "With the exam result",
+    "ru": "Вместе с результатом экзамена"
+  },
+  "dashboard.privacy.map.reports.where": {
+    "en": "Exam office",
+    "ru": "Экзаменационный отдел"
+  },
+  "dashboard.privacy.map.reports.who": {
+    "en": "Committee, on request",
+    "ru": "Комиссия, по запросу"
+  },
+  "dashboard.privacy.map.server": {
+    "en": "Üki server · Frankfurt",
+    "ru": "Сервер Üki · Франкфурт"
+  },
+  "dashboard.privacy.map.staff": {
+    "en": "Proctor, exam office",
+    "ru": "Проктор, экзаменационный отдел"
+  },
+  "dashboard.privacy.map.title": {
+    "en": "Data map",
+    "ru": "Карта данных"
+  },
+  "dashboard.privacy.map.video.data": {
+    "en": "Webcam video",
+    "ru": "Видео с веб-камеры"
+  },
+  "dashboard.privacy.map.video.kept": {
+    "en": "Not stored",
+    "ru": "Не хранится"
+  },
+  "dashboard.privacy.map.video.where": {
+    "en": "Student laptop only",
+    "ru": "Только ноутбук студента"
+  },
+  "dashboard.privacy.map.video.who": {
+    "en": "No one",
+    "ru": "Никто"
+  },
+  "dashboard.privacy.profile.export": {
+    "en": "Export data",
+    "ru": "Экспорт данных"
+  },
+  "dashboard.privacy.recent.empty": {
+    "en": "No access recorded yet.",
+    "ru": "Обращений пока нет."
+  },
+  "dashboard.privacy.recent.open": {
+    "en": "Open audit log",
+    "ru": "Открыть журнал аудита"
+  },
+  "dashboard.privacy.recent.title": {
+    "en": "Recent access",
+    "ru": "Последние обращения к данным"
+  },
+  "dashboard.privacy.reply.cancel": {
+    "en": "Cancel",
+    "ru": "Отмена"
+  },
+  "dashboard.privacy.reply.done.body": {
+    "en": "{name} replied on {date}: {reply}",
+    "ru": "{name} ответил(а) {date}: {reply}"
+  },
+  "dashboard.privacy.reply.done.title": {
+    "en": "Answered with a reason",
+    "ru": "Дан ответ с причиной"
+  },
+  "dashboard.privacy.reply.label": {
+    "en": "Reason for the student",
+    "ru": "Причина для студента"
+  },
+  "dashboard.privacy.reply.send": {
+    "en": "Send reply",
+    "ru": "Отправить ответ"
+  },
+  "dashboard.privacy.reply.toast": {
+    "en": "Reply saved.",
+    "ru": "Ответ сохранён."
+  },
+  "dashboard.privacy.requests.done": {
+    "en": "{name} · done {date}",
+    "ru": "{name} · выполнен {date}"
+  },
+  "dashboard.privacy.requests.due": {
+    "en": "{name} · due {date}",
+    "ru": "{name} · срок {date}"
+  },
+  "dashboard.privacy.requests.empty": {
+    "en": "No data requests.",
+    "ru": "Запросов данных нет."
+  },
+  "dashboard.privacy.requests.kind.copy": {
+    "en": "Copy of my data",
+    "ru": "Копия моих данных"
+  },
+  "dashboard.privacy.requests.kind.delete": {
+    "en": "Delete my data",
+    "ru": "Удалить мои данные"
+  },
+  "dashboard.privacy.requests.replied": {
+    "en": "{name} · replied {date}",
+    "ru": "{name} · дан ответ {date}"
+  },
+  "dashboard.privacy.requests.review": {
+    "en": "Review",
+    "ru": "Открыть"
+  },
+  "dashboard.privacy.requests.title": {
+    "en": "Requests",
+    "ru": "Запросы"
+  },
+  "dashboard.privacy.retention.error.failed": {
+    "en": "Could not save. Try again.",
+    "ru": "Не удалось сохранить. Попробуйте ещё раз."
+  },
+  "dashboard.privacy.retention.error.forbidden": {
+    "en": "Only the exam office can change retention.",
+    "ru": "Срок хранения меняет только экзаменационный отдел."
+  },
+  "dashboard.privacy.retention.error.invalid": {
+    "en": "That value can’t be saved.",
+    "ru": "Это значение нельзя сохранить."
+  },
+  "dashboard.privacy.retention.frames": {
+    "en": "Flagged frames",
+    "ru": "Отмеченные кадры"
+  },
+  "dashboard.privacy.retention.next": {
+    "en": "Next cleanup tonight, {time} · {count, plural, one {# frame} other {# frames}}.",
+    "ru": "Следующая очистка сегодня ночью, {time} · {count, plural, one {# кадр} few {# кадра} many {# кадров} other {# кадра}}."
+  },
+  "dashboard.privacy.retention.saved": {
+    "en": "Retention saved",
+    "ru": "Срок хранения сохранён"
+  },
+  "dashboard.privacy.retention.title": {
+    "en": "Retention",
+    "ru": "Хранение"
+  },
+  "dashboard.privacy.title": {
+    "en": "Privacy",
+    "ru": "Конфиденциальность"
+  }
+}
