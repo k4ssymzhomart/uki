@@ -1,7 +1,7 @@
 # Manual: unsigned installers for macOS arm64 and x64 (dmg) and Windows x64 (NSIS), attached to a draft
-# GitHub release (docs/phase-0-plan.md, Pipelines). The demo installers are normally built on the demo
-# laptops themselves; a CI build copied to a Mac needs the quarantine flag removed and Windows needs
-# SmartScreen's "Run anyway" (docs/runbooks/demo-laptops.md).
+# GitHub release (docs/phase-0-plan.md, Pipelines). The macOS installer is normally built on the MacBook
+# itself, Windows on GitHub's Windows runners; a CI build copied to a Mac needs the quarantine flag removed
+# and a lab PC needs SmartScreen's "Run anyway" (docs/runbooks/demo-laptops.md).
 #
 # Variables (Settings > Secrets and variables > Actions > Variables): VITE_SUPABASE_URL and
 # VITE_SUPABASE_PUBLISHABLE_KEY of the cloud project, VITE_LOCK_EXTENSION_ID. Only the publishable key

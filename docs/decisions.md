@@ -390,10 +390,10 @@ Decided by the hardening run. Design to sign off the three icon changes.
 
 ## 2026-10-07 · Detection thresholds: evidence so far
 
-Recorded by the hardening run; you tune both on the demo laptops.
+Recorded by the hardening run; you tune both on the MacBook Pro and, in the lab session, on a Windows 11 lab PC.
 
 - Phone: EfficientDet-Lite0 int8 scored a clearly held phone (the brand kit's evidence picture through the e2e's synthetic camera) at 0.77 on every check, below the 0.85 default. With the defaults, no `phone.detected` fires. The desktop e2e lowers its exam's `phone_score` to 0.7 so that the 2.2 path runs.
-  - Tune on real phones on both laptops.
+  - Tune on real phones on the MacBook and a lab PC.
   - Put the chosen value into the `exams.checks` defaults: `DEFAULT_EXAM_CHECKS.phone_score` in contracts, plus the column default in a new migration. Code constants stay unchanged.
   - Record the value here.
 - Identity: in the e2e, a card made from the student's own enrolment photo matched at 0.93 on the first try. Earlier, a different person's low-resolution photo passed the 0.5 threshold at 0.53. Neither run used a real camera and a printed card.

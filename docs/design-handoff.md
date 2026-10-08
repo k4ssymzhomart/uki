@@ -797,7 +797,7 @@ Sixteen decisions the design leaves to engineering and to the team. Round 2 sett
 - [x] Enrolment photo: none. The build plan matches the live face to the photo on the student card, on the laptop.
 - [x] Hosting: Supabase Cloud in Frankfurt (eu-central-1) for the hackathon build; A.5’s “Üki server · Kazakhstan” rows change to match in Phase 1.
 - [x] Desktop app: Electron 44 on macOS and Windows.
-- [x] Detection: MediaPipe Face Landmarker and Object Detector, Human for the card photo match and Tesseract.js for the card digits; the weakest laptop is an 8th-gen Core i5.
+- [x] Detection: MediaPipe Face Landmarker and Object Detector, Human for the card photo match and Tesseract.js for the card digits; the slowest target is a Windows 11 lab PC at the university, which may have no graphics card.
 - [x] Üki Lock: one tab, allowed sites, copy and print blocking and full screen are enforced; screen sharing is detected by the app; developer tools need administrator policy, and pausing other extensions waits for Phase 2.
 - [x] Browsers: Chrome, Edge, Yandex Browser and Opera; Firefox and Safari are out of scope.
 - [ ] LMS: exam.kru.test is a placeholder. Which LMS does KRU run, and what should webhooks send to it?

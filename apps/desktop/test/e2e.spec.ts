@@ -227,7 +227,7 @@ test.beforeAll(async () => {
   mkdirSync(FRAMES_DIR, { recursive: true });
   // EfficientDet-Lite0 scores the brand kit's phone picture at about 0.77, under the 0.85 default: the
   // exam's phone_score (an exam setting) is lowered so the run exercises the whole 2.2 path. The real
-  // threshold is a tuning question for real phones on the demo laptops.
+  // threshold is a tuning question for real phones on the MacBook and a lab PC.
   fixture = await createFixture({ startsInMin: 20, checks: { phone_score: PHONE_SCORE } });
   madina = await launchApp("madina", { kiosk: KIOSK });
 });

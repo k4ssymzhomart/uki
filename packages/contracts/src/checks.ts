@@ -110,7 +110,7 @@ export const THRESHOLDS = {
     scanIntervalMs: 15_000,
     /**
      * Camera row: a frame whose luma standard deviation is below this is uniform (a covered lens or a
-     * blank picture). Not in the plan's tables; tune it on the demo laptops.
+     * blank picture). Not in the plan's tables; tune it on the MacBook and a lab PC.
      */
     uniformMaxStd: 6,
   },

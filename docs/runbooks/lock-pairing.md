@@ -1,6 +1,6 @@
 # Runbook: Üki Lock pairing, lock and the 10-minute quiet test
 
-The hand checks for work package 0.8 on the demo laptops: Chrome on macOS, Chrome and Edge on Windows. The
+The hand checks for work package 0.8: Chrome on the MacBook, and Chrome and Edge on a Windows 11 lab PC. The
 automated smoke (`pnpm --filter lock smoke`, last section) runs the same flow in Chrome for Testing on one
 Mac, but it does not replace these checks.
 
@@ -147,4 +147,4 @@ alive on its own, so the quiet run there does not replace step 6.
 - **Edge reports another origin.** The relay also accepts `extension://<id>` for the same id; if Edge
   connects with neither, note the origin from the app log in `docs/decisions.md`.
 - **Developer mode is greyed out** on a managed laptop: an administrator policy blocks unpacked extensions;
-  use a personal browser profile on the demo laptops.
+  use a personal browser profile on the MacBook, or ask lab IT on a lab PC.

@@ -93,7 +93,7 @@ Check: the dashboard URL redirects to `/sign-in`; Dana signs in and the overview
 
 ## 6. Desktop build variables
 
-The student app is built on the demo laptops ([demo-laptops.md](demo-laptops.md)) with these values in the laptop's `.env`:
+The student app is built on the MacBook, and for Windows on GitHub's Windows runners ([demo-laptops.md](demo-laptops.md)), with these values in the MacBook's `.env` or as repository variables:
 
 ```sh
 VITE_SUPABASE_URL=https://<ref>.supabase.co
