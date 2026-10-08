@@ -1,7 +1,7 @@
 // The sync loop ("Offline queue" in docs/phase-0-plan.md):
 // 1. After each answer and every 2 s, upsert unsynced answers, then send up to 50 events to ingest in
 //    seq order; a flag event flushes at once. Ingest is called at least every 10 s, with an empty
-//    batch if needed, carrying the session status.
+//    batch if needed, carrying the session status; the next run is never later than that heartbeat.
 // 2. A failed call retries after 2, 4, 8, 16, then every 30 s. With no reply for 5 s the app is
 //    offline (2.1a); the next successful call ends it and queues net.offline {offline_ms, queued}
 //    before that call's events, so on reconnect answers go first, then events in seq order.
@@ -211,12 +211,24 @@ export class SyncLoop {
   private schedule(): void {
     if (!this.started) return;
     if (this.timer !== null) clearTimeout(this.timer);
-    const delay =
-      this.attempt > 0 ? Math.max(0, this.backoffUntil - this.now()) : THRESHOLDS.outbox.flushIntervalMs;
+    const delay = this.attempt > 0 ? Math.max(0, this.backoffUntil - this.now()) : this.untilNextRun();
     this.timer = setTimeout(() => {
       this.timer = null;
       this.trigger();
     }, delay);
+  }
+
+  /**
+   * The flush interval, or less when the heartbeat falls due sooner. Each 2 s tick counts from the end
+   * of the run before it, so slow runs shift the ticks; checked only on them, the heartbeat slipped by
+   * up to a tick (12 s instead of 10 on a loaded laptop), and so did a command whose broadcast was lost
+   * and that only an ingest reply could bring (P.10).
+   */
+  private untilNextRun(): number {
+    const interval = THRESHOLDS.outbox.flushIntervalMs;
+    const untilHeartbeat = this.lastIngestAt + THRESHOLDS.outbox.ingestHeartbeatMs - this.now();
+    if (!Number.isFinite(untilHeartbeat)) return interval;
+    return Math.max(0, Math.min(interval, untilHeartbeat));
   }
 
   private runOnce(): Promise<boolean> {
