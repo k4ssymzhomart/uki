@@ -27,6 +27,8 @@ export type FlagPreviewProps = {
   onOpenChange?: (open: boolean) => void;
   side?: "top" | "right" | "bottom" | "left";
   align?: "start" | "center" | "end";
+  /** Moves the card along its side: 3.2b draws it 9 px left of the flags it previews. */
+  alignOffset?: number;
   /** Portal target; defaults to document.body. */
   container?: HTMLElement | null;
   className?: string;
@@ -51,6 +53,7 @@ export function FlagPreview({
   onOpenChange,
   side = "bottom",
   align = "start",
+  alignOffset = 0,
   container,
   className,
 }: FlagPreviewProps) {
@@ -61,6 +64,7 @@ export function FlagPreview({
         <HoverCard.Content
           side={side}
           align={align}
+          alignOffset={alignOffset}
           sideOffset={8}
           collisionPadding={16}
           className={cn(
