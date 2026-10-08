@@ -908,6 +908,66 @@
         "tryAgain": "Try again"
       }
     },
+    "reports": {
+      "breadcrumb": "Reports / {term}",
+      "decisions": {
+        "committee": "Sent to the committee",
+        "headline": "{decision, select, no_issue {Most flags end as no issue} talk {Most flags end in a talk with the student} committee {Most flags go to the committee} other {No decisions yet this term}}",
+        "no_issue": "No issue",
+        "note": "Flag ≠ fail. A proctor decides every flag.",
+        "overline": "Decisions · {count, plural, one {# flagged session} other {# flagged sessions}}",
+        "pending": "Not decided yet",
+        "talk": "Talked to the student"
+      },
+      "export": "Export PDF",
+      "filter": {
+        "faculty": "Faculty",
+        "term": "Term"
+      },
+      "kpi": {
+        "committee": {
+          "caption": "{count, number} of {total, plural, one {# session} other {# sessions}}",
+          "label": "To committee"
+        },
+        "exams": {
+          "caption": "since {date}",
+          "label": "Exams run"
+        },
+        "rate": {
+          "caption": "{kind, select, down {down from {from} {month, select, feb {in Feb} other {in Sep}}} up {up from {from} {month, select, feb {in Feb} other {in Sep}}} same {same as {month, select, feb {in Feb} other {in Sep}}} other {week of {week}}}",
+          "label": "Flags per 100"
+        },
+        "sessions": {
+          "caption": "students × exams",
+          "label": "Sessions"
+        }
+      },
+      "none": "–",
+      "review": {
+        "headline": "{kind, select, faster {Reviews got faster: {first} → {last}} slower {Reviews got slower: {first} → {last}} same {Reviews take {last}} other {No reviews yet this term}}",
+        "overline": "Median review time · weekly",
+        "tooltip": "Median {time}"
+      },
+      "term": "{season, select, spring {Spring term {year}} other {Autumn term {year}}}",
+      "title": "Reports",
+      "types": {
+        "camera_lost": "Camera lost",
+        "empty": "No flags yet this term",
+        "headline": "{type, select, looked_away {Looking away} phone {A phone in frame} tab_or_site {A blocked tab or site} no_face {No face in frame} second_face {A second face} camera_lost {A lost camera} other {Other flags}} {size, select, majority {is more than half} half {is half} almost {is almost half} other {is flagged most}}",
+        "looked_away": "Looked away",
+        "no_face": "No face",
+        "other": "Other",
+        "overline": "What gets flagged",
+        "phone": "Phone in frame",
+        "second_face": "Second face",
+        "tab_or_site": "Tab or site blocked"
+      },
+      "weekly": {
+        "headline": "{kind, select, down {Down from {first} to {last} in {weeks, plural, =1 {one week} =2 {two weeks} =3 {three weeks} =4 {four weeks} =5 {five weeks} =6 {six weeks} =7 {seven weeks} =8 {eight weeks} =9 {nine weeks} other {# weeks}}} up {Up from {first} to {last} in {weeks, plural, =1 {one week} =2 {two weeks} =3 {three weeks} =4 {four weeks} =5 {five weeks} =6 {six weeks} =7 {seven weeks} =8 {eight weeks} =9 {nine weeks} other {# weeks}}} flat {Steady at {last} for {weeks, plural, =1 {one week} =2 {two weeks} =3 {three weeks} =4 {four weeks} =5 {five weeks} =6 {six weeks} =7 {seven weeks} =8 {eight weeks} =9 {nine weeks} other {# weeks}}} single {{last} in the week of {week}} other {No exams yet this term}}",
+        "overline": "Flags per 100 sessions · weekly",
+        "tooltip": "{rate, plural, one {# flag} other {# flags}} per 100"
+      }
+    },
     "review": {
       "breadcrumb": {
         "exam": "Review / {exam}",

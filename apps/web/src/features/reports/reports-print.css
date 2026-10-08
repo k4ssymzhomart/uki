@@ -1,0 +1,36 @@
+/*
+ * Export PDF on A.1 prints the reports page, nothing else (Phase 1 plan, Decisions: Reports page; Screens:
+ * /reports). A4 portrait with 40 pt margins, as Figma's "Windows and breakpoints" (212:2521) sets for PDF
+ * exports, the same page as 3.4's Download PDF (report-print.css). Only the element marked
+ * data-print-root is printed; the page's own print: classes put the weekly chart and the decisions on
+ * full rows, so the charts keep their size and the page fits one sheet.
+ */
+@page {
+  size: A4 portrait;
+  margin: 40pt;
+}
+
+@media print {
+  html,
+  body {
+    background: var(--color-surface);
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  [data-print-root],
+  [data-print-root] * {
+    visibility: visible;
+  }
+
+  [data-print-root] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}
