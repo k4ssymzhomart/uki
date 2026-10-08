@@ -186,7 +186,7 @@ select is((select verify_code from public.reports where session_id = t.id('s7'))
   (select public.make_verify_code(r.id, r.content_hash) from public.reports r where r.session_id = t.id('s7')),
   'the code comes from the report id and the content hash');
 select is((select count(*) from public.audit_log where action = 'report.view' and object_id = t.id('s7')::text
-  and actor_id = t.id('aigerim')), 1::bigint, 'reading the report writes an audit row');
+  and actor_id = t.id('aigerim') and at >= now()), 1::bigint, 'reading the report writes an audit row');
 
 select t.login(t.id('office'));
 select is((public.get_report(t.id('s7')) -> 'report' ->> 'verify_code'), (select p -> 'report' ->> 'verify_code' from t.r1),
@@ -254,7 +254,7 @@ select is((select count(*) from public.report_shares sh where to_jsonb(sh)::text
   0::bigint, 'the token itself is stored nowhere in report_shares');
 select is((select count(*) from public.audit_log a where a.meta::text like '%' || (select s ->> 'token' from t.share) || '%'),
   0::bigint, 'nor in the audit log');
-select is((select count(*) from public.audit_log where action = 'report.share'
+select is((select count(*) from public.audit_log where action = 'report.share' and at >= now()
   and object_id = (select p -> 'report' ->> 'id' from t.r2)), 1::bigint, 'sharing writes an audit row');
 
 select t.login(t.id('other_proctor'));
@@ -275,7 +275,7 @@ select is((public.open_shared_report((select h from t.hash)) -> 'student' ->> 'f
   (select p -> 'student' ->> 'full_name' from t.r2), 'the committee sees the same report');
 reset role;
 select is((select count(*) from public.audit_log where action = 'report.share_view' and actor_kind = 'share' and actor_id is null
-  and object_id = (select p -> 'report' ->> 'id' from t.r2)), 2::bigint, 'each view of the link writes its own audit row');
+  and at >= now() and object_id = (select p -> 'report' ->> 'id' from t.r2)), 2::bigint, 'each view of the link writes its own audit row');
 
 update public.report_shares set expires_at = now() - interval '1 second';
 select t.service();
@@ -289,7 +289,7 @@ select is(t.err(format('select public.open_shared_report(%L)', (select h from t.
 select is(t.err(format('select public.open_shared_report(%L)', repeat('a', 64))), 'not_found:unknown',
   'an unknown link is not found');
 reset role;
-select is((select count(*) from public.audit_log where action = 'report.share_view'
+select is((select count(*) from public.audit_log where action = 'report.share_view' and at >= now()
   and object_id = (select p -> 'report' ->> 'id' from t.r2)), 2::bigint, 'refused views write no audit row');
 
 select t.anon();
