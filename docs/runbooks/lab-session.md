@@ -30,7 +30,7 @@ The release's Lock and app belong together: the Lock's key fixes its extension i
 gh release download --repo k4ssymzhomart/uki -p 'Uki-win-x64.zip' -p 'Uki-Setup-win-x64.exe' -p 'Uki-Lock-*.zip' -D lab-usb
 ```
 
-To publish a new release from `main` (about 30 minutes; the version is `0.1.<run number>`):
+To publish a new release from `main` (about 10 minutes; the version is `0.1.<run number>`):
 
 ```sh
 gh workflow run desktop-dist.yml --repo k4ssymzhomart/uki --ref main -f publish=true
