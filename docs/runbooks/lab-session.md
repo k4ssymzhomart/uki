@@ -252,7 +252,7 @@ The venue network may block websockets or drop. In order of preference:
 1. **Phone hotspot.** Put the student machine and the dashboard machine on one hotspot, and check that `https://<project-ref>.supabase.co/auth/v1/health` answers (1.2 shows the round trip). Machines on one hotspot share one public IP, so they also share the cloud project's limit of 30 anonymous sign-ins an hour. If a join fails with a rate limit, raise the limit under Authentication, Rate limits in the Supabase dashboard.
 2. **Short drops are fine.** The app's outbox keeps answers and events through minutes offline. 2.1a shows, and everything syncs on reconnect without duplicates.
 3. **Last resort: the local stack over the LAN.** Use this only if Frankfurt is unreachable.
-   1. On the MacBook, run `supabase start -x vector,logflare,imgproxy,edge-runtime`, `pnpm env:local`, `pnpm seed:staff` and `pnpm demo:reset`, then `pnpm dev`, which serves the Edge Functions.
+   1. On the MacBook, run `pnpm db:start`, `pnpm env:local`, `pnpm seed:staff` and `pnpm demo:reset`, then `pnpm dev:local`, which serves the Edge Functions (plain `pnpm dev` would use the cloud). This needs Docker on the MacBook ([development.md](development.md)).
    2. Rebuild the student app with `VITE_SUPABASE_URL=http://<MacBook-LAN-IP>:54721` and the local publishable key (`SUPABASE_PUBLISHABLE_KEY` in the MacBook's `.env`).
    3. Keep every machine on one Wi-Fi or hotspot. The app's content security policy allows exactly that URL over http and ws.
 

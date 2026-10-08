@@ -2,8 +2,9 @@
 #   check     pnpm check (Biome with the i18n GritQL plugin, the guards, type check, unit tests) and
 #             generated files up to date (i18n messages, tokens)
 #   gitleaks  secret scan with .gitleaks.toml
-#   stack     supabase start without the edge runtime, then a clean db reset of every migration and the
-#             seed (P.9), then supabase functions serve; pgTAP; the functions' integration tests and the
+#   stack     the slim local stack (pnpm db:start, as pnpm dev:local starts it; the edge runtime runs
+#             under functions serve), then a clean db reset of every migration and the seed (P.9), then
+#             supabase functions serve; pgTAP; the functions' integration tests and the
 #             desktop flow against the stack; the dashboard smoke test (Playwright Chromium); the demo
 #             scripts against the real schema; then send-invites (WP 1.4) and pilot-notify (WP 1.13) again
 #             with UKI_EMAIL_SINK set
@@ -93,8 +94,10 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: 2.107.0
-      - name: Start the local stack (the edge runtime runs under functions serve)
-        run: supabase start -x vector,logflare,imgproxy,edge-runtime,studio
+      # The containers Üki does not use stay out (scripts/lib/local-stack.ts, STACK_EXCLUDE); the edge
+      # runtime runs under functions serve. The database tests run here; on a laptop only with pnpm dev:local.
+      - name: Start the slim local stack (pnpm db:start, as pnpm dev:local starts it)
+        run: pnpm db:start
       - name: Clean db reset with every migration and the seed (P.9)
         run: |
           pnpm db:reset
@@ -107,10 +110,10 @@ jobs:
       - name: Write .env from the local stack
         run: pnpm env:local
       - name: pgTAP (RLS for every role, RPCs, triggers)
-        run: supabase test db
+        run: pnpm db:test
       - name: Staff accounts
         run: pnpm seed:staff
-      - name: Serve the Edge Functions (as pnpm dev does)
+      - name: Serve the Edge Functions (as pnpm dev:local does)
         run: nohup pnpm functions:serve > functions-serve.log 2>&1 &
       - name: Functions and realtime integration tests
         run: pnpm test:integration

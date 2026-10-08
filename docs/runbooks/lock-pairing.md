@@ -100,7 +100,7 @@ Pass: paired before and after, no drop in between, on Chrome macOS, Chrome Windo
 
 ## 7. Lock and release (WP 0.8 "Done when")
 
-Needs the local stack, `pnpm dev` (mock portal on http://localhost:5180) and the seeded browser exam
+Needs the local stack, `pnpm dev:local` (mock portal on http://localhost:5180) and the seeded browser exam
 "Physics 1 · Quiz 3" (code `PHYS1-102-FRI`). Keep the dashboard's live wall open on another laptop.
 
 1. Open a few tabs in two windows (one pinned). Join the exam in the app; once it reaches the lobby the popup

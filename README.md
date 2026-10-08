@@ -11,7 +11,7 @@ Built for the Qostanai Industry Hackathon; the case customer is KRU, Kostanay. T
 | `apps/lock` | Üki Lock, a Manifest V3 extension paired with the app over a local WebSocket | unpacked from `apps/lock/.output/chrome-mv3-dev` |
 | `apps/lms-mock` | A static mock of the KRU exam portal for the browser exam | http://localhost:5180/physics-1/quiz-3 |
 
-Everything talks to one Supabase project: locally the Supabase CLI stack, on Demo Day the cloud project in Frankfurt (`eu-central-1`).
+Everything talks to one Supabase project: `pnpm dev` runs the apps against the cloud demo project in Frankfurt (`eu-central-1`), and `pnpm dev:local` against a Supabase CLI stack on your laptop.
 
 ## Download
 
@@ -36,57 +36,84 @@ A release is made from `main` by the Desktop installers workflow: `gh workflow r
 | --- | --- | --- |
 | Node.js | 24 (see `.nvmrc`) | `brew install node@24`, or `nvm install` / `fnm use` in the repository |
 | pnpm | 10 (pinned in `package.json`) | `corepack enable` (ships with Node) |
-| Docker | Docker Desktop or OrbStack, running, about 6 GB of free disk | https://docs.docker.com/desktop/ |
-| Supabase CLI | 2.107 or later | `brew install supabase/tap/supabase` |
+| Docker | Only for the local stack: Docker Desktop or OrbStack, running, about 6 GB of free disk | https://docs.docker.com/desktop/ |
+| Supabase CLI | Only for the local stack: 2.107 or later | `brew install supabase/tap/supabase` |
 
-Windows works the same with Node from nodejs.org, Docker Desktop with WSL 2, and the Supabase CLI from Scoop (`scoop install supabase`).
+`pnpm dev` needs neither Docker nor the Supabase CLI. Windows works the same with Node from nodejs.org, and for the local stack Docker Desktop with WSL 2 and the Supabase CLI from Scoop (`scoop install supabase`).
 
 ## From clone to all four apps running
 
-On a clean MacBook with a normal connection this takes under 15 minutes; most of it is the first Docker image pull and `pnpm install`.
+`pnpm dev` runs the four apps against the cloud demo project: no Docker and no local database. Most of the setup time is `pnpm install` and the models.
 
 ```sh
 git clone <repository-url> uki && cd uki
 corepack enable                 # pnpm 10, as pinned in package.json
 pnpm install
-supabase start -x vector,logflare,imgproxy,edge-runtime   # local stack on 547xx; the first start applies the migrations and supabase/seed.sql
-pnpm env:local                  # creates .env from .env.example with the local URL and keys and a generated staff password
-pnpm seed:staff                 # the four staff accounts; their password is SEED_STAFF_PASSWORD in .env
-pnpm demo:reset                 # Mathematics 2 starts in 15 minutes, Physics 1 started 5 minutes ago
 pnpm models                     # detection models for the desktop app (59 MB, checked against a SHA-256 manifest)
-pnpm dev                        # functions:sync and supabase functions serve, then web, mock portal, desktop app and Üki Lock in watch mode
+# put the cloud project's address and publishable key into .env.cloud (below)
+pnpm dev                        # web, mock portal, desktop app and Üki Lock in watch mode, against the cloud
 ```
 
-`supabase start` leaves out the edge runtime container (`-x ... edge-runtime`, see [docs/decisions.md](docs/decisions.md)): `pnpm dev` copies the contracts into the functions and runs `supabase functions serve` itself, so there is no second terminal. Without `pnpm dev` (for example before `pnpm test:integration`), run `pnpm functions:serve`. `pnpm dev` also starts the stack with the same flags when it is not running.
+`pnpm dev` reads the cloud project's public values from `.env.cloud` in the repository root, which git ignores. Two lines are enough (Supabase dashboard, Project Settings, API Keys):
 
-`pnpm env:local` reads `supabase status -o env` and writes only the Supabase lines (and `SEED_STAFF_PASSWORD` when it is empty); every other line of `.env.example`, such as `VITE_EXAM_OFFICE_EMAIL` and `SEED_LMS_URL`, is kept as it is. To fill `.env` by hand instead, copy `.env.example` and take `API_URL`, `PUBLISHABLE_KEY` and `SECRET_KEY` from `supabase status -o env`. The apps only ever get the publishable key; the secret key is for the scripts.
+```sh
+SUPABASE_URL=https://<project-ref>.supabase.co
+SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+```
+
+It reads only `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` and any `NEXT_PUBLIC_*`, `VITE_*` and `LOCK_*` lines of that file. On the machine that runs the demo the same file also holds the secret key and the passwords for the demo scripts ([docs/runbooks/cloud-setup.md](docs/runbooks/cloud-setup.md)); `pnpm dev` skips those lines unread, and no secret key, password or token reaches an app, not even one exported in your shell. It starts no Docker, no local Supabase and no `functions serve`: the cloud project's own Edge Functions answer. `pnpm dev --only web,lock` runs a subset of `web`, `lms-mock`, `desktop` and `lock`. More, with the troubleshooting, in [docs/runbooks/development.md](docs/runbooks/development.md).
+
+**This is the shared, live demo data.** Whatever you do in the apps (sign in, join an exam, send a command to a student) happens on the project everyone, the judges included, is looking at. Look around freely; change data only when you mean to. Its owner restores the demo with `pnpm demo:reset --env-file .env.cloud`.
 
 Then check each app:
 
-1. **Dashboard**: open http://localhost:3000 and sign in as `dana.akhmetova@kru.test` (exam office) or `aigerim.sadykova@kru.test` (proctor) with `SEED_STAFF_PASSWORD` from `.env`.
-2. **Desktop app**: the Electron window opens on 1.1 Join in Kazakh. Join Mathematics 2 with `MATH2-204-FRI` and `20231187`. macOS asks for camera access the first time.
+1. **Dashboard**: open http://localhost:3000. Staff sign in as `dana.akhmetova@kru.test` (exam office) or `aigerim.sadykova@kru.test` (proctor); on the cloud their password is the demo owner's `SEED_STAFF_PASSWORD`, on the local stack `SEED_STAFF_PASSWORD` from `.env`.
+2. **Desktop app**: the Electron window opens on 1.1 Join in Kazakh. macOS asks for camera access the first time. On the cloud a join takes a real seat in the live demo, so try joins on the local stack (below), where Mathematics 2 takes `MATH2-204-FRI` and `20231187`.
 3. **Üki Lock**: in Chrome or Edge open `chrome://extensions` (or `edge://extensions`), turn on Developer mode, choose Load unpacked and pick `apps/lock/.output/chrome-mv3-dev`. Pairing: [docs/runbooks/lock-pairing.md](docs/runbooks/lock-pairing.md).
 4. **Mock portal**: http://localhost:5180/physics-1/quiz-3.
 
+### The local stack, on request
+
+`pnpm dev:local` is the old `pnpm dev`: the same four apps against a Supabase CLI stack on your laptop, with the Edge Functions served locally. It needs Docker and the Supabase CLI; the first start pulls images and takes minutes.
+
+```sh
+pnpm db:start                   # local stack on 547xx without the containers Üki does not use; the first start applies the migrations and supabase/seed.sql
+pnpm env:local                  # creates .env from .env.example with the local URL and keys and a generated staff password
+pnpm seed:staff                 # the four staff accounts; their password is SEED_STAFF_PASSWORD in .env
+pnpm demo:reset                 # Mathematics 2 starts in 15 minutes, Physics 1 started 5 minutes ago
+pnpm dev:local                  # functions:sync and supabase functions serve, then the four apps against the local stack
+```
+
+`pnpm db:start` leaves out Studio, postgres-meta, imgproxy, Mailpit, logflare, vector, supavisor and the edge runtime container (`scripts/lib/local-stack.ts` says why for each; [docs/decisions.md](docs/decisions.md)). `pnpm dev:local` starts the stack the same way when it is not running, copies the contracts into the functions and runs `supabase functions serve` with `supabase/functions/local.env` itself, so there is no second terminal. Without `pnpm dev:local` (for example before `pnpm test:integration`), run `pnpm functions:serve`.
+
+`pnpm env:local` reads `supabase status -o env` and writes only the Supabase lines (and `SEED_STAFF_PASSWORD` when it is empty); every other line of `.env.example`, such as `VITE_EXAM_OFFICE_EMAIL` and `SEED_LMS_URL`, is kept as it is. To fill `.env` by hand instead, copy `.env.example` and take `API_URL`, `PUBLISHABLE_KEY` and `SECRET_KEY` from `supabase status -o env`. The apps only ever get the publishable key; the secret key is for the scripts.
+
 The demo schedule is relative to the last `pnpm demo:reset` (or to the seed's load, on a fresh stack or after `pnpm db:reset`): Mathematics 2 starts 15 minutes later and Physics 1 started 5 minutes earlier. Run `pnpm demo:reset` to get that schedule back at any time; after a `pnpm db:reset`, run `pnpm seed:staff` again.
+
+### The database tests run in CI
+
+pgTAP (`pnpm db:test`), `pnpm test:integration`, `pnpm test:integration:desktop`, `pnpm e2e`, `pnpm e2e:load` and the desktop end-to-end tests need the local stack, and so do `pnpm db:reset`, `pnpm db:types` and `pnpm functions:serve`. Each first checks that something answers on the stack's API and database ports (no Docker needed for the check) and otherwise stops at once with one line ending "needs pnpm dev:local, or runs in CI". CI's stack job runs all of them on every push and pull request: follow it with `gh pr checks <number> --watch` and read a failure with `gh run view <run id> --log-failed`. What needs no database runs anywhere: `pnpm check`, `pnpm test:functions` and the builds.
 
 ## Commands
 
 | Command | What it does |
 | --- | --- |
-| `pnpm dev` | Starts the local Supabase if it is not running, serves the Edge Functions, then web on 3000, the mock portal on 5180, the desktop app and Üki Lock in watch mode |
+| `pnpm dev` | Web on 3000, the mock portal on 5180, the desktop app and Üki Lock in watch mode, against the cloud demo project (public values of `.env.cloud`); no Docker, no local Supabase. `--only web,lock` runs a subset |
+| `pnpm dev:local` | The same against the local stack: starts it (as `pnpm db:start`) when it is not running and serves the Edge Functions |
+| `pnpm db:start` | Starts the local stack without the containers Üki does not use |
 | `pnpm env:local` | Writes the local stack's URL and keys into `.env` (refuses to overwrite a cloud `.env` without `--force`) |
-| `pnpm db:reset` | Re-applies the migrations and `supabase/seed.sql` to the local database (then `pnpm seed:staff` again) |
+| `pnpm db:reset` | Re-applies the migrations and `supabase/seed.sql` to the local database (then `pnpm seed:staff` again); needs the local stack |
 | `pnpm seed:staff` | Creates or updates the staff accounts (idempotent) |
-| `pnpm db:types` | Regenerates `packages/db/src/database.types.ts` from the local schema |
-| `supabase test db` | pgTAP tests: row-level security for every role, the RPCs and triggers |
-| `pnpm functions:serve` | Serves the four Edge Functions locally (`pnpm dev` does this too) |
-| `pnpm test:integration` | Edge Function and realtime tests against the local stack (needs `pnpm dev` or `pnpm functions:serve`) |
-| `pnpm test:integration:desktop` | The desktop flow's services against the local stack: join, ingest, frames, commands, Realtime, submit (same needs) |
+| `pnpm db:types` | Regenerates `packages/db/src/database.types.ts` from the local schema; needs the local stack |
+| `pnpm db:test` | pgTAP tests: row-level security for every role, the RPCs and triggers; needs the local stack, runs in CI |
+| `pnpm functions:serve` | Serves the Edge Functions on the local stack (`pnpm dev:local` does this too) |
+| `pnpm test:integration` | Edge Function and realtime tests against the local stack (needs `pnpm dev:local` or `pnpm functions:serve`); runs in CI |
+| `pnpm test:functions` | The Edge Functions' unit tests alone; needs nothing running (`pnpm check` runs them too) |
+| `pnpm test:integration:desktop` | The desktop flow's services against the local stack: join, ingest, frames, commands, Realtime, submit (same needs); runs in CI |
 | `pnpm check` | Biome (with the i18n GritQL plugin), `pnpm guards`, type checks (workspace, Edge Functions, scripts, `e2e/`), unit tests; CI runs the same |
 | `pnpm guards` | Fails on `MediaRecorder`, colour or pixel literals in components, and uploads outside the `frames` bucket |
-| `pnpm e2e` | The Playwright smoke test for the dashboard against the local stack (needs `pnpm seed:staff` and the functions; `pnpm exec playwright install chromium` once) |
-| `pnpm e2e:load` | The live wall under 120 simulated students, several minutes; Mathematics 2 must be open (`pnpm demo:reset`) |
+| `pnpm e2e` | The Playwright smoke test for the dashboard against the local stack (needs `pnpm seed:staff` and the functions; `pnpm exec playwright install chromium` once); runs in CI |
+| `pnpm e2e:load` | The live wall under 120 simulated students on the local stack, several minutes; Mathematics 2 must be open (`pnpm demo:reset`) |
 | `pnpm --filter lock smoke` | Üki Lock in headless Chrome for Testing next to the app's real relay: pairing, lock, blocked tab and site, copy, release (after `pnpm --filter lock build` and `pnpm --filter lms-mock build`; `PW_CHROMIUM` names the browser binary, as CI sets it to Playwright's) |
 | `pnpm tokens` | Rebuilds `packages/tokens` from `figma-variables.json` |
 | `pnpm i18n:build` | Builds `packages/i18n/messages/{en,kk,ru}.json` from the catalog and checks every message |
@@ -151,7 +178,7 @@ Phase 0 scope:
 
 Technical limits recorded in [docs/decisions.md](docs/decisions.md):
 
-- The local stack runs without the edge runtime container; the Edge Functions run under `supabase functions serve` (`pnpm dev` or `pnpm functions:serve`).
+- The local stack runs without the edge runtime container; the Edge Functions run under `supabase functions serve` (`pnpm dev:local` or `pnpm functions:serve`). `pnpm dev` uses the cloud project's functions.
 - Edge Functions get the contracts by copy: `pnpm functions:sync` writes `supabase/functions/_shared/contracts/` (gitignored) before serve and deploy, so contracts import only `zod` and use explicit `.ts` extensions.
 - The cloud project must sign JWTs with an asymmetric key (ES256 or RS256): `@supabase/server` refuses tokens signed with the legacy shared secret.
 - Each function bundle is about 15.9 MB of the 20 MB limit.

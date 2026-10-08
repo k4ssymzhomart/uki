@@ -3,7 +3,8 @@
 //                   rules); needs nothing running.
 //   integration     test/integration against the local stack and `pnpm functions:serve`; the global
 //                   setup stops with a clear message when either is missing.
-// Run one with `pnpm test:integration --project functions-unit`.
+// `pnpm test:integration` runs both and needs the stack (it checks first); `pnpm test:functions` runs
+// functions-unit alone, with nothing running.
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({

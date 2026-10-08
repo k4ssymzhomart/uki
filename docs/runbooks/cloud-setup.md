@@ -96,6 +96,8 @@ pnpm demo:reset --env-file .env.cloud                       # asks before touchi
 
 Check: `demo:reset` prints Mathematics 2 as scheduled 15 minutes ahead and Physics 1 as live, with `lms_url` on the Vercel portal.
 
+`pnpm dev` runs the apps against this project from the same file, reading only `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` and any `NEXT_PUBLIC_*`, `VITE_*` and `LOCK_*` lines; the secret key and the `SEED_*` passwords are skipped and never reach an app. A developer who does not run the demo scripts needs only the first two lines. See [development.md](development.md).
+
 ## 5. Two Vercel projects
 
 In https://vercel.com/new import the GitHub repository twice.
