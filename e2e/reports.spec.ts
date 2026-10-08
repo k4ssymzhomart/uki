@@ -6,12 +6,15 @@
 // the page alone on one A4 sheet. Works on any seed: the expectations come from the views.
 //
 // UKI_E2E_FRAMES_DIR=<dir> also saves A.1 at the frame's 1440 x 960 for the Figma comparison.
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { expect, type Page, test } from "@playwright/test";
 import { pageStatus, signIn } from "./support/dashboard.ts";
+import { ROOT } from "./support/env.ts";
 import { message } from "./support/messages.ts";
 import { KRU, STAFF } from "./support/seed.ts";
 import { adminClient, cleanUp, userIdsByEmail } from "./support/supabase.ts";
+import { baseURL } from "./support/web-server.ts";
 
 const FRAMES_DIR = process.env.UKI_E2E_FRAMES_DIR;
 const NUMBER = new Intl.NumberFormat("en");
@@ -202,6 +205,91 @@ test("A.1 shows the term from the term views, by faculty, and Export PDF prints 
     expect(Number(box?.[1])).toBeCloseTo(595.28, 0);
     expect(Number(box?.[2])).toBeCloseTo(841.89, 0);
     await testInfo.attach("reports-a4.pdf", { body: pdf, contentType: "application/pdf" });
+  } finally {
+    await cleanUp("audit rows", [
+      [
+        "audit_log",
+        () =>
+          adminClient()
+            .from("audit_log")
+            .delete()
+            .eq("actor_id", danaId)
+            .eq("action", "reports.read")
+            .gte("at", since),
+      ],
+    ]);
+  }
+});
+
+/** Seed v2 (WP 1.14) writes its Autumn 2026 term into supabase/seed.sql between these marker lines. */
+const SEED_V2 = readFileSync(join(ROOT, "supabase", "seed.sql"), "utf8").includes(
+  "-- BEGIN seed v2 term data",
+);
+
+// The frame's figures (Figma 102:10454): Faculty of Mathematics, Autumn term 2026, as seed v2 tunes them.
+const FRAME = {
+  tiles: {
+    exams: ["38", "since 1 Sep"],
+    sessions: ["4,912", "students × exams"],
+    rate: ["8.4", "down from 10.5 in Sep"],
+    committee: ["0.5%", "23 of 4,912 sessions"],
+  },
+  weekly: "Down from 11.6 to 8.4 in six weeks",
+  rates: ["11.6", "10.8", "10.1", "9.4", "8.9", "8.4"],
+  weeks: ["1 Sep", "8 Sep", "15 Sep", "22 Sep", "29 Sep", "6 Oct"],
+  types: "Looking away is almost half",
+  shares: [
+    ["Looked away", "46%"],
+    ["Phone in frame", "18%"],
+    ["Tab or site blocked", "14%"],
+    ["No face", "12%"],
+    ["Second face", "6%"],
+    ["Camera lost", "4%"],
+  ],
+  decisions: ["Decisions · 298 flagged sessions", "Most flags end as no issue"],
+  legend: ["214 · 72%", "61 · 20%", "23 · 8%"],
+  review: "Reviews got faster: 2:30 → 1:40",
+} as const;
+
+test("A.1 on seed v2 shows the frame's numbers for the Faculty of Mathematics in Autumn term 2026", async ({
+  page,
+}) => {
+  test.skip(!SEED_V2, "seed v2 (WP 1.14) is not in supabase/seed.sql yet");
+  const since = new Date(Date.now() - 2000).toISOString();
+  try {
+    await signIn(page, STAFF.dana);
+    // The workspace menu's choice (0.1c), which A.1's faculty picker shares.
+    await page.context().addCookies([{ name: "uki_faculty", value: KRU.mathFacultyId, url: baseURL }]);
+    await page.goto("/reports?term=2026-autumn");
+    await expect(
+      page.getByRole("heading", { level: 1, name: message("dashboard.reports.title") }),
+    ).toBeVisible({
+      timeout: 90_000,
+    });
+    await expect(
+      page.getByRole("button", { name: message("dashboard.reports.filter.term"), exact: true }),
+    ).toHaveText("Autumn term 2026");
+    await expect(
+      page.getByRole("button", { name: message("dashboard.reports.filter.faculty"), exact: true }),
+    ).toHaveText("Faculty of Mathematics");
+
+    for (const [kpi, [value, caption]] of Object.entries(FRAME.tiles)) {
+      await expect(page.locator(`[data-kpi="${kpi}"] p`).nth(1)).toHaveText(value);
+      await expect(page.locator(`[data-kpi="${kpi}"] p`).nth(2)).toHaveText(caption);
+    }
+    const weekly = page.locator('[data-chart="weekly"]');
+    await expect(weekly.getByRole("img", { name: FRAME.weekly })).toBeVisible();
+    await expect(weekly.locator("[data-column]")).toHaveText(
+      FRAME.rates.map((rate, index) => `${rate}${FRAME.weeks[index]}`),
+    );
+    await expect(page.getByRole("heading", { level: 2, name: FRAME.types })).toBeVisible();
+    await expect(page.locator('[data-chart="types"] li')).toHaveText(
+      FRAME.shares.map(([type, share]) => `${type}${share}`),
+    );
+    for (const text of FRAME.decisions) await expect(page.getByText(text, { exact: true })).toBeVisible();
+    for (const text of FRAME.legend) await expect(page.getByText(text, { exact: true })).toBeVisible();
+    await expect(page.getByRole("img", { name: FRAME.review })).toBeVisible();
+    await captureFrame(page, "A.1-seed-v2");
   } finally {
     await cleanUp("audit rows", [
       [
