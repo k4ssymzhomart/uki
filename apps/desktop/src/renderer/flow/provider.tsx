@@ -56,7 +56,8 @@ export function createDefaultRuntime(overrides: Partial<FlowRuntimeDeps> = {}): 
     outbox: new Outbox(new OutboxDb()),
     locale: storedLocale() ?? DEFAULT_LOCALE,
     contactEmail: examOfficeEmail(),
-    debug: import.meta.env.DEV,
+    // The overlay's numbers: development builds and the lab zip only (overlay/dev-overlay.tsx).
+    debug: import.meta.env.DEV || import.meta.env.MODE === "lab",
     ...overrides,
   });
 }

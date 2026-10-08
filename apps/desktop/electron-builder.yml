@@ -50,9 +50,15 @@ mac:
     NSCameraUsageDescription: Your camera stays on this laptop. Only events and flagged frames are sent.
 dmg:
   sign: false
+# Windows x64 (WP 0.12): the NSIS installer, whose install-mode page offers an install for the current user
+# only, and a zip of the unpacked app that runs from any folder or a USB drive without an install. CI also
+# builds the lab variant of the zip from electron-builder.lab.yml (pnpm dist:lab); it never ships.
 win:
   target:
     - target: nsis
+      arch:
+        - x64
+    - target: zip
       arch:
         - x64
 nsis:

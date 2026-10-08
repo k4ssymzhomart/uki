@@ -37,7 +37,7 @@ export type LockdownWindow = Pick<
 
 export type LockdownOptions = {
   os: DesktopOs;
-  /** Development (unpackaged) builds only: Cmd/Ctrl+Shift+Q leaves lockdown. */
+  /** Development (unpackaged) and lab builds only: Cmd/Ctrl+Shift+Q leaves lockdown. */
   devEscape: boolean;
   /** Focus left the window during lockdown (Windows); at most once per BLUR_NOTICE_INTERVAL_MS. */
   onBlur: () => void;

@@ -1,6 +1,6 @@
 // The developer overlay ("Tuning" in docs/phase-0-plan.md): Ctrl+Shift+D shows fps, head angles, look
-// scores, face count, phone score, the rule state and the fallback flag. Development builds only
-// (dev-overlay.tsx never imports this file in production), so plain debug labels are fine here.
+// scores, face count, phone score, the rule state and the fallback flag. Development builds and the lab
+// zip only (dev-overlay.tsx never imports this file in production), so plain debug labels are fine here.
 import { useEffect, useState } from "react";
 import { useDetectionDebug } from "../flow/provider.tsx";
 

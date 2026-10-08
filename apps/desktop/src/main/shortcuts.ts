@@ -100,7 +100,8 @@ export function isBlockedShortcut(input: InputLike, os: DesktopOs): boolean {
 
 /**
  * The development escape hatch: Cmd+Shift+Q on macOS, Ctrl+Shift+Q on Windows leaves lockdown. Only
- * development (unpackaged) builds listen for it; packaged builds drop it with every other Q shortcut.
+ * development (unpackaged) builds and the lab zip listen for it; packaged builds drop it with every other
+ * Q shortcut.
  */
 export function isDevEscape(input: InputLike, os: DesktopOs): boolean {
   return isKeyDown(input) && matches(input, { codes: ["KeyQ"], mod: true, shift: true }, os);
