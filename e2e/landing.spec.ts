@@ -2,7 +2,10 @@
 // (1440 in the chromium project, 390 in landing-390), and the pilot form. The page text comes from the
 // generated messages, so selectors follow dashboard-landing.json.
 import { expect, type Page, test } from "@playwright/test";
+import { LOCALE_COOKIE } from "./support/dashboard.ts";
+import { readE2eEnv } from "./support/env.ts";
 import { message } from "./support/messages.ts";
+import { STAFF } from "./support/seed.ts";
 import { adminClient } from "./support/supabase.ts";
 
 const desktop = (page: Page) => (page.viewportSize()?.width ?? 0) >= 1024;
@@ -210,8 +213,9 @@ test.describe("the landing: user decisions of 8 October", () => {
     expect(
       (box?.x ?? -1) >= 0 && (box?.x ?? 0) + (box?.width ?? 0) <= (page.viewportSize()?.width ?? 0),
     ).toBe(true);
-    // The demo login is given in person: no address and no password on the page.
-    expect(await guide.innerText()).not.toMatch(/@|password/i);
+    // No login in the guide: no address and no field; the password is on the jury's one-pager.
+    expect(await guide.innerText()).not.toMatch(/@/);
+    await expect(guide.locator("input")).toHaveCount(0);
     await expectFadesOnly(page, "[role=dialog]");
     await close.click();
     await expect(guide).toBeHidden();
@@ -237,10 +241,17 @@ test.describe("the landing: user decisions of 8 October", () => {
       page.getByRole("region", { name: message("dashboard.landing.download.title") }),
     ).toBeInViewport();
 
-    // Sign in goes to the dashboard's sign-in.
+    // Every link for the jury leads to /demo.
+    await launcher.click();
+    await guide.getByRole("link", { name: message("dashboard.landing.guide.all") }).click();
+    await expect(page).toHaveURL(/\/demo$/);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(message("dashboard.landing.demo.title"));
+
+    // Live demo goes to sign-in with the jury's email filled in, then /demo/live.
+    await page.goto("/");
     await launcher.click();
     await guide.getByRole("link", { name: message("dashboard.landing.guide.signIn.action") }).click();
-    await expect(page).toHaveURL(/\/sign-in$/);
+    await expectLiveDemoSignIn(page);
   });
 
   test("with reduced motion the guide still only fades", async ({ page }) => {
@@ -256,6 +267,189 @@ test.describe("the landing: user decisions of 8 October", () => {
   });
 });
 
+// The judge path (user requests of 8 and 9 October; docs/decisions.md, "1.13 Landing: user decisions and
+// judge path"): Live demo opens sign-in with the jury's email filled in and /demo/live as next; sign-in
+// follows only a safe internal next; /demo/live sends a visitor to sign-in and staff to DEMO-LIVE's wall;
+// /demo is public. The tests in "with the stack" sign in and run in CI's stack job, at 1440 only.
+const LIVE_DEMO = "/sign-in?email=judge%40kru.test&next=/demo/live";
+const JUDGE_EMAIL = "judge@kru.test";
+const UNSAFE_NEXT = [
+  "//evil.example",
+  "//evil.example/demo/live",
+  "/\\evil.example",
+  "https://evil.example",
+  "javascript:alert(1)",
+  "/\t/evil.example",
+  "/..//evil.example",
+  "/sign-in",
+] as const;
+
+/** The sign-in form's hidden `next` field (absent when sign-in will use the role landing). */
+function nextField(page: Page) {
+  return page.locator('form input[type="hidden"][name="next"]');
+}
+
+function emailField(page: Page) {
+  return page.getByLabel(message("dashboard.signIn.email"), { exact: true });
+}
+
+/** A.0 Sign in reached through Live demo: the jury's email filled in, /demo/live as next. */
+async function expectLiveDemoSignIn(page: Page): Promise<void> {
+  await expect(page).toHaveURL(/\/sign-in\?email=judge%40kru\.test&next=\/demo\/live$/);
+  await expect(emailField(page)).toHaveValue(JUDGE_EMAIL);
+  await expect(nextField(page)).toHaveValue("/demo/live");
+  await expect(page.getByLabel(message("dashboard.signIn.password"), { exact: true })).toHaveValue("");
+}
+
+/** Signs in through the form already on screen with the seeded staff password. */
+async function submitSignIn(page: Page, email: string): Promise<void> {
+  await emailField(page).fill(email);
+  await page
+    .getByLabel(message("dashboard.signIn.password"), { exact: true })
+    .fill(readE2eEnv().SEED_STAFF_PASSWORD);
+  await page.getByRole("button", { name: message("dashboard.signIn.submit"), exact: true }).click();
+}
+
+test.describe("the judge path", () => {
+  test("Live demo on the landing opens sign-in with the jury's email filled in", async ({ page }) => {
+    await page.goto("/");
+    const live = page.getByRole("link", { name: message("dashboard.landing.hero.liveDemo"), exact: true });
+    await expect(live).toHaveAttribute("href", LIVE_DEMO);
+    await expect(live).toBeInViewport();
+    if (!desktop(page)) {
+      await page.getByRole("button", { name: message("dashboard.landing.nav.openMenu") }).click();
+      await expect(
+        page
+          .getByRole("navigation", { name: message("dashboard.landing.nav.label") })
+          .getByRole("link", { name: message("dashboard.landing.nav.liveDemo"), exact: true }),
+      ).toHaveAttribute("href", LIVE_DEMO);
+      await page.keyboard.press("Escape");
+    }
+    await live.click();
+    await expectLiveDemoSignIn(page);
+  });
+
+  test("/demo/live without a session goes to sign-in, which comes back to it", async ({ page }) => {
+    await page.goto("/demo/live");
+    await expect(page).toHaveURL(/\/sign-in\?next=\/demo\/live$/);
+    await expect(nextField(page)).toHaveValue("/demo/live");
+    await expect(emailField(page)).toHaveValue("");
+  });
+
+  test("sign-in carries only a safe internal next, and only an email address", async ({ page }) => {
+    for (const next of UNSAFE_NEXT) {
+      await page.goto(
+        `/sign-in?email=${encodeURIComponent("not an email")}&next=${encodeURIComponent(next)}`,
+      );
+      await expect(page.getByRole("button", { name: message("dashboard.signIn.submit") })).toBeVisible();
+      await expect(nextField(page), next).toHaveCount(0);
+      await expect(emailField(page)).toHaveValue("");
+    }
+    await page.goto("/sign-in?next=%2Freview%3Fsession%3D1");
+    await expect(nextField(page)).toHaveValue("/review?session=1");
+  });
+
+  test("/demo is public: the live demo, the jury's email, the files, /try and three things to try", async ({
+    page,
+  }) => {
+    const response = await page.goto("/demo");
+    expect(response?.status()).toBe(200);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(message("dashboard.landing.demo.title"));
+    const m = (key: string) => message(`dashboard.landing.demo.${key}`);
+
+    const dashboard = page.getByRole("region", { name: m("dashboard.title") });
+    await expect(dashboard.getByText(JUDGE_EMAIL, { exact: true })).toBeVisible();
+    await expect(dashboard.getByText(m("dashboard.passwordWhere"))).toBeVisible();
+    // Nothing to type a login into (the header's language forms carry only hidden fields).
+    await expect(page.locator('main input:not([type="hidden"])')).toHaveCount(0);
+    await expect(dashboard.getByRole("link", { name: m("dashboard.liveDemo") })).toHaveAttribute(
+      "href",
+      LIVE_DEMO,
+    );
+    await expect(dashboard.getByRole("link", { name: m("dashboard.open") })).toHaveAttribute(
+      "href",
+      "/sign-in",
+    );
+
+    const tries = page.getByRole("region", { name: m("tries.title") });
+    await expect(tries.getByRole("heading", { level: 3 })).toHaveText(
+      ["flags", "ask", "report"].map((id) => m(`tries.${id}.title`)),
+    );
+    await expect(page.getByRole("link", { name: m("try.action") })).toHaveAttribute("href", "/try");
+
+    // The video's slot: the labelled placeholder until NEXT_PUBLIC_DEMO_VIDEO_URL is set (CI sets none).
+    const video = page.getByRole("region", { name: m("video.title") });
+    if (process.env.NEXT_PUBLIC_DEMO_VIDEO_URL) {
+      await expect(video.getByRole("link")).toHaveAttribute("target", "_blank");
+    } else {
+      await expect(video.getByText(m("video.soon.title"))).toBeVisible();
+    }
+
+    const apps = page.getByRole("region", { name: m("apps.title") });
+    const hrefs = await apps
+      .getByRole("link")
+      .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("href")));
+    expect(hrefs).toEqual([...RELEASE_FILES.map((file) => `${LATEST}/download/${file}`), LATEST]);
+
+    await dashboard.getByRole("link", { name: m("dashboard.liveDemo") }).click();
+    await expectLiveDemoSignIn(page);
+    await page.goto("/demo");
+    await expectWholePage(page);
+  });
+});
+
+test.describe("the judge path with the stack", () => {
+  test.skip(({ viewport }) => (viewport?.width ?? 0) < 1024, "Signs in twice; runs once, at 1440");
+
+  test("after sign-in, a safe next is followed and any other goes to the role landing", async ({
+    page,
+    context,
+    baseURL,
+  }) => {
+    const url = baseURL ?? "http://localhost:3000";
+    await context.addCookies([{ name: LOCALE_COOKIE, value: "en", url }]);
+
+    // Through the form: the exam office signs in with next=/students and lands there.
+    await page.goto("/sign-in?next=/students");
+    await submitSignIn(page, STAFF.dana);
+    await expect(page).toHaveURL(/\/students$/, { timeout: 90_000 });
+
+    // Signed in, sign-in sends a safe next on and everything else to the overview.
+    await page.goto("/sign-in?next=/review");
+    await expect(page).toHaveURL(/\/review$/);
+    for (const next of UNSAFE_NEXT) {
+      await page.goto(`/sign-in?next=${encodeURIComponent(next)}`);
+      await expect(page, next).toHaveURL(/\/overview$/);
+    }
+
+    // /demo/live opens DEMO-LIVE's wall, or says the exam is not there yet (the CI seed has none).
+    const { data: demo, error } = await adminClient()
+      .from("exams")
+      .select("id")
+      .eq("code", "DEMO-LIVE")
+      .maybeSingle();
+    expect(error).toBeNull();
+    const response = await page.goto("/demo/live");
+    if (demo) {
+      await expect(page).toHaveURL(new RegExp(`/exams/${demo.id}/live$`));
+    } else {
+      expect(response?.status()).toBe(404);
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+        message("dashboard.landing.demoLive.missing.title"),
+      );
+      await expect(page.getByText("DEMO-LIVE")).toBeVisible();
+    }
+
+    // Through the form again, signed out: a next to another site is ignored.
+    await context.clearCookies();
+    await context.addCookies([{ name: LOCALE_COOKIE, value: "en", url }]);
+    await page.goto(`/sign-in?next=${encodeURIComponent("//evil.example")}`);
+    await expect(nextField(page)).toHaveCount(0);
+    await submitSignIn(page, STAFF.dana);
+    await expect(page).toHaveURL(/\/overview$/, { timeout: 90_000 });
+  });
+});
+
 test.describe("the public pages in Russian", () => {
   // The real cookie, as the switch and 3.4a write it: src/i18n/request.ts reads it on every request.
   test.beforeEach(async ({ context, baseURL }) => {
@@ -267,6 +461,7 @@ test.describe("the public pages in Russian", () => {
     { path: "/pilot", h1: "pilot.title", h1Mobile: "pilot.title" },
     { path: "/privacy", h1: "privacyPolicy.title", h1Mobile: "privacyPolicy.title" },
     { path: "/terms", h1: "termsOfUse.title", h1Mobile: "termsOfUse.title" },
+    { path: "/demo", h1: "demo.title", h1Mobile: "demo.title" },
   ] as const) {
     test(`${target.path} renders in Russian with no raw key`, async ({ page }) => {
       await page.goto(target.path);
