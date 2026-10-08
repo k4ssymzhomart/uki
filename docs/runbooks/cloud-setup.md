@@ -32,7 +32,16 @@ The functions accept browser calls only from allowed origins (`uki://app` and lo
 supabase secrets set --project-ref <ref> UKI_ALLOWED_ORIGINS="https://<web>.vercel.app https://<web>-*.vercel.app"
 ```
 
-Check: Database > Tables lists 17 tables, each with RLS enabled; Edge Functions lists the four functions; Integrations > Cron shows `session_tick`.
+Check: Database > Tables lists 17 tables, each with RLS enabled; Edge Functions lists the four functions; Integrations > Cron shows `session_tick`. From Phase 1 (`20261009000000_phase1.sql`) it lists 24 tables, the private `exports` bucket as well, and `retention_nightly` at 22:00 UTC in Cron.
+
+Phase 1: two Vault secrets let the database call Edge Functions through `pg_net`. `retention_nightly` calls `retention` every night, and each new pilot request calls `pilot-notify`. Until both secrets exist, those calls are skipped and nothing else breaks. Create them yourself in Project Settings > Vault (or Database > Vault):
+
+| Name | Value |
+| --- | --- |
+| `uki_project_url` | `https://<ref>.supabase.co` |
+| `uki_secret_key` | a secret key of the project (`sb_secret_…`); any of its secret keys works |
+
+Check: `select name from vault.secrets` in the SQL editor shows both names (it never shows the values).
 
 ## 3. Load the seed once
 

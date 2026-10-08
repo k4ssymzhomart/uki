@@ -402,6 +402,10 @@
           "feed": "message sent",
           "title": "Message sent"
         },
+        "proctor_note": {
+          "detail": "“{text}”",
+          "title": "Note"
+        },
         "proctor_paused": {
           "feed": "paused by the proctor",
           "title": "Paused by the proctor"

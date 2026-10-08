@@ -1,7 +1,9 @@
 // Messages between Üki Lock and the Üki app over the local WebSocket ("Pairing (E.3)" and
 // "Lock messages" in docs/phase-0-plan.md). Each message is one JSON text frame.
 import { z } from "zod";
-import { CopyKind, type EventEnvelope, TabBlockedLockData } from "./events.ts";
+import { BrowserRules } from "./browser-rules.ts";
+import { MessageText } from "./commands.ts";
+import { CopyKind, type EventEnvelope, HelpTopic, TabBlockedLockData } from "./events.ts";
 import { Host, Timestamp, UtcTimestamp, Uuid } from "./primitives.ts";
 import { DesktopOs, ExamMode, Locale } from "./session.ts";
 
@@ -93,6 +95,8 @@ export const LOCK_EVENT_TYPES = [
   "copy.blocked",
   "lock.fullscreen_exit",
   "exam.submitted",
+  // Phase 1: Ask proctor in the bar (E.5a).
+  "student.help_requested",
 ] as const;
 export type LockEventType = (typeof LOCK_EVENT_TYPES)[number];
 
@@ -117,6 +121,13 @@ export const LockEvent = z.discriminatedUnion("type", [
     data: z.object({ count: z.number().int().min(1) }),
   }),
   z.object({ id: Uuid, at: UtcTimestamp, type: z.literal("exam.submitted"), data: z.object({}) }),
+  // Phase 1: E.5a's sheet. The app queues it in its outbox as its own event and answers help.queued.
+  z.object({
+    id: Uuid,
+    at: UtcTimestamp,
+    type: z.literal("student.help_requested"),
+    data: z.object({ topic: HelpTopic, text: MessageText.optional() }),
+  }),
 ]);
 export type LockEvent = z.infer<typeof LockEvent>;
 
@@ -161,6 +172,12 @@ export const LockExam = z.object({
   allowed_hosts: z.array(Host),
   lms_url: z.string().nullable(),
   done_path: z.string().nullable(),
+  /**
+   * Phase 1: E.1's rules from join_exam. Copy and paste, print and full screen follow them; with a
+   * rule off the Lock skips that guard and its event. Missing from an older app: every rule is on
+   * (effectiveBrowserRules in browser-rules.ts).
+   */
+  browser_rules: BrowserRules.nullish(),
 });
 export type LockExam = z.infer<typeof LockExam>;
 
@@ -191,6 +208,8 @@ export const AppToLock = z.discriminatedUnion("type", [
   /** Exams in the app: lock the browser when 2.1 opens. */
   z.object({ type: z.literal("lock.start") }),
   z.object({ type: z.literal("lock.release"), reason: ReleaseReason }),
+  /** Phase 1: the app queued the Lock's student.help_requested with this event id; E.5a confirms. */
+  z.object({ type: z.literal("help.queued"), id: Uuid }),
   Ping,
   Pong,
 ]);

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { colourLiteralsGuard } from "./colour-literals.ts";
 import { globToRegExp, maskComments, position } from "./guard.ts";
 import { mediaRecorderGuard } from "./media-recorder.ts";
-import { isFramesBucket, storageBucketsGuard } from "./storage-buckets.ts";
+import { isAllowedBucket, isFramesBucket, storageBucketsGuard } from "./storage-buckets.ts";
 
 const API = ["Media", "Recorder"].join("");
 
@@ -100,6 +100,18 @@ describe("frames-bucket-only", () => {
     ).toHaveLength(1);
     expect(check("supabase/config.toml", "[storage.buckets.frames]\npublic = false\n")).toEqual([]);
     expect(check("supabase/config.toml", "[storage.buckets.avatars]\npublic = true\n")).toHaveLength(1);
+  });
+
+  it("allows Phase 1's private exports bucket for copy requests, and nothing else", () => {
+    expect(isAllowedBucket(`"exports"`)).toBe(true);
+    expect(isAllowedBucket("contracts.EXPORTS_BUCKET")).toBe(true);
+    expect(isFramesBucket(`"exports"`)).toBe(false);
+    expect(check("a.ts", `admin.storage.from(EXPORTS_BUCKET).upload(path, json)`)).toEqual([]);
+    expect(check("a.ts", `admin.storage.from("export").upload(path, json)`)).toHaveLength(1);
+    expect(
+      check("x.sql", "insert into storage.buckets (id, name, public)\nvalues ('exports', 'exports', false);"),
+    ).toEqual([]);
+    expect(check("supabase/config.toml", "[storage.buckets.exports]\npublic = false\n")).toEqual([]);
   });
 });
 

@@ -68,8 +68,22 @@ export type Database = {
             foreignKeyName: "answers_session_id_fkey"
             columns: ["session_id"]
             isOneToOne: false
+            referencedRelation: "review_queue"
+            referencedColumns: ["session_id"]
+          },
+          {
+            foreignKeyName: "answers_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
             referencedRelation: "sessions"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "answers_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "term_sessions"
+            referencedColumns: ["session_id"]
           },
         ]
       }
@@ -108,6 +122,77 @@ export type Database = {
           workspace_id?: string
         }
         Relationships: []
+      }
+      data_requests: {
+        Row: {
+          done_at: string | null
+          done_by: string | null
+          due_at: string
+          export_path: string | null
+          id: string
+          kind: Database["public"]["Enums"]["data_request_kind"]
+          received_at: string
+          reply: string | null
+          status: Database["public"]["Enums"]["data_request_status"]
+          student_id: string
+          workspace_id: string
+        }
+        Insert: {
+          done_at?: string | null
+          done_by?: string | null
+          due_at?: string
+          export_path?: string | null
+          id?: string
+          kind: Database["public"]["Enums"]["data_request_kind"]
+          received_at?: string
+          reply?: string | null
+          status?: Database["public"]["Enums"]["data_request_status"]
+          student_id: string
+          workspace_id: string
+        }
+        Update: {
+          done_at?: string | null
+          done_by?: string | null
+          due_at?: string
+          export_path?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["data_request_kind"]
+          received_at?: string
+          reply?: string | null
+          status?: Database["public"]["Enums"]["data_request_status"]
+          student_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_requests_done_by_fkey"
+            columns: ["done_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "data_requests_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "student_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "data_requests_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "data_requests_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       events: {
         Row: {
@@ -168,11 +253,46 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "events_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "student_overview"
+            referencedColumns: ["last_exam_id"]
+          },
+          {
+            foreignKeyName: "events_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "term_exams"
+            referencedColumns: ["exam_id"]
+          },
+          {
+            foreignKeyName: "events_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "term_sessions"
+            referencedColumns: ["exam_id"]
+          },
+          {
+            foreignKeyName: "events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "review_queue"
+            referencedColumns: ["session_id"]
+          },
+          {
             foreignKeyName: "events_session_id_fkey"
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "sessions"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "term_sessions"
+            referencedColumns: ["session_id"]
           },
         ]
       }
@@ -203,6 +323,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "exams"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exam_groups_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "student_overview"
+            referencedColumns: ["last_exam_id"]
+          },
+          {
+            foreignKeyName: "exam_groups_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "term_exams"
+            referencedColumns: ["exam_id"]
+          },
+          {
+            foreignKeyName: "exam_groups_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "term_sessions"
+            referencedColumns: ["exam_id"]
           },
           {
             foreignKeyName: "exam_groups_group_id_fkey"
@@ -243,6 +384,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "exams"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exam_questions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "student_overview"
+            referencedColumns: ["last_exam_id"]
+          },
+          {
+            foreignKeyName: "exam_questions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "term_exams"
+            referencedColumns: ["exam_id"]
+          },
+          {
+            foreignKeyName: "exam_questions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "term_sessions"
+            referencedColumns: ["exam_id"]
           },
           {
             foreignKeyName: "exam_questions_question_id_fkey"
@@ -288,6 +450,34 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "exam_students_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "student_overview"
+            referencedColumns: ["last_exam_id"]
+          },
+          {
+            foreignKeyName: "exam_students_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "term_exams"
+            referencedColumns: ["exam_id"]
+          },
+          {
+            foreignKeyName: "exam_students_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "term_sessions"
+            referencedColumns: ["exam_id"]
+          },
+          {
+            foreignKeyName: "exam_students_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "student_overview"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "exam_students_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
@@ -299,6 +489,7 @@ export type Database = {
       exams: {
         Row: {
           allowed_sites: string[]
+          browser_rules: Json
           checks: Json
           code: string | null
           course: string
@@ -312,6 +503,9 @@ export type Database = {
           lms_url: string | null
           lobby_opens_at: string
           mode: Database["public"]["Enums"]["exam_mode"]
+          room: string | null
+          rules_locale: Database["public"]["Enums"]["locale"] | null
+          scheduled_at: string | null
           starts_at: string
           status: Database["public"]["Enums"]["exam_status"]
           title: string
@@ -319,6 +513,7 @@ export type Database = {
         }
         Insert: {
           allowed_sites?: string[]
+          browser_rules?: Json
           checks?: Json
           code?: string | null
           course: string
@@ -332,6 +527,9 @@ export type Database = {
           lms_url?: string | null
           lobby_opens_at: string
           mode: Database["public"]["Enums"]["exam_mode"]
+          room?: string | null
+          rules_locale?: Database["public"]["Enums"]["locale"] | null
+          scheduled_at?: string | null
           starts_at: string
           status?: Database["public"]["Enums"]["exam_status"]
           title: string
@@ -339,6 +537,7 @@ export type Database = {
         }
         Update: {
           allowed_sites?: string[]
+          browser_rules?: Json
           checks?: Json
           code?: string | null
           course?: string
@@ -352,6 +551,9 @@ export type Database = {
           lms_url?: string | null
           lobby_opens_at?: string
           mode?: Database["public"]["Enums"]["exam_mode"]
+          room?: string | null
+          rules_locale?: Database["public"]["Enums"]["locale"] | null
+          scheduled_at?: string | null
           starts_at?: string
           status?: Database["public"]["Enums"]["exam_status"]
           title?: string
@@ -455,11 +657,46 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "frames_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "student_overview"
+            referencedColumns: ["last_exam_id"]
+          },
+          {
+            foreignKeyName: "frames_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "term_exams"
+            referencedColumns: ["exam_id"]
+          },
+          {
+            foreignKeyName: "frames_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "term_sessions"
+            referencedColumns: ["exam_id"]
+          },
+          {
+            foreignKeyName: "frames_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "review_queue"
+            referencedColumns: ["session_id"]
+          },
+          {
             foreignKeyName: "frames_session_id_fkey"
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "sessions"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "frames_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "term_sessions"
+            referencedColumns: ["session_id"]
           },
         ]
       }
@@ -499,8 +736,244 @@ export type Database = {
           },
         ]
       }
+      help_requests: {
+        Row: {
+          created_at: string
+          done_at: string | null
+          done_by: string | null
+          event_id: string | null
+          exam_id: string
+          id: string
+          reply: string | null
+          session_id: string
+          text: string | null
+          topic: string
+        }
+        Insert: {
+          created_at?: string
+          done_at?: string | null
+          done_by?: string | null
+          event_id?: string | null
+          exam_id: string
+          id?: string
+          reply?: string | null
+          session_id: string
+          text?: string | null
+          topic: string
+        }
+        Update: {
+          created_at?: string
+          done_at?: string | null
+          done_by?: string | null
+          event_id?: string | null
+          exam_id?: string
+          id?: string
+          reply?: string | null
+          session_id?: string
+          text?: string | null
+          topic?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "help_requests_done_by_fkey"
+            columns: ["done_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "help_requests_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "help_requests_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exam_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "help_requests_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "help_requests_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "student_overview"
+            referencedColumns: ["last_exam_id"]
+          },
+          {
+            foreignKeyName: "help_requests_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "term_exams"
+            referencedColumns: ["exam_id"]
+          },
+          {
+            foreignKeyName: "help_requests_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "term_sessions"
+            referencedColumns: ["exam_id"]
+          },
+          {
+            foreignKeyName: "help_requests_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "review_queue"
+            referencedColumns: ["session_id"]
+          },
+          {
+            foreignKeyName: "help_requests_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "help_requests_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "term_sessions"
+            referencedColumns: ["session_id"]
+          },
+        ]
+      }
+      invites: {
+        Row: {
+          email: string
+          error: string | null
+          exam_id: string
+          id: string
+          locale: Database["public"]["Enums"]["locale"]
+          provider_id: string | null
+          sent_at: string | null
+          state: Database["public"]["Enums"]["invite_state"]
+          student_id: string
+        }
+        Insert: {
+          email: string
+          error?: string | null
+          exam_id: string
+          id?: string
+          locale: Database["public"]["Enums"]["locale"]
+          provider_id?: string | null
+          sent_at?: string | null
+          state?: Database["public"]["Enums"]["invite_state"]
+          student_id: string
+        }
+        Update: {
+          email?: string
+          error?: string | null
+          exam_id?: string
+          id?: string
+          locale?: Database["public"]["Enums"]["locale"]
+          provider_id?: string | null
+          sent_at?: string | null
+          state?: Database["public"]["Enums"]["invite_state"]
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invites_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exam_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invites_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invites_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "student_overview"
+            referencedColumns: ["last_exam_id"]
+          },
+          {
+            foreignKeyName: "invites_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "term_exams"
+            referencedColumns: ["exam_id"]
+          },
+          {
+            foreignKeyName: "invites_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "term_sessions"
+            referencedColumns: ["exam_id"]
+          },
+          {
+            foreignKeyName: "invites_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "student_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invites_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pilot_requests: {
+        Row: {
+          created_at: string
+          demo_invite: boolean
+          email: string
+          exam_size: string | null
+          id: string
+          message: string | null
+          name: string
+          pilot_month: string | null
+          role: string | null
+          university: string
+        }
+        Insert: {
+          created_at?: string
+          demo_invite?: boolean
+          email: string
+          exam_size?: string | null
+          id?: string
+          message?: string | null
+          name: string
+          pilot_month?: string | null
+          role?: string | null
+          university: string
+        }
+        Update: {
+          created_at?: string
+          demo_invite?: boolean
+          email?: string
+          exam_size?: string | null
+          id?: string
+          message?: string | null
+          name?: string
+          pilot_month?: string | null
+          role?: string | null
+          university?: string
+        }
+        Relationships: []
+      }
       proctor_assignments: {
         Row: {
+          change_request: string | null
           confirmed_at: string | null
           exam_id: string
           is_lead: boolean
@@ -510,6 +983,7 @@ export type Database = {
           staff_id: string
         }
         Insert: {
+          change_request?: string | null
           confirmed_at?: string | null
           exam_id: string
           is_lead?: boolean
@@ -519,6 +993,7 @@ export type Database = {
           staff_id: string
         }
         Update: {
+          change_request?: string | null
           confirmed_at?: string | null
           exam_id?: string
           is_lead?: boolean
@@ -541,6 +1016,27 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "exams"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proctor_assignments_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "student_overview"
+            referencedColumns: ["last_exam_id"]
+          },
+          {
+            foreignKeyName: "proctor_assignments_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "term_exams"
+            referencedColumns: ["exam_id"]
+          },
+          {
+            foreignKeyName: "proctor_assignments_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "term_sessions"
+            referencedColumns: ["exam_id"]
           },
           {
             foreignKeyName: "proctor_assignments_staff_id_fkey"
@@ -580,6 +1076,239 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "workspaces"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      report_shares: {
+        Row: {
+          created_at: string
+          created_by: string
+          expires_at: string
+          id: string
+          report_id: string
+          revoked_at: string | null
+          token_hash: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          expires_at: string
+          id?: string
+          report_id: string
+          revoked_at?: string | null
+          token_hash: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          id?: string
+          report_id?: string
+          revoked_at?: string | null
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_shares_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_shares_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reports: {
+        Row: {
+          content_hash: string
+          created_at: string
+          created_by: string
+          exam_id: string
+          id: string
+          issued_at: string
+          session_id: string
+          verify_code: string
+        }
+        Insert: {
+          content_hash: string
+          created_at?: string
+          created_by: string
+          exam_id: string
+          id?: string
+          issued_at?: string
+          session_id: string
+          verify_code: string
+        }
+        Update: {
+          content_hash?: string
+          created_at?: string
+          created_by?: string
+          exam_id?: string
+          id?: string
+          issued_at?: string
+          session_id?: string
+          verify_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exam_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "student_overview"
+            referencedColumns: ["last_exam_id"]
+          },
+          {
+            foreignKeyName: "reports_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "term_exams"
+            referencedColumns: ["exam_id"]
+          },
+          {
+            foreignKeyName: "reports_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "term_sessions"
+            referencedColumns: ["exam_id"]
+          },
+          {
+            foreignKeyName: "reports_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: true
+            referencedRelation: "review_queue"
+            referencedColumns: ["session_id"]
+          },
+          {
+            foreignKeyName: "reports_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: true
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: true
+            referencedRelation: "term_sessions"
+            referencedColumns: ["session_id"]
+          },
+        ]
+      }
+      review_decisions: {
+        Row: {
+          decided_at: string
+          decision: Database["public"]["Enums"]["review_decision"]
+          exam_id: string
+          note: string | null
+          reviewer_id: string
+          session_id: string
+        }
+        Insert: {
+          decided_at?: string
+          decision: Database["public"]["Enums"]["review_decision"]
+          exam_id: string
+          note?: string | null
+          reviewer_id: string
+          session_id: string
+        }
+        Update: {
+          decided_at?: string
+          decision?: Database["public"]["Enums"]["review_decision"]
+          exam_id?: string
+          note?: string | null
+          reviewer_id?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_decisions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exam_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "review_decisions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "review_decisions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "student_overview"
+            referencedColumns: ["last_exam_id"]
+          },
+          {
+            foreignKeyName: "review_decisions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "term_exams"
+            referencedColumns: ["exam_id"]
+          },
+          {
+            foreignKeyName: "review_decisions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "term_sessions"
+            referencedColumns: ["exam_id"]
+          },
+          {
+            foreignKeyName: "review_decisions_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "review_decisions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: true
+            referencedRelation: "review_queue"
+            referencedColumns: ["session_id"]
+          },
+          {
+            foreignKeyName: "review_decisions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: true
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "review_decisions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: true
+            referencedRelation: "term_sessions"
+            referencedColumns: ["session_id"]
           },
         ]
       }
@@ -639,6 +1368,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "session_commands_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "student_overview"
+            referencedColumns: ["last_exam_id"]
+          },
+          {
+            foreignKeyName: "session_commands_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "term_exams"
+            referencedColumns: ["exam_id"]
+          },
+          {
+            foreignKeyName: "session_commands_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "term_sessions"
+            referencedColumns: ["exam_id"]
+          },
+          {
             foreignKeyName: "session_commands_issued_by_fkey"
             columns: ["issued_by"]
             isOneToOne: false
@@ -649,8 +1399,22 @@ export type Database = {
             foreignKeyName: "session_commands_session_id_fkey"
             columns: ["session_id"]
             isOneToOne: false
+            referencedRelation: "review_queue"
+            referencedColumns: ["session_id"]
+          },
+          {
+            foreignKeyName: "session_commands_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
             referencedRelation: "sessions"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_commands_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "term_sessions"
+            referencedColumns: ["session_id"]
           },
         ]
       }
@@ -671,6 +1435,8 @@ export type Database = {
           pause_event_id: string | null
           paused_s: number
           receipt_id: string | null
+          rules_accepted_at: string | null
+          rules_locale: Database["public"]["Enums"]["locale"] | null
           self_paused_s: number
           started_at: string | null
           state: Database["public"]["Enums"]["session_state"]
@@ -695,6 +1461,8 @@ export type Database = {
           pause_event_id?: string | null
           paused_s?: number
           receipt_id?: string | null
+          rules_accepted_at?: string | null
+          rules_locale?: Database["public"]["Enums"]["locale"] | null
           self_paused_s?: number
           started_at?: string | null
           state?: Database["public"]["Enums"]["session_state"]
@@ -719,6 +1487,8 @@ export type Database = {
           pause_event_id?: string | null
           paused_s?: number
           receipt_id?: string | null
+          rules_accepted_at?: string | null
+          rules_locale?: Database["public"]["Enums"]["locale"] | null
           self_paused_s?: number
           started_at?: string | null
           state?: Database["public"]["Enums"]["session_state"]
@@ -740,6 +1510,34 @@ export type Database = {
             columns: ["exam_id"]
             isOneToOne: false
             referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "student_overview"
+            referencedColumns: ["last_exam_id"]
+          },
+          {
+            foreignKeyName: "sessions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "term_exams"
+            referencedColumns: ["exam_id"]
+          },
+          {
+            foreignKeyName: "sessions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "term_sessions"
+            referencedColumns: ["exam_id"]
+          },
+          {
+            foreignKeyName: "sessions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "student_overview"
             referencedColumns: ["id"]
           },
           {
@@ -800,8 +1598,10 @@ export type Database = {
           group_id: string | null
           id: string
           locale: Database["public"]["Enums"]["locale"]
+          programme: string | null
           student_number: string
           workspace_id: string
+          year: number | null
         }
         Insert: {
           email?: string | null
@@ -809,8 +1609,10 @@ export type Database = {
           group_id?: string | null
           id?: string
           locale?: Database["public"]["Enums"]["locale"]
+          programme?: string | null
           student_number: string
           workspace_id: string
+          year?: number | null
         }
         Update: {
           email?: string | null
@@ -818,8 +1620,10 @@ export type Database = {
           group_id?: string | null
           id?: string
           locale?: Database["public"]["Enums"]["locale"]
+          programme?: string | null
           student_number?: string
           workspace_id?: string
+          year?: number | null
         }
         Relationships: [
           {
@@ -843,6 +1647,7 @@ export type Database = {
           created_at: string | null
           id: string
           name: string
+          settings: Json
           slug: string
           timezone: string
         }
@@ -850,6 +1655,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           name: string
+          settings?: Json
           slug: string
           timezone?: string
         }
@@ -857,6 +1663,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           name?: string
+          settings?: Json
           slug?: string
           timezone?: string
         }
@@ -910,17 +1717,402 @@ export type Database = {
           },
         ]
       }
+      review_queue: {
+        Row: {
+          decided_at: string | null
+          decision: Database["public"]["Enums"]["review_decision"] | null
+          exam_id: string | null
+          faculty_id: string | null
+          first_flag_at: string | null
+          flag_types: string[] | null
+          flags: number | null
+          last_flag_received_at: string | null
+          open_flags: number | null
+          session_id: string | null
+          student_id: string | null
+          workspace_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exams_faculty_id_fkey"
+            columns: ["faculty_id"]
+            isOneToOne: false
+            referencedRelation: "faculties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exams_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exam_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "student_overview"
+            referencedColumns: ["last_exam_id"]
+          },
+          {
+            foreignKeyName: "sessions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "term_exams"
+            referencedColumns: ["exam_id"]
+          },
+          {
+            foreignKeyName: "sessions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "term_sessions"
+            referencedColumns: ["exam_id"]
+          },
+          {
+            foreignKeyName: "sessions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "student_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_overview: {
+        Row: {
+          email: string | null
+          exams_taken: number | null
+          faculty_id: string | null
+          faculty_name: string | null
+          flags: number | null
+          full_name: string | null
+          group_code: string | null
+          group_id: string | null
+          id: string | null
+          last_exam_at: string | null
+          last_exam_id: string | null
+          last_exam_title: string | null
+          latest_decision: Database["public"]["Enums"]["review_decision"] | null
+          latest_decision_at: string | null
+          locale: Database["public"]["Enums"]["locale"] | null
+          programme: string | null
+          sessions_in_review: number | null
+          student_number: string | null
+          workspace_id: string | null
+          year: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "groups_faculty_id_fkey"
+            columns: ["faculty_id"]
+            isOneToOne: false
+            referencedRelation: "faculties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      term_decisions: {
+        Row: {
+          all_faculties: boolean | null
+          decision: Database["public"]["Enums"]["review_decision"] | null
+          faculty_id: string | null
+          sessions: number | null
+          term: string | null
+          term_start: string | null
+          workspace_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exams_faculty_id_fkey"
+            columns: ["faculty_id"]
+            isOneToOne: false
+            referencedRelation: "faculties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exams_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      term_exams: {
+        Row: {
+          day: string | null
+          duration_min: number | null
+          exam_id: string | null
+          faculty_id: string | null
+          starts_at: string | null
+          term: string | null
+          term_start: string | null
+          week_start: string | null
+          workspace_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exams_faculty_id_fkey"
+            columns: ["faculty_id"]
+            isOneToOne: false
+            referencedRelation: "faculties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exams_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      term_flag_types: {
+        Row: {
+          all_faculties: boolean | null
+          faculty_id: string | null
+          flags: number | null
+          term: string | null
+          term_start: string | null
+          type: string | null
+          workspace_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exams_faculty_id_fkey"
+            columns: ["faculty_id"]
+            isOneToOne: false
+            referencedRelation: "faculties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exams_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      term_kpis: {
+        Row: {
+          all_faculties: boolean | null
+          committee: number | null
+          decisions: number | null
+          exams_run: number | null
+          faculty_id: string | null
+          first_day: string | null
+          flagged_sessions: number | null
+          flags: number | null
+          last_day: string | null
+          sessions: number | null
+          term: string | null
+          term_start: string | null
+          workspace_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exams_faculty_id_fkey"
+            columns: ["faculty_id"]
+            isOneToOne: false
+            referencedRelation: "faculties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exams_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      term_review_time: {
+        Row: {
+          all_faculties: boolean | null
+          decisions: number | null
+          faculty_id: string | null
+          median_review_s: number | null
+          term: string | null
+          term_start: string | null
+          week_start: string | null
+          workspace_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exams_faculty_id_fkey"
+            columns: ["faculty_id"]
+            isOneToOne: false
+            referencedRelation: "faculties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exams_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      term_sessions: {
+        Row: {
+          day: string | null
+          decided_at: string | null
+          decision: Database["public"]["Enums"]["review_decision"] | null
+          duration_min: number | null
+          exam_id: string | null
+          faculty_id: string | null
+          flags: number | null
+          session_id: string | null
+          starts_at: string | null
+          term: string | null
+          term_start: string | null
+          week_start: string | null
+          workspace_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exams_faculty_id_fkey"
+            columns: ["faculty_id"]
+            isOneToOne: false
+            referencedRelation: "faculties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exams_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      term_weekly_flags: {
+        Row: {
+          all_faculties: boolean | null
+          exams: number | null
+          faculty_id: string | null
+          flags: number | null
+          flags_per_100: number | null
+          sessions: number | null
+          term: string | null
+          term_start: string | null
+          week_start: string | null
+          workspace_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exams_faculty_id_fkey"
+            columns: ["faculty_id"]
+            isOneToOne: false
+            referencedRelation: "faculties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exams_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
+      add_session_note: {
+        Args: { session_id: string; text: string }
+        Returns: string
+      }
+      assign_proctors: { Args: { exam_id: string; rows: Json }; Returns: Json }
+      assignment_json: {
+        Args: { p_exam_id: string; p_staff_id: string }
+        Returns: Json
+      }
+      audit_read: {
+        Args: { action: string; object_id?: string; object_type: string }
+        Returns: undefined
+      }
+      call_edge_function: {
+        Args: { p_body?: Json; p_name: string }
+        Returns: number
+      }
       can_read_topic: { Args: { p_topic: string }; Returns: boolean }
+      close_help_request: {
+        Args: { id: string; reply?: string }
+        Returns: Json
+      }
       confirm_frames: {
         Args: { p_event_id: string; p_paths: string[] }
         Returns: string[]
       }
+      confirm_seats: {
+        Args: { change_request?: string; exam_id: string }
+        Returns: Json
+      }
+      create_share: { Args: { report_id: string }; Returns: Json }
+      decide_session: {
+        Args: {
+          decision: Database["public"]["Enums"]["review_decision"]
+          note?: string
+          session_id: string
+        }
+        Returns: Json
+      }
+      exam_code_base: {
+        Args: {
+          p_course: string
+          p_group: string
+          p_starts_at: string
+          p_tz: string
+        }
+        Returns: string
+      }
+      exam_code_latin: { Args: { p: string }; Returns: string }
+      exam_draft_json: { Args: { p_exam_id: string }; Returns: Json }
+      exam_has_open_flags: { Args: { p_exam_id: string }; Returns: boolean }
       exam_question_count: { Args: { exam_id: string }; Returns: number }
       exam_started: { Args: { p_exam_id: string }; Returns: boolean }
       exam_workspace: { Args: { p_exam_id: string }; Returns: string }
+      get_report: { Args: { session_id: string }; Returns: Json }
       has_session_in: { Args: { p_exam_id: string }; Returns: boolean }
+      help_broadcast: { Args: { p_id: string }; Returns: undefined }
+      help_json: { Args: { p_id: string }; Returns: Json }
+      import_roster: { Args: { exam_id: string; rows: Json }; Returns: Json }
       ingest_batch: {
         Args: {
           p_events: Json
@@ -930,6 +2122,7 @@ export type Database = {
         }
         Returns: Json
       }
+      is_admin: { Args: never; Returns: boolean }
       is_anonymous: { Args: never; Returns: boolean }
       is_exam_staff: { Args: { p_exam_id: string }; Returns: boolean }
       is_final_state: {
@@ -960,7 +2153,17 @@ export type Database = {
         }
         Returns: Json
       }
+      json_number_between: {
+        Args: { p: Json; p_int?: boolean; p_max: number; p_min: number }
+        Returns: boolean
+      }
       make_receipt_id: { Args: { p_student_id: string }; Returns: string }
+      make_verify_code: {
+        Args: { p_content_hash: string; p_report_id: string }
+        Returns: string
+      }
+      normalize_verify_code: { Args: { p: string }; Returns: string }
+      open_shared_report: { Args: { p_token_hash: string }; Returns: Json }
       owns_session: { Args: { p_session_id: string }; Returns: boolean }
       pending_pause_s: {
         Args: { s: Database["public"]["Tables"]["sessions"]["Row"] }
@@ -968,6 +2171,55 @@ export type Database = {
       }
       pre_exam_rank: { Args: { p_state: string }; Returns: number }
       receipt_initial: { Args: { p_word: string }; Returns: string }
+      report_content: { Args: { p_session_id: string }; Returns: Json }
+      report_content_hash: { Args: { p_session_id: string }; Returns: string }
+      report_payload: { Args: { p_session_id: string }; Returns: Json }
+      report_sync: {
+        Args: { p_actor: string; p_session_id: string }
+        Returns: {
+          content_hash: string
+          created_at: string
+          created_by: string
+          exam_id: string
+          id: string
+          issued_at: string
+          session_id: string
+          verify_code: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "reports"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      request_pilot: {
+        Args: {
+          demo_invite?: boolean
+          email: string
+          exam_size?: string
+          message?: string
+          name: string
+          pilot_month?: string
+          role?: string
+          university: string
+        }
+        Returns: Json
+      }
+      retention_due: {
+        Args: { p_limit?: number }
+        Returns: {
+          captured_at: string
+          event_id: string
+          exam_id: string
+          frame_id: string
+          session_id: string
+          storage_path: string
+          workspace_id: string
+        }[]
+      }
+      save_exam_draft: { Args: { exam: Json }; Returns: Json }
+      schedule_exam: { Args: { exam_id: string }; Returns: Json }
       session_ends_at: {
         Args: { s: Database["public"]["Tables"]["sessions"]["Row"] }
         Returns: string
@@ -980,6 +2232,24 @@ export type Database = {
       session_tick: { Args: never; Returns: Json }
       start_exam: { Args: { exam_id: string }; Returns: Json }
       submit_session: { Args: { session_id: string }; Returns: Json }
+      term_key: { Args: { d: string }; Returns: string }
+      term_start: { Args: { d: string }; Returns: string }
+      try_uuid: { Args: { p: string }; Returns: string }
+      valid_browser_rules: { Args: { p: Json }; Returns: boolean }
+      valid_checks: { Args: { p: Json }; Returns: boolean }
+      valid_settings: { Args: { p: Json }; Returns: boolean }
+      verify_report: { Args: { code: string }; Returns: Json }
+      write_audit: {
+        Args: {
+          p_action: string
+          p_actor_kind: string
+          p_meta?: Json
+          p_object_id: string
+          p_object_type: string
+          p_workspace: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       command_type:
@@ -989,6 +2259,8 @@ export type Database = {
         | "message"
         | "add_time"
         | "start"
+      data_request_kind: "delete" | "copy"
+      data_request_status: "received" | "done" | "replied"
       event_review: "flag" | "log" | "none"
       event_source: "app" | "lock" | "proctor" | "server"
       exam_mode: "app" | "browser"
@@ -999,7 +2271,9 @@ export type Database = {
         | "to_review"
         | "reviewed"
         | "cancelled"
+      invite_state: "pending" | "sent" | "failed" | "bounced"
       locale: "kk" | "ru" | "en"
+      review_decision: "no_issue" | "talk" | "committee"
       session_state:
         | "joined"
         | "checking"
@@ -1143,6 +2417,8 @@ export const Constants = {
   public: {
     Enums: {
       command_type: ["pause", "resume", "end", "message", "add_time", "start"],
+      data_request_kind: ["delete", "copy"],
+      data_request_status: ["received", "done", "replied"],
       event_review: ["flag", "log", "none"],
       event_source: ["app", "lock", "proctor", "server"],
       exam_mode: ["app", "browser"],
@@ -1154,7 +2430,9 @@ export const Constants = {
         "reviewed",
         "cancelled",
       ],
+      invite_state: ["pending", "sent", "failed", "bounced"],
       locale: ["kk", "ru", "en"],
+      review_decision: ["no_issue", "talk", "committee"],
       session_state: [
         "joined",
         "checking",

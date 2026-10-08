@@ -42,6 +42,8 @@ export const EVENT_KIND: Record<EventType, EventRowKind> = {
   "student.help_requested": "warn",
   "lock.app_disconnected": "flag",
   "lock.fullscreen_exit": "warn",
+  // Phase 1: a proctor's note (add_session_note); timeline only, never in Live events.
+  "proctor.note": "info",
 };
 
 /** The dot of one stored event: a third full-screen exit is a flag, so it turns red. */
@@ -194,6 +196,10 @@ function detailOf(event: CompactEvent, context: EventCopyContext): WallMessage |
     case "lock.fullscreen_exit": {
       const count = num(data, "count");
       return count === undefined ? undefined : message(key(event.type, "detail"), { count });
+    }
+    case "proctor.note": {
+      const text = str(data, "text");
+      return text === undefined ? undefined : message(key(event.type, "detail"), { text });
     }
     default:
       return undefined;

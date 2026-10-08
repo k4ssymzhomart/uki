@@ -32,6 +32,8 @@ export const EVENT_TYPES = [
   "student.help_requested",
   "lock.app_disconnected",
   "lock.fullscreen_exit",
+  // Phase 1
+  "proctor.note",
 ] as const;
 export const EventType = z.enum(EVENT_TYPES);
 export type EventType = z.infer<typeof EventType>;
@@ -90,6 +92,8 @@ export const REVIEW: Record<(typeof EVENT_TYPES)[number], "flag" | "log" | "none
   "student.help_requested": "log",
   "lock.app_disconnected": "flag",
   "lock.fullscreen_exit": "log", // the third exit in a session is a flag
+  // Phase 1: a proctor's note on 2.5 and 3.3 (add_session_note) stays on the timeline only.
+  "proctor.note": "none",
 };
 
 /** From this many full-screen exits in one session on, lock.fullscreen_exit is a flag. */
@@ -115,6 +119,8 @@ export const PROCTOR_EVENT_TYPES = [
   "proctor.ended",
   "proctor.time_added",
   "proctor.message",
+  // Phase 1: add_session_note writes it.
+  "proctor.note",
 ] as const satisfies readonly EventType[];
 
 /** Event types a client (the app, or Üki Lock through the app) may send to `ingest`. */
@@ -155,6 +161,9 @@ export type HelpTopic = z.infer<typeof HelpTopic>;
 /** `lock` when the extension or browser went away, `app` after an app crash. */
 export const DisconnectSide = z.enum(["lock", "app"]);
 export type DisconnectSide = z.infer<typeof DisconnectSide>;
+
+/** A proctor.note's text: what add_session_note accepts (AddSessionNoteInput in review.ts). */
+export const SESSION_NOTE_TEXT_MAX = 500;
 
 /** A blocked app's display name from blocked-apps.ts, like "Telegram". */
 export const BlockedAppName = z.string().min(1).max(100);
@@ -208,6 +217,8 @@ export const EVENT_DATA = {
   "student.help_requested": z.object({ topic: HelpTopic, text: MessageText.optional() }),
   "lock.app_disconnected": z.object({ side: DisconnectSide }),
   "lock.fullscreen_exit": z.object({ count: z.number().int().min(1) }),
+  // Phase 1
+  "proctor.note": z.object({ text: z.string().trim().min(1).max(SESSION_NOTE_TEXT_MAX), staff_id: Uuid }),
 } as const satisfies Record<EventType, z.ZodType>;
 
 export type EventData<T extends EventType> = z.infer<(typeof EVENT_DATA)[T]>;

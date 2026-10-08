@@ -20,7 +20,7 @@ Everything marked pass below ran on one shared development Mac (Apple M4, 16 GB,
 | 0.3 | `pnpm db:reset` and `supabase test db` pass | Agent | pass | 7 migrations + seed apply; pgTAP 7 files, 311 tests (RLS for exam office, assigned proctor, other proctor, session owner, other student; join_exam codes; session states; pause credit; triggers) | 2026-10-07 |
 | 0.3 | `pnpm seed:staff` creates the four staff accounts | Agent | pass | Idempotent on a second run | 2026-10-07 |
 | 0.3 | `supabase test db` with the five migrations added later on 2026-10-07 (`20261007200000` to `20261007221100`) | Agent | pass | 8 files, 390 tests, run twice. Includes `08_command_followups` (55 assertions). The review's regression cases fail against the old policies and functions | 2026-10-07 |
-| 0.3 | A clean `pnpm db:reset` applies all 12 migrations and the seed | Agent | pending | All 12 are applied on the local database (`supabase_migrations.schema_migrations`). The last four were applied one at a time, with `migration up` or with psql plus a `schema_migrations` row, because the CLI timed out on the loaded laptop. No reset has run since the 8th migration; CI's `supabase start` will do one | |
+| 0.3 | A clean `pnpm db:reset` applies all 13 migrations and the seed | Agent | pass | P.9 below: `supabase db reset` on a fresh second stack applied the 13 Phase 0 migrations and `seed.sql` in one run, and pgTAP passed 8 files with 404 tests | 2026-10-08 |
 | 0.3 | Every public table has row-level security | Agent | pass | `pg_class` query on the local database: all 17 tables in `public` have `relrowsecurity` on | 2026-10-07 |
 | 0.4 | 50 events stored once with the server's review value | Agent | pass | `pnpm test:integration` 65/65, three runs | 2026-10-07 |
 | 0.4 | A staff client gets the broadcast within 1 s | Agent | pass | Local: event broadcast median 9 ms, max 11.9 ms (n=5); cloud latency from Kostanay pending (WP 0.10/0.11) | 2026-10-07 |
@@ -174,3 +174,27 @@ The rest of the run:
 - **Receipt:** `UKI-204-6677-MT`, with a 27,733-byte PDF.
 
 After the run, `ps` showed no Electron process left and `ioreg` reported `IOConsoleLocked = No`. The app that had been in front before the run was in front again, so the Mac was not left locked.
+
+## P.9 clean db reset
+
+On 2026-10-08, P.9 ran on a second local Supabase stack. The stack used project `uki-p1` on ports 548xx and the same CLI as CI (2.107.0). The scratch config copied `supabase/config.toml` with only the project id and ports changed, and it linked `migrations/`, `seed.sql` and `tests/` from the `wp/1.1-schema` worktree at `origin/main` (33a7a78). The main stack on 547xx was left alone.
+
+- `supabase start -x vector,logflare,imgproxy,studio,edge-runtime`, then `supabase db reset` (29 s). The reset recreated the database and applied all 13 migrations in one run, with no error and no manual step:
+  1. `20261007115920_core.sql`
+  2. `20261007115925_helpers_rls.sql`
+  3. `20261007115927_rpc.sql`
+  4. `20261007115930_internals.sql`
+  5. `20261007115933_realtime_triggers.sql`
+  6. `20261007115936_storage.sql`
+  7. `20261007115938_cron.sql`
+  8. `20261007200000_command_followups.sql`
+  9. `20261007210000_ingest_performance.sql`
+  10. `20261007213000_pause_credit_server_only.sql`
+  11. `20261007221000_answers_until_real_end.sql`
+  12. `20261007221100_ingest_last_seen_every_call.sql`
+  13. `20261008090000_proctor_pause_ends_by_proctor.sql`
+
+  Then it seeded `seed.sql` and created the `frames` bucket from `config.toml`.
+- `supabase test db`: pass, 8 files and 404 tests. Per file: `01_rls` 86, `02_join_exam` 40, `03_start_submit` 34, `04_session_states` 63, `05_ingest_frames` 50, `06_commands` 48, `07_realtime` 28, `08_command_followups` 55.
+- This closes the 0.3 row above. These 13 migrations were applied to the main local stack one at a time, partly by hand, under load. A full reset through the CLI now applies them cleanly. CI's `supabase start` repeats the reset on every push. The same reset with the Phase 1 migration added is evidence for WP 1.1 in `docs/phase-1-exit.md`.
+
