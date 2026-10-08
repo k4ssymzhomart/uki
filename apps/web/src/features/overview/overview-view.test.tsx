@@ -118,7 +118,7 @@ describe("0.1 Overview", () => {
     expect(titles()).toEqual(["Physics 1 · Quiz 3"]);
   });
 
-  it("opens the next exam's lobby from its card, and hides Import CSV and New exam", () => {
+  it("opens the next exam's lobby from its card, and hides Import CSV", () => {
     renderOverview();
     expect(screen.getByText("Mathematics 2 · 10:00")).toBeTruthy();
     expect(screen.getByText("Lobby opens at 09:40. 128 students, 2 proctors.")).toBeTruthy();
@@ -127,6 +127,44 @@ describe("0.1 Overview", () => {
     );
     expect(screen.getByText("Before Friday")).toBeTruthy();
     expect(screen.queryByText("Import CSV")).toBeNull();
-    expect(screen.queryByText("New exam")).toBeNull();
+  });
+
+  it("gives the exam office New exam (WP 1.3) and opens a draft in its wizard", () => {
+    renderOverview();
+    expect(screen.getByRole("button", { name: "New exam" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Linear Algebra · Final" }).getAttribute("href")).toBe(
+      "/exams/e0000000-0000-4000-8000-000000000004/edit/details",
+    );
+  });
+
+  it("shows a proctor no New exam, and a draft's row still leads to its lobby", () => {
+    renderWithIntl(<OverviewView rows={rows} groupCount={4} readiness={null} nowMs={now} />, {
+      ...DANA,
+      role: "proctor",
+    });
+    expect(screen.queryByRole("button", { name: "New exam" })).toBeNull();
+    expect(screen.getByRole("link", { name: "Linear Algebra · Final" }).getAttribute("href")).toBe(
+      "/exams/e0000000-0000-4000-8000-000000000004/lobby",
+    );
+  });
+
+  it("links the exam office to the next exam's roster when an invite bounced (0.3b)", () => {
+    renderWithIntl(
+      <OverviewView rows={rows} groupCount={4} readiness={{ ready: 127, total: 128 }} nowMs={now} />,
+      DANA,
+    );
+    expect(screen.getByRole("link", { name: "Fix 1 address" }).getAttribute("href")).toBe(
+      "/exams/e0000000-0000-4000-8000-000000000001/edit/roster",
+    );
+    renderOverview();
+    expect(screen.getAllByRole("link", { name: /^Fix \d+ address/ })).toHaveLength(1);
+  });
+
+  it("gives a proctor no roster link", () => {
+    renderWithIntl(
+      <OverviewView rows={rows} groupCount={4} readiness={{ ready: 127, total: 128 }} nowMs={now} />,
+      { ...DANA, role: "proctor" },
+    );
+    expect(screen.queryByRole("link", { name: "Fix 1 address" })).toBeNull();
   });
 });

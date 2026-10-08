@@ -903,3 +903,63 @@ Choices WP 1.9 makes for 3.4, 3.5, the share link, the `shared-report` function 
 - The code is accepted with or without the prefix, spaces or hyphens (`normalize_verify_code`). Neither 3.4 nor 3.5 prints where to verify, since no frame has that string.
 
 **Strings.** 59 keys in `packages/i18n/dashboard-report.json`, English from 3.4 and 3.5. Keys without a Figma source: `doc.identity` (matchedNoTime and other arms), `doc.noProctor`, `doc.noFlags`, `doc.still` (alt text), `doc.notes`, `doc.noteDetail`, `doc.decision` (other arm), `share.copy`, `share.copied`, `share.once`, `share.failed`, `shared.banner` (no-name arm), `shared.decisionNote` (no_issue and committee arms), `verify.*`, `notFound.*`, `breadcrumb` (Review in place of Reports). The Russian is a first pass for P.18.
+
+## 2026-10-08 · 1.3 Exam wizard
+
+Decided by the WP 1.3 agent while building 0.4, 0.2, 0.2a, E.1, 0.3, 0.3a, 0.3b and 0.5. Where the plan and a frame disagree, the plan decides behaviour and the frame decides visuals.
+
+**Flow and saving**
+- `/exams/new` makes the draft with `save_exam_draft` and redirects to `/exams/[examId]/edit/details`, as the plan says. 0.1's New exam (exam office and admin only) is a button that calls the same server action, not a link, so no prefetch ever makes a draft. Import CSV stays hidden: no Phase 1 frame imports exams. A draft's row on 0.1 opens its wizard for the exam office; a proctor's still opens the lobby.
+- Every change saves into the draft after a 500 ms pause; Next and Back wait for the save, and leaving the page sends what is left. A refresh or a second tab therefore loses nothing (e2e: a check changed on 0.2 survives a reload; the title survives Back).
+- The stepper has the frames' four items. E.1 is part of Checks: Next on 0.2 goes to E.1 for a browser exam, as the plan says, and E.1's top bar reads "Browser rules" as the frame does. From 0.2 on, the breadcrumb is "Exams / <exam title>", as 0.2, E.1, 0.3 and 0.5 draw it.
+- A scheduled exam opens only its roster page (0.3b fixes a bounced address after the invites went out); its other wizard pages lead there. A live or finished exam's wizard leads to its lobby.
+- 0.5's Save draft returns to 0.1 (everything is saved already). Schedule exam returns to 0.1 with `?scheduled=<code>`, and 0.1 shows the code in a toast once; a schedule_exam problem shows on 0.5 with a link to the step that fixes it.
+
+**0.4 Details**
+- Course is a text field with the workspace's earlier courses offered while typing, drawn like the frame's select: there is no course table. Type offers Midterm, Final, Quiz and Test and stores the English word, as the seed does, so the app's `exam.type.<kind>` keys still apply.
+- Popover/Date picker (147:2727) is built in `features/wizard/date-picker.tsx`; the kit has no date picker. The frame has no control for the start time, so its footer line holds a 24-hour HH:MM field (a native time field showed AM and PM in Chromium).
+- At a glance shows the exam's `rules_locale` (Kazakh when unset) as "Қазақша, then РУС, ENG"; no frame lets the exam office change it, so the wizard does not.
+
+**0.2 and 0.2a Checks**
+- `exams.checks` switches only the Browser lock (`lock`) and the Identity check (`identity`). Gaze control, phone detection and second person always run on the laptop, and the microphone is never used, so those four rows are fixed (the switch is drawn disabled, which is lighter than the frame's switches).
+- The thresholds offer 0.2a's three gaze values (1, 2 and 3 s) and phone confidence 0.75 to 0.95.
+- 0.2a's "How gaze control works" is hidden: there is no page for it.
+- The Student preview shows the student app's own 1.4 lines from the catalog (`rules.window.body`, `rules.eyes.body` with this exam's seconds, `rules.phone.body`, `identity.title`, `rules.video.title`) in ҚАЗ, РУС or ENG, so the preview is what the student will read. The frame's wording differs a little, and its Kazakh text does not exist; no catalog key was added.
+- The 3D laptop shield is the desktop app's `uki-3d-laptop-shield.png`, byte for byte the Figma export of the frame's asset.
+
+**E.1 Browser rules**
+- Block developer tools and Block screen sharing are fixed by Phase 0 and carry its labels, "University-managed computers only" and "Detected" (Phase 1 plan, Scope). Pause other extensions is Phase 2, so its row is hidden.
+- The calculator is the "Calculator · built in" chip: its close button turns `browser_rules.calculator` off, and an "Add the calculator" chip turns it back on. The exam's own host comes from the exam link and cannot be removed.
+- The preview is the kit's Lock popup with the catalog's Lock strings, as the Lock shows it in Phase 0 (no Other extensions row); "3 open" is a sample. "Test as a student" and its note are hidden: nothing in Phase 1 opens an exam in a locked window from the dashboard.
+
+**0.3, 0.3a and 0.3b Roster**
+- The header row is matched by name (English, Russian and Kazakh spellings); without one, the plan's column order applies. The plan's columns stand (Open questions): the empty drop zone's caption names the language column too, and a file with no language column gives every student Kazakh, so Figma's four-column export also works.
+- "Row 17" counts data rows, the first after the header being 1.
+- The frame's error list has no action, while the plan says Edit opens 0.3b: each bad row gets an Edit that opens a panel in 0.3b's layout for the row's first problem (the old value struck through, the new value; a select for the group and the language). Its titles beyond "Fix <name>’s email" are new keys. The valid rows' Edit changes the address.
+- Nothing is written while a row has a problem. The file is imported as soon as its last problem is fixed, or when the exam office presses the frame's "Skip N rows", which imports only the valid rows. "Download error report" writes a CSV in the browser. "Upload fixed file" and "Replace file" pick a new file; `import_roster` replaces the roster, so a second import adds nobody.
+- The file's name and counts are kept in the browser (local storage, per viewer) for the card and 0.5; without them the card reads "Roster".
+- 0.3's third tab is "Needs a fix" (0.3a and 0.3b draw it) instead of "Not opened": opens are not tracked. After the import it counts bounced and failed invites; before it, the file's bad rows.
+- The proctors card has no editing frame: Add proctor and a click on a proctor open a dialog with the proctor, the seats and the languages, suggesting the seats after the last range. A gap or an overlap is refused before and by `assign_proctors`, with new messages naming the seats. Each proctor's chip is Confirmed, Not confirmed or Change requested from `confirmed_at` and `change_request` (0.9a), where the frame shows Confirmed for both. Languages are listed Kazakh, Russian, English.
+- 0.3b names the student by the first name, as the frame does ("Fix Yerlan’s email"). Save upserts the invite (the Phase 0 seed has no `invites` rows), back to `pending`; "Also fix it in the roster for later exams" also writes `students.email`.
+- Reading the roster writes one `audit_log` row (`roster.view` on the exam) through `audit_read`.
+
+**send-invites (WP 1.4)**
+- The wizard calls WP 1.4's `send-invites` as the signed-in exam office member, with `SendInvitesInput` and `SendInvitesOutput` from `@uki/contracts`. `SEND_INVITES_READY` and the wizard's own copy of those schemas (`features/wizard/send-invites.ts`) are gone, so nothing can switch the invites off again by mistake. 0.3b's input and the Resend input are contracts too (`FixInviteEmailInput`, `ResendInviteInput` in `wizard.ts`). The PostgREST row shapes the wizard reads (`RosterEntry`, `WizardGroup`, `WizardProctor`) stay next to their queries, as every other dashboard feature keeps its rows.
+- Send a test invite (0.5) sends `{ exam_id, test: true }`. send-invites writes it for the roster's first student and answers 409 on an empty roster, so the button is disabled until the roster has a student, with "The test invite is written for the first student, so it waits for the roster." (`review.testInviteNeedsRoster`, a new key in place of `review.invitesUnavailable`). The toast says sent only when the reply has one email sent and nothing failed.
+- Schedule exam runs `schedule_exam`, then `send-invites` with `{ exam_id }`, then returns to 0.1. The exam stays scheduled whatever the send does. The action then counts the exam's invites that are not `sent` (under RLS, so a call that failed as a whole counts every invite) and, when there are any, 0.1's address carries `&exam=<id>&unsent=<n>`: a second toast says "N invites did not go out. The roster says why." with Open roster, which opens 0.3 for that exam, where each such row reads Not sent · error or Email bounced and has Fix email. New keys: `overview.unsent`, `overview.openRoster`. The query string is checked (`parseScheduledNotice`): the code with the contracts' `ExamCode`, the exam with `Uuid`, the count as a whole number up to the roster limit.
+- 0.3's Resend sends `{ exam_id, student_ids: [id] }` (`resendInvite`) and says the outcome in a toast (`roster.resent`, `roster.resendFailed`, new keys); the row's chip follows after the refresh.
+- 0.3b's Save puts the invite back to `pending` with the new address (as before), and on a scheduled exam then calls send-invites with that student's id, so the fixed address gets its invite at once; the row then reads Sent · not opened, or Not sent · error with the reason. A draft's invite waits for Schedule exam.
+- **0.1 links a bounced invite to its roster.** A scheduled exam opens only its roster page in the wizard, but no frame leads there, so the exit criterion's "the seeded bounced address is fixed through 0.3b and resent" had no way in except the address bar. 0.1's readiness card already counts the next exam's bounced invites ("Roster 127 of 128"); for the exam office it now ends with "Fix 1 address →" to that exam's roster, drawn like the next-exam card's Open lobby, only while an invite has bounced (`wizard.overview.fixRoster`, a new key; added, not in Figma). Proctors do not get it: the wizard is the exam office's.
+
+**0.5 and a proctor's change request (with WP 1.5)**
+- The plan has the exam office see a change request "on 0.5 and in the exam's proctor table"; WP 1.5 left both to this package. 0.3's proctor card already reads Change requested. On 0.5 the proctor's row now ends with "change requested: “<the proctor's words>”" in place of "waiting for confirmation" (`review.people.changeRequested`, a new key; 0.5's frame draws only confirmed and waiting). The footer still names them as not confirmed, which a request is.
+
+**0.5's footer and the reminder**
+- **The reminder promise is hidden.** 0.5's footer for an unconfirmed proctor read "…You can schedule now; they get a reminder." No reminder email exists in Phase 1 (send-invites mails students only, and WP 1.5's 0.9a has no reminder), so the line now ends at "You can schedule now." (`review.footerWaiting`, in English and Russian). The frame's ", he gets a reminder" returns when a reminder is built, in Phase 2 at the earliest.
+
+**Untitled drafts on 0.1**
+- New exam makes the draft before 0.4 has a title, so a draft the exam office leaves at once would be a row on 0.1 with no name, no course and no groups, linking to a wizard nobody remembers. 0.1 leaves a draft with an empty title out of the table and the Upcoming count (`shownOnOverview`, applied where the rows are parsed, so the sidebar's counts agree). A draft shows again once it has a title. The empty drafts stay in the database; seed v2's `pnpm demo:reset` (WP 1.14) is to delete the exams the wizard made, these included.
+
+**Database**
+- `assign_proctors` emptied its scratch table with a bare `DELETE`, which PostgREST's pg-safeupdate refuses, so the dashboard could never save a proctor; pgTAP did not see it because it runs outside PostgREST. `20261011090000_assign_proctors_safeupdate.sql` replaces the function with `where true` on that statement and nothing else. `16_wizard_1_3` checks that no function in `public` deletes without a WHERE clause.
+- The migration was written as `20261010010000_…` and renamed before the merge to `20261011090000_…`, so it sorts after every migration on main (`20261010060000_help_topics.sql` landed meanwhile) and `supabase db push` accepts it; its pgTAP file became `16_wizard_1_3`, since main has `15_ask_proctor`. It was never on main under the old name.

@@ -78,15 +78,19 @@ export function navSections(
 }
 
 const EXAM_ROUTE = /^\/exams\/[^/]+\/(lobby|live)(?:\/|$)/;
+/** The new-exam wizard: /exams/new and /exams/[examId]/edit/* (0.4 to 0.5 mark Exams). */
+const WIZARD_ROUTE = /^\/exams\/(?:new|[^/]+\/edit)(?:\/|$)/;
 const startsWith = (pathname: string, base: string) => pathname === base || pathname.startsWith(`${base}/`);
 
 /**
  * The current sidebar item: Overview on /overview and a proctor's /my-exams (0.9 marks Overview); Live
- * on an exam's lobby and live wall (1.5 and 2.4); the Phase 1 items on their own routes.
+ * on an exam's lobby and live wall (1.5 and 2.4); Exams in the new-exam wizard (0.4 to 0.5); the Phase 1
+ * items on their own routes.
  */
 export function activeNav(pathname: string): NavId | null {
   if (pathname === "/overview" || startsWith(pathname, "/my-exams")) return "overview";
   if (EXAM_ROUTE.test(pathname)) return "live";
+  if (WIZARD_ROUTE.test(pathname)) return "exams";
   for (const [id, href] of Object.entries(NAV_HREFS)) {
     if (startsWith(pathname, href)) return id as NavId;
   }

@@ -438,3 +438,19 @@ export const Invite = z.object({
   sent_at: Timestamp.nullable(),
 });
 export type Invite = z.infer<typeof Invite>;
+
+/**
+ * 0.3b's Save (WP 1.3): a new address for one student's invite on the exam, and whether the student's
+ * roster address changes too, for later exams. The address is checked as the roster CSV checks it.
+ */
+export const FixInviteEmailInput = z.strictObject({
+  exam_id: Uuid,
+  student_id: Uuid,
+  email: RosterRow.shape.email,
+  roster: z.boolean(),
+});
+export type FixInviteEmailInput = z.infer<typeof FixInviteEmailInput>;
+
+/** 0.3's Resend (WP 1.3): one student's invite sent again, through send-invites with `student_ids`. */
+export const ResendInviteInput = z.strictObject({ exam_id: Uuid, student_id: Uuid });
+export type ResendInviteInput = z.infer<typeof ResendInviteInput>;

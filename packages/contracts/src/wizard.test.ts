@@ -10,10 +10,12 @@ import {
   DEFAULT_WORKSPACE_SETTINGS,
   ExamDraft,
   ExamDraftInput,
+  FixInviteEmailInput,
   ImportRosterInput,
   InviteStatus,
   ProctorAssignment,
   parseScheduleError,
+  ResendInviteInput,
   RosterRow,
   rosterLocale,
   SCHEDULE_PROBLEMS,
@@ -263,5 +265,26 @@ describe("settings and browser rules", () => {
 
   it("reads the lobby's invite_status, opened included", () => {
     expect(InviteStatus.options).toEqual(["pending", "sent", "failed", "bounced", "opened"]);
+  });
+});
+
+describe("the wizard's invite inputs (0.3, 0.3b)", () => {
+  const exam_id = uuidv7();
+  const student_id = uuidv7();
+
+  it("checks 0.3b's address as the roster checks it", () => {
+    const base = { exam_id, student_id, roster: true };
+    expect(FixInviteEmailInput.parse({ ...base, email: " Y.Tokhtarov@KRU.test " }).email).toBe(
+      "y.tokhtarov@kru.test",
+    );
+    expect(FixInviteEmailInput.safeParse({ ...base, email: "yerlan.kru.test" }).success).toBe(false);
+    expect(FixInviteEmailInput.safeParse({ ...base, email: "y@kru.test", extra: 1 }).success).toBe(false);
+    expect(FixInviteEmailInput.safeParse({ exam_id, student_id, email: "y@kru.test" }).success).toBe(false);
+  });
+
+  it("resends one student's invite", () => {
+    expect(ResendInviteInput.parse({ exam_id, student_id })).toEqual({ exam_id, student_id });
+    expect(ResendInviteInput.safeParse({ exam_id, student_id: "20230877" }).success).toBe(false);
+    expect(ResendInviteInput.safeParse({ exam_id }).success).toBe(false);
   });
 });
