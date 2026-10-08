@@ -1,5 +1,6 @@
 # Unsigned Phase 0 installers ("Builds" in docs/phase-0-plan.md): dmg for macOS arm64 and x64, NSIS for
-# Windows x64. Build on the demo laptops themselves; runbook: docs/runbooks/demo-laptops.md.
+# Windows x64. Build the dmg on the MacBook itself and Windows on GitHub's Windows runners; runbook:
+# docs/runbooks/demo-laptops.md.
 # One arch on this machine: pnpm --filter desktop dist --mac dmg --arm64 (or --win nsis --x64 on Windows).
 # Run `pnpm --filter @uki/detection models` and `models:verify` first: the model binaries are not in git.
 appId: kz.uki.app

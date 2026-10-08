@@ -1,6 +1,6 @@
 // @vitest-environment node
 // The relay's one slot when Üki Lock is installed in two browsers (docs/runbooks/lock-pairing.md puts it
-// in Chrome and Edge on the demo laptop): a Lock that is not paired must not shut the paired one out.
+// in Chrome and Edge on a lab PC): a Lock that is not paired must not shut the paired one out.
 import { createServer as createNetServer, type Server as NetServer } from "node:net";
 import {
   type AppToLock,

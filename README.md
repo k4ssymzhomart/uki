@@ -109,16 +109,16 @@ docs/             The plan, the design handoff, decisions, exit evidence, runboo
 
 ## The demo
 
-The Demo Day script is in [docs/phase-0-plan.md](docs/phase-0-plan.md#script): a MacBook writes Mathematics 2 in the Üki app, a Windows laptop writes Physics 1 in the browser under Üki Lock, and the dashboard shows both. On the cloud project:
+The Demo Day script is in [docs/phase-0-plan.md](docs/phase-0-plan.md#script): on the student machine (a Windows 11 lab PC at the university if the organizers allow it, otherwise the MacBook Pro with its lockdown guard), Madina writes Mathematics 2 in the Üki app and Aliya writes Physics 1 in the browser under Üki Lock, and the dashboard shows both. On the cloud project:
 
 1. `pnpm demo:reset --env-file .env.cloud`: Mathematics 2 opens its lobby and starts in 15 minutes; Physics 1 is live.
 2. Dana signs in to the dashboard (A.0) and sees the overview (0.1); Aigerim opens the Mathematics 2 lobby (1.5).
 3. `pnpm demo:simulate --env-file .env.cloud`: 120 simulated students join and check in; three need help. They are marked `device.simulated` and the presenter says so on stage.
-4. Madina's MacBook joins with `MATH2-204-FRI` and `20231187`, passes 1.2 to 1.4; Aigerim presses Start exam.
+4. Madina joins on the student machine with `MATH2-204-FRI` and `20231187`, passes 1.2 to 1.4; Aigerim presses Start exam.
 5. The wall (2.4) fills with the simulated moments (looks away, a blocked tab, a second face, a phone at 0.94, an empty seat, a lost camera, a student with no signal, early submissions) next to Madina's real ones.
-6. Aliya's Windows laptop joins `PHYS1-102-FRI` and pairs Üki Lock (E.3 to E.9).
+6. Aliya joins `PHYS1-102-FRI` on the student machine and pairs Üki Lock (E.3 to E.9).
 
-Laptop setup, the quarantine and SmartScreen steps and the network fallback are in [docs/runbooks/demo-laptops.md](docs/runbooks/demo-laptops.md); creating the cloud project and the Vercel projects is in [docs/runbooks/cloud-setup.md](docs/runbooks/cloud-setup.md).
+Setting up the MacBook and a lab PC, the quarantine and SmartScreen steps and the network fallback are in [docs/runbooks/demo-laptops.md](docs/runbooks/demo-laptops.md); creating the cloud project and the Vercel projects is in [docs/runbooks/cloud-setup.md](docs/runbooks/cloud-setup.md).
 
 ## Known limits
 

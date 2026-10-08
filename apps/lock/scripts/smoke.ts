@@ -9,7 +9,8 @@
 // Env: PW_CHROMIUM (browser binary; default the Chrome for Testing of the installed Playwright, from
 // `pnpm exec playwright install chromium`; see scripts/chromium.ts), SMOKE_PORT (portal, default 5181),
 // SMOKE_SHOTS, SMOKE_QUIET_S (seconds of quiet at the end, default 0), SMOKE_HEADED=1.
-// This is not the hand check: real Chrome and Edge on the demo laptops are still run by a person.
+// This is not the hand check: real Chrome on the MacBook, and Chrome and Edge on a Windows 11 lab PC, are
+// still run by a person.
 import assert from "node:assert/strict";
 import { existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
 import { createServer, type Server } from "node:http";

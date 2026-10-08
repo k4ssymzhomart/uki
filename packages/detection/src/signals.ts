@@ -1,7 +1,7 @@
 // Per-frame signals from a MediaPipe Face Landmarker result, plus the pixel statistics behind the camera
 // row on 1.2. Pure functions: the worker passes MediaPipe's result in, tests pass recorded fixtures.
 //
-// Conventions (check them on the demo laptops with the developer overlay):
+// Conventions (check them on the MacBook and a lab PC with the developer overlay):
 // - Camera frames are not mirrored. Head yaw is positive when the face turns towards the right edge of
 //   the image, which is the student's own left; pitch is positive when the face turns up.
 // - `lookOutL`, `lookInL` and so on are MediaPipe's eyeLookOutLeft, eyeLookInLeft... A side look is the

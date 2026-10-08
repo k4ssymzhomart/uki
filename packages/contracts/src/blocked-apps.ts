@@ -2,7 +2,7 @@
 // only in this file. macOS names are the basename of `ps -axo comm=` (the bundle's CFBundleExecutable);
 // Windows names are the image name in the first column of `tasklist /fo csv /nh`.
 // Names checked on a macOS 15 laptop on 2026-10-07 carry "checked"; every other name is marked
-// "verify on day 3" and must be confirmed on both demo laptops.
+// "verify on day 3" and must be confirmed on the MacBook and on a Windows 11 lab PC.
 import { z } from "zod";
 import type { DesktopOs } from "./session.ts";
 
