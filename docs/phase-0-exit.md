@@ -220,3 +220,15 @@ WP 0.12. The CI job "Windows (unit tests, zips, installer, launch test)" runs on
 | Artifacts for the lab session | pass | `uki-windows-x64-zip`, `uki-windows-x64-lab-zip`, `uki-windows-x64-installer`, and `windows-launch-test` (screenshots of both launches), kept 14 days. To get them: the run's Summary page, Artifacts | 2026-10-08 |
 | P.9 in CI: a clean `pnpm db:reset` of every migration | pass | Stack job step "Clean db reset with every migration and the seed (P.9)", right after `supabase start`. Run 37758235170: `db reset: 13 of 13 migrations applied; seed: 5 exams`; pgTAP after it, 8 files and 404 tests. After WP 1.1 merged, [37763483376](https://github.com/k4ssymzhomart/uki/actions/runs/37763483376) gave `db reset: 14 of 14 migrations applied` with `20261009000000_phase1.sql`; pgTAP 14 files, 757 tests. That run passed every job, the Windows launch tests included | 2026-10-08 |
 | On a Windows 11 lab PC: the zip from a USB drive or profile folder without admin rights, SmartScreen, the NSIS install for the current user | pending | Lab session (P.5) with the artifacts above | |
+
+## P.12 macOS x64 dmg
+
+The CI job "Desktop installer (macOS dmg arm64 and x64)" runs on `macos-latest` (image `macos-26-arm64`). Evidence run: [37758341250](https://github.com/k4ssymzhomart/uki/actions/runs/37758341250), PR #7 at `bb1e821`, before its rebase.
+
+| Check | Status | Evidence | Date |
+| --- | --- | --- | --- |
+| The x64 dmg is built in CI next to arm64 | pass | One electron-builder run builds `Uki-0.0.0-arm64.dmg` and `Uki-0.0.0-x64.dmg`; the x64 Electron download happens on the runner | 2026-10-08 |
+| Each dmg holds the app for its architecture | pass | `.github/scripts/macos-dmg-check.sh` mounts each dmg read-only and runs `lipo -archs`: arm64 for the arm64 dmg, x86_64 for the x64 dmg | 2026-10-08 |
+| Both apps start from their dmg | pass | Same script: "Uki (arm64) still runs after 20 s" and "Uki (x86_64) still runs after 20 s". The x64 app ran under Rosetta 2, which the runner already had; the step installs it when missing. Both apps were stopped and both images detached afterwards | 2026-10-08 |
+| Artifacts | pass | `uki-macos-arm64-dmg` (157 MB), `uki-macos-x64-dmg` (164 MB), and `macos-launch-test` (launch logs and screenshots), kept 14 days | 2026-10-08 |
+| The x64 dmg on an Intel Mac | pending | No Intel Mac in the hardware; Rosetta 2 on the runner is the only check | |
