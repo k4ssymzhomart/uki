@@ -10,7 +10,8 @@
 #             headless Chrome for Testing
 #   windows   WP 0.12 on windows-latest: pnpm check, the x64 zip, the NSIS installer, the launch test of
 #             the packaged Uki.exe from the zip and from a current-user install, and the lab zip
-#   desktop   the unsigned macOS installers (dmg arm64 and x64)
+#   desktop   the unsigned macOS installers, dmg arm64 and x64 (P.12): each dmg's app is checked for its
+#             architecture and started from the image (x64 under Rosetta 2)
 name: CI
 
 on:
@@ -281,7 +282,7 @@ jobs:
           retention-days: 14
 
   desktop:
-    name: Desktop installer (macOS)
+    name: Desktop installer (macOS dmg arm64 and x64)
     runs-on: macos-latest
     timeout-minutes: 45
     env:
@@ -309,11 +310,34 @@ jobs:
         run: |
           pnpm models
           pnpm models:verify
-      - name: Build the installer
+      # Both architectures in one run (electron-builder.yml); the x64 Electron download happens here.
+      - name: Build the dmg for arm64 and x64
         run: pnpm --filter desktop run dist --publish never
-      - uses: actions/upload-artifact@v4
+      - name: Rosetta 2 for the x64 launch
+        run: arch -x86_64 /usr/bin/true 2> /dev/null || sudo softwareupdate --install-rosetta --agree-to-license
+      - name: Each dmg holds its architecture's app, and the app starts from it (P.12)
+        run: bash .github/scripts/macos-dmg-check.sh "$RUNNER_TEMP/launch"
+      - name: Upload the arm64 dmg
+        uses: actions/upload-artifact@v4
         with:
-          name: uki-desktop-${{ runner.os }}
-          path: apps/desktop/release/*.dmg
+          name: uki-macos-arm64-dmg
+          path: apps/desktop/release/Uki-*-arm64.dmg
           if-no-files-found: error
-          retention-days: 7
+          compression-level: 0
+          retention-days: 14
+      - name: Upload the x64 dmg
+        uses: actions/upload-artifact@v4
+        with:
+          name: uki-macos-x64-dmg
+          path: apps/desktop/release/Uki-*-x64.dmg
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      - name: macOS launch logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-launch-test
+          path: ${{ runner.temp }}/launch
+          if-no-files-found: ignore
+          retention-days: 14
