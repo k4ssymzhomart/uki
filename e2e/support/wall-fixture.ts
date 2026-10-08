@@ -48,6 +48,8 @@ async function waitForStates(sessionIds: readonly string[], state: string, timeo
 export async function createWallFixture(options: {
   proctorId: string;
   students?: number;
+  /** More proctors of the exam, not lead (the Ask proctor test watches 2.4d on two walls). */
+  moreProctorIds?: readonly string[];
 }): Promise<WallFixture> {
   const admin = adminClient();
   const count = Math.min(options.students ?? 3, FIRST_NAMES.length);
@@ -70,6 +72,7 @@ export async function createWallFixture(options: {
     if (examId !== null) {
       steps.push(
         ["frames", () => admin.from("frames").delete().eq("exam_id", examId)],
+        ["help_requests", () => admin.from("help_requests").delete().eq("exam_id", examId)],
         ["events", () => admin.from("events").delete().eq("exam_id", examId)],
         ["session_commands", () => admin.from("session_commands").delete().eq("exam_id", examId)],
         ["sessions", () => admin.from("sessions").delete().eq("exam_id", examId)],
@@ -168,7 +171,15 @@ export async function createWallFixture(options: {
     check(
       await admin
         .from("proctor_assignments")
-        .insert({ exam_id: exam.id, staff_id: options.proctorId, languages: ["kk", "ru"], is_lead: true })
+        .insert([
+          { exam_id: exam.id, staff_id: options.proctorId, languages: ["kk", "ru"], is_lead: true },
+          ...(options.moreProctorIds ?? []).map((staffId) => ({
+            exam_id: exam.id,
+            staff_id: staffId,
+            languages: ["kk", "ru"] as ("kk" | "ru")[],
+            is_lead: false,
+          })),
+        ])
         .select(),
       "proctor assignment",
     );

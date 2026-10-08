@@ -12,7 +12,7 @@ import { baseURL, CI, webServer } from "./support/web-server.ts";
 
 export default defineConfig({
   testDir: ".",
-  testMatch: ["dashboard.spec.ts", "language.spec.ts"],
+  testMatch: ["dashboard.spec.ts", "language.spec.ts", "help.spec.ts"],
   // One worker: the tests share the seeded staff accounts, and latency figures stay honest.
   fullyParallel: false,
   workers: 1,
