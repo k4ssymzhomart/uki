@@ -62,6 +62,8 @@ export const InitMessage = z.strictObject({
   /** Face Landmarker GPU with CPU fallback; the int8 phone model runs on CPU. */
   delegate: z.strictObject({ face: Delegate, phone: Delegate }).default({ face: "GPU", phone: "CPU" }),
   debug: z.boolean().default(false),
+  /** False: still requests are reported but no JPEG is made (the browser demo on /try). */
+  stills: z.boolean().default(true),
 });
 export type InitMessage = z.input<typeof InitMessage>;
 

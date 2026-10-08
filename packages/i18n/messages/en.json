@@ -1271,6 +1271,17 @@
       },
       "title": "Privacy"
     },
+    "pwa": {
+      "description": "The Üki dashboard: exams, the live wall, review and reports.",
+      "name": "Üki · Exam office and proctors",
+      "offline": {
+        "body": "The dashboard needs the network. Students’ answers and events wait on their laptops and arrive when the connection is back.",
+        "meta": "Offline · Üki",
+        "retry": "Try again",
+        "title": "You are offline"
+      },
+      "shortName": "Üki"
+    },
     "report": {
       "breadcrumb": "Review / {exam} / {student}",
       "doc": {
@@ -1842,6 +1853,166 @@
         "title": "Students"
       },
       "title": "Students"
+    },
+    "try": {
+      "band": {
+        "lead": "The face, gaze and phone checks the Üki app runs during an exam, running in this tab with the same models and rules.",
+        "notice": "Detection demo: lockdown and the exam need the desktop app",
+        "overline": "Detection demo",
+        "title": "Üki’s detection, on your camera"
+      },
+      "camera": {
+        "faces": "{count, plural, one {# face} other {# faces}}",
+        "label": "Your camera, shown only on this page",
+        "live": "LIVE · LOCAL"
+      },
+      "cue": {
+        "away": "Looking away",
+        "phone": "Phone in view"
+      },
+      "error": {
+        "busy": {
+          "body": "Close the other app or tab that uses the camera, then try again.",
+          "title": "The camera is in use"
+        },
+        "denied": {
+          "body": "Allow the camera for this site in the address bar, then try again.",
+          "title": "Camera access is off"
+        },
+        "missing": {
+          "body": "Connect a webcam, or open this page on a laptop with a built-in camera.",
+          "title": "No camera found"
+        },
+        "models": {
+          "body": "Check the connection and try again.",
+          "title": "The models did not load"
+        },
+        "unsupported": {
+          "body": "Open the page over HTTPS in a current Chrome, Edge, Safari or Firefox.",
+          "title": "This browser cannot run the demo"
+        }
+      },
+      "event": {
+        "camera_lost": {
+          "title": "Camera stopped sending frames"
+        },
+        "duration": "{duration, number, ::.0} s",
+        "face_missing": {
+          "title": "No face for more than {seconds, number} s"
+        },
+        "face_second": {
+          "detail": "{faces, plural, one {# face} other {# faces}} · {duration, number, ::.0} s",
+          "title": "A second face in the frame"
+        },
+        "gaze_down": {
+          "title": "Looked down for more than {seconds, number} s"
+        },
+        "gaze_off_screen": {
+          "detail": "{direction} · {duration, number, ::.0} s",
+          "title": "Looked away for more than {seconds, number} s"
+        },
+        "gaze_on_screen": {
+          "title": "Eyes back on the screen"
+        },
+        "phone_detected": {
+          "detail": "Confidence {score, number, ::.00}",
+          "title": "Phone in the frame"
+        },
+        "session_paused": {
+          "title": "Session paused, timer stopped"
+        },
+        "session_resumed": {
+          "detail": "Paused {duration, number, ::.0} s",
+          "title": "Session resumed"
+        }
+      },
+      "events": {
+        "caption": "As the app would send them. A look is sent when it ends, with its full length.",
+        "empty": "No events yet. Look away for 2 s, hold up a phone or step out of the frame.",
+        "flag": "Flag",
+        "log": "Log",
+        "stills": "{count, plural, one {The app takes # still} other {The app takes # stills}}; none is made here",
+        "title": "Rule events"
+      },
+      "look": {
+        "down": "Down",
+        "left": "Left",
+        "no_face": "No face",
+        "on": "On screen",
+        "right": "Right",
+        "up": "Up"
+      },
+      "meta": {
+        "description": "Run Üki’s on-device face, gaze and phone checks on your own camera. Nothing leaves your browser.",
+        "title": "Detection demo · Üki"
+      },
+      "overlay": {
+        "caption": "The numbers the app’s tuning overlay shows, twice a second.",
+        "degValue": "{deg, number, ::.0}°",
+        "delegate": "Runs on",
+        "delegateValue": "face {face} · phone {phone}",
+        "elapsed": "Frame time",
+        "faceMs": "Face model",
+        "fallback": "Fallback",
+        "fallbackOff": "Off",
+        "fallbackOn": "On: 480 px frames, phone every 1 s",
+        "fps": "Tracking rate",
+        "fpsValue": "{fps, number, ::.0} fps",
+        "input": "Frame size",
+        "inputValue": "{width, number} × {height, number}",
+        "lookDown": "Look down",
+        "lookLeft": "Side look, left",
+        "lookRight": "Side look, right",
+        "msValue": "{ms, number, ::.0} ms",
+        "none": "–",
+        "phoneMs": "Phone model",
+        "phoneRate": "Phone checks",
+        "pitch": "Head pitch",
+        "rateValue": "{rate, number, ::.0} per s",
+        "scoreValue": "{score, number, ::.00}",
+        "source": "Frames from",
+        "title": "Developer overlay",
+        "yaw": "Head yaw"
+      },
+      "panel": {
+        "faces": "Faces",
+        "facesCaption": "A second face flags after {second, number} s, none after {seconds, number} s",
+        "look": "Look",
+        "lookCaption": "Flags after {seconds, number} s away or down",
+        "phone": "Phone score",
+        "phoneCaption": "Flags at {threshold, number, ::.00} on two checks in a row",
+        "title": "What the app sees"
+      },
+      "paused": {
+        "body": "In the app the timer stops until the student is back in view and presses I’m here.",
+        "resume": "I’m here",
+        "title": "The exam would pause here"
+      },
+      "privacy": {
+        "body": "The models run on this device. No video, image or event is uploaded, and this page makes no call to Üki’s servers.",
+        "title": "Nothing leaves this browser"
+      },
+      "retry": "Try again",
+      "start": {
+        "body": "Your browser asks for the camera once. The first start loads the models from this site, about 21 MB.",
+        "button": "Start the demo",
+        "title": "Start the camera"
+      },
+      "status": {
+        "camera": "Opening the camera",
+        "models": "Loading the models",
+        "running": "Running on this device"
+      },
+      "stop": "Stop",
+      "timers": {
+        "hits": "{hits, number} of {needed, number}",
+        "look": "Look away held",
+        "noFace": "No face",
+        "phoneHits": "Phone hits in a row",
+        "seconds": "{held, number, ::.0} of {limit, number} s",
+        "title": "Rule timers",
+        "twoFaces": "Two faces"
+      }
     },
     "wall": {
       "action": {

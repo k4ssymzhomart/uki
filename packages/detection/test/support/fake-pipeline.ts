@@ -44,7 +44,12 @@ export interface FakeRun {
 }
 
 export function fakePipeline(
-  options: { mode?: ExamMode; phase?: "check" | "exam"; phoneScores?: Map<number, number> } = {},
+  options: {
+    mode?: ExamMode;
+    phase?: "check" | "exam";
+    phoneScores?: Map<number, number>;
+    stills?: boolean;
+  } = {},
 ): FakeRun {
   const posted: WorkerToMain[] = [];
   const capturedAt: number[] = [];
@@ -64,7 +69,13 @@ export function fakePipeline(
       capture,
       now: () => 0,
     },
-    { checks: ExamChecks.parse({}), mode: options.mode ?? "app", debug: true, newId: counterIds() },
+    {
+      checks: ExamChecks.parse({}),
+      mode: options.mode ?? "app",
+      debug: true,
+      newId: counterIds(),
+      ...(options.stills === undefined ? {} : { stills: options.stills }),
+    },
     (message) => posted.push(message),
   );
   pipeline.setPhase(options.phase ?? "exam", 0);

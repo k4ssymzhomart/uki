@@ -47,6 +47,14 @@ describe("only the pipeline can make image bytes", () => {
     expect(sources.filter(({ text }) => text.includes(recorder)).map(({ name }) => name)).toEqual([]);
   });
 
+  it("the worker shuts its network to the models' origin before MediaPipe loads", () => {
+    const worker = code(sources.find(({ name }) => name === "worker.ts")?.text ?? "");
+    const guard = worker.indexOf("restrictNetwork(");
+    expect(guard).toBeGreaterThan(-1);
+    expect(guard).toBeLessThan(worker.indexOf("createFaceTracker({"));
+    expect(guard).toBeLessThan(worker.indexOf("createPhoneDetector({"));
+  });
+
   it("no model, wasm or worker URL points at a CDN", () => {
     const cdn = /https?:\/\/(cdn\.jsdelivr\.net|unpkg\.com|storage\.googleapis\.com|cdnjs\.)/;
     expect(sources.filter(({ text }) => cdn.test(code(text))).map(({ name }) => name)).toEqual([]);

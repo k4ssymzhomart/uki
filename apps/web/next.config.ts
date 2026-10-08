@@ -37,7 +37,7 @@ const PUBLIC_REPORT_HEADERS = [
 
 const nextConfig: NextConfig = {
   // Workspace packages ship TypeScript source (docs/decisions.md): Next.js compiles them.
-  transpilePackages: ["@uki/ui", "@uki/tokens", "@uki/contracts", "@uki/i18n", "@uki/db"],
+  transpilePackages: ["@uki/ui", "@uki/tokens", "@uki/contracts", "@uki/i18n", "@uki/db", "@uki/detection"],
   typedRoutes: true,
   reactStrictMode: true,
   poweredByHeader: false,

@@ -29,3 +29,6 @@ e2e/.auth/
 apps/desktop/test/results/
 shots/
 apps/web/next-env.d.ts
+
+# Detection models the web app serves for /try (apps/web/scripts/detection-models.ts)
+apps/web/public/models/

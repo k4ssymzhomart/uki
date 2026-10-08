@@ -12,12 +12,15 @@
 // slow connection downloads each file once. Downloads come only from Google's storage.googleapis.com
 // mediapipe-models bucket and the tessdata_fast GitHub repository; everything else is copied from
 // node_modules.
-import { copyFile, writeFile } from "node:fs/promises";
-import { join, resolve } from "node:path";
+import { copyFile } from "node:fs/promises";
+import { join } from "node:path";
 import {
   atomicWrite,
+  DESKTOP_MANIFEST,
+  DESKTOP_MODELS_DIR,
   DETECTION_DIR,
   describeFile,
+  downloadFile,
   formatProblem,
   MODEL_SPECS,
   type ModelSpec,
@@ -30,54 +33,17 @@ import {
 } from "../packages/detection/scripts/model-files.ts";
 import type { ModelManifestEntry } from "../packages/detection/src/models.ts";
 
-const ROOT = resolve(DETECTION_DIR, "../..");
-const MODELS_DIR = join(ROOT, "apps/desktop/resources/models");
-const MANIFEST = join(MODELS_DIR, "manifest.json");
-const ATTEMPTS = 4;
+const MODELS_DIR = DESKTOP_MODELS_DIR;
+const MANIFEST = DESKTOP_MANIFEST;
 
 function log(line: string): void {
   process.stdout.write(`${line}\n`);
 }
 
-async function download(url: string, target: string): Promise<void> {
-  let lastError: unknown;
-  for (let attempt = 1; attempt <= ATTEMPTS; attempt += 1) {
-    try {
-      await atomicWrite(target, async (part) => {
-        const response = await fetch(url, { redirect: "follow", signal: AbortSignal.timeout(30 * 60_000) });
-        if (!response.ok || !response.body) throw new Error(`${url}: HTTP ${response.status}`);
-        const total = Number(response.headers.get("content-length") ?? 0);
-        const chunks: Uint8Array[] = [];
-        let received = 0;
-        let lastReport = 0;
-        const reader = response.body.getReader();
-        for (;;) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          chunks.push(value);
-          received += value.byteLength;
-          if (received - lastReport >= 512 * 1024) {
-            lastReport = received;
-            const pct = total > 0 ? ` (${Math.round((received / total) * 100)}%)` : "";
-            log(`    ${(received / 1048576).toFixed(1)} MB${pct}`);
-          }
-        }
-        if (total > 0 && received !== total) throw new Error(`${url}: got ${received} of ${total} bytes`);
-        await writeFile(part, Buffer.concat(chunks));
-      });
-      return;
-    } catch (error) {
-      lastError = error;
-      log(`    attempt ${attempt} failed: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  }
-  throw lastError;
-}
-
 async function obtain(spec: ModelSpec, target: string): Promise<void> {
   if ("url" in spec.from) {
     log(`  download ${spec.from.url}`);
-    await download(spec.from.url, target);
+    await downloadFile(spec.from.url, target, { log });
   } else {
     const source = npmSourcePath(DETECTION_DIR, spec.from);
     log(`  copy ${sourceLabel(spec.from)}`);

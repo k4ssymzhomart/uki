@@ -26,7 +26,10 @@ interface ModuleLoaderScope {
 /** Defines `self.import` so tasks-vision can load its ES-module wasm loader any number of times. */
 export function installModuleImport(
   scope: ModuleLoaderScope = globalThis as unknown as ModuleLoaderScope,
-  load: (url: string) => Promise<{ default?: unknown }> = (url) => import(/* @vite-ignore */ url),
+  // Neither bundler may touch this import: Vite (the desktop app) reads @vite-ignore, Turbopack and
+  // webpack (the /try demo in apps/web) read webpackIgnore.
+  load: (url: string) => Promise<{ default?: unknown }> = (url) =>
+    import(/* webpackIgnore: true */ /* @vite-ignore */ url),
 ): void {
   scope.import = async (url: string) => {
     const module = await load(url);
@@ -35,15 +38,37 @@ export function installModuleImport(
   };
 }
 
+/**
+ * True in a module worker. Its `importScripts` throws a TypeError even with no URL, where a classic
+ * worker's returns at once. The desktop app's worker is a module worker; Next.js (Turbopack) starts the
+ * /try demo's worker as a classic script, which loads chunks with importScripts, and there tasks-vision's
+ * classic loader (vision_wasm_internal.js, same version, same models) is the one that works.
+ */
+export function isModuleWorkerScope(
+  scope: { importScripts?: unknown } = globalThis as { importScripts?: unknown },
+): boolean {
+  const load = scope.importScripts;
+  if (typeof load !== "function") return true;
+  try {
+    load.call(scope);
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 const filesets = new Map<string, Promise<WasmFileset>>();
 
-/** The tasks-vision fileset for the ES-module wasm build under `wasmBase` (no trailing slash). */
+/**
+ * The tasks-vision fileset under `wasmBase` (no trailing slash): the ES-module wasm build in a module
+ * worker, the classic build in a classic one (isModuleWorkerScope).
+ */
 export function visionFileset(wasmBase: string): Promise<WasmFileset> {
   const base = wasmBase.replace(/\/+$/, "");
   let fileset = filesets.get(base);
   if (!fileset) {
     installModuleImport();
-    fileset = FilesetResolver.forVisionTasks(base, true);
+    fileset = FilesetResolver.forVisionTasks(base, isModuleWorkerScope());
     fileset.catch(() => filesets.delete(base));
     filesets.set(base, fileset);
   }

@@ -63,6 +63,20 @@ export const MODEL_SPECS: readonly ModelSpec[] = [
   },
 ];
 
+/**
+ * The files the /try demo in apps/web serves from public/models/ (apps/web/scripts/detection-models.ts):
+ * the Face Landmarker, the Object Detector and tasks-vision's classic SIMD build. Next.js starts the
+ * demo's worker as a classic script, so vision.ts picks the classic loader there (isModuleWorkerScope);
+ * the desktop app's module worker uses the ES-module build. The card match (Human, Tesseract) is not
+ * part of the demo.
+ */
+export const WEB_DEMO_MODEL_PATHS: readonly string[] = [
+  MODEL_PATHS.faceLandmarker,
+  MODEL_PATHS.objectDetector,
+  `${MODEL_PATHS.visionWasmDir}/vision_wasm_internal.js`,
+  `${MODEL_PATHS.visionWasmDir}/vision_wasm_internal.wasm`,
+];
+
 export function sourceLabel(from: ModelSource): string {
   return "url" in from ? from.url : `npm:${from.npm}/${from.file}`;
 }
@@ -131,6 +145,31 @@ export async function verifyManifest(
   return problems;
 }
 
+/**
+ * The manifest entries for `paths`, in that order. Throws when one is missing, or when its recorded
+ * source differs from MODEL_SPECS (the desktop manifest is then out of date: `pnpm models --update`).
+ */
+export function pinnedEntries(manifest: ModelManifest, paths: readonly string[]): ModelManifestEntry[] {
+  return paths.map((path) => {
+    const entry = manifest.files.find((file) => file.path === path);
+    if (!entry) throw new Error(`${path}: not in manifest.json`);
+    const spec = MODEL_SPECS.find((candidate) => candidate.path === path);
+    if (!spec) throw new Error(`${path}: not in MODEL_SPECS`);
+    if (entry.source !== sourceLabel(spec.from)) {
+      throw new Error(`${path}: manifest.json says ${entry.source}, MODEL_SPECS ${sourceLabel(spec.from)}`);
+    }
+    return entry;
+  });
+}
+
+/** True when `root/entry.path` exists with the entry's size and SHA-256. */
+export async function fileMatches(root: string, entry: ModelManifestEntry): Promise<boolean> {
+  const full = join(root, entry.path);
+  if (!existsSync(full)) return false;
+  if ((await stat(full)).size !== entry.bytes) return false;
+  return (await sha256File(full)) === entry.sha256;
+}
+
 export function formatProblem(p: VerifyProblem): string {
   switch (p.problem) {
     case "missing":
@@ -184,5 +223,54 @@ export async function atomicWrite(target: string, write: (partPath: string) => P
   }
 }
 
+/**
+ * Downloads `url` to `target` through atomicWrite, with `attempts` tries and progress every 512 KB.
+ * A response shorter than its content-length is an error, so a cut connection never passes as a file.
+ */
+export async function downloadFile(
+  url: string,
+  target: string,
+  options: { attempts?: number; log?: (line: string) => void } = {},
+): Promise<void> {
+  const attempts = options.attempts ?? 4;
+  const log = options.log ?? (() => {});
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      await atomicWrite(target, async (part) => {
+        const response = await fetch(url, { redirect: "follow", signal: AbortSignal.timeout(30 * 60_000) });
+        if (!response.ok || !response.body) throw new Error(`${url}: HTTP ${response.status}`);
+        const total = Number(response.headers.get("content-length") ?? 0);
+        const chunks: Uint8Array[] = [];
+        let received = 0;
+        let lastReport = 0;
+        const reader = response.body.getReader();
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+          received += value.byteLength;
+          if (received - lastReport >= 512 * 1024) {
+            lastReport = received;
+            const pct = total > 0 ? ` (${Math.round((received / total) * 100)}%)` : "";
+            log(`    ${(received / 1048576).toFixed(1)} MB${pct}`);
+          }
+        }
+        if (total > 0 && received !== total) throw new Error(`${url}: got ${received} of ${total} bytes`);
+        await writeFile(part, Buffer.concat(chunks));
+      });
+      return;
+    } catch (error) {
+      lastError = error;
+      log(`    attempt ${attempt} failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+  throw lastError;
+}
+
 /** packages/detection */
 export const DETECTION_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+/** apps/desktop/resources/models/, where `pnpm models` puts every file; its manifest.json is committed. */
+export const DESKTOP_MODELS_DIR = resolve(DETECTION_DIR, "../../apps/desktop/resources/models");
+/** The committed SHA-256 manifest: the lock file for every model, wasm and language file. */
+export const DESKTOP_MANIFEST = join(DESKTOP_MODELS_DIR, "manifest.json");

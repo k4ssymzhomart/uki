@@ -30,6 +30,7 @@
     "test:functions": "vitest run -c vitest.integration.config.ts --project functions-unit",
     "test:integration:desktop": "node scripts/lib/local-stack.ts test:integration:desktop && pnpm --filter desktop exec vitest run -c src/renderer/test/vitest.stack.config.mjs",
     "e2e": "node scripts/lib/local-stack.ts e2e && playwright test -c e2e/playwright.config.ts",
+    "e2e:try": "playwright test -c e2e/try/playwright.config.ts",
     "e2e:load": "node scripts/lib/local-stack.ts e2e:load && playwright test -c e2e/simulate/playwright.config.ts",
     "supabase:deploy": "pnpm functions:sync && supabase db push && supabase functions deploy",
     "seed:staff": "tsx scripts/seed-staff.ts",

@@ -9,9 +9,11 @@
 //
 // MediaPipe runs here through vision.ts, which makes tasks-vision 1.1 load its ES-module wasm loader in a
 // module worker (see the comment there). Messages are the Zod schemas in protocol.ts. Image bytes leave
-// this worker only as stills from pipeline.ts.
+// this worker only as stills from pipeline.ts, and its fetch reaches only the models' origin
+// (network-guard.ts: tasks-vision's usage logs to Google are refused).
 import type { Delegate } from "./debug.ts";
 import { createFaceTracker, type FaceTracker } from "./face.ts";
+import { restrictNetwork } from "./network-guard.ts";
 import { createPhoneDetector, type PhoneDetectorHandle } from "./phone.ts";
 import { createPipeline, type Pipeline } from "./pipeline.ts";
 import { MainToWorker, type WorkerToMain } from "./protocol.ts";
@@ -82,6 +84,8 @@ async function handle(raw: unknown): Promise<void> {
         post({ type: "error", stage: "init", message: "already initialised" });
         return;
       }
+      // Before MediaPipe loads: its usage logs to Google are refused, the model files are not.
+      restrictNetwork([msg.models.wasmBase, msg.models.faceLandmarker, msg.models.objectDetector]);
       try {
         face = await createFaceTracker({
           wasmBase: msg.models.wasmBase,
@@ -95,7 +99,7 @@ async function handle(raw: unknown): Promise<void> {
         });
         pipeline = createPipeline(
           { face, phone, luma: sampleLuma },
-          { checks: msg.checks, mode: msg.mode, debug: msg.debug },
+          { checks: msg.checks, mode: msg.mode, debug: msg.debug, stills: msg.stills },
           post,
         );
         const phoneDelegate: Delegate = phone.delegate;

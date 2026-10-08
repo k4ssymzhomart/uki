@@ -51,6 +51,11 @@ export interface PipelineOptions {
   checks: ExamChecks;
   mode: ExamMode;
   debug: boolean;
+  /**
+   * False makes no JPEG at all: the rules engine still requests stills and the request is posted, but
+   * no frame is captured. The browser demo on /try runs this way; the desktop app keeps the default true.
+   */
+  stills?: boolean;
   newId?: (atMs: number) => string;
 }
 
@@ -125,6 +130,7 @@ export function createPipeline(
   }
 
   function takeStill(image: ImageBitmap, still: DueStill, at: number): void {
+    if (options.stills === false) return;
     let pending: Promise<Blob>;
     try {
       pending = capture(image);
