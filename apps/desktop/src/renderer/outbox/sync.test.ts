@@ -197,6 +197,29 @@ describe("backoff", () => {
     expect(Math.max(...gaps)).toBeLessThanOrEqual(10_500);
     expect(server.statuses.at(-1)).toEqual({ question: 7 });
   });
+
+  it("keeps the heartbeat at 10 s when a slow run shifts the 2 s ticks (P.10)", async () => {
+    // A run that takes long (a loaded laptop) moves every later 2 s tick. The heartbeat was checked
+    // only on those ticks, so one at 9.95 s missed it and the call came at 11.95 s: a command whose
+    // broadcast was lost waited 2 s longer than "within about 10 s".
+    const settle = outbox.settle.bind(outbox);
+    let slowRuns = 1;
+    outbox.settle = async (sessionId) => {
+      await settle(sessionId);
+      if (server.calls.length === 1 && slowRuns > 0) {
+        slowRuns -= 1;
+        await new Promise((resolve) => setTimeout(resolve, 1950));
+      }
+    };
+    startLoop({ getStatus: () => ({ question: 7 }) });
+    await flushIo(100);
+    await advance(25_000, 50);
+    const ingests = server.calls.filter((call) => call.kind === "ingest");
+    expect(slowRuns).toBe(0);
+    expect(ingests.length).toBeGreaterThanOrEqual(3);
+    const gaps = ingests.slice(1).map((call, i) => call.at - (ingests[i]?.at ?? 0));
+    expect(Math.max(...gaps)).toBeLessThanOrEqual(10_100);
+  });
 });
 
 describe("546 WORKER_LIMIT and gateway 502, 503, 504", () => {
