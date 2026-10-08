@@ -313,7 +313,7 @@ Branch `wp/1.3-wizard` (PR #16, draft while the package runs to Sunday 11). Ran 
 | `pnpm check` | pass | Exit 0: Biome 803 files, guards 832 files, turbo 22/22 tasks (web 245 tests, 35 files), functions-unit 61, scripts 83 | 2026-10-08 |
 | `pnpm test:integration` against the third stack | pass | 16 files, 86 tests, with `supabase functions serve` on `uki-w13` | 2026-10-08 |
 | `pnpm e2e` | pass | 6/6 against `next dev -p 3401` and `uki-w13` (4 Phase 0 tests, the language test, the wizard) | 2026-10-08 |
-| CI on the pull request | pending | PR #16 | |
+| CI on the pull request | pass (draft) | Push run 37775975035 at 560da48: every job passed (lint, guards, types and unit tests; database, functions, desktop flow and dashboard e2e with `15_wizard_1_3` and `e2e/wizard.spec.ts`, New exam to the code in 23.8 s on the runner; the builds; the macOS dmgs; Windows; the secret scan). The pull-request run at 813639f had one unit test time out at Vitest's 5 s default on the loaded runner (0.4 with the date picker); the view tests now allow 30 s. Vercel's two previews are rate-limited by the Vercel account, outside this change. Merge waits for Sunday | 2026-10-08 |
 | The cloud project has the new migration | pending | `pnpm supabase:deploy` after the merge (P.2) | |
 | Figma 0.4 `158:12473` (details, date picker open) | pass | ![0.4](evidence/phase-1/1.3/0.4.jpg) Same cards, fields, chips, radio cards, At a glance and picker. Differences: the picker's footer time is a typed field; search and bell hidden (Phase 0) | 2026-10-08 |
 | Figma 0.4 in Russian | pass | ![0.4 ru](evidence/phase-1/1.3/0.4-ru.jpg) Fits; the month reads «Октябрь 2026 г.» from Intl | 2026-10-08 |

@@ -50,6 +50,10 @@ vi.mock("../../lib/supabase/server.ts", () => ({ createSupabaseServerClient: vi.
 
 const { previewLines } = await import("./wizard-data.ts");
 
+// The first render of each view loads Radix, next-intl and the messages; on a busy CI runner that alone
+// took over Vitest's default 5 s once (0.4 with the date picker).
+vi.setConfig({ testTimeout: 30_000 });
+
 const EXAM_ID = "e1000000-0000-4000-8000-000000000001";
 const G204 = "a2000000-0000-4000-8000-000000000204";
 const GROUPS = [
