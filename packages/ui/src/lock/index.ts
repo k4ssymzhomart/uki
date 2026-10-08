@@ -1,5 +1,6 @@
 // Üki Lock extension components (Figma "Üki Lock extension"). Presentational: texts, codes and rows come in as props.
 export * from "./lock-bar.tsx";
+export * from "./lock-calculator.tsx";
 export * from "./lock-check.tsx";
 export * from "./lock-popup.tsx";
 export * from "./lock-popup-footer.tsx";

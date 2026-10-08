@@ -896,7 +896,8 @@
     "app": {
       "connected": "Üki app · connected · camera on",
       "found": "Üki app · found on this laptop",
-      "idle": "Üki app · idle"
+      "idle": "Üki app · idle",
+      "watching": "Üki app · watching · camera on"
     },
     "ask": {
       "body": "Your proctor sees this on the live wall. Your time keeps running.",
@@ -924,6 +925,8 @@
       "title": "This site is closed during the exam."
     },
     "calc": {
+      "clear": "C",
+      "error": "Can’t divide by 0",
       "note": "Works offline. Keeps no history after you submit.",
       "title": "Calculator · built into Üki Lock"
     },
@@ -950,6 +953,18 @@
       "title": "Lock released"
     },
     "name": "Üki Lock",
+    "noted": {
+      "copy": "Copy blocked",
+      "kind": {
+        "copy": "Copy",
+        "cut": "Cut",
+        "paste": "Paste",
+        "print": "Print"
+      },
+      "outside": "Outside the exam window",
+      "site": "Site closed",
+      "tab": "New tab blocked"
+    },
     "pair": {
       "action": "Pair",
       "badge": "NOT PAIRED",
@@ -983,6 +998,12 @@
         "title": "Other tabs"
       },
       "when": "Starts {time} · {minutes} min · {host}"
+    },
+    "status": {
+      "built_in": "built in",
+      "ends": "left · ends {time}",
+      "noted": "NOTED · {count}",
+      "open": "OPEN DURING THE EXAM"
     },
     "tab": {
       "calculator": "Calculator",
