@@ -62,6 +62,7 @@ Stop the simulator (Ctrl+C), then `pnpm demo:reset --env-file .env.cloud --yes`,
 | The request from the simulated Physics 1 student is missing | `demo:reset` puts it back; a Mark done in rehearsal reopens it |
 | Mathematics 2 already started | `demo:reset` again: it schedules Mathematics 2 15 minutes ahead |
 | Nurlan's seats show as confirmed | `demo:reset` again |
+| A.1 shows more than 38 exams, or a week of 13 October, before Act 1 | Another exam of the Faculty of Mathematics has run: `seed:check` names it. Judge mode's DEMO-LIVE, if it is set up in that faculty, is live all day, and A.1 counts it with the term |
 
 Never paste a key or a password into a chat, a slide or a screenshot. `.env.cloud` stays on the MacBook.
 
