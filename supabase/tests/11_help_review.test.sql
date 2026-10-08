@@ -268,7 +268,8 @@ select is((select count(*) from public.review_decisions where session_id = (sele
   1::bigint, 'one decision per session');
 select is((select count(*) from public.review_queue where exam_id = t.id('history')), 3::bigint,
   'decided sessions leave the queue');
-select is((select count(*) from public.audit_log where action = 'review.decide'
+-- Only this run's rows (written in this transaction, at now()): the review e2e leaves its own on the stack.
+select is((select count(*) from public.audit_log where action = 'review.decide' and at >= now()
   and object_id in (select session_id::text from t.hist)), 3::bigint, 'every decision writes an audit row');
 
 select t.login(t.id('office'));
