@@ -8,8 +8,9 @@ import { useFormatter, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useDashboardLocale } from "../../i18n/use-dashboard-locale.ts";
 import { timeOf } from "../../lib/format.ts";
+import { drawerHref } from "../privacy/privacy-model.ts";
 import { PageHeader } from "../shell/page-header.tsx";
-import { NAV, NAV_HREFS } from "../shell/shell-model.ts";
+import { NAV } from "../shell/shell-model.ts";
 import { formatDayLongMonth, formatDayMonth, formatDayMonthYear } from "./student-format.ts";
 import {
   dataKept,
@@ -51,9 +52,9 @@ function Item({ icon, title, caption }: { icon: IconName; title: ReactNode; capt
 /**
  * A.3 Student profile (Figma 105:10746): who the student is, their exams with each decision, the devices
  * from `sessions.device`, when and in which language they last accepted the exam rules
- * (`rules_accepted_at`, `rules_locale`), and the data kept about them. Message, Export data, the
- * readiness badge and the camera consent row are not drawn; Delete on request appears with the privacy
- * centre (WP 1.12). See docs/decisions.md, 1.11.
+ * (`rules_accepted_at`, `rules_locale`), and the data kept about them. Message, the readiness badge and
+ * the camera consent row are not drawn (docs/decisions.md, 1.11). Export data and Delete on request open
+ * the privacy centre's copy (A.5b) and delete (A.5a) drawers for this student (WP 1.12).
  */
 export function StudentProfileView({
   student,
@@ -64,6 +65,7 @@ export function StudentProfileView({
   retentionDays,
 }: StudentProfileViewProps) {
   const t = useTranslations("dashboard.students");
+  const tPrivacy = useTranslations("dashboard.privacy");
   const format = useFormatter();
   const locale = useDashboardLocale();
   const history = examHistory(sessions, flags, decisions);
@@ -101,6 +103,16 @@ export function StudentProfileView({
                   <Badge tone="neutral">{LOCALE_LABELS[student.locale]}</Badge>
                 </div>
               </div>
+              {NAV.privacy.built ? (
+                <Button variant="ghost" asChild>
+                  <Link
+                    href={drawerHref({ type: "new", kind: "copy", studentId: student.id }) as Route}
+                    prefetch={false}
+                  >
+                    {tPrivacy("profile.export")}
+                  </Link>
+                </Button>
+              ) : null}
             </section>
 
             <div className="grid grid-cols-3 gap-4">
@@ -244,7 +256,10 @@ export function StudentProfileView({
               <Item icon="cloud-off" title={t("profile.kept.video")} caption={t("profile.kept.videoNever")} />
               {NAV.privacy.built ? (
                 <Button variant="secondary" className="w-full" asChild>
-                  <Link href={NAV_HREFS.privacy as Route} prefetch={false}>
+                  <Link
+                    href={drawerHref({ type: "new", kind: "delete", studentId: student.id }) as Route}
+                    prefetch={false}
+                  >
                     {t("profile.kept.delete")}
                   </Link>
                 </Button>

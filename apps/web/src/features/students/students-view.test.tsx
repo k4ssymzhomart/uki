@@ -184,8 +184,14 @@ describe("A.3 Student profile", () => {
     expect(text).toContain("Deleted on 7 Jan 2027");
     expect(text).toContain("Event log · 3 exams");
     expect(text).toContain("Video · 0 MB");
-    // Phase 2 and 1.12 entry points stay hidden.
-    expect(screen.queryByRole("link", { name: "Delete on request" })).toBeNull();
+    // The privacy centre's drawers for this student (WP 1.12); Message stays hidden.
+    const madinaId = MADINA_PROFILE.student.id;
+    expect(screen.getByRole("link", { name: "Delete on request" }).getAttribute("href")).toBe(
+      `/privacy-centre?new=delete&student=${madinaId}`,
+    );
+    expect(screen.getByRole("link", { name: "Export data" }).getAttribute("href")).toBe(
+      `/privacy-centre?new=copy&student=${madinaId}`,
+    );
     expect(screen.queryByRole("button", { name: "Message" })).toBeNull();
     expect(intlErrors).toEqual([]);
     expect(rawKeys(document.body)).toEqual([]);

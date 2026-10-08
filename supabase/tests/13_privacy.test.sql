@@ -160,7 +160,7 @@ insert into public.data_requests (workspace_id, student_id, kind) values (t.id('
 returning t.put('req', id);
 reset role;
 select is((select status::text || '|' || (due_at - received_at)::text from public.data_requests where id = t.id('req')),
-  'received|30 days', 'a new request is received and due in 30 days');
+  'received|7 days', 'a new request is received and due in 7 days (A.5a, WP 1.12)');
 select is((select count(*) from public.audit_log where action = 'data_request.received' and actor_id = t.id('office')
   and object_id = t.id('yerlan')::text and meta ->> 'kind' = 'delete'), 1::bigint, 'a new request writes an audit row');
 select t.login(t.id('office'));

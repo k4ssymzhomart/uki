@@ -48,7 +48,7 @@ export const NAV: Readonly<Record<NavId, NavSpec>> = {
   reports: { section: "workspace", icon: "report", roles: OFFICE, built: true },
   students: { section: "workspace", icon: "users", roles: OFFICE, built: true },
   settings: { section: "admin", icon: "settings", roles: OFFICE, built: true },
-  privacy: { section: "admin", icon: "shield", roles: OFFICE, built: false },
+  privacy: { section: "admin", icon: "shield", roles: OFFICE, built: true },
 };
 
 /** Where the fixed items lead. Privacy is /privacy-centre, because /privacy is the public policy page. */

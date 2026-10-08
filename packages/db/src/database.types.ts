@@ -2138,6 +2138,80 @@ export type Database = {
         Returns: number
       }
       pre_exam_rank: { Args: { p_state: string }; Returns: number }
+      privacy_delete_check: {
+        Args: { p_actor: string; p_request_id: string }
+        Returns: {
+          done_at: string | null
+          done_by: string | null
+          due_at: string
+          export_path: string | null
+          id: string
+          kind: Database["public"]["Enums"]["data_request_kind"]
+          received_at: string
+          reply: string | null
+          status: Database["public"]["Enums"]["data_request_status"]
+          student_id: string
+          workspace_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "data_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      privacy_delete_plan: {
+        Args: { p_actor: string; p_request_id: string }
+        Returns: Json
+      }
+      privacy_delete_student: {
+        Args: { p_actor: string; p_request_id: string; p_stills?: number }
+        Returns: Json
+      }
+      privacy_export: {
+        Args: { p_actor: string; p_request_id: string }
+        Returns: Json
+      }
+      privacy_export_done: {
+        Args: {
+          p_actor: string
+          p_bytes: number
+          p_expires_at: string
+          p_path: string
+          p_request_id: string
+        }
+        Returns: Json
+      }
+      privacy_reply: {
+        Args: { p_actor: string; p_reply: string; p_request_id: string }
+        Returns: Json
+      }
+      privacy_request_for: {
+        Args: {
+          p_actor: string
+          p_kind: Database["public"]["Enums"]["data_request_kind"]
+          p_request_id: string
+        }
+        Returns: {
+          done_at: string | null
+          done_by: string | null
+          due_at: string
+          export_path: string | null
+          id: string
+          kind: Database["public"]["Enums"]["data_request_kind"]
+          received_at: string
+          reply: string | null
+          status: Database["public"]["Enums"]["data_request_status"]
+          student_id: string
+          workspace_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "data_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       receipt_initial: { Args: { p_word: string }; Returns: string }
       report_content: { Args: { p_session_id: string }; Returns: Json }
       report_content_hash: { Args: { p_session_id: string }; Returns: string }
