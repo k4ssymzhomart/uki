@@ -13,6 +13,7 @@ import {
   type TileSort,
   type TileStateName,
   tileState,
+  toMs,
 } from "@uki/contracts";
 import { formatTime } from "@uki/i18n";
 import type { StudentTileState } from "@uki/ui";
@@ -90,6 +91,25 @@ function eventsOf(state: WallState, sessionId: string): readonly CompactEvent[] 
   return state.events[sessionId] ?? [];
 }
 
+/** The session's flags a decision covers: received up to its `decided_at` (the queue rule, review.ts). */
+export function reviewedEventIds(
+  events: readonly CompactEvent[],
+  decidedAt: string | undefined,
+): ReadonlySet<string> | undefined {
+  if (decidedAt === undefined) return undefined;
+  const decided = toMs(decidedAt);
+  return new Set(events.filter((event) => toMs(event.received_at) <= decided).map((event) => event.id));
+}
+
+/** True while the session has a flag with no newer decision: Mark reviewed (2.4a) has something to do. */
+export function selectHasOpenFlag(state: WallState, sessionId: string): boolean {
+  const decidedAt = state.decisions[sessionId];
+  const decided = decidedAt === undefined ? null : toMs(decidedAt);
+  return eventsOf(state, sessionId).some(
+    (event) => event.review === "flag" && (decided === null || toMs(event.received_at) > decided),
+  );
+}
+
 function compute(state: WallState): Computed {
   const hit = cache.get(state);
   if (hit) return hit;
@@ -106,6 +126,7 @@ function compute(state: WallState): Computed {
           status: session.status,
         },
         events: eventsOf(state, session.id),
+        reviewedEventIds: reviewedEventIds(eventsOf(state, session.id), state.decisions[session.id]),
       },
       state.nowMs,
     );

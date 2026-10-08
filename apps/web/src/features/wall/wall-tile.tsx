@@ -1,17 +1,18 @@
 "use client";
 
 import { isFinalState } from "@uki/contracts";
-import { ActionMenu, type MenuAction, StudentTile, StudentTileMore } from "@uki/ui";
+import { ActionMenu, type MenuAction, StudentTile, StudentTileMore, ToastContext } from "@uki/ui";
 import { useTranslations } from "next-intl";
-import { memo, useState } from "react";
+import { memo, useContext, useState } from "react";
 import { hasOpenRequest } from "../help/help-model.ts";
 import { useHelp } from "../help/help-store.tsx";
+import { decideSession } from "../review/review-actions.ts";
 import { EndSessionDialog } from "./end-session-dialog.tsx";
 import { pronounFromName } from "./names.ts";
 import { useQuickMessageContent } from "./quick-message.tsx";
-import { sameTileView, selectTileView } from "./tiles.ts";
+import { sameTileView, selectHasOpenFlag, selectTileView } from "./tiles.ts";
 import { useCommand } from "./use-command.ts";
-import { useWall, useWallWith } from "./wall-store-context.tsx";
+import { useWall, useWallActions, useWallWith } from "./wall-store-context.tsx";
 import { WriteMessageDialog } from "./write-message-dialog.tsx";
 
 export interface WallTileProps {
@@ -41,6 +42,10 @@ export const WallTile = memo(function WallTile({ sessionId, onOpenTimeline }: Wa
   });
   // 2.4d: an on-screen student with an open Ask proctor request reads "raised hand · Q 8".
   const raised = useHelp((state) => hasOpenRequest(state, sessionId));
+  const hasOpenFlag = useWall((state) => selectHasOpenFlag(state, sessionId));
+  const { applyDecision } = useWallActions();
+  const toast = useContext(ToastContext);
+  const review = useTranslations("dashboard.review");
   const { send } = useCommand();
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<MenuMode>("actions");
@@ -93,6 +98,19 @@ export const WallTile = memo(function WallTile({ sessionId, onOpenTimeline }: Wa
             disabled: sessionState !== "writing",
             onSelect: () => void send({ session_id: sessionId, type: "pause", payload: {} }),
           },
+      {
+        // Phase 1 (WP 1.8): decide_session with no_issue covers every flag so far; the tile stops
+        // showing Flagged, and the session leaves the review queue until a new flag arrives.
+        id: "reviewed",
+        icon: "check",
+        label: t("action.markReviewed"),
+        disabled: !hasOpenFlag,
+        onSelect: () =>
+          void decideSession({ session_id: sessionId, decision: "no_issue" }).then((result) => {
+            if (result.ok) applyDecision(sessionId, result.data.decided_at);
+            else toast?.show({ kind: "error", message: review("error", { code: result.code }) });
+          }),
+      },
     ],
     [
       {

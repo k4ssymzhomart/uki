@@ -1,6 +1,6 @@
 "use client";
 
-import { type CompactEvent, type Locale, type MessagePreset, Uuid } from "@uki/contracts";
+import { type CompactEvent, type Locale, type MessagePreset, SESSION_NOTE_MAX, Uuid } from "@uki/contracts";
 import { createUkiTranslator, formatTime } from "@uki/i18n";
 import {
   Avatar,
@@ -14,9 +14,12 @@ import {
   Spinner,
   Tab,
   TabGroup,
+  TextArea,
+  ToastContext,
 } from "@uki/ui";
 import { useTranslations } from "next-intl";
-import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
+import { type KeyboardEvent, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { addSessionNote } from "../review/review-actions.ts";
 import {
   DRAWER_STATE_CHIP,
   drawerState,
@@ -84,6 +87,55 @@ function DrawerMessage({
   );
   const beneath = (["ru", "en"] as const).filter((l) => l !== locale);
   const labelId = `drawer-message-${target.sessionId}`;
+  const wall = useTranslations("dashboard.wall");
+  const review = useTranslations("dashboard.review");
+  const toast = useContext(ToastContext);
+  const [noting, setNoting] = useState(false);
+  const [note, setNote] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const saveNote = async () => {
+    const text = note.trim();
+    if (text === "" || saving) return;
+    setSaving(true);
+    const result = await addSessionNote({ session_id: target.sessionId, text });
+    setSaving(false);
+    if (!result.ok) {
+      toast?.show({ kind: "error", message: review("error", { code: result.code }) });
+      return;
+    }
+    // The proctor.note event reaches the timeline through the exam channel, like every event.
+    setNote("");
+    setNoting(false);
+  };
+
+  if (noting) {
+    return (
+      <div className="flex w-full flex-col items-start gap-2.5 overflow-clip rounded-card bg-surface px-4 pt-3.5 pb-4">
+        <TextArea
+          label={t("noteLabel")}
+          value={note}
+          maxLength={SESSION_NOTE_MAX}
+          onChange={(event) => setNote(event.target.value)}
+          className="w-full"
+          autoFocus
+        />
+        <div className="flex w-full items-start justify-end gap-2.5">
+          <Button variant="ghost" disabled={saving} onClick={() => setNoting(false)}>
+            {wall("message.cancel")}
+          </Button>
+          <Button
+            variant="primary"
+            loading={saving}
+            disabled={note.trim() === ""}
+            onClick={() => void saveNote()}
+          >
+            {t("addNote")}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex w-full flex-col items-start gap-2.5 overflow-clip rounded-card bg-surface px-4 pt-3.5 pb-4">
@@ -114,6 +166,10 @@ function DrawerMessage({
         ))}
       </div>
       <div className="flex w-full items-start justify-end gap-2.5">
+        {/* Phase 1 (WP 1.8): a note for the review, on the session's timeline in 2.5 and 3.3. */}
+        <Button variant="ghost" onClick={() => setNoting(true)}>
+          {t("addNote")}
+        </Button>
         <Button
           variant="primary"
           loading={pending}

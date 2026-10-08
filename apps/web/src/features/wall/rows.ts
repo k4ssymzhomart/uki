@@ -85,3 +85,7 @@ export function parseQuestionCount(value: unknown): number | null {
   const parsed = QuestionCount.safeParse(value);
   return parsed.success && parsed.data !== null && parsed.data > 0 ? parsed.data : null;
 }
+
+/** `review_decisions` as the wall needs them: which session was decided when (WP 1.8). */
+export const DecisionRow = z.object({ session_id: Uuid, decided_at: Timestamp });
+export type DecisionRow = z.infer<typeof DecisionRow>;

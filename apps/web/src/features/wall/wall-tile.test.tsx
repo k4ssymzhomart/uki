@@ -18,6 +18,9 @@ import { WallTile } from "./wall-tile.tsx";
 
 setupDom();
 
+const review = vi.hoisted(() => ({ decideSession: vi.fn() }));
+vi.mock("../review/review-actions.ts", () => review);
+
 function fakeFunctions() {
   const sent: CommandRequest[] = [];
   const api: FunctionsClient = {
@@ -92,7 +95,7 @@ describe("wall tiles", () => {
     openMenu(1);
     expect(await screen.findByText("Madina T. · 20231001")).toBeTruthy();
     expect(screen.queryByText("Watch camera")).toBeNull();
-    expect(screen.queryByText("Mark reviewed")).toBeNull();
+    expect(screen.getByRole("menuitem", { name: /Mark reviewed/ }).getAttribute("aria-disabled")).toBeNull();
     fireEvent.keyDown(screen.getByRole("menu"), { key: "p" });
     await waitFor(() => expect(functions.sent).toHaveLength(1));
     expect(functions.sent[0]).toEqual({ session_id: sessionId(1), type: "pause", payload: {} });
@@ -166,5 +169,36 @@ describe("wall tiles", () => {
       ]),
     );
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+
+  it("Mark reviewed decides no issue, and the tile drops Flagged for the flags it covers (WP 1.8)", async () => {
+    review.decideSession.mockResolvedValueOnce({
+      ok: true,
+      data: {
+        session_id: sessionId(1),
+        decision: "no_issue",
+        note: null,
+        reviewer_id: "c1000000-0000-4000-8000-000000000001",
+        decided_at: iso(5000),
+        exam_status: "live",
+      },
+    });
+    renderTiles();
+    expect(tile(1).dataset.wallState).toBe("flagged");
+    openMenu(1);
+    fireEvent.click(await screen.findByRole("menuitem", { name: /Mark reviewed/ }));
+    await waitFor(() => expect(tile(1).dataset.wallState).toBe("on_screen"));
+    expect(review.decideSession).toHaveBeenCalledWith({ session_id: sessionId(1), decision: "no_issue" });
+    // Nothing left to review: the item turns off.
+    openMenu(1);
+    const item = await screen.findByRole("menuitem", { name: /Mark reviewed/ });
+    expect(item.getAttribute("aria-disabled")).toBe("true");
+  });
+
+  it("disables Mark reviewed for a session without flags", async () => {
+    renderTiles();
+    openMenu(5);
+    const item = await screen.findByRole("menuitem", { name: /Mark reviewed/ });
+    expect(item.getAttribute("aria-disabled")).toBe("true");
   });
 });

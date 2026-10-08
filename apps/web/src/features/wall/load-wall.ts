@@ -1,9 +1,18 @@
 // The server render's data for /exams/[examId]/live (plan, Live wall data flow step 1): the exam, its
 // roster and sessions, its flag and log events from the last 60 minutes and every older phone or
-// second-face flag (the Flagged tile has no time limit), all under the caller's RLS.
+// second-face flag (the Flagged tile has no time limit), and its review decisions (WP 1.8), all under
+// the caller's RLS.
 
 import { type AnyClient, fetchInitialEvents, fetchSessions, readPages } from "./queries.ts";
-import { ExamGroupRow, ExamRow, parseQuestionCount, parseRows, RosterRow, StaffRow } from "./rows.ts";
+import {
+  DecisionRow,
+  ExamGroupRow,
+  ExamRow,
+  parseQuestionCount,
+  parseRows,
+  RosterRow,
+  StaffRow,
+} from "./rows.ts";
 import type { WallInitialData, WallStudent } from "./wall-store.ts";
 
 /** Null when the exam does not exist or the caller may not see it. */
@@ -20,28 +29,37 @@ export async function loadWall(
   const exam = ExamRow.safeParse(examResult.data);
   if (examResult.error || !exam.success) return null;
 
-  const [groupsResult, rosterRows, sessions, events, staffRows, questionsResult] = await Promise.all([
-    client.from("exam_groups").select("groups(code)").eq("exam_id", examId),
-    readPages((from, to) =>
-      client
-        .from("exam_students")
-        .select("seat, students(id, full_name, student_number)")
-        .eq("exam_id", examId)
-        .order("seat", { ascending: true, nullsFirst: false })
-        .range(from, to),
-    ),
-    fetchSessions(client, examId),
-    fetchInitialEvents(client, examId, nowMs),
-    readPages((from, to) =>
-      client
-        .from("staff")
-        .select("id, full_name")
-        .eq("workspace_id", exam.data.workspace_id)
-        .order("id")
-        .range(from, to),
-    ),
-    client.rpc("exam_question_count", { exam_id: examId }),
-  ]);
+  const [groupsResult, rosterRows, sessions, events, staffRows, questionsResult, decisionRows] =
+    await Promise.all([
+      client.from("exam_groups").select("groups(code)").eq("exam_id", examId),
+      readPages((from, to) =>
+        client
+          .from("exam_students")
+          .select("seat, students(id, full_name, student_number)")
+          .eq("exam_id", examId)
+          .order("seat", { ascending: true, nullsFirst: false })
+          .range(from, to),
+      ),
+      fetchSessions(client, examId),
+      fetchInitialEvents(client, examId, nowMs),
+      readPages((from, to) =>
+        client
+          .from("staff")
+          .select("id, full_name")
+          .eq("workspace_id", exam.data.workspace_id)
+          .order("id")
+          .range(from, to),
+      ),
+      client.rpc("exam_question_count", { exam_id: examId }),
+      readPages((from, to) =>
+        client
+          .from("review_decisions")
+          .select("session_id, decided_at")
+          .eq("exam_id", examId)
+          .order("session_id")
+          .range(from, to),
+      ),
+    ]);
 
   const groups = parseRows(ExamGroupRow, groupsResult.data)
     .map((row) => row.groups?.code)
@@ -54,6 +72,7 @@ export async function loadWall(
     seat: row.seat,
   }));
   const staff = parseRows(StaffRow, staffRows);
+  const decisions = parseRows(DecisionRow, decisionRows);
   // exam_question_count answers exam staff (proctors cannot read exam_questions); null is unknown.
   const questionCount = questionsResult.error === null ? parseQuestionCount(questionsResult.data) : null;
 
@@ -71,6 +90,7 @@ export async function loadWall(
     sessions,
     events,
     staff: staff.map((s) => ({ id: s.id, fullName: s.full_name })),
+    decisions: decisions.map((d) => ({ sessionId: d.session_id, decidedAt: d.decided_at })),
     serverNowMs: nowMs,
   };
 }
