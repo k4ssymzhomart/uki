@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { loadChangeRequestExamIds } from "../../../features/my-exams/change-requests-data.ts";
 import { loadBouncedInvites, loadGroupCount } from "../../../features/overview/overview-data.ts";
 import { overviewStats } from "../../../features/overview/overview-model.ts";
 import { OverviewView } from "../../../features/overview/overview-view.tsx";
@@ -16,12 +17,17 @@ export async function generateMetadata(): Promise<Metadata> {
 /**
  * 0.1 Overview (Figma 51:2046), rendered on the server as the staff member under RLS: the exam office
  * sees its workspace's exams, within the faculty chosen in the workspace menu (0.1c), a proctor only
- * the exams assigned to it.
+ * the exams assigned to it. The exam office also sees which exams have a proctor's change request
+ * (0.9a, WP 1.5).
  */
 export default async function OverviewPage() {
   const staff = await requireStaff();
   if (!staff) return <StaffLookupFailed />;
-  const [scope, groupCount] = await Promise.all([loadOverviewScope(), loadGroupCount()]);
+  const [scope, groupCount, changeRequests] = await Promise.all([
+    loadOverviewScope(),
+    loadGroupCount(),
+    staff.role === "proctor" ? Promise.resolve([]) : loadChangeRequestExamIds(),
+  ]);
   const next = overviewStats(scope.rows).upcoming.next;
   const bounced = next ? await loadBouncedInvites(next.id) : 0;
   const t = await getTranslations("dashboard.shell.workspace");
@@ -32,6 +38,7 @@ export default async function OverviewPage() {
       groupCount={groupCount}
       readiness={next ? { ready: Math.max(0, next.roster_size - bounced), total: next.roster_size } : null}
       nowMs={Date.now()}
+      changeRequests={changeRequests}
       scopeName={scopesFaculty(staff.role) ? (faculty?.name ?? t("allFaculties")) : undefined}
     />
   );

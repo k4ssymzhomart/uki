@@ -68,10 +68,11 @@ describe("shell", () => {
     }
   });
 
-  it("lands proctors on /my-exams only once WP 1.5 has turned it on", () => {
-    expect(PROCTORS_LAND_ON_MY_EXAMS).toBe(false);
-    expect(staffHomePath("proctor")).toBe("/overview");
-    expect(staffHomePath("proctor", true)).toBe("/my-exams");
+  it("lands proctors on /my-exams (0.9) since WP 1.5, and the exam office on the overview", () => {
+    expect(PROCTORS_LAND_ON_MY_EXAMS).toBe(true);
+    expect(staffHomePath("proctor")).toBe("/my-exams");
+    expect(staffHomePath("proctor", false)).toBe("/overview");
+    expect(staffHomePath("exam_office")).toBe("/overview");
     expect(staffHomePath("exam_office", true)).toBe("/overview");
     expect(staffHomePath("admin", true)).toBe("/overview");
   });

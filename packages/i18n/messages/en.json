@@ -79,6 +79,26 @@
         "startsAt": "Starts at {time} · in {minutes} min"
       },
       "breadcrumb": "Live / {exam} · {groups}",
+      "card": {
+        "cardUnreadable": "Card unreadable",
+        "device": "Device",
+        "help": "help",
+        "problem": "Problem",
+        "retry": "retry {attempt} of {max}",
+        "step": "Check-in · step {step} of {total}",
+        "stepName": {
+          "identity": "Identity",
+          "ready": "Ready",
+          "rules": "Rules",
+          "system": "System"
+        },
+        "tries": "{tries} of {max} tries"
+      },
+      "changeRequest": {
+        "body": "“{text}”",
+        "title": "{name} asked to change seats {from}–{to}",
+        "titleAll": "{name} asked for a change"
+      },
       "chip": {
         "checking": "Checking in",
         "done": "Done",
@@ -99,10 +119,24 @@
         "appOpen": "{app} is open",
         "bounced": "Invite email bounced",
         "cameraBlocked": "Camera blocked by another app",
+        "cardHelp": "Card unreadable · {tries} of {max} tries",
         "cardRetry": "Card unreadable · retry {attempt} of {max}",
         "waiting": "Waiting for the start"
       },
       "device": "{os} · Üki {version}",
+      "identityHelp": {
+        "close": "Close",
+        "footer": "You see each try’s result, never the photo.",
+        "hint": {
+          "helper": "Sent in {language}, {name}’s app language · {count}/{max}",
+          "label": "Hint for {name}",
+          "placeholder": "Tilt the card away from the window light, then hold it inside the lime frame."
+        },
+        "open": "Identity help",
+        "send": "Send hint",
+        "sent": "Hint sent to {name}.",
+        "title": "Identity help"
+      },
       "message": "Message",
       "messageEveryone": "Message everyone",
       "noDevice": "—",
@@ -156,6 +190,80 @@
         "title": "Check-in"
       },
       "title": "Lobby"
+    },
+    "myExams": {
+      "allSeats": "All seats",
+      "banner": {
+        "body": "{name} assigned you seats {from}–{to} on {date}. Confirm them or ask for a change.",
+        "bodyAll": "{name} assigned you to this exam on {date}. Confirm it or ask for a change.",
+        "review": "Review",
+        "title": "Confirm your seats for {course}"
+      },
+      "change": {
+        "back": "Back",
+        "body": "The exam office sees your note on {course} and changes your seats or languages.",
+        "counter": "{count}/{max}",
+        "field": "What should change?",
+        "send": "Send request"
+      },
+      "confirm": {
+        "allSeats": "All seats, {count, plural, one {# student} other {# students}}.",
+        "change": "Ask for a change",
+        "confirm": "Confirm seats",
+        "languages": "You speak with them in {languages}.",
+        "lobby": "The lobby opens at {time}.",
+        "seats": "Seats {from}–{to}, {count, plural, one {# student} other {# students}}.",
+        "title": "Confirm {course}?",
+        "when": "{date}, {start}–{end}."
+      },
+      "examOffice": "The exam office",
+      "language": {
+        "en": "English",
+        "kk": "Kazakh",
+        "ru": "Russian"
+      },
+      "languageIn": {
+        "en": "English",
+        "kk": "Kazakh",
+        "ru": "Russian"
+      },
+      "seats": "Seats {from}–{to}",
+      "stat": {
+        "assigned": {
+          "caption": "this week and next",
+          "label": "Assigned",
+          "value": "{count, plural, one {# exam} other {# exams}}"
+        },
+        "confirm": {
+          "label": "To confirm",
+          "none": "All confirmed"
+        },
+        "next": {
+          "day": "{weekday} {time}",
+          "label": "Next exam",
+          "none": "None",
+          "today": "Today {time}"
+        },
+        "students": {
+          "caption": "across your seats",
+          "label": "Your students"
+        }
+      },
+      "status": {
+        "changeRequested": "Change requested",
+        "confirm": "Confirm seats",
+        "confirmed": "Confirmed"
+      },
+      "table": {
+        "empty": "No exams are assigned to you yet.",
+        "title": "Assignments"
+      },
+      "title": "My exams",
+      "toast": {
+        "confirmed": "Seats confirmed for {course}.",
+        "failed": "Could not save. Try again.",
+        "requested": "Change request sent to the exam office."
+      }
     },
     "overview": {
       "check": {

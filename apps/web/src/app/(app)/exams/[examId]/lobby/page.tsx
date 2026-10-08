@@ -13,8 +13,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * 1.5 Lobby (Figma 51:2066) for proctors of the exam and the exam office, rendered on the server under
- * RLS; an exam the staff member may not see is a 404.
+ * 1.5 Lobby (Figma 51:2066) with 1.5a and 1.5b, for proctors of the exam and the exam office, rendered
+ * on the server under RLS; an exam the staff member may not see is a 404. The exam office also gets the
+ * proctors' change requests from 0.9a.
  */
 export default async function LobbyPage({ params }: PageProps<"/exams/[examId]/lobby">) {
   const staff = await requireStaff();
@@ -28,6 +29,7 @@ export default async function LobbyPage({ params }: PageProps<"/exams/[examId]/l
       roster={lobby.roster}
       sessions={lobby.sessions}
       who={lobby.who}
+      changeRequests={lobby.changeRequests}
       nowMs={Date.now()}
       startAction={startExam}
     />

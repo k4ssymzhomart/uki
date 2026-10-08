@@ -1,0 +1,283 @@
+{
+  "$comment": "WP 1.5 Proctor home and lobby: 0.9 (Figma 164:13518), 0.9a (164:15836), 1.5a (85:6412) and 1.5b (156:12176). English from the frames; keys no frame shows (the change-request step of 0.9a, the toasts, the empty states, the language names, the exam office's change-request banner, the hint toast) are added-not-in-figma, logged in docs/decisions.md under 1.5. The Russian is a first pass by the agent: native review needed, P.18.",
+  "dashboard.lobby.card.cardUnreadable": {
+    "en": "Card unreadable",
+    "ru": "Билет не читается"
+  },
+  "dashboard.lobby.card.device": {
+    "en": "Device",
+    "ru": "Устройство"
+  },
+  "dashboard.lobby.card.help": {
+    "en": "help",
+    "ru": "помощь"
+  },
+  "dashboard.lobby.card.problem": {
+    "en": "Problem",
+    "ru": "Проблема"
+  },
+  "dashboard.lobby.card.retry": {
+    "en": "retry {attempt} of {max}",
+    "ru": "попытка {attempt} из {max}"
+  },
+  "dashboard.lobby.card.step": {
+    "en": "Check-in · step {step} of {total}",
+    "ru": "Регистрация · шаг {step} из {total}"
+  },
+  "dashboard.lobby.card.stepName.identity": {
+    "en": "Identity",
+    "ru": "Личность"
+  },
+  "dashboard.lobby.card.stepName.ready": {
+    "en": "Ready",
+    "ru": "Готов"
+  },
+  "dashboard.lobby.card.stepName.rules": {
+    "en": "Rules",
+    "ru": "Правила"
+  },
+  "dashboard.lobby.card.stepName.system": {
+    "en": "System",
+    "ru": "Система"
+  },
+  "dashboard.lobby.card.tries": {
+    "en": "{tries} of {max} tries",
+    "ru": "{tries} из {max} попыток"
+  },
+  "dashboard.lobby.changeRequest.body": {
+    "en": "“{text}”",
+    "ru": "«{text}»"
+  },
+  "dashboard.lobby.changeRequest.title": {
+    "en": "{name} asked to change seats {from}–{to}",
+    "ru": "{name} просит изменить места {from}–{to}"
+  },
+  "dashboard.lobby.changeRequest.titleAll": {
+    "en": "{name} asked for a change",
+    "ru": "{name} просит изменить назначение"
+  },
+  "dashboard.lobby.detail.cardHelp": {
+    "en": "Card unreadable · {tries} of {max} tries",
+    "ru": "Билет не читается · {tries} из {max} попыток"
+  },
+  "dashboard.lobby.identityHelp.close": {
+    "en": "Close",
+    "ru": "Закрыть"
+  },
+  "dashboard.lobby.identityHelp.footer": {
+    "en": "You see each try’s result, never the photo.",
+    "ru": "Вы видите результат каждой попытки, но не фото."
+  },
+  "dashboard.lobby.identityHelp.hint.helper": {
+    "en": "Sent in {language}, {name}’s app language · {count}/{max}",
+    "ru": "Язык приложения {name}: {language} · {count}/{max}"
+  },
+  "dashboard.lobby.identityHelp.hint.label": {
+    "en": "Hint for {name}",
+    "ru": "Подсказка для {name}"
+  },
+  "dashboard.lobby.identityHelp.hint.placeholder": {
+    "en": "Tilt the card away from the window light, then hold it inside the lime frame.",
+    "ru": "Отверните билет от света из окна и держите его внутри зелёной рамки."
+  },
+  "dashboard.lobby.identityHelp.open": {
+    "en": "Identity help",
+    "ru": "Помочь"
+  },
+  "dashboard.lobby.identityHelp.send": {
+    "en": "Send hint",
+    "ru": "Отправить подсказку"
+  },
+  "dashboard.lobby.identityHelp.sent": {
+    "en": "Hint sent to {name}.",
+    "ru": "Подсказка отправлена: {name}."
+  },
+  "dashboard.lobby.identityHelp.title": {
+    "en": "Identity help",
+    "ru": "Помощь с личностью"
+  },
+  "dashboard.myExams.allSeats": {
+    "en": "All seats",
+    "ru": "Все места"
+  },
+  "dashboard.myExams.banner.body": {
+    "en": "{name} assigned you seats {from}–{to} on {date}. Confirm them or ask for a change.",
+    "ru": "{name}: вам назначены места {from}–{to} на {date}. Подтвердите их или попросите изменить."
+  },
+  "dashboard.myExams.banner.bodyAll": {
+    "en": "{name} assigned you to this exam on {date}. Confirm it or ask for a change.",
+    "ru": "{name}: вы назначены на этот экзамен {date}. Подтвердите или попросите изменить."
+  },
+  "dashboard.myExams.banner.review": {
+    "en": "Review",
+    "ru": "Проверить"
+  },
+  "dashboard.myExams.banner.title": {
+    "en": "Confirm your seats for {course}",
+    "ru": "Подтвердите места на экзамене «{course}»"
+  },
+  "dashboard.myExams.change.back": {
+    "en": "Back",
+    "ru": "Назад"
+  },
+  "dashboard.myExams.change.body": {
+    "en": "The exam office sees your note on {course} and changes your seats or languages.",
+    "ru": "Экзаменационный отдел увидит вашу заметку к экзамену «{course}» и изменит места или языки."
+  },
+  "dashboard.myExams.change.counter": {
+    "en": "{count}/{max}",
+    "ru": "{count}/{max}"
+  },
+  "dashboard.myExams.change.field": {
+    "en": "What should change?",
+    "ru": "Что нужно изменить?"
+  },
+  "dashboard.myExams.change.send": {
+    "en": "Send request",
+    "ru": "Отправить запрос"
+  },
+  "dashboard.myExams.confirm.allSeats": {
+    "en": "All seats, {count, plural, one {# student} other {# students}}.",
+    "ru": "Все места, {count, plural, one {# студент} few {# студента} many {# студентов} other {# студента}}."
+  },
+  "dashboard.myExams.confirm.change": {
+    "en": "Ask for a change",
+    "ru": "Попросить изменить"
+  },
+  "dashboard.myExams.confirm.confirm": {
+    "en": "Confirm seats",
+    "ru": "Подтвердить места"
+  },
+  "dashboard.myExams.confirm.languages": {
+    "en": "You speak with them in {languages}.",
+    "ru": "Вы говорите с ними на {languages}."
+  },
+  "dashboard.myExams.confirm.lobby": {
+    "en": "The lobby opens at {time}.",
+    "ru": "Лобби открывается в {time}."
+  },
+  "dashboard.myExams.confirm.seats": {
+    "en": "Seats {from}–{to}, {count, plural, one {# student} other {# students}}.",
+    "ru": "Места {from}–{to}, {count, plural, one {# студент} few {# студента} many {# студентов} other {# студента}}."
+  },
+  "dashboard.myExams.confirm.title": {
+    "en": "Confirm {course}?",
+    "ru": "Подтвердить «{course}»?"
+  },
+  "dashboard.myExams.confirm.when": {
+    "en": "{date}, {start}–{end}.",
+    "ru": "{date}, {start}–{end}."
+  },
+  "dashboard.myExams.examOffice": {
+    "en": "The exam office",
+    "ru": "Экзаменационный отдел"
+  },
+  "dashboard.myExams.language.en": {
+    "en": "English",
+    "ru": "английский"
+  },
+  "dashboard.myExams.language.kk": {
+    "en": "Kazakh",
+    "ru": "казахский"
+  },
+  "dashboard.myExams.language.ru": {
+    "en": "Russian",
+    "ru": "русский"
+  },
+  "dashboard.myExams.languageIn.en": {
+    "en": "English",
+    "ru": "английском"
+  },
+  "dashboard.myExams.languageIn.kk": {
+    "en": "Kazakh",
+    "ru": "казахском"
+  },
+  "dashboard.myExams.languageIn.ru": {
+    "en": "Russian",
+    "ru": "русском"
+  },
+  "dashboard.myExams.seats": {
+    "en": "Seats {from}–{to}",
+    "ru": "Места {from}–{to}"
+  },
+  "dashboard.myExams.stat.assigned.caption": {
+    "en": "this week and next",
+    "ru": "на этой и следующей неделе"
+  },
+  "dashboard.myExams.stat.assigned.label": {
+    "en": "Assigned",
+    "ru": "Назначено"
+  },
+  "dashboard.myExams.stat.assigned.value": {
+    "en": "{count, plural, one {# exam} other {# exams}}",
+    "ru": "{count, plural, one {# экзамен} few {# экзамена} many {# экзаменов} other {# экзамена}}"
+  },
+  "dashboard.myExams.stat.confirm.label": {
+    "en": "To confirm",
+    "ru": "Подтвердить"
+  },
+  "dashboard.myExams.stat.confirm.none": {
+    "en": "All confirmed",
+    "ru": "Всё подтверждено"
+  },
+  "dashboard.myExams.stat.next.day": {
+    "en": "{weekday} {time}",
+    "ru": "{weekday} {time}"
+  },
+  "dashboard.myExams.stat.next.label": {
+    "en": "Next exam",
+    "ru": "Следующий экзамен"
+  },
+  "dashboard.myExams.stat.next.none": {
+    "en": "None",
+    "ru": "Нет"
+  },
+  "dashboard.myExams.stat.next.today": {
+    "en": "Today {time}",
+    "ru": "Сегодня {time}"
+  },
+  "dashboard.myExams.stat.students.caption": {
+    "en": "across your seats",
+    "ru": "на ваших местах"
+  },
+  "dashboard.myExams.stat.students.label": {
+    "en": "Your students",
+    "ru": "Ваши студенты"
+  },
+  "dashboard.myExams.status.changeRequested": {
+    "en": "Change requested",
+    "ru": "Запрошено изменение"
+  },
+  "dashboard.myExams.status.confirm": {
+    "en": "Confirm seats",
+    "ru": "Подтвердить места"
+  },
+  "dashboard.myExams.status.confirmed": {
+    "en": "Confirmed",
+    "ru": "Подтверждено"
+  },
+  "dashboard.myExams.table.empty": {
+    "en": "No exams are assigned to you yet.",
+    "ru": "Вам пока не назначены экзамены."
+  },
+  "dashboard.myExams.table.title": {
+    "en": "Assignments",
+    "ru": "Назначения"
+  },
+  "dashboard.myExams.title": {
+    "en": "My exams",
+    "ru": "Мои экзамены"
+  },
+  "dashboard.myExams.toast.confirmed": {
+    "en": "Seats confirmed for {course}.",
+    "ru": "Места на экзамене «{course}» подтверждены."
+  },
+  "dashboard.myExams.toast.failed": {
+    "en": "Could not save. Try again.",
+    "ru": "Не удалось сохранить. Попробуйте снова."
+  },
+  "dashboard.myExams.toast.requested": {
+    "en": "Change request sent to the exam office.",
+    "ru": "Запрос на изменение отправлен в экзаменационный отдел."
+  }
+}

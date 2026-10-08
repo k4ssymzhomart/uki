@@ -107,16 +107,14 @@ export function liveHref(target: LiveTarget): string {
 export const EXAMS_HREF = "/overview#exams";
 
 /**
- * Proctors land on 0.9 (/my-exams) after sign-in (Phase 1 plan, Decisions: Proctor landing). /my-exams
- * is WP 1.5; until it lands this stays false and proctors keep landing on the overview. WP 1.5 turns it
- * on together with its page.
+ * Proctors land on 0.9 (/my-exams) after sign-in (Phase 1 plan, Decisions: Proctor landing); WP 1.5
+ * turned it on with the page. 0.9 marks Overview, so a proctor's Overview item leads there too.
  */
-export const PROCTORS_LAND_ON_MY_EXAMS = false;
+export const PROCTORS_LAND_ON_MY_EXAMS = true;
 
 /** Where a staff member lands after sign-in and on `/`, and where their Overview item leads. */
 export function staffHomePath(role: StaffRole, myExamsBuilt: boolean = PROCTORS_LAND_ON_MY_EXAMS): Route {
-  // /my-exams is not a typed route until WP 1.5 adds its page.
-  return (role === "proctor" && myExamsBuilt ? "/my-exams" : "/overview") as Route;
+  return role === "proctor" && myExamsBuilt ? "/my-exams" : "/overview";
 }
 
 /** "KRU · Kostanay" gives "K", as the workspace avatar in Figma. */

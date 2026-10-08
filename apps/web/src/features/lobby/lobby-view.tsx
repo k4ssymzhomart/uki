@@ -2,6 +2,7 @@
 
 import { toMs } from "@uki/contracts";
 import {
+  Banner,
   Button,
   initials,
   RowAction,
@@ -25,8 +26,11 @@ import { useNow, useServerOffset } from "../../lib/use-now.ts";
 import { PageHeader } from "../shell/page-header.tsx";
 import { shortName } from "../wall/names.ts";
 import { QuickMessage } from "../wall/quick-message.tsx";
+import { WriteMessageDialog } from "../wall/write-message-dialog.tsx";
+import { IdentityHelp } from "./identity-help.tsx";
 import {
   beforeStart,
+  type ChangeRequestRow,
   canStartExam,
   defaultLobbyFilter,
   LOBBY_FILTERS,
@@ -41,6 +45,8 @@ import {
   type StepDetail,
   visibleRows,
 } from "./lobby-model.ts";
+import { StudentCard } from "./student-card.tsx";
+import { useHoverCard } from "./use-hover-card.ts";
 import { useLobbySessions } from "./use-lobby-sessions.ts";
 
 /** Resolves with an error; on success the action redirects to the live wall instead. */
@@ -56,6 +62,8 @@ export type LobbyViewProps = {
   /** The server's clock when the page rendered. */
   nowMs: number;
   startAction: StartExamAction;
+  /** The proctors' open change requests from 0.9a; the exam office sees them above the banner. */
+  changeRequests?: readonly ChangeRequestRow[];
   /** Server clock minus this browser's (lib/use-now.ts); tests pass a fake. Must be stable. */
   measureOffset?: () => Promise<number | null>;
 };
@@ -64,8 +72,10 @@ const CLOCK_TICK_MS = 15_000;
 
 /**
  * 1.5 Lobby (Figma 51:2066): the start banner with Message everyone and Start exam, the four stat cards
- * and the check-in table with tabs and search, kept live from the exam channel. Call stays hidden in
- * Phase 0.
+ * and the check-in table with tabs and search, kept live from the exam channel. Call stays hidden. A
+ * student's name opens 1.5a (85:6412), the student card, also when the pointer rests on the row; a
+ * student held by the card check gets Identity help there, which opens 1.5b (156:12176). The exam office
+ * sees the proctors' change requests from 0.9a above the banner.
  */
 export function LobbyView({
   exam,
@@ -74,6 +84,7 @@ export function LobbyView({
   who,
   nowMs,
   startAction,
+  changeRequests = [],
   measureOffset,
 }: LobbyViewProps) {
   const t = useTranslations("dashboard");
@@ -88,6 +99,10 @@ export function LobbyView({
   const [query, setQuery] = useState("");
   const [starting, startTransition] = useTransition();
   const visible = visibleRows(rows, filter, query);
+  const card = useHoverCard();
+  const [writingTo, setWritingTo] = useState<LobbyRow | null>(null);
+  const [helping, setHelping] = useState<string | null>(null);
+  const helpRow = rows.find((row) => row.studentId === helping) ?? null;
 
   const groupsLabel =
     exam.groups.length > 0
@@ -111,6 +126,8 @@ export function LobbyView({
         return t("lobby.detail.appOpen", { app: detail.app });
       case "cardRetry":
         return t("lobby.detail.cardRetry", { attempt: detail.attempt, max: detail.max });
+      case "cardHelp":
+        return t("lobby.detail.cardHelp", { tries: detail.tries, max: detail.max });
       default:
         return t(`lobby.detail.${detail.key}`);
     }
@@ -132,6 +149,23 @@ export function LobbyView({
         title={t("lobby.title")}
       />
       <main className="flex flex-col gap-5 px-8 pt-6.5 pb-7">
+        {changeRequests.map((request) => (
+          <Banner
+            key={request.staff_id}
+            kind="warn"
+            data-change-request={request.staff_id}
+            title={
+              request.seat_from !== null && request.seat_to !== null
+                ? t("lobby.changeRequest.title", {
+                    name: request.staff.full_name,
+                    from: request.seat_from,
+                    to: request.seat_to,
+                  })
+                : t("lobby.changeRequest.titleAll", { name: request.staff.full_name })
+            }
+            body={t("lobby.changeRequest.body", { text: request.change_request })}
+          />
+        ))}
         <section className="flex items-center gap-4.5 overflow-clip rounded-card bg-brand-subtle px-4.5 py-3.5">
           <Image src={stopwatchArt} alt="" className="size-18 shrink-0 object-contain" />
           <div className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
@@ -244,8 +278,17 @@ export function LobbyView({
                 <RowLobby
                   key={row.studentId}
                   data-category={row.category}
+                  data-student-id={row.studentId}
+                  {...(row.sessionId === null ? {} : card.rowHandlers(row.studentId))}
                   initials={initials(row.name, locale)}
-                  name={row.name}
+                  name={
+                    <StudentCard
+                      row={row}
+                      card={card}
+                      onMessage={setWritingTo}
+                      onIdentityHelp={(target) => setHelping(target.studentId)}
+                    />
+                  }
                   studentId={row.number}
                   step={t(`lobby.step.${row.step}`)}
                   stepDetail={detailText(row.detail)}
@@ -270,6 +313,21 @@ export function LobbyView({
           </Table>
         </section>
       </main>
+      {writingTo?.sessionId ? (
+        <WriteMessageDialog
+          target={{ scope: "student", sessionId: writingTo.sessionId, name: shortName(writingTo.name) }}
+          open
+          onOpenChange={(open) => {
+            if (!open) setWritingTo(null);
+          }}
+        />
+      ) : null}
+      <IdentityHelp
+        row={helpRow}
+        onOpenChange={(open) => {
+          if (!open) setHelping(null);
+        }}
+      />
     </>
   );
 }

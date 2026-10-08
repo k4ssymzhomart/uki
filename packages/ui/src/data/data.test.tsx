@@ -311,6 +311,28 @@ describe("table rows", () => {
     expect(within(row).getAllByRole("cell")).toHaveLength(6);
   });
 
+  it("makes Row/Exam's status chip a button above the row link with onStatusClick (0.9 Confirm seats)", () => {
+    const onStatusClick = vi.fn();
+    render(
+      <InBody>
+        <RowExam
+          exam="Mathematics 2 · Midterm"
+          when="Fri 9 Oct · 10:00"
+          students="64"
+          status="warn"
+          statusLabel="Confirm seats"
+          onStatusClick={onStatusClick}
+          href="/exams/1/lobby"
+        />
+      </InBody>,
+    );
+    const button = screen.getByRole("button", { name: "Confirm seats" });
+    expect(button.className).toContain("z-1");
+    fireEvent.click(button);
+    expect(onStatusClick).toHaveBeenCalledOnce();
+    expect(screen.getByRole("link", { name: "Mathematics 2 · Midterm" })).toBeTruthy();
+  });
+
   it("uses a custom link component for Row/Exam", () => {
     function FakeLink({
       href,

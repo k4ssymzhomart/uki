@@ -113,7 +113,8 @@ describe("lobby rows", () => {
     expect(at("checking", "app:Discord")).toEqual({ key: "appOpen", app: "Discord" });
     expect(at("checking", "camera:busy")).toEqual({ key: "cameraBlocked" });
     expect(at("identity", "card:retry:1")).toEqual({ key: "cardRetry", attempt: 1, max: 3 });
-    expect(at("identity", "card:help:3")).toEqual({ key: "cardRetry", attempt: 3, max: 3 });
+    // 1.3a: 1.5b writes "Card unreadable · 3 of 3 tries" (WP 1.5).
+    expect(at("identity", "card:help:3")).toEqual({ key: "cardHelp", tries: 3, max: 3 });
     // In the vocabulary, with no string in Figma yet: Needs help without a detail line.
     for (const detail of [
       "lock:not_paired",

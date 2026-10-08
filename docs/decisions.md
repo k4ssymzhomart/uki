@@ -731,3 +731,74 @@ Choices WP 1.4 made for `send-invites` and the invite email 0.8 (161:13438), whe
 - `pnpm functions:serve`, `pnpm dev` and CI's stack job serve the functions with `supabase/functions/local.env`. That file points `RESEND_BASE_URL` at `http://host.docker.internal:54790`, where the integration tests run a Resend stub (`test/integration/resend-stub.ts`). With nothing listening there, a local send marks its invites `failed`. The file holds no secret.
 - The integration tests read the served env file (`UKI_FUNCTIONS_ENV_FILE`, or `local.env`) to find the stub's port and the sink. CI runs `send-invites.test.ts` a second time with `UKI_EMAIL_SINK` set.
 - Biome skips `__snapshots__/`, where the email's HTML and text snapshots live.
+
+## 2026-10-08 · 1.5 Proctor home and lobby
+
+Choices WP 1.5 made where the plan leaves room, or where a frame and the plan disagree. The plan decides behaviour and Figma decides visuals.
+
+**Proctor landing.** `PROCTORS_LAND_ON_MY_EXAMS` is on: sign-in, `/` and the proctor's Overview item lead to `/my-exams` (0.9 marks Overview). `/overview` still works for a proctor and lists only their exams. The exam office and admins have no seats to confirm, so `/my-exams` sends them to `/overview`. The e2e sign-in helper accepts either home.
+
+**0.9 My exams**
+- **Which rows.** Live and scheduled assignments: live first, then by start. Drafts can still change, and finished exams are on 0.1's Done tab, so neither is listed. A row leads to the exam's lobby, or to its live wall once it has started.
+- **The stat cards.**
+  - NEXT EXAM is the live exam, or else the soonest scheduled one. It reads "Today 14:00" today, "Fri 10:00" within six days, and the date after that.
+  - ASSIGNED and YOUR STUDENTS count the listed exams that start this Monday-to-Sunday week or next, in Asia/Almaty. The students are the roster rows in the assignment's seats, counted with a head request so that no student row is read. An assignment without seats (Physics 1's only proctor) counts the whole roster.
+  - TO CONFIRM counts the scheduled assignments that are neither confirmed nor questioned.
+  - Conflict: the frame's caption "Mathematics 2 · Thu" sits beside an exam on Fri 9 Oct. The plan has no confirm-by day, so the caption is the course and the exam's own weekday.
+- **The banner** shows the soonest assignment to confirm.
+  - "Dana Akhmetova assigned you…" names the exam's `created_by`, the exam office member who made it, because no table records who assigned the seats. Without one it reads "The exam office".
+  - "on Fri 9 Oct" is the exam's date.
+  - An assignment without seats gets its own sentence ("assigned you to this exam").
+  - The search field and the bell stay hidden, as Phase 0 decided.
+- **The sidebar's user line** reads "Proctor · Group 204" (WP 1.2's shell), where 0.9 writes "Proctor · 3 exams". Reports and Students stay hidden until 1.10 and 1.11 build them.
+
+**0.9a Confirm seats**
+- Confirm seats calls `confirm_seats` without text, through a server action that checks its input with `ConfirmSeatsInput`.
+- **Ask for a change has no frame.** It turns the same dialog into a note for the exam office in the Dialog's field slot, as 2.4b's Write a message does. Back returns to 0.9a, and Send request calls `confirm_seats` with the note (1 to 500 characters). For this, the kit's Dialog gains `onCancel`, a Secondary action that keeps the dialog open.
+- While an assignment is not confirmed, its chip stays a button. A proctor who asked for a change can still confirm, which clears the request, as `confirm_seats` does.
+- The toasts, the field, Back and Send request are new keys, added-not-in-figma.
+- 0.9a is centred over the page beside the sidebar, as the frame places it (left 628 px). The kit's other dialogs (2.4e) stay centred in the window.
+
+**The change request reaches the exam office.** 0.5 and the wizard's proctor table are WP 1.3 (#16, not merged; its 0.3 proctor table already marks "Change requested"). Until then the exam office sees a request in two places:
+- 0.1's exam row: the status chip of an upcoming exam with an open request reads "Change requested" (warn) in place of Scheduled.
+- The lobby: a warn Banner per request above the start banner, with the proctor, the seats and the note in quotes. It shows for the exam office and admins only.
+
+Neither frame draws these, so both use new keys, added-not-in-figma.
+
+**1.5a Student card**
+- **Opening and closing.** Popover/Student (`StudentPopover` in `@uki/ui`) opens when the pointer rests on a lobby row for 300 ms. It closes 200 ms after the pointer leaves the row and the card. A click, Enter or Space on the student's name also opens it, so the keyboard reaches its buttons. A card opened by the pointer neither takes the focus when it opens nor gives the focus back when it closes; otherwise the next row's card would close at once.
+- **Placement.** The card sits where the frame draws it: 21 px right of the row's edge and 5 px under the avatar.
+- **Not joined.** A student who has not joined has no session, so their row has no card.
+- **The bar.** The four steps are System, Identity, Rules and Ready, from `sessions.state`. Steps before the current one are done. The current step is warn while something holds the student there, done once ready, and to do otherwise.
+- **The chip** reads "help" for Needs help, as the frame does, and the row's chip otherwise.
+- **The facts** are Problem (the lobby's detail, or "Card unreadable" for the card) and Device. Figma's Camera fact ("On · 1 face") is left out: the server only learns of a camera problem at the system check, not that the camera is on.
+- **Verify by hand** would confirm a student's identity by hand, and the plan builds no identity override, so it is hidden. For a student held by the card check, Identity help (opening 1.5b) takes its place. Other students get only Message, which opens 2.4b's Write a message for that student.
+
+**1.5b Identity help**
+- **The drawer** is the kit's new `Drawer`: 460 px on the right over the scrim, with a close icon, a scrolling body and the footer. 1.5a's Identity help opens it, and it gives the focus back to the opener when it closes.
+- **The header.** The device line is "macOS · Üki 1.4.2"; see the network type below. The tries pill comes from `status.detail`.
+- **The tries log.** The server has no record of each try. The app reports only the latest count in `status.detail` (`card:retry:n`, then `card:help:n`), and sends `student.help_requested` with topic identity when it moves to 1.3a. So the log lists the session's identity help requests and the proctors' messages to it, with their times, in Phase 0's event wording. Figma's per-try rows ("Try 2 · glare on the card") need a per-try event, which waits for Phase 2.
+- **Audit.** Opening the drawer reads the student's events, so it writes one `identity_help.read` audit row on the session.
+- **What happens next is hidden.** "Start now, check later" would need an identity override and "Remove from this exam" a removal, and the plan builds neither. With only "Give one more try" left there is nothing to choose, so Send hint is the action. The other two options go to Phase 2.
+- **Send hint** sends the proctor's own words (up to 200 characters, the frame's counter) through the `command` function as a `message` command with `scope: "student"`. The student's app shows it as 2.1e over 1.3a (WP 1.6). The helper names the student's app language from `sessions.locale`; the text is not translated. The frame's example hint is the field's placeholder. A toast confirms the send.
+- **The lobby row of `card:help:n`** now reads "Card unreadable · 3 of 3 tries", as 1.5b draws it. This replaces Phase 0's reuse of "retry 3 of 3".
+
+**The network type is missing.** The lobby polish asks for the network type on the lobby row "if the data exists"; it does not.
+- `sessions.device` holds `os`, `app_version`, `browser` and `lock_version`.
+- `status.detail` carries only network problems at the system check (`network:slow`, `network:offline`).
+- The app collects neither the network type nor the OS version (Figma: "macOS 14 · Wi-Fi"), as Phase 0 noted for 1.5.
+
+Showing them needs the app to report both (`Device` in the contracts and `join_exam`), so the rows, 1.5a and 1.5b keep "macOS · Üki 1.4.2". Call stays hidden.
+
+**Russian layout notes for P.18**
+- "Сегодня 22:00" is kept on one line in the NEXT EXAM tile.
+- The drawer title is "Помощь с личностью", and the card's button is "Помочь", so that both fit.
+- The kit's drawer title now wraps rather than cutting a long translation.
+
+**The UI kit**
+- `Drawer`
+- `Dialog`'s `onCancel`
+- `RowExam`'s `onStatusClick`: the chip becomes a button above the row's link
+- `StudentPopover`'s `sideOffset`, `alignOffset`, `onOpenAutoFocus` and `onCloseAutoFocus`
+
+**The e2e on a long-running stack.** The seeded Mathematics 2 starts 15 minutes after a reset, so on the shared local stack it has usually started. `e2e/proctor.spec.ts` then moves it back to scheduled for its run and restores the row, Nurlan's assignment and the audit rows it wrote. On a fresh stack, as in CI, it changes nothing.

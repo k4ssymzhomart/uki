@@ -36,6 +36,11 @@ export type RowExamProps = Omit<ComponentProps<"tr">, "children"> & {
   status: ChipStatus;
   /** "Scheduled", "Live", "Done". */
   statusLabel: ReactNode;
+  /**
+   * Makes the status chip a button above the row's link, for example 0.9's "Confirm seats", which
+   * opens 0.9a while the rest of the row still leads to the exam.
+   */
+  onStatusClick?: () => void;
   /** Where the row leads, for example the exam's lobby. The whole row becomes clickable. */
   href?: string;
   /** Link component for href, for example Next.js Link. Defaults to "a". */
@@ -56,6 +61,7 @@ export function RowExam({
   checkLabels,
   status,
   statusLabel,
+  onStatusClick,
   href,
   linkAs: Link = "a",
   className,
@@ -109,7 +115,19 @@ export function RowExam({
         </div>
       </td>
       <td className={cn(columns.status, "pl-5 align-middle")}>
-        <Chip status={status}>{statusLabel}</Chip>
+        {onStatusClick === undefined ? (
+          <Chip status={status}>{statusLabel}</Chip>
+        ) : (
+          <button
+            type="button"
+            onClick={onStatusClick}
+            className="group relative z-1 cursor-pointer rounded-pill outline-none focus-visible:shadow-focus"
+          >
+            <Chip status={status} className="transition-colors group-hover:bg-hover group-active:bg-pressed">
+              {statusLabel}
+            </Chip>
+          </button>
+        )}
       </td>
       <td className="pr-5 pl-5 text-right align-middle">
         <Icon name="chevron-right" className="ml-auto size-5 opacity-50" />

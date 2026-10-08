@@ -45,6 +45,9 @@ test.describe("sign-in and exam visibility", () => {
 
   test("a lead proctor sees only the exams assigned to them", async ({ page }) => {
     await signIn(page, STAFF.aigerim);
+    // Proctors land on 0.9 (WP 1.5); the overview's exams table still lists only their exams.
+    await expect(page).toHaveURL(/\/my-exams$/);
+    await page.goto("/overview");
     await expect(examRow(page, EXAMS.math2.title)).toHaveCount(1);
     for (const exam of [EXAMS.physics1, EXAMS.history, EXAMS.linearAlgebra, EXAMS.english]) {
       await expect(examRow(page, exam.title), exam.title).toHaveCount(0);
@@ -70,6 +73,7 @@ test.describe("sign-in and exam visibility", () => {
 
   test("a proctor of another exam sees nothing of Mathematics 2", async ({ page }) => {
     await signIn(page, STAFF.gulnara);
+    await page.goto("/overview");
     await expect(examRow(page, EXAMS.physics1.title)).toHaveCount(1);
     await expect(examRow(page, EXAMS.math2.title)).toHaveCount(0);
     for (const path of [`/exams/${EXAMS.math2.id}/live`, `/exams/${EXAMS.math2.id}/lobby`]) {
