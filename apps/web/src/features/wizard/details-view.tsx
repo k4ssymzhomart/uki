@@ -139,7 +139,7 @@ export function DetailsView({ exam: initial, settings, groups, courses, examDays
               label={t("wizard.details.kind.label")}
               icon="exam"
               placeholder={t("wizard.details.kind.placeholder")}
-              value={exam.kind === "" ? undefined : exam.kind}
+              value={exam.kind}
               onValueChange={(kind) => draft.update({ kind }, 0)}
             >
               {kinds.map((kind) => (

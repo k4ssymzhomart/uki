@@ -234,7 +234,7 @@ function ProctorDialog({
         <Select
           label={t("roster.proctors.dialog.proctor")}
           placeholder={t("roster.proctors.dialog.choose")}
-          value={staffId === "" ? undefined : staffId}
+          value={staffId}
           onValueChange={pick}
           disabled={current !== null}
         >

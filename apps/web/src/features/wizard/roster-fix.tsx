@@ -170,7 +170,7 @@ export function RowFix({ row, cells, issues, groups, onSave, trigger }: RowFixPr
         onSubmit={save}
       >
         {column === "group" ? (
-          <Select label={label} value={value === "" ? undefined : value} onValueChange={setValue}>
+          <Select label={label} value={value} onValueChange={setValue}>
             {groups.map((code) => (
               <SelectItem key={code} value={code}>
                 {t("roster.group", { code })}
@@ -178,7 +178,7 @@ export function RowFix({ row, cells, issues, groups, onSave, trigger }: RowFixPr
             ))}
           </Select>
         ) : column === "locale" ? (
-          <Select label={label} value={value === "" ? undefined : value} onValueChange={setValue}>
+          <Select label={label} value={value} onValueChange={setValue}>
             {(["kk", "ru", "en"] as const).map((locale) => (
               <SelectItem key={locale} value={locale}>
                 {tc(`language.${locale}`)}
