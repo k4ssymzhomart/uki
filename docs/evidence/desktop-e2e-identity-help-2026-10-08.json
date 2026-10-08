@@ -1,0 +1,186 @@
+{
+  "date": "2026-10-08T09:37:50.111Z",
+  "offlineSeconds": 20,
+  "kiosk": false,
+  "latencyMs": {
+    "start": 31,
+    "pause": 66,
+    "resume": 112,
+    "message": 46,
+    "add_time": 89,
+    "end": 24
+  },
+  "functionMs": {
+    "pause": 69,
+    "resume": 123,
+    "message": 47,
+    "add_time": 90
+  },
+  "commandRetries": {},
+  "checkAgainPresses": 0,
+  "pairing": {
+    "code": "6 digits",
+    "helloStudent": "Madina Tulegenova",
+    "paired": true
+  },
+  "offline": {
+    "cutSeconds": 20,
+    "bannerAfterMs": 5319,
+    "queuedAnswers": 5,
+    "recoveredAfterMs": 76,
+    "syncedAfterMs": 692,
+    "answersLocal": 9,
+    "answersServer": 9,
+    "answersWaitingAtReconnect": 5,
+    "eventsWaitingAtReconnect": 6,
+    "appEventsServer": 14,
+    "seqRange": [
+      0,
+      13
+    ],
+    "duplicates": 0,
+    "netOffline": {
+      "queued": 11,
+      "offline_ms": 20045
+    },
+    "netOfflineEvents": [
+      {
+        "queued": 11,
+        "offline_ms": 20045
+      }
+    ],
+    "framesDuringCut": [
+      "1s 2.1",
+      "5s 2.1a"
+    ],
+    "requestsThroughDuringCut": []
+  },
+  "identity": {
+    "recoveredAfterMs": 6341,
+    "event": {
+      "score": 0.93,
+      "tries": 5
+    }
+  },
+  "identityHelp": {
+    "cardNumberShown": "another student's (20230912)",
+    "helpFrameAfterMs": 11360,
+    "helpEventsOnServer": 1,
+    "helpEvent": {
+      "type": "student.help_requested",
+      "source": "app",
+      "review": "log",
+      "data": {
+        "topic": "identity"
+      }
+    },
+    "sessionStateDuringHelp": "identity",
+    "matchedOnTry": 5
+  },
+  "phone": {
+    "stillsConfirmed": 3,
+    "examPhoneScore": 0.7,
+    "scores": [
+      0,
+      0.76953125,
+      0.76953125,
+      0.76953125,
+      0.76953125,
+      0.76953125,
+      0.76953125,
+      0.76953125
+    ],
+    "phoneMs": [
+      53.4,
+      57.3,
+      59.9,
+      118.2,
+      48.5,
+      48.5,
+      58,
+      57
+    ],
+    "phoneChecksPerS": [
+      2.5,
+      2.5,
+      2,
+      2,
+      2,
+      2,
+      2.5,
+      2.5
+    ],
+    "fps": [
+      12,
+      14,
+      14,
+      13,
+      14,
+      14,
+      14,
+      12
+    ],
+    "rulesPaused": false,
+    "warningAfterMs": 729,
+    "review": "flag",
+    "data": {
+      "score": 0.77,
+      "held_ms": 401
+    },
+    "frameCount": 3
+  },
+  "receipt": {
+    "receiptId": "UKI-204-6799-MT",
+    "pdfBytes": 28595,
+    "timeUsedS": 46
+  },
+  "frames": [
+    "1.1-kk",
+    "1.1-ru",
+    "1.1-en",
+    "1.1a-en",
+    "1.1a-kk",
+    "1.1a-ru",
+    "1.2-en",
+    "1.2-kk",
+    "1.2-ru",
+    "E.3-app-en",
+    "E.3-app-kk",
+    "E.3-app-ru",
+    "1.3-checking-en",
+    "1.3a-en",
+    "1.3a-kk",
+    "1.3a-ru",
+    "1.3-en",
+    "1.3-kk",
+    "1.3-ru",
+    "1.4-en",
+    "1.4-kk",
+    "1.4-ru",
+    "2.1-en",
+    "2.1-kk",
+    "2.1-ru",
+    "2.1a-en",
+    "2.1a-kk",
+    "2.1a-ru",
+    "2.1c-en",
+    "2.1c-kk",
+    "2.1c-ru",
+    "2.1e-en",
+    "2.1e-kk",
+    "2.1e-ru",
+    "2.1e-time-en",
+    "2.2-en",
+    "2.2-kk",
+    "2.2-ru",
+    "2.3-en",
+    "2.3-kk",
+    "2.3-ru",
+    "3.1-en",
+    "3.1-kk",
+    "3.1-ru",
+    "2.1d-en",
+    "2.1d-kk",
+    "2.1d-ru"
+  ]
+}
