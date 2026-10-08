@@ -21,19 +21,25 @@ async function status(url: string, init: RequestInit): Promise<number | null> {
 
 async function waitForFunctions(supabaseUrl: string): Promise<void> {
   const deadline = Date.now() + FUNCTIONS_READY_MS;
-  for (const name of ["ingest", "command"] as const) {
+  // Without a token every function answers 401, except shared-report (no credential, WP 1.9), which
+  // answers an empty body with 400; anything else is a runtime still (re)starting.
+  const expected = [
+    ["ingest", 401],
+    ["command", 401],
+    ["shared-report", 400],
+  ] as const;
+  for (const [name, want] of expected) {
     const url = `${supabaseUrl}/functions/v1/${name}`;
     const probe = () =>
       status(url, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
-    // Without a token every function answers 401; anything else is a runtime still (re)starting.
     let code = await probe();
-    while (code !== 401 && Date.now() < deadline) {
+    while (code !== want && Date.now() < deadline) {
       await new Promise((resolve) => setTimeout(resolve, 2000));
       code = await probe();
     }
-    if (code !== 401) {
+    if (code !== want) {
       throw new Error(
-        `e2e: functions/v1/${name} answered ${code ?? "nothing"} without a token, expected 401. ` +
+        `e2e: functions/v1/${name} answered ${code ?? "nothing"} to an empty request, expected ${want}. ` +
           "Start the Edge Functions with `pnpm functions:serve` (or `pnpm dev`).",
       );
     }

@@ -20,6 +20,7 @@ export default defineConfig({
     "proctor.spec.ts",
     "students.spec.ts",
     "landing.spec.ts",
+    "report.spec.ts",
   ],
   // One worker: the tests share the seeded staff accounts, and latency figures stay honest.
   fullyParallel: false,
