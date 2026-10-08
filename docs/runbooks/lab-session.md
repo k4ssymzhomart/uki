@@ -12,9 +12,31 @@ On Demo Day the student machine is a KRU lab PC if the organizers allow it, othe
 
 A virtual machine on the MacBook cannot stand in for a lab PC: macOS takes the keys before the VM sees them.
 
-## 1. Get the Windows builds from CI
+## 1. Get the builds
 
-The Windows builds come only from the `windows` job of the CI workflow (`.github/workflows/ci.yml`). Take them from the **latest green run on `main`**.
+The shipped Windows builds and Üki Lock come from the **latest GitHub release**, made by `.github/workflows/desktop-dist.yml` against the cloud project (WP 0.15). Each file has a stable address that always serves the newest release:
+
+| File | Address | What it is |
+| --- | --- | --- |
+| `Uki-win-x64.zip` | https://github.com/k4ssymzhomart/uki/releases/latest/download/Uki-win-x64.zip | The shipped app, unpacked. It runs from any folder or the USB drive with no install |
+| `Uki-Setup-win-x64.exe` | https://github.com/k4ssymzhomart/uki/releases/latest/download/Uki-Setup-win-x64.exe | The NSIS installer. Its install-mode page offers the current user only |
+| `Uki-Lock-chrome.zip` | https://github.com/k4ssymzhomart/uki/releases/latest/download/Uki-Lock-chrome.zip | Üki Lock for Chrome |
+| `Uki-Lock-edge.zip` | https://github.com/k4ssymzhomart/uki/releases/latest/download/Uki-Lock-edge.zip | Üki Lock for Edge |
+| `Uki-mac-arm64.dmg`, `Uki-mac-x64.dmg` | https://github.com/k4ssymzhomart/uki/releases/latest/download/Uki-mac-arm64.dmg (and `Uki-mac-x64.dmg`) | Üki for Apple silicon and Intel Macs |
+
+The release's Lock and app belong together: the Lock's key fixes its extension id, and the app accepts only that id, so take both from the same release. The release page lists each file's size and SHA-256 and the first-launch steps for unsigned builds. From the MacBook:
+
+```sh
+gh release download --repo k4ssymzhomart/uki -p 'Uki-win-x64.zip' -p 'Uki-Setup-win-x64.exe' -p 'Uki-Lock-*.zip' -D lab-usb
+```
+
+To publish a new release from `main` (about 10 minutes; the version is `0.1.<run number>`):
+
+```sh
+gh workflow run desktop-dist.yml --repo k4ssymzhomart/uki --ref main -f publish=true
+```
+
+**The lab zip is never released.** It comes only from the `windows` job of the CI workflow (`.github/workflows/ci.yml`), together with CI's own copies of the shipped builds. Take it from the **latest green run on `main`**.
 
 1. Before you download, check two things:
    - **The run has the cloud URL.** The app's content security policy fixes the Supabase URL at build time. Without the repository variable, a CI build points at `http://127.0.0.1:54721` and cannot reach the cloud project. So the repository variables `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` and `VITE_LOCK_EXTENSION_ID` must have been set (P.2, `cloud-setup.md`) before that run.
@@ -24,7 +46,7 @@ The Windows builds come only from the `windows` job of the CI workflow (`.github
 
    ```sh
    RUN=$(gh run list --workflow CI --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId')
-   gh run download "$RUN" -n uki-windows-x64-zip -n uki-windows-x64-lab-zip -n uki-windows-x64-installer -n uki-lock -D lab-usb
+   gh run download "$RUN" -n uki-windows-x64-lab-zip -D lab-usb
    ```
 
 | Artifact | File | What it is |
@@ -32,9 +54,9 @@ The Windows builds come only from the `windows` job of the CI workflow (`.github
 | `uki-windows-x64-zip` | `Uki-<version>-x64.zip` | The shipped app, unpacked. It runs from any folder or the USB drive with no install |
 | `uki-windows-x64-lab-zip` | `Uki-lab-<version>-x64.zip` | The same app with the developer overlay and the development escape on. Never ships |
 | `uki-windows-x64-installer` | `Uki-<version>-x64.exe` | The NSIS installer. Its install-mode page offers the current user only |
-| `uki-lock` | `lock-<version>-chrome.zip`, `lock-<version>-edge.zip` | Üki Lock for Chrome and Edge |
+| `uki-lock` | `Uki-Lock-chrome.zip`, `Uki-Lock-edge.zip` | Üki Lock for Chrome and Edge, under the release names |
 
-A browser download wraps each artifact in one more zip, so unzip it once. Copy everything to a USB drive: the lab PC may wipe itself when it restarts.
+CI's copies of the shipped builds come from the same commit as its lab zip; the release may come from an older one. Both are built with the same Lock key pair, so the lab zip pairs with the release's Lock too. A browser download wraps each artifact in one more zip, so unzip it once. Copy everything to a USB drive: the lab PC may wipe itself when it restarts.
 
 ### The lab zip
 
@@ -57,7 +79,7 @@ The checklist from `docs/phase-0-plan.md`:
 
 - [ ] The lab allows you to run your own software; if security software blocks it, ask lab IT.
 - [ ] A USB webcam, in case the PC has none.
-- [ ] Both Windows zips and the Üki Lock zip from the latest green CI run, on a USB drive: the PC may wipe itself on reboot.
+- [ ] The Windows zip, the installer and both Üki Lock zips from the latest release, and the lab zip from the latest green CI run, on a USB drive: the PC may wipe itself on reboot.
 - [ ] `pnpm demo:reset` against the cloud project, and a phone hotspot in case the lab network blocks websockets.
 
 Also take:
@@ -100,7 +122,7 @@ Get-Content "$env:TEMP\uki-out.txt", "$env:TEMP\uki-err.txt" | Select-String 'ke
 The checklist from `docs/phase-0-plan.md`, with the steps for each line. Photograph every result.
 
 - [ ] The app starts from the USB drive or a folder in your profile without admin rights; write down any SmartScreen or antivirus prompt and what got it past.
-  1. Unzip `Uki-<version>-x64.zip` to the USB drive, or to a folder under `%USERPROFILE%`, such as `%USERPROFILE%\Uki`.
+  1. Unzip `Uki-win-x64.zip` (or CI's `Uki-<version>-x64.zip`) to the USB drive, or to a folder under `%USERPROFILE%`, such as `%USERPROFILE%\Uki`.
   2. Run `Uki.exe` as the lab's standard user.
   3. Section 3 has the prompts.
 - [ ] 1.2 sees the camera; if the Windows camera privacy settings are locked by policy, write it down.
@@ -125,7 +147,7 @@ The checklist from `docs/phase-0-plan.md`, with the steps for each line. Photogr
 - [ ] Üki Lock loads unpacked in Chrome and Edge, pairs by code and closes a second tab; if browser policy blocks unpacked extensions, write it down.
   - `lock-pairing.md` has the steps.
 - [ ] The NSIS installer installs for the current user and starts, if the lab allows installers.
-  - Run `Uki-<version>-x64.exe` and choose "Only for me". It installs to `%LOCALAPPDATA%\Programs\Uki`.
+  - Run `Uki-Setup-win-x64.exe` and choose "Only for me". It installs to `%LOCALAPPDATA%\Programs\Uki`.
 - [ ] One run of the demo script against the cloud project.
 
 ## 5. Where the results go
@@ -138,12 +160,12 @@ Write each result, with its photo, into `docs/phase-0-exit.md`. That means the W
   - the date and the PC model;
   - the CPU and the graphics card;
   - the Windows edition and build (`winver`);
-  - the CI run id the builds came from;
+  - the release tag and the CI run id the builds came from;
   - every security prompt.
 
 ## 6. The MacBook as the student machine
 
-**Build on the MacBook itself.** A build made on the Mac that runs it carries no quarantine flag, so Gatekeeper does not object.
+**Take the release, or build on the MacBook itself.** The release's `Uki-mac-arm64.dmg` (Apple silicon) and `Uki-mac-x64.dmg` (Intel) are built against the cloud project and pair with the release's Üki Lock; install them as below, quarantine step included. A build made on the Mac that runs it carries no quarantine flag, so Gatekeeper does not object.
 
 ```sh
 git clone <repository-url> uki && cd uki
@@ -170,7 +192,7 @@ Development runs (`pnpm dev`) are different from the packaged build in two ways.
 **Install:**
 
 1. Open the dmg and drag Üki to Applications.
-2. If the app came from somewhere else, such as a CI artifact or the draft release from `desktop-dist.yml`, macOS has quarantined it. Remove the flag once:
+2. If the app came from somewhere else, such as the release or a CI artifact, macOS has quarantined it. Remove the flag once:
 
    ```sh
    xattr -dr com.apple.quarantine "/Applications/Uki.app"
@@ -201,8 +223,8 @@ Record the results under "P.4 Lockdown guard" in `docs/phase-0-exit.md`.
 
 ## 7. Üki Lock in Chrome and Edge
 
-1. Build it on the MacBook (`pnpm --filter lock build`, output `apps/lock/.output/chrome-mv3`), or take the zip from CI (the `uki-lock` artifact) and unzip it.
-2. Open `chrome://extensions` or `edge://extensions`, turn on Developer mode, choose Load unpacked and pick the folder. When `LOCK_DEV_PUBLIC_KEY` was set at build time, the extension id is fixed and matches `VITE_LOCK_EXTENSION_ID` in the app.
+1. Take `Uki-Lock-chrome.zip` or `Uki-Lock-edge.zip` from the release (or CI's `uki-lock` artifact) and unzip it into a folder you keep, or build it on the MacBook (`pnpm --filter lock build`, output `apps/lock/.output/chrome-mv3`).
+2. Open `chrome://extensions` or `edge://extensions`, turn on Developer mode, choose Load unpacked and pick the folder. When `LOCK_DEV_PUBLIC_KEY` was set at build time, the extension id is fixed and matches `VITE_LOCK_EXTENSION_ID` in the app. The release always has both: its Lock's id is `enjmmceojibbmnjiplojklhkgmghcchp`, the one its app accepts.
 3. Pin Üki Lock to the toolbar. Pairing, the 10-quiet-minutes check and the E.3 to E.9 walk-through are in [lock-pairing.md](lock-pairing.md).
 
 ## 8. Before every rehearsal (T minus 30 minutes)

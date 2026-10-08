@@ -39,7 +39,8 @@
     "test:scripts": "vitest run -c scripts/lib/vitest.config.ts",
     "env:local": "tsx scripts/lib/local-env.ts",
     "models": "pnpm --filter @uki/detection models",
-    "models:verify": "pnpm --filter @uki/detection models:verify"
+    "models:verify": "pnpm --filter @uki/detection models:verify",
+    "release:assets": "tsx scripts/release-assets.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

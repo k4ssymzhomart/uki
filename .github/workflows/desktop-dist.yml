@@ -1,21 +1,39 @@
-# Manual: unsigned installers for macOS arm64 and x64 (dmg) and Windows x64 (NSIS and the zip that runs
-# without an install; never the lab zip, which only the CI job builds), attached to a draft GitHub release
-# (docs/phase-0-plan.md, Pipelines). The macOS installer is normally built on the MacBook itself, Windows
-# on GitHub's Windows runners; a CI build copied to a Mac needs the quarantine flag removed and a lab PC
-# needs SmartScreen's "Run anyway" (docs/runbooks/lab-session.md).
+# Manual: the Üki release (WP 0.15). Builds the unsigned installers against the cloud project, macOS arm64
+# and x64 (dmg) and Windows x64 (the NSIS installer and the zip that runs without an install; never the lab
+# zip, which only the CI job builds), and Üki Lock for Chrome and Edge, then gives each file a stable name
+# without the version:
+#
+#   Uki-mac-arm64.dmg  Uki-mac-x64.dmg  Uki-Setup-win-x64.exe  Uki-win-x64.zip  Uki-Lock-chrome.zip  Uki-Lock-edge.zip
+#
+# With `publish` on (main only) the files become the GitHub release v0.1.<run number>, neither a draft nor
+# a pre-release, so it is the latest release and https://github.com/k4ssymzhomart/uki/releases/latest/download/<file>
+# serves each file; the landing page and the invite email link there. The apps carry 0.1.<run number> as
+# their version. With `publish` off the run only builds, and keeps the files and the notes as its
+# "release" artifact.
+#
+#   gh workflow run desktop-dist.yml --ref main -f publish=true
 #
 # Variables (Settings > Secrets and variables > Actions > Variables): VITE_SUPABASE_URL and
-# VITE_SUPABASE_PUBLISHABLE_KEY of the cloud project, VITE_LOCK_EXTENSION_ID. Only the publishable key
-# goes into an app.
+# VITE_SUPABASE_PUBLISHABLE_KEY of the cloud project (only the publishable key goes into an app);
+# LOCK_DEV_PUBLIC_KEY and VITE_LOCK_EXTENSION_ID from `pnpm --filter lock make-key`
+# (docs/runbooks/lock-pairing.md). The public key goes into the Lock's manifest and fixes its extension id;
+# the app accepts only VITE_LOCK_EXTENSION_ID. The run stops unless the key gives that id, and checks the
+# built app and the manifest inside each Lock zip against it, so the released app pairs with the released
+# Lock. scripts/release-assets.ts names the files, makes these checks and writes the notes.
 name: Desktop installers
 
 on:
   workflow_dispatch:
     inputs:
-      tag:
-        description: Release tag, for example desktop-2026-10-16
-        required: true
-        type: string
+      publish:
+        description: Publish the files as the latest GitHub release (main only)
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: desktop-dist
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -25,31 +43,31 @@ env:
   TURBO_TELEMETRY_DISABLED: "1"
   DO_NOT_TRACK: "1"
   ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+  # Unsigned until Phase 2; electron-builder must not look for a certificate.
   CSC_IDENTITY_AUTO_DISCOVERY: "false"
   VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
   VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
   VITE_LOCK_EXTENSION_ID: ${{ vars.VITE_LOCK_EXTENSION_ID }}
+  LOCK_DEV_PUBLIC_KEY: ${{ vars.LOCK_DEV_PUBLIC_KEY }}
+  VERSION: 0.1.${{ github.run_number }}
 
 jobs:
-  build:
-    name: ${{ matrix.name }}
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 45
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          # electron-builder.yml builds both macOS architectures (dmg arm64 and x64) in one run.
-          - name: macOS arm64 and x64
-            os: macos-latest
-          - name: Windows x64
-            os: windows-latest
+  preflight:
+    name: Branch and build values
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
+      - name: Only main publishes
+        if: inputs.publish
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::a release is published from main only, not $GITHUB_REF"; exit 1
+          fi
       - name: Cloud build values are set
-        shell: bash
         run: |
           case "$VITE_SUPABASE_URL" in https://*) ;; *) echo "::error::set the VITE_SUPABASE_URL variable to the cloud project"; exit 1;; esac
           case "$VITE_SUPABASE_PUBLISHABLE_KEY" in sb_publishable_*) ;; *) echo "::error::set VITE_SUPABASE_PUBLISHABLE_KEY (sb_publishable_…)"; exit 1;; esac
+          echo "Release v$VERSION from $GITHUB_REF at $GITHUB_SHA"
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v5
@@ -57,6 +75,27 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # Before the long builds: both halves of the Lock key pair are set, and LOCK_DEV_PUBLIC_KEY gives
+      # VITE_LOCK_EXTENSION_ID as Chromium derives an id (apps/lock/src/lib/extension-id.ts, as make-key does).
+      - name: The Lock key pair is set and the id is the key's
+        run: pnpm release:assets lock-key
+
+  mac:
+    name: macOS dmg (arm64 and x64)
+    needs: preflight
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: The app's version is the release's
+        working-directory: apps/desktop
+        run: npm pkg set version="$VERSION"
       - name: Model files cache
         uses: actions/cache@v4
         with:
@@ -68,40 +107,183 @@ jobs:
         run: |
           pnpm models
           pnpm models:verify
-      - name: Build the installer
+      # Both architectures in one run (electron-builder.yml); the x64 Electron download happens here.
+      - name: Build the dmg for arm64 and x64
         run: pnpm --filter desktop run dist --publish never
+      - name: The app talks to the cloud project and accepts only the release's Lock
+        run: |
+          grep -rqF "$VITE_SUPABASE_URL" apps/desktop/out/renderer || { echo "::error::the renderer has no $VITE_SUPABASE_URL"; exit 1; }
+          grep -rqF "$VITE_LOCK_EXTENSION_ID" apps/desktop/out/main || { echo "::error::the main process has no $VITE_LOCK_EXTENSION_ID"; exit 1; }
+      - name: Rosetta 2 for the x64 launch
+        run: arch -x86_64 /usr/bin/true 2> /dev/null || sudo softwareupdate --install-rosetta --agree-to-license
+      - name: Each dmg holds its architecture's app, and the app starts from it (P.12)
+        run: bash .github/scripts/macos-dmg-check.sh "$RUNNER_TEMP/launch"
+      - name: Stable names
+        run: pnpm release:assets stage --platform mac --out release-files
       - uses: actions/upload-artifact@v4
         with:
-          name: installer-${{ matrix.os }}-${{ strategy.job-index }}
-          path: |
-            apps/desktop/release/*.dmg
-            apps/desktop/release/*.exe
-            apps/desktop/release/*.zip
+          name: release-files-mac
+          path: release-files/
           if-no-files-found: error
-          retention-days: 14
+          compression-level: 0
+          retention-days: 7
+
+  windows:
+    name: Windows x64 (installer and zip)
+    needs: preflight
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: The app's version is the release's
+        working-directory: apps/desktop
+        shell: bash
+        run: npm pkg set version="$VERSION"
+      - name: Model files cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            apps/desktop/resources/models
+            !apps/desktop/resources/models/manifest.json
+          key: models-${{ hashFiles('apps/desktop/resources/models/manifest.json') }}
+      - name: Models from the SHA-256 manifest
+        run: |
+          pnpm models
+          pnpm models:verify
+      # The shipped build only: dist:lab never runs here, so the lab zip cannot reach the release.
+      - name: NSIS installer and zip (x64)
+        run: pnpm --filter desktop run dist --publish never
+      - name: The app talks to the cloud project and accepts only the release's Lock
+        shell: bash
+        run: |
+          grep -rqF "$VITE_SUPABASE_URL" apps/desktop/out/renderer || { echo "::error::the renderer has no $VITE_SUPABASE_URL"; exit 1; }
+          grep -rqF "$VITE_LOCK_EXTENSION_ID" apps/desktop/out/main || { echo "::error::the main process has no $VITE_LOCK_EXTENSION_ID"; exit 1; }
+      - name: The zip carries the keyboard hook's Koffi (WP 0.13)
+        shell: pwsh
+        run: |
+          $zip = Get-ChildItem apps/desktop/release -Filter 'Uki-*-x64.zip' | Select-Object -First 1
+          ./.github/scripts/windows-koffi-check.ps1 -Zip $zip.FullName
+      - name: Launch test from the zip, unpacked into a new folder
+        shell: pwsh
+        run: |
+          $zip = Get-ChildItem apps/desktop/release -Filter 'Uki-*-x64.zip' | Select-Object -First 1
+          ./.github/scripts/windows-launch-test.ps1 -Zip $zip.FullName
+      - name: Stable names
+        shell: bash
+        run: pnpm release:assets stage --platform win --out release-files
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-files-windows
+          path: release-files/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+
+  lock:
+    name: Üki Lock (Chrome and Edge)
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: The extension's version is the release's
+        working-directory: apps/lock
+        run: npm pkg set version="$VERSION"
+      - name: Zips for Chrome and Edge
+        run: pnpm --filter lock zip
+      - name: Stable names
+        run: pnpm release:assets stage --platform lock --out release-files
+      # The id the browser will give each released Lock, from the key in the manifest inside its zip, is
+      # the one the released app accepts.
+      - name: Each Lock zip's extension id is VITE_LOCK_EXTENSION_ID
+        run: pnpm release:assets lock-id --dir release-files --version "$VERSION"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-files-lock
+          path: release-files/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
 
   release:
-    name: Draft release
-    needs: build
+    name: Release v0.1.${{ github.run_number }}
+    needs: [mac, windows, lock]
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     permissions:
       contents: write
     env:
       GH_TOKEN: ${{ github.token }}
-      TAG: ${{ inputs.tag }}
+      TAG: v0.1.${{ github.run_number }}
     steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
       - uses: actions/download-artifact@v4
         with:
-          path: installers
+          pattern: release-files-*
           merge-multiple: true
-      - name: Create or update the draft release
+          path: release-files
+      - name: Exactly the six files, the Lock's id once more, and the release notes
         run: |
-          ls -l installers
+          ls -l release-files
+          pnpm release:assets lock-id --dir release-files --version "$VERSION"
+          pnpm release:assets notes --dir release-files --tag "$TAG" --sha "$GITHUB_SHA" --repo "$GITHUB_REPOSITORY" --out release-notes.md
+          cat release-notes.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Keep the files and the notes (publish off)
+        if: ${{ !inputs.publish }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: release
+          path: |
+            release-files/
+            release-notes.md
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+      # Not a draft and not a pre-release, so GitHub makes it the latest release. A re-run of this job
+      # finds the release it made and replaces the files and the notes.
+      - name: Publish the release
+        if: inputs.publish
+        run: |
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
-            gh release upload "$TAG" installers/* --clobber --repo "$GITHUB_REPOSITORY"
+            gh release upload "$TAG" release-files/* --clobber --repo "$GITHUB_REPOSITORY"
+            gh release edit "$TAG" --draft=false --prerelease=false --latest --notes-file release-notes.md --repo "$GITHUB_REPOSITORY"
           else
-            gh release create "$TAG" installers/* --draft --target "$GITHUB_SHA" --repo "$GITHUB_REPOSITORY" \
-              --title "Üki desktop $TAG (unsigned)" \
-              --notes "Unsigned Phase 0 installers: macOS arm64 and x64 (dmg), Windows x64 (NSIS and zip). See docs/runbooks/lab-session.md for the quarantine and SmartScreen steps."
+            gh release create "$TAG" release-files/* --target "$GITHUB_SHA" --latest --repo "$GITHUB_REPOSITORY" \
+              --title "Üki $TAG" --notes-file release-notes.md
           fi
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json url,isDraft,isPrerelease,assets \
+            --jq '"\(.url) draft=\(.isDraft) prerelease=\(.isPrerelease)", (.assets[] | "\(.name) \(.size)")'
+      - name: Every stable link answers
+        if: inputs.publish
+        run: |
+          status=0
+          for file in release-files/*; do
+            url="https://github.com/$GITHUB_REPOSITORY/releases/latest/download/$(basename "$file")"
+            code=000
+            for attempt in 1 2 3 4 5 6; do
+              code="$(curl -sSIL -o /dev/null -w '%{http_code}' "$url" || true)"
+              [ "$code" = 200 ] && break
+              sleep 10
+            done
+            echo "$code $url"
+            [ "$code" = 200 ] || { echo "::error::$url answered $code"; status=1; }
+          done
+          exit "$status"

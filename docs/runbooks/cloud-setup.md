@@ -149,8 +149,8 @@ gh variable set LOCK_DEV_PUBLIC_KEY --body <base64 DER public key>
 | `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, `SUPABASE_PROJECT_REF` | Secrets | `deploy-supabase.yml`: link, `db push`, `functions deploy` after CI passes on `main` |
 | `CLOUD_DEPLOY` | Variable | `true` lets `deploy-supabase.yml` deploy; while it is unset, every run is skipped |
 | `UKI_ALLOWED_ORIGINS` | Variable | `deploy-supabase.yml` sets it as a function secret on every deploy |
-| `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_LOCK_EXTENSION_ID` | Variables | `desktop-dist.yml` (manual installers); CI's desktop build falls back to local values |
-| `LOCK_DEV_PUBLIC_KEY` | Variable | CI's Üki Lock build, for the fixed extension id; the private key stays on your laptop |
+| `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_LOCK_EXTENSION_ID` | Variables | `desktop-dist.yml`, the release (it stops without them); CI's desktop builds fall back to local values |
+| `LOCK_DEV_PUBLIC_KEY` | Variable | CI's Üki Lock build and the release, for the fixed extension id; the release stops unless it gives `VITE_LOCK_EXTENSION_ID`. The private key stays on your laptop |
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Variables, optional | CI's web build; placeholders otherwise |
 | `DEPLOY_FREEZE` | Variable | `true` stops `deploy-supabase.yml` (Demo Day freeze) |
 | `GITLEAKS_LICENSE` | Secret, optional | Only if the repository moves to an organization account |

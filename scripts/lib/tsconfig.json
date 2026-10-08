@@ -4,5 +4,11 @@
   "compilerOptions": {
     "types": ["node"]
   },
-  "include": ["./**/*.ts", "../demo-reset.ts", "../demo-simulate.ts", "../guards/**/*.ts"]
+  "include": [
+    "./**/*.ts",
+    "../demo-reset.ts",
+    "../demo-simulate.ts",
+    "../release-assets.ts",
+    "../guards/**/*.ts"
+  ]
 }
