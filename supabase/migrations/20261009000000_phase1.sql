@@ -1946,6 +1946,10 @@ left join lateral (
   limit 1
 ) latest on true;
 
+-- Read-only for staff, whatever default privileges the project has: anonymous visitors get nothing.
+revoke all on public.review_queue, public.term_exams, public.term_sessions, public.term_kpis,
+  public.term_weekly_flags, public.term_flag_types, public.term_decisions, public.term_review_time,
+  public.student_overview from anon, authenticated;
 grant select on public.review_queue, public.term_exams, public.term_sessions, public.term_kpis,
   public.term_weekly_flags, public.term_flag_types, public.term_decisions, public.term_review_time,
   public.student_overview to authenticated, service_role;
