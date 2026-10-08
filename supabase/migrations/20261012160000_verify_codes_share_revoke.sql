@@ -54,7 +54,7 @@ $$;
 
 -- Gives every report whose code is not in the new form an unused one, a row at a time so each draw
 -- sees the last; the content hash and issued_at stay. Returns how many rows it changed. Run once here
--- for the rows that exist (the cloud's); 18_verify_revoke tests it on rows in the old form.
+-- for the rows that exist (the cloud's); 19_verify_revoke tests it on rows in the old form.
 create or replace function public.convert_verify_codes()
 returns int
 language plpgsql

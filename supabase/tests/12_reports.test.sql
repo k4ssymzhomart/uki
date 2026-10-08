@@ -152,7 +152,7 @@ select t.put('s7', 'd0000000-0000-4000-8003-000000000007');
 select t.put('s7_uid', t.uid_of(t.id('s7')));
 
 -- verify_report as a visitor from a fresh address each time, so these lookups stay under its limit of
--- 10 a minute per client (18_verify_revoke tests the limit).
+-- 10 a minute per client (19_verify_revoke tests the limit).
 create function t.verify(p_code text) returns jsonb language sql volatile as $$
   select public.verify_report(p_code, encode(sha256(convert_to(gen_random_uuid()::text, 'UTF8')), 'hex'))
 $$;
