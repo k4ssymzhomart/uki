@@ -159,13 +159,15 @@ test("A.1 shows the term from the term views, by faculty, and Export PDF prints 
         .single();
       const picker = page.getByRole("button", { name: message("dashboard.reports.filter.faculty") });
       await picker.click();
-      await page.getByRole("menuitem", { name: faculty?.name ?? "" }).click();
+      await page.getByRole("menuitemcheckbox", { name: faculty?.name ?? "" }).click();
       await expect(picker).toHaveText(faculty?.name ?? "");
       await expectTiles(page, await termKpis(term, facultyId));
       await expect.poll(() => auditIds(danaId, since)).toContain(`${term}:${facultyId}`);
 
       await picker.click();
-      await page.getByRole("menuitem", { name: message("dashboard.shell.workspace.allFaculties") }).click();
+      await page
+        .getByRole("menuitemcheckbox", { name: message("dashboard.shell.workspace.allFaculties") })
+        .click();
       await expect(picker).toHaveText(message("dashboard.shell.workspace.allFaculties"));
       await expectTiles(page, all);
     }
