@@ -1,4 +1,4 @@
-import { act, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import type { StillsRequest } from "@uki/contracts";
 import { describe, expect, it, vi } from "vitest";
 import type { FunctionsClient } from "./functions-client.ts";
@@ -20,6 +20,10 @@ import { useWallStoreApi, WallStoreProvider } from "./wall-store-context.tsx";
 
 setupDom();
 
+const review = vi.hoisted(() => ({ addSessionNote: vi.fn() }));
+vi.mock("../review/review-actions.ts", () => review);
+
+const STAFF = "c1000000-0000-4000-8000-000000000001";
 const phone = event(1, "phone.detected", { score: 0.94, held_ms: 6000 }, { at: iso(0), frame_count: 3 });
 const look = event(1, "gaze.off_screen", { duration_ms: 2300, direction: "left" }, { at: iso(-248_000) });
 const back = event(1, "gaze.on_screen", {}, { at: iso(11_000), review: "none" });
@@ -108,5 +112,62 @@ describe("timeline drawer (2.5)", () => {
         });
     });
     await waitFor(() => expect(stills).toHaveBeenCalledTimes(2));
+  });
+
+  it("adds a note through add_session_note, and the note shows on the timeline when its event arrives (WP 1.8)", async () => {
+    review.addSessionNote.mockResolvedValueOnce({ ok: true, data: "e9000000-0000-4000-8000-000000000001" });
+    const { store } = setup(true);
+    fireEvent.click(await screen.findByRole("button", { name: "Add note" }));
+    const field = screen.getByRole("textbox", { name: "Note" });
+    const save = screen.getAllByRole("button", { name: "Add note" }).at(-1) as HTMLElement;
+    expect(save.hasAttribute("disabled")).toBe(true);
+    fireEvent.change(field, { target: { value: "  Phone face down after the warning.  " } });
+    fireEvent.click(save);
+    await waitFor(() =>
+      expect(review.addSessionNote).toHaveBeenCalledWith({
+        session_id: sessionId(1),
+        text: "Phone face down after the warning.",
+      }),
+    );
+    // Back to the quick message; the event comes through the exam channel like any other.
+    expect(await screen.findByRole("button", { name: "Send" })).toBeTruthy();
+    // Focus stays in the dialog, on Add note, so Escape still closes the drawer.
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole("button", { name: "Add note" })),
+    );
+    act(() => {
+      store()
+        .getState()
+        .actions.applyEvent(
+          event(
+            1,
+            "proctor.note",
+            { text: "Phone face down after the warning.", staff_id: STAFF },
+            {
+              id: "e9000000-0000-4000-8000-000000000001",
+              source: "proctor",
+              review: "none",
+              at: iso(20_000),
+              received_at: iso(20_000),
+            },
+          ),
+        );
+    });
+    const dialog = screen.getByRole("dialog");
+    const rows = [...dialog.querySelectorAll("ol li")].map((li) => li.textContent);
+    expect(rows[0]).toContain("Note");
+    expect(rows[0]).toContain("“Phone face down after the warning.”");
+  });
+
+  it("keeps the note and shows an error toast when add_session_note fails", async () => {
+    review.addSessionNote.mockResolvedValueOnce({ ok: false, code: "forbidden" });
+    setup(true);
+    fireEvent.click(await screen.findByRole("button", { name: "Add note" }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Note" }), { target: { value: "Talked to her" } });
+    fireEvent.click(screen.getAllByRole("button", { name: "Add note" }).at(-1) as HTMLElement);
+    await waitFor(() => expect(review.addSessionNote).toHaveBeenCalled());
+    expect((screen.getByRole("textbox", { name: "Note" }) as HTMLTextAreaElement).value).toBe(
+      "Talked to her",
+    );
   });
 });

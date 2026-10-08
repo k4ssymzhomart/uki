@@ -42,7 +42,8 @@ export function EvidenceCard({
     >
       <div className="h-40.75 w-full shrink-0 overflow-clip bg-subtle">{image}</div>
       <div className="flex w-full flex-col items-start gap-1.5 overflow-clip px-3.5 pt-3 pb-3.5">
-        <div className="flex w-full items-center gap-2 overflow-clip">
+        {/* Wraps the time under a long chip (Russian) instead of cutting it off. */}
+        <div className="flex w-full flex-wrap items-center gap-x-2 gap-y-1.5">
           <Chip status={chipStatus}>{chipLabel}</Chip>
           <span aria-hidden="true" className="w-2.5 shrink-0" />
           <time dateTime={dateTime} className="whitespace-nowrap opacity-58 type-ui-mono">

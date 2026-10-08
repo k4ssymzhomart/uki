@@ -12,7 +12,7 @@ import {
   Uuid,
 } from "@uki/contracts";
 import { useEffect, useRef } from "react";
-import { type AnyClient, fetchEventsAfter, fetchSessions } from "./queries.ts";
+import { type AnyClient, fetchDecisions, fetchEventsAfter, fetchSessions } from "./queries.ts";
 import { useWallStoreApi } from "./wall-store-context.tsx";
 
 /** The trigger also sends student_id (plan open issue), which a new join needs. */
@@ -86,7 +86,7 @@ export function useExamChannel({
       const updated = new Set<string>();
       updatedDuringCatchUp = updated;
       try {
-        const [events, sessions] = await Promise.all([
+        const [events, sessions, decisions] = await Promise.all([
           fetchEventsAfter(
             client,
             examId,
@@ -95,11 +95,14 @@ export function useExamChannel({
             overlapMs,
           ),
           fetchSessions(client, examId),
+          // WP 1.8: decisions have no broadcast, so another proctor's Mark reviewed arrives here.
+          fetchDecisions(client, examId),
           onCatchUpRef.current?.(),
         ]);
         if (cancelled) return;
         actions.mergeEvents(events);
         actions.mergeSessions(sessions, updated);
+        actions.mergeDecisions(decisions.map((d) => ({ sessionId: d.session_id, decidedAt: d.decided_at })));
       } catch {
         // Nothing is lost: the next resubscribe or focus asks again from the same point.
       } finally {

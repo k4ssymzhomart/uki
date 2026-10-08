@@ -35,7 +35,8 @@ export type AppShellProps = {
   staff: Omit<StaffIdentity, "initials">;
   /** Groups of the exams a proctor is assigned to, for "Proctor · Group 204". */
   groupCodes: readonly string[];
-  nav: { examsCount: number; liveCount: number; liveHref: string };
+  /** reviewCount: sessions in the review queue (WP 1.8), drawn as a coral count on Review (3.2). */
+  nav: { examsCount: number; liveCount: number; liveHref: string; reviewCount?: number };
   /**
    * 0.1c for the exam office: the workspace's faculties, the chosen one and exams this week per faculty.
    * Null for proctors, whose workspace card has no menu.
@@ -72,6 +73,7 @@ export function AppShell({ staff: member, groupCodes, nav, facultyMenu, children
   const countOf = (id: NavId): number | undefined => {
     if (id === "exams") return nav.examsCount;
     if (id === "live") return nav.liveCount;
+    if (id === "review") return nav.reviewCount;
     return undefined;
   };
   const item = (id: NavId): SidebarNavItem => {
@@ -82,6 +84,7 @@ export function AppShell({ staff: member, groupCodes, nav, facultyMenu, children
       label: t(`shell.nav.${id}`),
       href: hrefOf(id),
       count: count ? String(count) : undefined,
+      countTone: id === "review" ? "flag" : undefined,
       active: active === id,
     };
   };

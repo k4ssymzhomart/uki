@@ -80,6 +80,11 @@ export interface WallState {
   frames: Record<string, FrameMessage[]>;
   /** Staff names by id, for proctor events. */
   staffNames: Record<string, string>;
+  /**
+   * Each reviewed session's `review_decisions.decided_at` (WP 1.8): its flags received up to then are
+   * reviewed, so they no longer mark the tile Flagged. Mark reviewed on 2.4a adds one.
+   */
+  decisions: Record<string, string>;
   /** Latest `received_at` seen, for the refetch after a reconnect. */
   lastReceivedAt: string | null;
   /** Set when a `session` message names a session the store does not know: the client refetches. */
@@ -94,6 +99,8 @@ export interface WallInitialData {
   sessions: SessionRow[];
   events: CompactEvent[];
   staff: { id: string; fullName: string }[];
+  /** The exam's review decisions (WP 1.8); left out, no session has one. */
+  decisions?: { sessionId: string; decidedAt: string }[];
   /**
    * Server time when the page rendered: the clock of the first render, so it matches the server HTML.
    * The ticker then runs on the offset lib/use-now.ts measures.
@@ -135,6 +142,7 @@ export function initialWallState(data: WallInitialData, nowMs: number): WallStat
     events: {},
     frames: {},
     staffNames: Object.fromEntries(data.staff.map((s) => [s.id, s.fullName])),
+    decisions: Object.fromEntries((data.decisions ?? []).map((d) => [d.sessionId, d.decidedAt])),
     lastReceivedAt: null,
     unknownSessions: false,
     nowMs,
@@ -241,6 +249,23 @@ export function applyFrame(state: WallState, frame: FrameMessage): WallState {
   return { ...state, frames: { ...state.frames, [frame.event_id]: [...current, frame] } };
 }
 
+/** A review decision for one session (Mark reviewed on 2.4a): a later one replaces an earlier one. */
+export function applyDecision(state: WallState, sessionId: string, decidedAt: string): WallState {
+  const current = state.decisions[sessionId];
+  if (current !== undefined && toMs(current) >= toMs(decidedAt)) return state;
+  return { ...state, decisions: { ...state.decisions, [sessionId]: decidedAt } };
+}
+
+/** Decisions read again on a catch-up (another proctor's Mark reviewed, or 3.3); older ones are kept. */
+export function mergeDecisions(
+  state: WallState,
+  rows: readonly { sessionId: string; decidedAt: string }[],
+): WallState {
+  let next = state;
+  for (const row of rows) next = applyDecision(next, row.sessionId, row.decidedAt);
+  return next;
+}
+
 /** The ticker. */
 export function tick(state: WallState, nowMs: number): WallState {
   return state.nowMs === nowMs ? state : { ...state, nowMs };
@@ -252,6 +277,8 @@ export interface WallActions {
   applySession: (message: SessionTileMessage & { student_id?: string | undefined }) => void;
   mergeSessions: (rows: readonly SessionRow[], keep?: ReadonlySet<string>) => void;
   applyFrame: (frame: FrameMessage) => void;
+  applyDecision: (sessionId: string, decidedAt: string) => void;
+  mergeDecisions: (rows: readonly { sessionId: string; decidedAt: string }[]) => void;
   tick: (nowMs: number) => void;
 }
 
@@ -273,6 +300,8 @@ export function createWallStore(data: WallInitialData, nowMs: number) {
         applySession: (message) => apply((s) => applySession(s, message)),
         mergeSessions: (rows, keep) => apply((s) => mergeSessions(s, rows, keep)),
         applyFrame: (frame) => apply((s) => applyFrame(s, frame)),
+        applyDecision: (sessionId, decidedAt) => apply((s) => applyDecision(s, sessionId, decidedAt)),
+        mergeDecisions: (rows) => apply((s) => mergeDecisions(s, rows)),
         tick: (now) => apply((s) => tick(s, now)),
       },
     };

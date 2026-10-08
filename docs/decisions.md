@@ -609,3 +609,48 @@ Choices WP 1.6 made where the plan leaves room, or where a frame and the plan di
 - **The restart test is local and on its own.** `pnpm --filter desktop e2e:realtime` stops Realtime for everyone on the stack, so `pnpm --filter desktop e2e` does not run it, and neither does CI, which has no desktop e2e. It runs only on a stack nobody else needs at that moment. Realtime is started again after every round, in `afterAll` and in a global teardown.
 - **The lead proctor is the fixture's,** a copy of the seed's Aigerim Sadykova in the fixture's own workspace, as in the desktop e2e. The seeded Mathematics 2 exam stays as the dashboard's tests and the demo expect it.
 - **The path is read from the window's network, and the app is not changed for the test.** The path that applied a command is the first of the window's Realtime frames, ingest replies and catch-up reads to carry its id. Playwright stamps these a little after the window gets them, so the first arrival may be stamped up to 2 s after the frame. The three paths arrive seconds apart, so the order stays clear.
+
+## 2026-10-08 · 1.8 Review
+
+Choices WP 1.8 makes for 3.2, 3.2a, 3.2b, 3.3, Mark reviewed (2.4a) and Add note (2.5) where the plan leaves room or a frame and the plan differ. No migration: WP 1.1's `decide_session`, `add_session_note`, `review_queue` and `audit_read` cover the package, and `11_help_review` already tests the queue rule.
+
+**3.2 Review queue**
+- **Which exams.** To review lists every session with a flag newer than its decision, whatever the exam's age (the `review_queue` view). Reviewed and All also need the decided sessions, so the page shows the exams with a session in the queue plus the flagged exams that started in the last 7 days. Exams without a single flag are left out.
+- **Grouped by exam, in one Sessions card.** Figma draws one exam, named in the breadcrumb (“Review / Mathematics 2 · Midterm · finished 11:30”). With one exam the page does the same. With more, the breadcrumb reads “Review / 2 exams” and each exam's rows start with a header row naming the exam, which no frame draws. Exams with a session in the queue come first, then the newest.
+- **Order and the top flag.** The flag ranks are phone, second face, ended by the proctor, app closed, looked away, looked down, tab blocked, no face, camera lost and left full screen. A row shows its highest-ranked open flag, or of all its flags once reviewed. Rows sort by that rank, then by more flags, then by name, which gives Figma's order. The Count is coral with 2 flags or more or a coral top flag (phone, second face, ended, app closed), otherwise yellow, as Figma's six rows. Look-aways add up (“Looked away · 6 s in total”). `camera.lost` carries no duration, so the row reads “Camera lost” without Figma's “· 10 s”.
+- **Stat cards.**
+  - To review counts the sessions in the queue; its caption counts their open flags.
+  - Reviewed counts sessions with a decision and no newer flag. Its caption reads “today, by 2 proctors” only when every one of those decisions was made today in Asia/Almaty, and “no decisions yet” when there are none (a new key).
+  - No flags counts the shown exams' sessions without a flag.
+  - Median review uses A.1's rule (`term_review_time`): from the exam's scheduled end to the decision, never negative. It shows the two largest units (“1 min 40 s”, “3 h 5 min”, “2 d 4 h”) and “—” without decisions. Opening a session is not timed, as WP 1.1 decided.
+- **Tabs and search** run on the client and are not in the URL. The search matches the name or the student number.
+- **3.2a, the flag filter.** Its rows are the flag types that have a flag among the sessions of the current tab, in the rank order above. They include Looked down, Ended by the proctor, App closed and Left full screen, which Figma's six rows leave out. Counts are flags of that type: open flags on To review, all flags on the other tabs. Ticking a row changes nothing until “Show N flags”, where N counts the ticked types (every type when none is ticked). The choice goes into `?flag=` (comma-separated event types) through `history.replaceState`, so it needs no server round trip and writes no second audit row. The pill's Count shows how many types the applied filter has, and is hidden without a filter. Figma draws “4” on 3.2 and 3.2b too.
+- **3.2b, the flag preview.** It is a Radix HoverCard on the row's flags cell, which is also a link to 3.3. It opens on hover and on keyboard focus. The still comes from Phase 0's `stills` function only when the card opens: a 5-minute URL and one audit row per still. The detail is 2.5's flag-card detail (“Held for 6 s” for a phone). Figma's “Put away after the warning.” has no data behind it, as decided for 2.5.
+
+**3.3 Session review**
+- **One evidence card per flag**, three to a row, by rank and then by time. A card selects which flag the large frame shows. Clicking the frame steps through that flag's stills, and the stamp counts them (“frame 1 of 3”, or “no frame kept”: seed v1's flags have no stills; seed v2 adds them). The time chip is left out when the time written is unknown. The identity chip reads “identity matched” when `identity_result` is `matched` or the session has an `identity.matched` event, and otherwise “identity not checked”, a new key that no frame shows.
+- **The timeline** lists every event of the session, newest first, notes included, in the wall's wording. It scrolls after 480 px, so the decision form stays in view.
+- **The decision form** opens with the saved decision and note; a new one replaces them, as `decide_session` does. Save and next stays disabled until a choice is made.
+  - Skip and Save and next open the next session of the exam's queue, wrapping round, and return to `/review` when none is left.
+  - The breadcrumb's “1 of 7” counts the exam's queue. A session out of the queue shows “Review / <exam>”.
+- **Option details.**
+  - Talk to the student reads “Ask about the phone in frame at 10:47.”: the top flag in the wall's words, where Figma writes “the phone”.
+  - Send to the exam committee reads “Attach this report and the 3 frames.”, with the number as a digit, where Figma writes “three”.
+
+**Audit rows**
+- 3.2 writes one `review.queue_viewed` row per exam it shows (object `exam`), and 3.3 one `review.session_viewed` row (object `session`). Both go through `audit_read` before any data reaches the page. When the audit write fails twice, the page fails rather than show unaudited student data.
+- Stills are audited by the `stills` function, decisions by `decide_session` (`review.decide`) and notes by `add_session_note` (`session.note`).
+- The sidebar's Review count reads no student data and writes no row.
+
+**The live wall**
+- **Mark reviewed (2.4a)** sits after Pause exam, as Figma draws it, and calls `decide_session` with `no_issue` through a server action.
+  - It is enabled while the wall holds a flag with no newer decision. The wall holds the last 60 minutes and every phone and second-face flag, so a session whose only flags are older is decided on 3.3.
+  - The flags up to `decided_at` then count as reviewed (`reviewedEventIds` in `wall.ts`), so a Flagged tile turns back to its other state. A live exam stays live.
+  - The wall loads the exam's decisions with the page and reads them again on every catch-up (a reconnect, focus, or the 20 s reconcile). Decisions have no broadcast, so another proctor's Mark reviewed or a 3.3 decision reaches this wall within about 20 s.
+- **Add note (2.5)** is the ghost button beside Send, as Figma draws it. It swaps the quick message for a Note field (up to 500 characters) with Cancel and Add note, which no frame draws; the label is 3.3's “Note”. The `proctor.note` event reaches the timeline through the exam channel like any other event.
+- **The sidebar's Review item** carries a coral Count of the sessions in the queue under the caller's RLS (Figma 3.2: “7”).
+
+**UI kit**
+- `FlagPreview` is Popover/Flag preview (71:2212), and `DropdownFilter` is Dropdown/Filter (76:2284).
+- `RowSession` gains `renderFlags`, so the flags cell can be the preview's trigger.
+- EvidenceCard's chip row wraps, so a long Russian chip (“взгляд 4,2 с”) moves the time to the next line instead of cutting it off.

@@ -231,6 +231,159 @@
       },
       "title": "Обзор"
     },
+    "review": {
+      "breadcrumb": {
+        "exam": "Проверка / {exam}",
+        "exams": "Проверка / {count, plural, one {# экзамен} few {# экзамена} many {# экзаменов} other {# экзамена}}",
+        "root": "Проверка"
+      },
+      "column": {
+        "flags": "Отметки",
+        "open": "Открыть",
+        "status": "Статус",
+        "student": "Студент",
+        "time": "Время"
+      },
+      "duration": {
+        "days": "{days} д {hours} ч",
+        "hours": "{hours} ч {minutes} мин",
+        "minutes": "{minutes} мин {seconds} с",
+        "seconds": "{seconds} с"
+      },
+      "empty": {
+        "filtered": "Подходящих сессий нет.",
+        "to_review": "Проверять нечего. По каждой отметке есть решение."
+      },
+      "error": "{code, select, forbidden {Вы не можете проверять эту сессию.} not_found {Этой сессии больше нет.} bad_request {Не принято. Проверьте заметку.} other {Не удалось связаться с Üki. Попробуйте ещё раз.}}",
+      "examLine": "{exam} · {state, select, live {идёт сейчас} other {завершён в {time}}}",
+      "filter": {
+        "button": "Тип отметки",
+        "clear": "Сбросить",
+        "header": "Тип отметки",
+        "show": "{count, plural, one {Показать # отметку} few {Показать # отметки} many {Показать # отметок} other {Показать # отметки}}"
+      },
+      "flag": {
+        "camera_lost": "Камера отключилась",
+        "face_missing": "Нет лица",
+        "face_second": "Второе лицо",
+        "gaze_down": "Взгляд вниз",
+        "gaze_off_screen": "Взгляд в сторону",
+        "lock_app_disconnected": "Приложение закрыто",
+        "lock_fullscreen_exit": "Выход из полноэкранного режима",
+        "phone_detected": "Телефон в кадре",
+        "proctor_ended": "Завершено проктором",
+        "tab_blocked": "Вкладка заблокирована"
+      },
+      "preview": {
+        "open": "Открыть проверку",
+        "still": "Кадр в {time}",
+        "title": "{name} · {what}"
+      },
+      "principle": {
+        "body": "Каждая отметка — это момент со временем и кадром. Что он значит, решаете вы.",
+        "title": "Отметка ≠ нарушение."
+      },
+      "row": {
+        "noTime": "—",
+        "review": "Проверить"
+      },
+      "search": {
+        "label": "Найти студента"
+      },
+      "session": {
+        "breadcrumb": "Проверка / {exam} / {index} из {total}",
+        "chip": {
+          "camera_lost": "камера",
+          "face_missing": "{seconds, select, none {нет лица} other {нет лица {seconds, number, ::.#} с}}",
+          "face_second": "{seconds, select, none {второе лицо} other {второе лицо {seconds, number, ::.#} с}}",
+          "flags": "{count, plural, one {# отметка} few {# отметки} many {# отметок} other {# отметки}}",
+          "gaze_down": "{seconds, select, none {взгляд} other {взгляд {seconds, number, ::.#} с}}",
+          "gaze_off_screen": "{seconds, select, none {взгляд} other {взгляд {seconds, number, ::.#} с}}",
+          "identity": "{result, select, matched {личность подтверждена} other {личность не проверена}}",
+          "lock_app_disconnected": "приложение закрыто",
+          "lock_fullscreen_exit": "полный экран",
+          "noVideo": "видео не хранится",
+          "phone_detected": "{score, select, none {телефон} other {телефон {score, number, ::.00}}}",
+          "proctor_ended": "завершено",
+          "tab_blocked": "вкладка",
+          "time": "{used} из {duration} мин"
+        },
+        "decision": {
+          "committee": {
+            "detail": "{count, plural, =0 {Приложить этот отчёт и его отметки.} one {Приложить этот отчёт и # кадр.} few {Приложить этот отчёт и # кадра.} many {Приложить этот отчёт и # кадров.} other {Приложить этот отчёт и # кадра.}}",
+            "title": "Передать в экзаменационную комиссию"
+          },
+          "no_issue": {
+            "detail": "Закрыть отметки. Студенту ничего не отправляется.",
+            "title": "Нарушений нет"
+          },
+          "talk": {
+            "detail": "{what, select, none {Спросите, что произошло.} other {Спросите про «{what}» в {time}.}}",
+            "title": "Поговорить со студентом"
+          },
+          "title": "Ваше решение"
+        },
+        "flags": "Отметки",
+        "note": "Заметка",
+        "save": "Сохранить и дальше",
+        "showFlag": "Показать «{flag}» в {time}",
+        "skip": "Пропустить",
+        "stamp": "{time} · {flag} · {count, plural, =0 {кадр не сохранён} one {кадр {index} из {count}} few {кадр {index} из {count}} many {кадр {index} из {count}} other {кадр {index} из {count}}}",
+        "still": "Кадр {index} из {count} в {time}",
+        "timeline": "Хронология"
+      },
+      "sessions": {
+        "title": "Сессии"
+      },
+      "stat": {
+        "median": {
+          "caption": "на сессию с отметками",
+          "label": "Медиана проверки",
+          "none": "—"
+        },
+        "noFlags": {
+          "caption": "смотреть нечего",
+          "label": "Без отметок"
+        },
+        "reviewed": {
+          "caption": "{when, select, today {сегодня, } other {}}{count, plural, one {# проверяющий} few {# проверяющих} many {# проверяющих} other {# проверяющего}}",
+          "label": "Проверено",
+          "none": "решений пока нет"
+        },
+        "toReview": {
+          "caption": "{count, plural, one {всего # отметка} few {всего # отметки} many {всего # отметок} other {всего # отметки}}",
+          "label": "К проверке"
+        }
+      },
+      "status": {
+        "committee": "Комиссия",
+        "no_flags": "Без отметок",
+        "no_issue": "Без нарушений",
+        "talk": "Беседа",
+        "to_review": "Нужна проверка"
+      },
+      "tab": {
+        "all": "Все · {count}",
+        "reviewed": "Проверено · {count}",
+        "to_review": "К проверке · {count}"
+      },
+      "tabs": {
+        "label": "Показать сессии"
+      },
+      "title": "Проверка",
+      "top": {
+        "camera_lost": "Камера отключилась",
+        "face_missing": "{seconds, select, none {Пауза · нет лица} other {Пауза · нет лица {seconds, number, ::.#} с}}",
+        "face_second": "{seconds, select, none {Второе лицо} other {Второе лицо · {seconds, number, ::.#} с}}",
+        "gaze_down": "{count, plural, one {Взгляд вниз · {seconds, number, ::.#} с} few {Взгляд вниз · всего {seconds, number, ::.#} с} many {Взгляд вниз · всего {seconds, number, ::.#} с} other {Взгляд вниз · всего {seconds, number, ::.#} с}}",
+        "gaze_off_screen": "{count, plural, one {Взгляд в сторону · {seconds, number, ::.#} с} few {Взгляд в сторону · всего {seconds, number, ::.#} с} many {Взгляд в сторону · всего {seconds, number, ::.#} с} other {Взгляд в сторону · всего {seconds, number, ::.#} с}}",
+        "lock_app_disconnected": "Приложение закрылось при включённом Lock",
+        "lock_fullscreen_exit": "Выход из полноэкранного режима",
+        "phone_detected": "{score, select, none {Телефон в кадре} other {Телефон в кадре · {score, number, ::.00}}}",
+        "proctor_ended": "Завершено проктором",
+        "tab_blocked": "Новая вкладка заблокирована"
+      }
+    },
     "shell": {
       "account": {
         "language": "Язык"
@@ -308,6 +461,7 @@
       "action": {
         "end": "Завершить сессию",
         "header": "{name} · {number}",
+        "markReviewed": "Отметить как проверено",
         "message": "Написать",
         "pause": "Приостановить экзамен",
         "resume": "Продолжить экзамен",
@@ -315,10 +469,12 @@
       },
       "breadcrumb": "Наблюдение / {exam} · осталось {left}",
       "drawer": {
+        "addNote": "Добавить заметку",
         "close": "Закрыть хронологию",
         "loading": "Загружаем хронологию",
         "messageLabel": "{pronoun, select, he {Быстрое сообщение · на его языке} she {Быстрое сообщение · на её языке} other {Быстрое сообщение · на языке студента}}",
         "meta": "{number}{seat, select, none {} other { · место {seat}}}{os, select, macos { · macOS} windows { · Windows} other {}}",
+        "noteLabel": "Заметка",
         "phoneChip": "телефон {score, number, ::.00}",
         "question": "Вопрос {question} из {total}",
         "questionNoTotal": "Вопрос {question}",

@@ -5,6 +5,7 @@ import {
   isDarkRoute,
   liveHref,
   NAV,
+  NAV_ITEMS,
   type NavId,
   type NavSpec,
   navSections,
@@ -55,9 +56,16 @@ describe("shell", () => {
 
   it("hides every item whose page is not built yet, and the empty Admin section with them", () => {
     const built = (Object.keys(NAV) as NavId[]).filter((id) => NAV[id].built);
-    expect(built).toEqual(["overview", "exams", "live"]);
-    expect(navSections("exam_office")).toEqual([{ id: "workspace", items: ["overview", "exams", "live"] }]);
-    expect(navSections("proctor")).toEqual([{ id: "workspace", items: ["overview", "exams", "live"] }]);
+    // Each package turns its own item on with its page; Review landed with WP 1.8.
+    expect(built).toEqual(expect.arrayContaining(["overview", "exams", "live", "review"]));
+    for (const role of ["exam_office", "proctor"] as const) {
+      expect(navSections(role).flatMap((section) => section.items)).toEqual(
+        NAV_ITEMS.filter((id) => NAV[id].built && NAV[id].roles.includes(role)),
+      );
+    }
+    if (!NAV.settings.built && !NAV.privacy.built) {
+      expect(navSections("exam_office").map((section) => section.id)).toEqual(["workspace"]);
+    }
   });
 
   it("lands proctors on /my-exams only once WP 1.5 has turned it on", () => {

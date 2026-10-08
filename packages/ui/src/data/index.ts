@@ -7,6 +7,7 @@ export * from "./columns.ts";
 export * from "./count.tsx";
 export * from "./event-row.tsx";
 export * from "./evidence-card.tsx";
+export * from "./flag-preview.tsx";
 export * from "./initials.ts";
 export * from "./row-action.tsx";
 export * from "./row-exam.tsx";

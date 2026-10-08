@@ -6,6 +6,7 @@ import {
   liveTarget,
   overviewStats,
 } from "../../features/overview/overview-model.ts";
+import { countReviewQueue } from "../../features/review/review-data.ts";
 import { AppShell } from "../../features/shell/app-shell.tsx";
 import { scopesFaculty } from "../../features/shell/scope.ts";
 import { loadOverviewScope } from "../../features/shell/scope-data.ts";
@@ -23,7 +24,7 @@ import { requireStaff } from "../../lib/auth.ts";
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const staff = await requireStaff();
   if (!staff) return <StaffLookupFailed standalone />;
-  const scope = await loadOverviewScope();
+  const [scope, reviewCount] = await Promise.all([loadOverviewScope(), countReviewQueue()]);
   const rows = scope.rows;
   const stats = overviewStats(rows);
   const now = Date.now();
@@ -42,6 +43,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         examsCount: stats.upcoming.count,
         liveCount: liveStudentCount(rows, now),
         liveHref: liveHref(liveTarget(rows, now)),
+        reviewCount,
       }}
       facultyMenu={
         scopesFaculty(staff.role)
