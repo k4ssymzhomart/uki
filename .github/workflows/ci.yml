@@ -5,7 +5,7 @@
 #   stack     supabase start without the edge runtime, then a clean db reset of every migration and the
 #             seed (P.9), then supabase functions serve; pgTAP; the functions' integration tests and the
 #             desktop flow against the stack; the dashboard smoke test (Playwright Chromium); the demo
-#             scripts against the real schema
+#             scripts against the real schema; then send-invites again with UKI_EMAIL_SINK set (WP 1.4)
 #   build     web, the mock portal and Üki Lock (Chrome and Edge zips), then the Üki Lock smoke test in
 #             headless Chrome for Testing
 #   windows   WP 0.12 on windows-latest: pnpm check, the x64 zip, the NSIS installer, the launch test of
@@ -120,6 +120,14 @@ jobs:
           pnpm demo:reset
           pnpm demo:simulate --sessions 20 --speed 4 --start-after 15 --seconds 50 --watch
           pnpm demo:reset
+      - name: send-invites with UKI_EMAIL_SINK (the functions served again with a sink)
+        run: |
+          pkill -f "functions serve" || true
+          sleep 5
+          cp supabase/functions/local.env "$RUNNER_TEMP/functions-sink.env"
+          echo "UKI_EMAIL_SINK=sink@uki.test" >> "$RUNNER_TEMP/functions-sink.env"
+          nohup supabase functions serve --env-file "$RUNNER_TEMP/functions-sink.env" > functions-serve-sink.log 2>&1 &
+          UKI_FUNCTIONS_ENV_FILE="$RUNNER_TEMP/functions-sink.env" pnpm exec vitest run -c vitest.integration.config.ts --project integration test/integration/send-invites.test.ts
       - name: Logs on failure
         if: failure()
         uses: actions/upload-artifact@v4
@@ -127,6 +135,7 @@ jobs:
           name: stack-logs
           path: |
             functions-serve.log
+            functions-serve-sink.log
             playwright-report/
             e2e/playwright-report/
             test-results/

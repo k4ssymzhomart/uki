@@ -475,7 +475,7 @@ describe("send-invites: failures and resends", () => {
     expect([...after.values()].every((row) => row.state === "sent" && row.error === null)).toBe(true);
   });
 
-  it("marks the batch failed when Resend cannot be reached or answers 500", async () => {
+  it("marks the batch failed when Resend answers 500", async () => {
     const target = students[0];
     if (!target) throw new Error("no student 0");
     stub.refuseWhen(() => ({ status: 500, name: "internal_server_error", message: "Something went wrong." }));
