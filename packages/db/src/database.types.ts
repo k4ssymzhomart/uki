@@ -1143,7 +1143,7 @@ export type Database = {
           id?: string
           issued_at?: string
           session_id: string
-          verify_code: string
+          verify_code?: string
         }
         Update: {
           content_hash?: string
@@ -1642,6 +1642,24 @@ export type Database = {
           },
         ]
       }
+      verify_lookups: {
+        Row: {
+          at: string
+          client_hash: string
+          id: number
+        }
+        Insert: {
+          at?: string
+          client_hash: string
+          id?: never
+        }
+        Update: {
+          at?: string
+          client_hash?: string
+          id?: never
+        }
+        Relationships: []
+      }
       workspaces: {
         Row: {
           created_at: string | null
@@ -2084,6 +2102,7 @@ export type Database = {
         Args: { change_request?: string; exam_id: string }
         Returns: Json
       }
+      convert_verify_codes: { Args: never; Returns: number }
       create_share: { Args: { report_id: string }; Returns: Json }
       decide_session: {
         Args: {
@@ -2158,10 +2177,7 @@ export type Database = {
         Returns: boolean
       }
       make_receipt_id: { Args: { p_student_id: string }; Returns: string }
-      make_verify_code: {
-        Args: { p_content_hash: string; p_report_id: string }
-        Returns: string
-      }
+      new_verify_code: { Args: never; Returns: string }
       normalize_verify_code: { Args: { p: string }; Returns: string }
       open_shared_report: { Args: { p_token_hash: string }; Returns: Json }
       owns_session: { Args: { p_session_id: string }; Returns: boolean }
@@ -2218,6 +2234,7 @@ export type Database = {
           workspace_id: string
         }[]
       }
+      revoke_share: { Args: { share_id: string }; Returns: Json }
       save_exam_draft: { Args: { exam: Json }; Returns: Json }
       schedule_exam: { Args: { exam_id: string }; Returns: Json }
       session_ends_at: {
@@ -2230,15 +2247,20 @@ export type Database = {
         Returns: Json
       }
       session_tick: { Args: never; Returns: Json }
+      staff_may_share: { Args: never; Returns: boolean }
       start_exam: { Args: { exam_id: string }; Returns: Json }
       submit_session: { Args: { session_id: string }; Returns: Json }
       term_key: { Args: { d: string }; Returns: string }
       term_start: { Args: { d: string }; Returns: string }
       try_uuid: { Args: { p: string }; Returns: string }
+      unused_verify_code: { Args: never; Returns: string }
       valid_browser_rules: { Args: { p: Json }; Returns: boolean }
       valid_checks: { Args: { p: Json }; Returns: boolean }
       valid_settings: { Args: { p: Json }; Returns: boolean }
-      verify_report: { Args: { code: string }; Returns: Json }
+      verify_report: {
+        Args: { client_hash: string; code: string }
+        Returns: Json
+      }
       write_audit: {
         Args: {
           p_action: string

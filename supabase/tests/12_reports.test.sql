@@ -151,13 +151,18 @@ select t.assign(t.id('math2'), t.id('other_proctor'), true, 1, 128);
 select t.put('s7', 'd0000000-0000-4000-8003-000000000007');
 select t.put('s7_uid', t.uid_of(t.id('s7')));
 
+-- verify_report as a visitor from a fresh address each time, so these lookups stay under its limit of
+-- 10 a minute per client (19_verify_revoke tests the limit).
+create function t.verify(p_code text) returns jsonb language sql volatile as $$
+  select public.verify_report(p_code, encode(sha256(convert_to(gen_random_uuid()::text, 'UTF8')), 'hex'))
+$$;
+grant execute on function t.verify(text) to anon, authenticated, service_role;
+
 -- ---------------------------------------------------------------------------
--- Verify codes: the same case as packages/contracts/src/review.test.ts
+-- Verify codes: the same cases as packages/contracts/src/review.test.ts
 -- ---------------------------------------------------------------------------
-select is(public.make_verify_code('0199a9d2-4c3e-7a10-8b2c-1d2e3f405162', 'abc'), 'XHHVQ7Z2YZ3D',
-  'the verify code matches the contracts'' verifyCodeFromDigest');
-select is(public.normalize_verify_code('uki-rpt-7k2m-9qxd-4hpa'), '7K2M9QXD4HPA', 'a printed code reads back');
-select is(public.normalize_verify_code(' 7K2M 9QXD 4HPO '), '7K2M9QXD4HP0', 'O reads as 0');
+select is(public.normalize_verify_code('uki-7k2m-9qxd'), '7K2M9QXD', 'a printed code reads back');
+select is(public.normalize_verify_code(' 7K2M 9QXO '), '7K2M9QX0', 'O reads as 0');
 select is(public.normalize_verify_code('UKI-RPT-0917-MT'), null, 'a malformed code is null');
 
 -- ---------------------------------------------------------------------------
@@ -167,7 +172,7 @@ select t.login(t.id('aigerim'));
 create table t.r1 as select public.get_report(t.id('s7')) as p;
 reset role;
 grant select on all tables in schema t to anon, authenticated, service_role;
-select ok((select p -> 'report' ->> 'verify_code' ~ '^[0-9A-HJKMNP-TV-Z]{12}$' from t.r1), 'the report has a 12-character code');
+select ok((select p -> 'report' ->> 'verify_code' ~ '^[0-9A-HJKMNP-TV-Z]{8}$' from t.r1), 'the report has an 8-character code');
 select is((select jsonb_array_length(p -> 'flags') from t.r1), 2, 'both flags are in the report');
 select is((select p -> 'flags' -> 0 ->> 'type' from t.r1), 'phone.detected', 'flags in time order');
 select is((select p -> 'data_kept' ->> 'video_bytes' from t.r1), '0', 'no video is kept');
@@ -182,9 +187,6 @@ select is((select verify_code from public.reports where session_id = t.id('s7'))
   (select p -> 'report' ->> 'verify_code' from t.r1), 'the row holds the printed code');
 select is((select content_hash from public.reports where session_id = t.id('s7')), public.report_content_hash(t.id('s7')),
   'the row holds the content hash');
-select is((select verify_code from public.reports where session_id = t.id('s7')),
-  (select public.make_verify_code(r.id, r.content_hash) from public.reports r where r.session_id = t.id('s7')),
-  'the code comes from the report id and the content hash');
 select is((select count(*) from public.audit_log where action = 'report.view' and object_id = t.id('s7')::text
   and actor_id = t.id('aigerim') and at >= now()), 1::bigint, 'reading the report writes an audit row');
 
@@ -207,13 +209,13 @@ reset role;
 create table t.code1 as select p -> 'report' ->> 'verify_code' as code from t.r1;
 grant select on all tables in schema t to anon, authenticated, service_role;
 select t.anon();
-select is((public.verify_report('UKI-RPT-' || (select code from t.code1)) ->> 'intact'), 'true',
+select is((t.verify('UKI-' || (select code from t.code1)) ->> 'intact'), 'true',
   'a fresh printout verifies');
-select is((public.verify_report(lower((select code from t.code1))) ->> 'exam_title'), 'History of Kazakhstan · Test',
+select is((t.verify(lower((select code from t.code1))) ->> 'exam_title'), 'History of Kazakhstan · Test',
   'the code shows the exam');
-select is(length(public.verify_report((select code from t.code1)) ->> 'initials'), 2, 'and the student''s initials only');
-select is(public.verify_report('0000000000ZZ'), '{"found":false}'::jsonb, 'an unknown code is not found');
-select is(public.verify_report('nonsense'), '{"found":false}'::jsonb, 'a malformed code is not found');
+select is(length(t.verify((select code from t.code1)) ->> 'initials'), 2, 'and the student''s initials only');
+select is(t.verify('000000ZZ'), '{"found":false}'::jsonb, 'an unknown code is not found');
+select is(t.verify('not-a-real-code'), '{"found":false}'::jsonb, 'a malformed code is not found');
 reset role;
 
 -- The decision changes the content: the old printout no longer verifies.
@@ -222,7 +224,7 @@ select lives_ok(format('select public.decide_session(%L, %L, %L)', t.id('s7'), '
   'a decision changes the report');
 reset role;
 select t.anon();
-select is((public.verify_report((select code from t.code1)) ->> 'intact'), 'false',
+select is((t.verify((select code from t.code1)) ->> 'intact'), 'false',
   'the older printout is found but no longer intact');
 reset role;
 select t.login(t.id('aigerim'));
@@ -232,9 +234,9 @@ grant select on all tables in schema t to anon, authenticated, service_role;
 select isnt((select p -> 'report' ->> 'verify_code' from t.r2), (select code from t.code1), 'the new version gets a new code');
 select is((select p -> 'decision' ->> 'decision' from t.r2), 'talk', 'the report shows the decision');
 select t.anon();
-select is((public.verify_report((select p -> 'report' ->> 'verify_code' from t.r2)) ->> 'intact'), 'true',
+select is((t.verify((select p -> 'report' ->> 'verify_code' from t.r2)) ->> 'intact'), 'true',
   'the new printout verifies');
-select is(public.verify_report((select code from t.code1)), '{"found":false}'::jsonb, 'the older code is gone');
+select is(t.verify((select code from t.code1)), '{"found":false}'::jsonb, 'the older code is gone');
 reset role;
 
 -- ---------------------------------------------------------------------------
@@ -246,8 +248,8 @@ reset role;
 grant select on all tables in schema t to anon, authenticated, service_role;
 select ok((select s ->> 'token' ~ '^[A-Za-z0-9_-]{43}$' from t.share), 'the token is 32 random bytes in base64url');
 select is((select s ->> 'path' from t.share), (select '/r/' || (s ->> 'token') from t.share), 'the link path holds the token');
-select ok((select abs(extract(epoch from (s ->> 'expires_at')::timestamptz - (now() + interval '7 days'))) < 5 from t.share),
-  'the link expires 7 days ahead');
+select ok((select abs(extract(epoch from (s ->> 'expires_at')::timestamptz - (now() + interval '30 days'))) < 5 from t.share),
+  'the link expires 30 days ahead');
 select is((select token_hash from public.report_shares where id = (select (s ->> 'share_id')::uuid from t.share)),
   (select encode(sha256(convert_to(s ->> 'token', 'UTF8')), 'hex') from t.share), 'only the SHA-256 of the token is stored');
 select is((select count(*) from public.report_shares sh where to_jsonb(sh)::text like '%' || (select s ->> 'token' from t.share) || '%'),

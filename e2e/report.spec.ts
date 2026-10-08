@@ -2,8 +2,10 @@
 // review to report to share. Dana decides on 3.3, opens 3.4 from it, prints it on A4, exports its events
 // as CSV and makes the share link; a browser context with no cookies opens 3.5 from the link with its
 // still loading, with no-index, no-referrer and no-store, and each view writes an audit row; the link
-// expired gets the not-found page; /verify confirms the printed code, and once the report changes the
-// old code no longer verifies. Everything the test adds is removed afterwards.
+// expired gets the not-found page, and so does a link withdrawn with Revoke on 3.4; /verify confirms
+// the printed code (UKI-XXXX-XXXX, typed in lower case too), and once the report changes the old code
+// no longer verifies; one client gets 10 lookups a minute and the 11th the try-again state (the user's
+// decisions of 8 Oct). Everything the test adds is removed afterwards.
 import { createHash, randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { type Browser, expect, type Page, test } from "@playwright/test";
@@ -18,7 +20,7 @@ const SESSION = "d0000000-0000-4000-8003-000000000033";
 const FLAG = "e1000000-0000-4000-8003-000000000004";
 const STILL_PATH = `${HISTORY}/${SESSION}/${FLAG}-0.jpg`;
 const NOTE = "Phone face down after the warning.";
-const CODE = /^UKI-RPT-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$/;
+const CODE = /^UKI-[0-9A-HJKMNP-TV-Z]{4}-[0-9A-HJKMNP-TV-Z]{4}$/;
 const CSV_HEADER = "at_utc,at_almaty,type,source,review,frame_count,received_at_utc,data";
 /** A 64 x 36 JPEG, as the integration tests upload (test/integration/api.ts). */
 const STILL = Buffer.from(
@@ -86,10 +88,31 @@ async function stillsLoaded(page: Page, count: number): Promise<void> {
     .toBe(true);
 }
 
-/** A browser context with no cookies at all: a committee member without an Üki account. */
+/**
+ * A browser context with no cookies at all: a committee member without an Üki account. Each one comes
+ * from its own address (x-forwarded-for, which the Next.js server hashes for /verify's limit), so its
+ * lookups never share a count with another test's or another run's.
+ */
 async function visitor(browser: Browser, viewport = { width: 1280, height: 800 }) {
-  const context = await browser.newContext({ viewport, locale: "en-GB", timezoneId: "Asia/Almaty" });
+  const id = randomUUID();
+  const address = `2001:db8::${id.slice(0, 4)}:${id.slice(9, 13)}`;
+  const context = await browser.newContext({
+    viewport,
+    locale: "en-GB",
+    timezoneId: "Asia/Almaty",
+    extraHTTPHeaders: { "x-forwarded-for": address },
+  });
   return { context, page: await context.newPage() };
+}
+
+async function revokes(shareId: string): Promise<number> {
+  const { count, error } = await adminClient()
+    .from("audit_log")
+    .select("id", { count: "exact", head: true })
+    .eq("action", "report.share_revoke")
+    .eq("meta->>share_id", shareId);
+  if (error) throw new Error(`e2e: reading revokes failed: ${error.message}`);
+  return count ?? 0;
 }
 
 test.beforeAll(async () => {
@@ -131,7 +154,7 @@ test("review to report to share: 3.4 prints and exports, 3.5 opens without sign-
     .select("id, verify_code")
     .eq("session_id", SESSION)
     .single();
-  expect(printed.replace(/^UKI-RPT-|-/g, "")).toBe(stored?.verify_code);
+  expect(printed.replace(/^UKI-|-/g, "")).toBe(stored?.verify_code);
   await stillsLoaded(page, 1);
   await expect(report.getByText("Talk to the student")).toBeVisible();
   await expect(report.getByText(NOTE)).toBeVisible();
@@ -170,7 +193,11 @@ test("review to report to share: 3.4 prints and exports, 3.5 opens without sign-
   expect(Number(box?.[2])).toBeCloseTo(841.89, 0);
   await testInfo.attach("report-a4.pdf", { body: pdf, contentType: "application/pdf" });
 
-  // Share link: shown once; only the token's SHA-256 is stored.
+  // Share link: shown once, for 30 days; only the token's SHA-256 is stored.
+  await expect(page.getByRole("button", { name: message("dashboard.report.share.label") })).toHaveText(
+    "Read-only link · expires in 30 days",
+  );
+  await expect(page.getByTestId("share-revoke")).toHaveCount(0);
   await page.getByRole("button", { name: message("dashboard.report.share.label") }).click();
   const field = page.getByTestId("share-link");
   await expect(field).toBeVisible();
@@ -185,6 +212,9 @@ test("review to report to share: 3.4 prints and exports, 3.5 opens without sign-
   const share = shares?.[0];
   expect(share?.token_hash).toBe(createHash("sha256").update(token, "utf8").digest("hex"));
   expect(share?.created_by).toBe(danaId);
+  const days = (Date.parse(share?.expires_at ?? "") - Date.now()) / 86_400_000;
+  expect(days).toBeGreaterThan(29.9);
+  expect(days).toBeLessThanOrEqual(30);
   expect(JSON.stringify(shares)).not.toContain(token);
   const shareId = share?.id ?? "";
 
@@ -219,9 +249,12 @@ test("review to report to share: 3.4 prints and exports, 3.5 opens without sign-
   await phone.context.close();
   expect(await shareViews(shareId)).toBe(3);
 
-  // /verify/[code] confirms the printout, with no session.
+  // /verify/[code] confirms the printout, with no session, typed in lower case too.
   await committee.page.goto(new URL(`/verify/${printed}`, link).toString());
   await expect(committee.page.getByRole("status")).toHaveAttribute("data-result", "intact");
+  await committee.page.goto(new URL(`/verify/${printed.toLowerCase()}`, link).toString());
+  await expect(committee.page.getByRole("status")).toHaveAttribute("data-result", "intact");
+  await expect(committee.page.getByText(printed)).toBeVisible();
 
   // Expired: the not-found page, and no audit row.
   await adminClient()
@@ -232,6 +265,40 @@ test("review to report to share: 3.4 prints and exports, 3.5 opens without sign-
   expect(expired?.status()).toBe(404);
   await expect(committee.page.getByText(message("dashboard.report.notFound.title"))).toBeVisible();
   expect(await shareViews(shareId)).toBe(3);
+
+  // Revoke: a new link opens; after a reload of 3.4 (the link is no longer shown) Revoke withdraws it,
+  // and the link gets the not-found page with no audit row of a view.
+  await page.reload();
+  await expect(page.getByTestId("share-revoke")).toHaveCount(0);
+  await page.getByRole("button", { name: message("dashboard.report.share.label") }).click();
+  const second = await page.getByTestId("share-link").inputValue();
+  const { data: secondRow } = await adminClient()
+    .from("report_shares")
+    .select("id")
+    .eq("token_hash", createHash("sha256").update(new URL(second).pathname.slice(3), "utf8").digest("hex"))
+    .single();
+  const secondId = secondRow?.id ?? "";
+  expect((await committee.page.goto(second))?.status()).toBe(200);
+  expect(await shareViews(secondId)).toBe(1);
+  await page.reload();
+  await expect(page.getByTestId("share-link")).toHaveCount(0);
+  await expect(page.getByText("1 active link")).toBeVisible();
+  await page.getByRole("button", { name: message("dashboard.report.share.revokeLabel") }).click();
+  // The toast, not the screen reader's copy of it in the notifications region.
+  await expect(page.getByText("1 link revoked", { exact: true })).toBeVisible();
+  await expect(page.getByTestId("share-revoke")).toHaveCount(0);
+  const { data: revokedRow } = await adminClient()
+    .from("report_shares")
+    .select("revoked_at")
+    .eq("id", secondId)
+    .single();
+  expect(revokedRow?.revoked_at).not.toBeNull();
+  expect(await revokes(secondId)).toBe(1);
+  expect(await revokes(shareId)).toBe(0);
+  const withdrawn = await committee.page.goto(second);
+  expect(withdrawn?.status()).toBe(404);
+  await expect(committee.page.getByText(message("dashboard.report.notFound.title"))).toBeVisible();
+  expect(await shareViews(secondId)).toBe(1);
 
   // The report changes (a note), so the printed code no longer verifies; the next view issues a new one.
   const dana = await staffClient(STAFF.dana);
@@ -249,4 +316,44 @@ test("review to report to share: 3.4 prints and exports, 3.5 opens without sign-
   await committee.page.goto(new URL(`/verify/${printed}`, link).toString());
   await expect(committee.page.getByRole("status")).toHaveAttribute("data-result", "not-verified");
   await committee.context.close();
+});
+
+test("/verify accepts a code in lower case and answers one client 10 lookups a minute", async ({
+  browser,
+}) => {
+  // Seat 33's report from the test above, or made here when this test runs alone.
+  const dana = await staffClient(STAFF.dana);
+  const { error: reportError } = await dana.client.rpc("get_report", { session_id: SESSION });
+  expect(reportError).toBeNull();
+  await dana.client.auth.signOut();
+  const { data: stored } = await adminClient()
+    .from("reports")
+    .select("verify_code")
+    .eq("session_id", SESSION)
+    .single();
+  const code = stored?.verify_code ?? "";
+  const typed = `uki-${code.slice(0, 4)}-${code.slice(4)}`.toLowerCase();
+
+  const one = await visitor(browser);
+  for (let lookup = 1; lookup <= 10; lookup += 1) {
+    await one.page.goto(`/verify/${lookup % 2 === 0 ? typed : code.toLowerCase()}`);
+    await expect(one.page.getByRole("status")).toHaveAttribute("data-result", "intact");
+  }
+  await expect(one.page.getByText(`UKI-${code.slice(0, 4)}-${code.slice(4)}`)).toBeVisible();
+
+  // The 11th lookup within the minute: the try-again state, with the code that was asked.
+  await one.page.goto(`/verify/${typed}`);
+  const status = one.page.getByRole("status");
+  await expect(status).toHaveAttribute("data-result", "rate-limited");
+  await expect(status).toHaveText(message("dashboard.report.verify.limited"));
+  await expect(
+    one.page.getByRole("link", { name: message("dashboard.report.verify.tryAgain") }),
+  ).toHaveAttribute("href", `/verify/${typed}`);
+
+  // Another visitor is still answered.
+  const other = await visitor(browser);
+  await other.page.goto(`/verify/${typed}`);
+  await expect(other.page.getByRole("status")).toHaveAttribute("data-result", "intact");
+  await one.context.close();
+  await other.context.close();
 });

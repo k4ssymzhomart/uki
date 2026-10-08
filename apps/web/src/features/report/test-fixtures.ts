@@ -10,7 +10,7 @@ export function reportFixture(): ReportPayload {
   return {
     report: {
       id: "f0000000-0000-4000-8000-000000000917",
-      verify_code: "7K2M9QXD4HPA",
+      verify_code: "7K2M9QXD",
       created_at: "2026-10-09T06:52:00.000Z",
       issued_at: "2026-10-09T06:52:00.000Z",
     },

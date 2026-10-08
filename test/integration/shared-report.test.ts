@@ -1,17 +1,23 @@
 // The share link round trip (WP 1.9): a proctor opens the report (get_report) and shares it
-// (create_share); the shared-report function, called with no credential at all, hashes the token,
-// returns 3.5's payload with 5-minute still URLs that work, and writes one audit row per view; an
-// expired, revoked, unknown or malformed token gets nothing, and no audit row. verify_report then
-// confirms the code, until the report changes.
-import { createHash } from "node:crypto";
+// (create_share, 30 days); the shared-report function, called with no credential at all, hashes the
+// token, returns 3.5's payload with 5-minute still URLs that work, and writes one audit row per view; an
+// expired, revoked (revoke_share, by staff of the exam), unknown or malformed token gets nothing, and no
+// audit row. verify_report then confirms the 8-character code, until the report changes, and answers
+// one client 10 lookups a minute (HTTP 429 after that).
+import { createHash, randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   FramesResponse,
+  formatVerifyCode,
   IngestResponse,
   ReportPayload,
+  RevokeShareOutput,
+  SHARE_TTL_DAYS,
   SharedReportResponse,
   ShareLink,
   STILL_VIEW_URL_TTL_S,
+  VERIFY_LOOKUPS_PER_MINUTE,
+  VerifyCode,
   VerifyReportOutput,
 } from "../../packages/contracts/src/index.ts";
 import { call, envelope, errorCode, TINY_JPEG } from "./api.ts";
@@ -55,6 +61,11 @@ afterAll(async () => {
   await world?.destroy();
 });
 
+/** A client of /verify as the Next.js server names it: the SHA-256 of an address, new for each test. */
+function newClient(): string {
+  return createHash("sha256").update(`test-${randomUUID()}`, "utf8").digest("hex");
+}
+
 async function share(): Promise<ShareLink> {
   const created = await world.lead.client.rpc("create_share", { report_id: reportId });
   expect(created.error).toBeNull();
@@ -75,6 +86,9 @@ describe("shared-report", () => {
   it("opens with no credential, signs working 5-minute still URLs and audits every view", async () => {
     const link = await share();
     expect(link.path).toBe(`/r/${link.token}`);
+    const days = (Date.parse(link.expires_at) - Date.now()) / 86_400_000;
+    expect(days).toBeGreaterThan(SHARE_TTL_DAYS - 0.01);
+    expect(days).toBeLessThanOrEqual(SHARE_TTL_DAYS);
     const stored = await adminClient()
       .from("report_shares")
       .select("token_hash")
@@ -142,14 +156,41 @@ describe("shared-report", () => {
     expect(await views(link.share_id)).toHaveLength(0);
   });
 
-  it("refuses a revoked share the same way", async () => {
+  it("refuses a share revoked through revoke_share the same way, with an audit row for the revoke", async () => {
     const link = await share();
     expect((await call("shared-report", { token: link.token }, null)).status).toBe(200);
-    const revoked = await adminClient()
-      .from("report_shares")
-      .update({ revoked_at: new Date().toISOString() })
-      .eq("id", link.share_id);
+
+    // Neither a visitor nor the student may revoke it.
+    const byVisitor = await publicClient().rpc("revoke_share", { share_id: link.share_id });
+    expect(byVisitor.error).not.toBeNull();
+    const byStudent = await student.client.rpc("revoke_share", { share_id: link.share_id });
+    expect(byStudent.error?.message).toBe("forbidden");
+
+    const revoked = await world.lead.client.rpc("revoke_share", { share_id: link.share_id });
     expect(revoked.error).toBeNull();
+    const result = RevokeShareOutput.parse(revoked.data);
+    expect(result).toMatchObject({ share_id: link.share_id, report_id: reportId });
+    const again = RevokeShareOutput.parse(
+      (await world.lead.client.rpc("revoke_share", { share_id: link.share_id })).data,
+    );
+    expect(Date.parse(again.revoked_at)).toBe(Date.parse(result.revoked_at));
+
+    const audit = await adminClient()
+      .from("audit_log")
+      .select("actor_id, actor_kind, object_type, object_id, meta")
+      .eq("action", "report.share_revoke")
+      .eq("meta->>share_id", link.share_id);
+    expect(audit.error).toBeNull();
+    expect(audit.data).toEqual([
+      {
+        actor_id: world.lead.id,
+        actor_kind: "staff",
+        object_type: "report",
+        object_id: reportId,
+        meta: { share_id: link.share_id },
+      },
+    ]);
+
     const reply = await call("shared-report", { token: link.token }, null);
     expect(reply.status).toBe(404);
     expect(reply.body).toEqual({ error: "not_found", message: "no such share" });
@@ -169,8 +210,11 @@ describe("shared-report", () => {
 
   it("verify_report confirms the code for anyone, until the report changes", async () => {
     const anon = publicClient();
+    const client_hash = newClient();
+    expect(VerifyCode.safeParse(verifyCode).success).toBe(true);
     const intact = VerifyReportOutput.parse(
-      (await anon.rpc("verify_report", { code: `UKI-RPT-${verifyCode}` })).data,
+      (await anon.rpc("verify_report", { code: formatVerifyCode(verifyCode).toLowerCase(), client_hash }))
+        .data,
     );
     expect(intact).toMatchObject({ found: true, code: verifyCode, intact: true });
 
@@ -179,7 +223,9 @@ describe("shared-report", () => {
       text: "Phone face down after the warning.",
     });
     expect(note.error).toBeNull();
-    const changed = VerifyReportOutput.parse((await anon.rpc("verify_report", { code: verifyCode })).data);
+    const changed = VerifyReportOutput.parse(
+      (await anon.rpc("verify_report", { code: verifyCode, client_hash })).data,
+    );
     expect(changed).toMatchObject({ found: true, intact: false });
 
     // The next view issues the new version; the old printout's code no longer exists.
@@ -190,12 +236,35 @@ describe("shared-report", () => {
     expect(opened.notes).toHaveLength(1);
     const fresh = opened.report?.verify_code ?? "";
     expect(fresh).not.toBe(verifyCode);
-    expect(VerifyReportOutput.parse((await anon.rpc("verify_report", { code: verifyCode })).data)).toEqual({
-      found: false,
-    });
-    expect(VerifyReportOutput.parse((await anon.rpc("verify_report", { code: fresh })).data)).toMatchObject({
-      found: true,
-      intact: true,
-    });
+    expect(VerifyCode.safeParse(fresh).success).toBe(true);
+    expect(
+      VerifyReportOutput.parse((await anon.rpc("verify_report", { code: verifyCode, client_hash })).data),
+    ).toEqual({ found: false });
+    expect(
+      VerifyReportOutput.parse((await anon.rpc("verify_report", { code: fresh, client_hash })).data),
+    ).toMatchObject({ found: true, intact: true });
+  });
+
+  it("verify_report answers a client 10 lookups a minute, then 429 rate_limited", async () => {
+    const anon = publicClient();
+    const client_hash = newClient();
+    for (let lookup = 1; lookup <= VERIFY_LOOKUPS_PER_MINUTE; lookup += 1) {
+      const answer = await anon.rpc("verify_report", { code: "UKI-0000-0000", client_hash });
+      expect(answer.error).toBeNull();
+      expect(answer.data).toEqual({ found: false });
+    }
+    const refused = await anon.rpc("verify_report", { code: formatVerifyCode(verifyCode), client_hash });
+    expect(refused.status).toBe(429);
+    expect(refused.error?.message).toBe("rate_limited");
+    expect(Number(refused.error?.details)).toBeGreaterThan(0);
+    expect(Number(refused.error?.details)).toBeLessThanOrEqual(60);
+
+    // Another client is still answered, and nobody but the function reads the lookups.
+    const other = await anon.rpc("verify_report", { code: "UKI-0000-0000", client_hash: newClient() });
+    expect(other.error).toBeNull();
+    const table = await anon.from("verify_lookups").select("client_hash");
+    expect(table.error).not.toBeNull();
+    const bad = await anon.rpc("verify_report", { code: "UKI-0000-0000", client_hash: "203.0.113.7" });
+    expect(bad.error?.message).toBe("bad_request");
   });
 });

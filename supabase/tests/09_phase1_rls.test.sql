@@ -179,11 +179,11 @@ insert into public.review_decisions (session_id, exam_id, decision, reviewer_id)
   (t.id('math2_session'), t.id('math2'), 'no_issue', t.id('proctor')),
   (t.id('phys1_session'), t.id('phys1'), 'talk', t.id('other_proctor'));
 insert into public.reports (session_id, exam_id, verify_code, content_hash, created_by) values
-  (t.id('math2_session'), t.id('math2'), '0000000000M2', 'h1', t.id('proctor')),
-  (t.id('phys1_session'), t.id('phys1'), '0000000000P1', 'h2', t.id('other_proctor'));
+  (t.id('math2_session'), t.id('math2'), '000000M2', 'h1', t.id('proctor')),
+  (t.id('phys1_session'), t.id('phys1'), '000000P1', 'h2', t.id('other_proctor'));
 insert into public.report_shares (report_id, token_hash, expires_at, created_by)
 select r.id, md5(r.id::text) || md5(r.verify_code), now() + interval '7 days', r.created_by from public.reports r
-where r.verify_code in ('0000000000M2', '0000000000P1');
+where r.verify_code in ('000000M2', '000000P1');
 insert into public.data_requests (workspace_id, student_id, kind) values
   (t.id('ws'), t.id('madina'), 'delete'),
   (t.id('ws2'), t.id('ws2_student'), 'copy');
@@ -377,7 +377,7 @@ select throws_ok($$ select count(*) from public.review_queue $$, '42501', null, 
 select throws_ok($$ select public.save_exam_draft('{}') $$, '42501', null, 'anon cannot call the wizard functions');
 select throws_ok($$ select public.open_shared_report(repeat('0', 64)) $$, '42501', null,
   'anon cannot open a share without the shared-report function');
-select lives_ok($$ select public.verify_report('UKI-RPT-0000-0000-00M2') $$, 'anon may verify a report');
+select lives_ok($$ select public.verify_report('UKI-0000-00M2', repeat('a', 64)) $$, 'anon may verify a report');
 select lives_ok($$ select public.request_pilot('Dana', 'dana2@kru.test', 'KRU') $$, 'anon may book a pilot');
 reset role;
 
