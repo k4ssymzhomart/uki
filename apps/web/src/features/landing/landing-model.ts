@@ -27,6 +27,8 @@ export const SECTION = {
   privacy: "privacy",
   universities: "universities",
   faq: "faq",
+  /** The installers from the latest release (decided by the user on 8 October; no frame). */
+  download: "download",
 } as const;
 export type SectionId = (typeof SECTION)[keyof typeof SECTION];
 

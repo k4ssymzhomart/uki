@@ -1,5 +1,5 @@
 {
-  "$comment": "Landing site strings (WP 1.13): key to { en, ru }. English from the Figma Landing frames (114:2039, 192:3586, 194:4014, 195:4090, 196:4125, 197:4144); drafts for your read-through on Monday 12. FAQ answers 2 to 6, the pilot form's role and size options and its error lines have no frame: drafted from the other frames' copy, review needed. The Russian is a first pass by the agent (WP 1.13): native review needed, P.18.",
+  "$comment": "Landing site strings (WP 1.13): key to { en, ru }. English from the Figma Landing frames (114:2039, 192:3586, 194:4014, 195:4090, 196:4125, 197:4144); drafts for your read-through on Monday 12. FAQ answers 2 to 6, the pilot form's role and size options and its error lines have no frame: drafted from the other frames' copy, review needed. The Russian is a first pass by the agent (WP 1.13): native review needed, P.18. The download block and the jury guide (dashboard.landing.download.*, dashboard.landing.guide.*) are a user request of 8 October with no frame: copy drafted by the agent, review needed.",
   "dashboard.landing.meta.home.title": {
     "en": "Üki · Proctoring that never leaves the laptop",
     "ru": "Üki · Прокторинг, который не покидает ноутбук"
@@ -631,6 +631,198 @@
   "dashboard.landing.cta.seeDemo": {
     "en": "See the demo",
     "ru": "Смотреть демо"
+  },
+  "dashboard.landing.download.overline": {
+    "en": "Download",
+    "ru": "Скачать"
+  },
+  "dashboard.landing.download.title": {
+    "en": "Try Üki on your own laptop.",
+    "ru": "Попробуйте Üki на своём ноутбуке."
+  },
+  "dashboard.landing.download.body": {
+    "en": "Test builds from the latest release, for the jury and pilot universities. They are not signed yet, so the first launch asks once.",
+    "ru": "Тестовые сборки из последнего релиза для жюри и пилотных университетов. Они пока не подписаны, поэтому первый запуск один раз попросит подтверждения."
+  },
+  "dashboard.landing.download.macArm.title": {
+    "en": "macOS · Apple silicon",
+    "ru": "macOS · Apple silicon"
+  },
+  "dashboard.landing.download.macArm.detail": {
+    "en": "M1 and later · .dmg",
+    "ru": "M1 и новее · .dmg"
+  },
+  "dashboard.landing.download.macIntel.title": {
+    "en": "macOS · Intel",
+    "ru": "macOS · Intel"
+  },
+  "dashboard.landing.download.macIntel.detail": {
+    "en": "Macs with an Intel processor · .dmg",
+    "ru": "Mac с процессором Intel · .dmg"
+  },
+  "dashboard.landing.download.winSetup.title": {
+    "en": "Windows · installer",
+    "ru": "Windows · установщик"
+  },
+  "dashboard.landing.download.winSetup.detail": {
+    "en": "Windows 10 and 11 · .exe",
+    "ru": "Windows 10 и 11 · .exe"
+  },
+  "dashboard.landing.download.winZip.title": {
+    "en": "Windows · no install",
+    "ru": "Windows · без установки"
+  },
+  "dashboard.landing.download.winZip.detail": {
+    "en": "Unzip it and run Uki.exe · .zip",
+    "ru": "Распакуйте и запустите Uki.exe · .zip"
+  },
+  "dashboard.landing.download.lock.title": {
+    "en": "Üki Lock for Chrome and Edge",
+    "ru": "Üki Lock для Chrome и Edge"
+  },
+  "dashboard.landing.download.lock.detail": {
+    "en": "The extension for exams in the browser · .zip",
+    "ru": "Расширение для экзаменов в браузере · .zip"
+  },
+  "dashboard.landing.download.lock.chrome": {
+    "en": "Chrome",
+    "ru": "Chrome"
+  },
+  "dashboard.landing.download.lock.edge": {
+    "en": "Edge",
+    "ru": "Edge"
+  },
+  "dashboard.landing.download.lock.chromeLabel": {
+    "en": "Download Üki Lock for Chrome",
+    "ru": "Скачать Üki Lock для Chrome"
+  },
+  "dashboard.landing.download.lock.edgeLabel": {
+    "en": "Download Üki Lock for Edge",
+    "ru": "Скачать Üki Lock для Edge"
+  },
+  "dashboard.landing.download.notes": {
+    "en": "First launch",
+    "ru": "Первый запуск"
+  },
+  "dashboard.landing.download.note.mac": {
+    "en": "macOS: drag Üki to Applications, then right-click it and choose Open. On macOS 15 and later, choose Open Anyway in System Settings › Privacy & Security.",
+    "ru": "macOS: перетащите Üki в «Программы», затем нажмите на него правой кнопкой и выберите «Открыть». В macOS 15 и новее выберите «Всё равно открыть» в «Системных настройках» › «Конфиденциальность и безопасность»."
+  },
+  "dashboard.landing.download.note.windows": {
+    "en": "Windows: if SmartScreen warns you, choose More info, then Run anyway. Before unzipping the zip, tick Unblock in its Properties.",
+    "ru": "Windows: если SmartScreen предупреждает, выберите «Подробнее», затем «Выполнить в любом случае». Перед распаковкой архива отметьте «Разблокировать» в его свойствах."
+  },
+  "dashboard.landing.download.note.lock": {
+    "en": "Üki Lock: open chrome://extensions or edge://extensions, turn on Developer mode and drag the zip onto the page. Then start the Üki app and pair with the 6-digit code it shows.",
+    "ru": "Üki Lock: откройте chrome://extensions или edge://extensions, включите режим разработчика и перетащите архив на страницу. Затем запустите приложение Üki и подключитесь по 6-значному коду, который оно покажет."
+  },
+  "dashboard.landing.download.all": {
+    "en": "All files and checksums on GitHub",
+    "ru": "Все файлы и контрольные суммы на GitHub"
+  },
+  "dashboard.landing.guide.title": {
+    "en": "Jury guide",
+    "ru": "Гид для жюри"
+  },
+  "dashboard.landing.guide.close": {
+    "en": "Close the guide",
+    "ru": "Закрыть гид"
+  },
+  "dashboard.landing.guide.hello": {
+    "en": "Hi, I’m Üki. Five steps, about five minutes: here is what to try.",
+    "ru": "Привет, я Üki. Пять шагов, около пяти минут: вот что стоит попробовать."
+  },
+  "dashboard.landing.guide.what.title": {
+    "en": "What Üki is",
+    "ru": "Что такое Üki"
+  },
+  "dashboard.landing.guide.what.body": {
+    "en": "Proctoring for university exams that runs on the student’s own laptop. Proctors get flagged moments, never video.",
+    "ru": "Прокторинг университетских экзаменов на ноутбуке самого студента. Прокторы получают отмеченные моменты, а не видео."
+  },
+  "dashboard.landing.guide.signIn.title": {
+    "en": "Sign in to the live dashboard",
+    "ru": "Войдите в панель Üki"
+  },
+  "dashboard.landing.guide.signIn.body": {
+    "en": "The team gives you the demo login in person. You start on the exam office’s overview.",
+    "ru": "Демо-вход вам лично даст команда. Вы начнёте с обзора экзаменационного отдела."
+  },
+  "dashboard.landing.guide.signIn.action": {
+    "en": "Sign in",
+    "ru": "Войти"
+  },
+  "dashboard.landing.guide.app.title": {
+    "en": "Download and open the student app",
+    "ru": "Скачайте и откройте приложение студента"
+  },
+  "dashboard.landing.guide.app.body": {
+    "en": "For macOS and Windows. Join with the exam code the team gives you, as a student would.",
+    "ru": "Для macOS и Windows. Войдите по коду экзамена от команды, как это сделал бы студент."
+  },
+  "dashboard.landing.guide.app.action": {
+    "en": "Get the app",
+    "ru": "Скачать приложение"
+  },
+  "dashboard.landing.guide.lock.title": {
+    "en": "Install Üki Lock for browser exams",
+    "ru": "Установите Üki Lock для экзаменов в браузере"
+  },
+  "dashboard.landing.guide.lock.body": {
+    "en": "The extension for Chrome and Edge that locks the university portal while the exam runs.",
+    "ru": "Расширение для Chrome и Edge, которое блокирует портал университета на время экзамена."
+  },
+  "dashboard.landing.guide.lock.action": {
+    "en": "Get Üki Lock",
+    "ru": "Скачать Üki Lock"
+  },
+  "dashboard.landing.guide.look.title": {
+    "en": "What to look at",
+    "ru": "На что посмотреть"
+  },
+  "dashboard.landing.guide.look.body": {
+    "en": "Once you are signed in:",
+    "ru": "После входа:"
+  },
+  "dashboard.landing.guide.look.wall.title": {
+    "en": "The live wall",
+    "ru": "Экран наблюдения"
+  },
+  "dashboard.landing.guide.look.wall.body": {
+    "en": "Flagged students rise to the top.",
+    "ru": "Отмеченные студенты поднимаются наверх."
+  },
+  "dashboard.landing.guide.look.ask.title": {
+    "en": "Ask proctor",
+    "ru": "«Спросить проктора»"
+  },
+  "dashboard.landing.guide.look.ask.body": {
+    "en": "A student’s question reaches the proctor within a second.",
+    "ru": "Вопрос студента доходит до проктора за секунду."
+  },
+  "dashboard.landing.guide.look.flag.title": {
+    "en": "A flagged moment",
+    "ru": "Отмеченный момент"
+  },
+  "dashboard.landing.guide.look.flag.body": {
+    "en": "One still and the time, not a recording.",
+    "ru": "Один кадр и время, а не запись."
+  },
+  "dashboard.landing.guide.look.report.title": {
+    "en": "The integrity report",
+    "ru": "Отчёт о проверке"
+  },
+  "dashboard.landing.guide.look.report.body": {
+    "en": "The decision, its evidence and a share link.",
+    "ru": "Решение, его основания и ссылка для комиссии."
+  },
+  "dashboard.landing.guide.look.video.title": {
+    "en": "0 MB of video",
+    "ru": "0 МБ видео"
+  },
+  "dashboard.landing.guide.look.video.body": {
+    "en": "The video never leaves the student’s laptop.",
+    "ru": "Видео не покидает ноутбук студента."
   },
   "dashboard.landing.footer.tagline": {
     "en": "Көреді. Қорғайды. Дәлелдейді.",

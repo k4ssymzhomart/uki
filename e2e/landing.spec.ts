@@ -112,6 +112,150 @@ test.describe("the landing site", () => {
   }
 });
 
+// The user's landing decisions of 8 October (docs/decisions.md, "1.13 Landing: user decisions 8 Oct"):
+// Sign in opens /sign-in, every Book a pilot opens the form at /pilot, the download block links the
+// latest GitHub release, and the jury guide opens from its floating button and closes again.
+const LATEST = "https://github.com/k4ssymzhomart/uki/releases/latest";
+const RELEASE_FILES = [
+  "Uki-mac-arm64.dmg",
+  "Uki-mac-x64.dmg",
+  "Uki-Setup-win-x64.exe",
+  "Uki-win-x64.zip",
+  "Uki-Lock-chrome.zip",
+  "Uki-Lock-edge.zip",
+] as const;
+
+/** Only fades move: no transform, no keyframe animation, and transitions on opacity and colour only. */
+async function expectFadesOnly(page: Page, selector: string): Promise<void> {
+  const motion = await page.locator(selector).evaluate((node) => {
+    const style = getComputedStyle(node);
+    return {
+      transform: style.transform,
+      animation: style.animationName,
+      properties: style.transitionProperty.split(",").map((name) => name.trim()),
+    };
+  });
+  expect(motion.transform).toBe("none");
+  expect(motion.animation).toBe("none");
+  for (const name of motion.properties) expect(["opacity", "background-color"]).toContain(name);
+}
+
+test.describe("the landing: user decisions of 8 October", () => {
+  test("Sign in opens /sign-in", async ({ page }) => {
+    await page.goto("/");
+    const signIn = message("dashboard.landing.nav.signIn");
+    if (desktop(page)) {
+      await page.getByRole("link", { name: signIn, exact: true }).click();
+    } else {
+      await page.getByRole("button", { name: message("dashboard.landing.nav.openMenu") }).click();
+      await page
+        .getByRole("navigation", { name: message("dashboard.landing.nav.label") })
+        .getByRole("link", { name: signIn, exact: true })
+        .click();
+    }
+    await expect(page).toHaveURL(/\/sign-in$/);
+    await expect(page.getByRole("button", { name: message("dashboard.signIn.submit") })).toBeVisible();
+  });
+
+  test("every Book a pilot opens the form at /pilot", async ({ page }) => {
+    await page.goto("/");
+    const links = page.getByRole("link", { name: message("dashboard.landing.hero.bookPilot"), exact: true });
+    // The header (1440) or the hero and the CTA band (both widths), and Universities at 1440.
+    expect(await links.count()).toBeGreaterThanOrEqual(desktop(page) ? 4 : 2);
+    for (const href of await links.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("href")))) {
+      expect(href).toBe("/pilot");
+    }
+    await links.first().click();
+    await expect(page).toHaveURL(/\/pilot$/);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+      message("dashboard.landing.pilot.title"),
+    );
+  });
+
+  test("Download links each file of the latest GitHub release", async ({ page }) => {
+    await page.goto("/");
+    const block = page.getByRole("region", { name: message("dashboard.landing.download.title") });
+    // The footer's Üki app leads to the block.
+    await page
+      .getByRole("contentinfo")
+      .getByRole("link", { name: message("dashboard.landing.footer.app"), exact: true })
+      .click();
+    await expect(block).toBeInViewport();
+    const hrefs = await block
+      .getByRole("link")
+      .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("href")));
+    expect(hrefs).toEqual([...RELEASE_FILES.map((file) => `${LATEST}/download/${file}`), LATEST]);
+    for (const browser of ["chrome", "edge"] as const) {
+      await expect(
+        block.getByRole("link", { name: message(`dashboard.landing.download.lock.${browser}Label`) }),
+      ).toHaveAttribute("href", `${LATEST}/download/Uki-Lock-${browser}.zip`);
+    }
+    await expectWholePage(page);
+  });
+
+  test("the jury guide opens and closes by mouse and by keyboard, and its links work", async ({ page }) => {
+    await page.goto("/");
+    const launcher = page.getByRole("button", { name: message("dashboard.landing.guide.title") });
+    const guide = page.getByRole("dialog", { name: message("dashboard.landing.guide.title") });
+    const close = guide.getByRole("button", { name: message("dashboard.landing.guide.close") });
+    // A small floating button, inside the window at both widths.
+    await expect(launcher).toBeInViewport({ ratio: 1 });
+    await expect(guide).toBeHidden();
+
+    await launcher.click();
+    await expect(guide).toBeVisible();
+    await expect(guide.getByRole("heading", { level: 3 })).toHaveCount(5);
+    await expect(guide.getByText(message("dashboard.landing.guide.hello"))).toBeVisible();
+    const box = await guide.boundingBox();
+    expect(
+      (box?.x ?? -1) >= 0 && (box?.x ?? 0) + (box?.width ?? 0) <= (page.viewportSize()?.width ?? 0),
+    ).toBe(true);
+    // The demo login is given in person: no address and no password on the page.
+    expect(await guide.innerText()).not.toMatch(/@|password/i);
+    await expectFadesOnly(page, "[role=dialog]");
+    await close.click();
+    await expect(guide).toBeHidden();
+    await expect(launcher).toBeFocused();
+
+    // Keyboard only: Enter opens it with the focus inside, Tab stays inside, Escape closes it.
+    await page.keyboard.press("Enter");
+    await expect(guide).toBeVisible();
+    await expect(close).toBeFocused();
+    for (let step = 0; step < 6; step += 1) {
+      await page.keyboard.press("Tab");
+      expect(await page.evaluate(() => document.activeElement?.closest("[role=dialog]") !== null)).toBe(true);
+    }
+    await page.keyboard.press("Escape");
+    await expect(guide).toBeHidden();
+    await expect(launcher).toBeFocused();
+
+    // Get the app closes the guide on the download block.
+    await launcher.click();
+    await guide.getByRole("link", { name: message("dashboard.landing.guide.app.action") }).click();
+    await expect(guide).toBeHidden();
+    await expect(
+      page.getByRole("region", { name: message("dashboard.landing.download.title") }),
+    ).toBeInViewport();
+
+    // Sign in goes to the dashboard's sign-in.
+    await launcher.click();
+    await guide.getByRole("link", { name: message("dashboard.landing.guide.signIn.action") }).click();
+    await expect(page).toHaveURL(/\/sign-in$/);
+  });
+
+  test("with reduced motion the guide still only fades", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/");
+    const launcher = page.getByRole("button", { name: message("dashboard.landing.guide.title") });
+    await expectFadesOnly(page, "button[aria-haspopup=dialog]");
+    await launcher.click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await expectFadesOnly(page, "[role=dialog]");
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog")).toBeHidden();
+  });
+});
+
 test.describe("the public pages in Russian", () => {
   // The real cookie, as the switch and 3.4a write it: src/i18n/request.ts reads it on every request.
   test.beforeEach(async ({ context, baseURL }) => {
@@ -135,6 +279,22 @@ test.describe("the public pages in Russian", () => {
       await expectWholePage(page);
     });
   }
+
+  test("the jury guide and the download block are in Russian", async ({ page }) => {
+    await page.goto("/");
+    await expect(
+      page.getByRole("region", { name: message("dashboard.landing.download.title", "ru") }),
+    ).toBeAttached();
+    await page.getByRole("button", { name: message("dashboard.landing.guide.title", "ru") }).click();
+    const guide = page.getByRole("dialog", { name: message("dashboard.landing.guide.title", "ru") });
+    await expect(guide).toBeVisible();
+    await expect(
+      guide.getByRole("heading", { name: message("dashboard.landing.guide.look.title", "ru") }),
+    ).toBeVisible();
+    expect(await guide.innerText()).not.toMatch(/dashboard\.[a-z]/i);
+    await page.keyboard.press("Escape");
+    await expect(guide).toBeHidden();
+  });
 
   test("Book a pilot's checks and Sent are in Russian", async ({ page }) => {
     const admin = adminClient();

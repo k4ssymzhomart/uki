@@ -77,6 +77,42 @@
         "seeDemo": "See the demo",
         "title": "Run your next exam with Üki."
       },
+      "download": {
+        "all": "All files and checksums on GitHub",
+        "body": "Test builds from the latest release, for the jury and pilot universities. They are not signed yet, so the first launch asks once.",
+        "lock": {
+          "chrome": "Chrome",
+          "chromeLabel": "Download Üki Lock for Chrome",
+          "detail": "The extension for exams in the browser · .zip",
+          "edge": "Edge",
+          "edgeLabel": "Download Üki Lock for Edge",
+          "title": "Üki Lock for Chrome and Edge"
+        },
+        "macArm": {
+          "detail": "M1 and later · .dmg",
+          "title": "macOS · Apple silicon"
+        },
+        "macIntel": {
+          "detail": "Macs with an Intel processor · .dmg",
+          "title": "macOS · Intel"
+        },
+        "note": {
+          "lock": "Üki Lock: open chrome://extensions or edge://extensions, turn on Developer mode and drag the zip onto the page. Then start the Üki app and pair with the 6-digit code it shows.",
+          "mac": "macOS: drag Üki to Applications, then right-click it and choose Open. On macOS 15 and later, choose Open Anyway in System Settings › Privacy & Security.",
+          "windows": "Windows: if SmartScreen warns you, choose More info, then Run anyway. Before unzipping the zip, tick Unblock in its Properties."
+        },
+        "notes": "First launch",
+        "overline": "Download",
+        "title": "Try Üki on your own laptop.",
+        "winSetup": {
+          "detail": "Windows 10 and 11 · .exe",
+          "title": "Windows · installer"
+        },
+        "winZip": {
+          "detail": "Unzip it and run Uki.exe · .zip",
+          "title": "Windows · no install"
+        }
+      },
       "faq": {
         "body": "Anything else? Ask us on Demo Day or write to the team.",
         "browsers": {
@@ -186,6 +222,54 @@
         "team": "Team",
         "terms": "Terms",
         "trust": "Trust"
+      },
+      "guide": {
+        "app": {
+          "action": "Get the app",
+          "body": "For macOS and Windows. Join with the exam code the team gives you, as a student would.",
+          "title": "Download and open the student app"
+        },
+        "close": "Close the guide",
+        "hello": "Hi, I’m Üki. Five steps, about five minutes: here is what to try.",
+        "lock": {
+          "action": "Get Üki Lock",
+          "body": "The extension for Chrome and Edge that locks the university portal while the exam runs.",
+          "title": "Install Üki Lock for browser exams"
+        },
+        "look": {
+          "ask": {
+            "body": "A student’s question reaches the proctor within a second.",
+            "title": "Ask proctor"
+          },
+          "body": "Once you are signed in:",
+          "flag": {
+            "body": "One still and the time, not a recording.",
+            "title": "A flagged moment"
+          },
+          "report": {
+            "body": "The decision, its evidence and a share link.",
+            "title": "The integrity report"
+          },
+          "title": "What to look at",
+          "video": {
+            "body": "The video never leaves the student’s laptop.",
+            "title": "0 MB of video"
+          },
+          "wall": {
+            "body": "Flagged students rise to the top.",
+            "title": "The live wall"
+          }
+        },
+        "signIn": {
+          "action": "Sign in",
+          "body": "The team gives you the demo login in person. You start on the exam office’s overview.",
+          "title": "Sign in to the live dashboard"
+        },
+        "title": "Jury guide",
+        "what": {
+          "body": "Proctoring for university exams that runs on the student’s own laptop. Proctors get flagged moments, never video.",
+          "title": "What Üki is"
+        }
       },
       "hero": {
         "announcement": "Üki Lock for LMS exams",
