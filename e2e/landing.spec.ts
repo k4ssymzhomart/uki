@@ -85,6 +85,11 @@ test.describe("the landing site", () => {
     await expect
       .poll(async () => (await context.cookies()).find((cookie) => cookie.name === "uki_locale")?.value)
       .toBe("ru");
+    // The page renders again in Russian through src/i18n/request.ts, which reads the same cookie as 3.4a.
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+      message("dashboard.landing.privacyPolicy.title", "ru"),
+    );
+    await expect(page.locator("html")).toHaveAttribute("lang", /^ru/);
     await context.clearCookies({ name: "uki_locale" });
   });
 
@@ -107,6 +112,55 @@ test.describe("the landing site", () => {
   }
 });
 
+test.describe("the public pages in Russian", () => {
+  // The real cookie, as the switch and 3.4a write it: src/i18n/request.ts reads it on every request.
+  test.beforeEach(async ({ context, baseURL }) => {
+    await context.addCookies([{ name: "uki_locale", value: "ru", url: baseURL ?? "http://localhost:3000" }]);
+  });
+
+  for (const target of [
+    { path: "/", h1: "hero.title.line1", h1Mobile: "hero.title.mobile" },
+    { path: "/pilot", h1: "pilot.title", h1Mobile: "pilot.title" },
+    { path: "/privacy", h1: "privacyPolicy.title", h1Mobile: "privacyPolicy.title" },
+    { path: "/terms", h1: "termsOfUse.title", h1Mobile: "termsOfUse.title" },
+  ] as const) {
+    test(`${target.path} renders in Russian with no raw key`, async ({ page }) => {
+      await page.goto(target.path);
+      await expect(page.locator("html")).toHaveAttribute("lang", /^ru/);
+      await expect(page.getByRole("heading", { level: 1 })).toContainText(
+        message(`dashboard.landing.${desktop(page) ? target.h1 : target.h1Mobile}`, "ru"),
+      );
+      // A message missing in Russian would show as its key (next-intl's fallback).
+      expect(await page.locator("body").innerText()).not.toMatch(/dashboard\.[a-z]/i);
+      await expectWholePage(page);
+    });
+  }
+
+  test("Book a pilot's checks and Sent are in Russian", async ({ page }) => {
+    const admin = adminClient();
+    const email = `pilot-e2e-ru-${Date.now()}@kru.test`;
+    try {
+      await page.goto("/pilot");
+      await page.getByRole("button", { name: message("dashboard.landing.pilot.form.submit", "ru") }).click();
+      await expect(
+        page.getByText(message("dashboard.landing.pilot.form.error.nameRequired", "ru")),
+      ).toBeVisible();
+      await page.getByLabel(message("dashboard.landing.pilot.form.name", "ru")).fill("Дана Ахметова");
+      await page.getByLabel(message("dashboard.landing.pilot.form.email", "ru")).fill(email);
+      await page.getByLabel(message("dashboard.landing.pilot.form.university", "ru")).fill("КРУ · Костанай");
+      await page.getByRole("button", { name: message("dashboard.landing.pilot.form.submit", "ru") }).click();
+      await expect(
+        page.getByRole("heading", { name: message("dashboard.landing.pilot.sent.title", "ru") }),
+      ).toBeVisible();
+      await expect(page.getByText(email)).toBeVisible();
+      expect(await page.locator("body").innerText()).not.toMatch(/dashboard\.[a-z]/i);
+      await expectWholePage(page);
+    } finally {
+      await admin.from("pilot_requests").delete().eq("email", email);
+    }
+  });
+});
+
 test.describe("Book a pilot", () => {
   test("shows each field's line when the form is sent empty", async ({ page }) => {
     await page.goto("/pilot");
@@ -124,13 +178,6 @@ test.describe("Book a pilot", () => {
 
   test("stores a request, shows Sent, and refuses a fourth one from the same address", async ({ page }) => {
     const admin = adminClient();
-    // A local stack started before WP 1.1's migration (20261009000000_phase1.sql) has no pilot_requests.
-    const probe = await admin.from("pilot_requests").select("id").limit(1);
-    test.skip(
-      probe.error !== null,
-      "pilot_requests is not in this database: apply 20261009000000_phase1.sql",
-    );
-
     const email = `pilot-e2e-${Date.now()}@kru.test`;
     try {
       for (let attempt = 1; attempt <= 4; attempt += 1) {
