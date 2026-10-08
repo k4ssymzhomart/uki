@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { join } from "node:path";
 import { loadMessages } from "@uki/i18n";
 import type { SaveDialogOptions } from "electron";
 import { describe, expect, it, vi } from "vitest";
@@ -64,7 +65,8 @@ describe("saveReceiptPdf", () => {
     expect(RECEIPT_PDF_OPTIONS.printBackground).toBe(true);
     const dialogOptions = showSaveDialog.mock.calls[0]?.[1];
     expect(dialogOptions?.title).toBe(loadMessages("en").done.save);
-    expect(dialogOptions?.defaultPath).toBe("/Users/aliya/Documents/UKI-204-0942-MT.pdf");
+    // The OS's own separator: backslashes on Windows.
+    expect(dialogOptions?.defaultPath).toBe(join("/Users/aliya/Documents", "UKI-204-0942-MT.pdf"));
     expect(dialogOptions?.filters).toEqual([{ name: "PDF", extensions: ["pdf"] }]);
     expect(writeFile.mock.calls[0]?.[1]).toEqual(Buffer.from(PDF));
   });
@@ -104,7 +106,7 @@ describe("saveReceiptPdf", () => {
     const kk = loadMessages("kk");
     expect(showSaveDialog.mock.calls[0]?.[1].title).toBe(kk.done.save);
     expect(showSaveDialog.mock.calls[0]?.[1].defaultPath).toBe(
-      `/Users/aliya/Documents/${kk.done.receipt}.pdf`,
+      join("/Users/aliya/Documents", `${kk.done.receipt}.pdf`),
     );
   });
 });
