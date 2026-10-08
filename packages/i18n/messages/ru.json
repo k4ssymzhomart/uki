@@ -70,6 +70,17 @@
       "todayTime": "Сегодня · {time}",
       "withDetail": "{main} · {detail}"
     },
+    "judge": {
+      "simulator": {
+        "hours": "{count} ч",
+        "label": "Симулятор демо-режима",
+        "live": "Симулятор: работает · сигнал {ago} назад",
+        "minutes": "{count} мин",
+        "never": "Симулятор: остановлен · сигнала ещё не было",
+        "seconds": "{count} с",
+        "stopped": "Симулятор: остановлен · сигнал {ago} назад"
+      }
+    },
     "landing": {
       "cta": {
         "bookPilot": "Заказать пилот",
@@ -1671,6 +1682,7 @@
       "role": {
         "admin": "Администратор",
         "exam_office": "Экзаменационный отдел",
+        "observer": "Наблюдатель",
         "proctor": "Проктор"
       },
       "section": {

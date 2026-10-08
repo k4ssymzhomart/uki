@@ -13,6 +13,7 @@ const FUNCTIONS = [
   "shared-report",
   "data-request",
   "retention",
+  "demo-live-purge",
 ] as const;
 const read = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8")) as unknown;
 

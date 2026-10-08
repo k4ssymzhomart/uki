@@ -6,6 +6,7 @@ import {
   SessionState,
   SessionStatus,
   type SessionTileMessage,
+  type StaffRole,
   type StatusDetail,
   THRESHOLDS,
   Timestamp,
@@ -379,7 +380,7 @@ export function visibleRows(rows: readonly LobbyRow[], filter: LobbyFilter, quer
 // ---------------------------------------------------------------------------------------------------
 // The banner and Start exam
 
-export type LobbyRole = { role: "exam_office" | "proctor" | "admin"; isLead: boolean };
+export type LobbyRole = { role: StaffRole; isLead: boolean };
 
 /** True before the scheduled start of a scheduled exam (start_exam refuses anything else). */
 export function beforeStart(exam: LobbyExam, nowMs: number): boolean {
@@ -388,7 +389,10 @@ export function beforeStart(exam: LobbyExam, nowMs: number): boolean {
 
 /** Start exam is enabled for the lead proctor and the exam office, only before the scheduled start. */
 export function canStartExam(exam: LobbyExam, who: LobbyRole, nowMs: number): boolean {
-  return (who.role !== "proctor" || who.isLead) && beforeStart(exam, nowMs);
+  // The observer (judge mode) reads only: never the Start button.
+  const mayStart =
+    who.role === "exam_office" || who.role === "admin" || (who.role === "proctor" && who.isLead);
+  return mayStart && beforeStart(exam, nowMs);
 }
 
 // ---------------------------------------------------------------------------------------------------

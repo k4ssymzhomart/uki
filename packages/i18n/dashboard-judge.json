@@ -1,0 +1,35 @@
+{
+  "$comment": "Judge mode (docs/runbooks/judge-mode.md): the read-only observer role's name in the shell, and the simulator indicator on the DEMO-LIVE live wall. No Figma frame: judge mode is not in the Demo Day frames, so the English is the agent's, in the wall's style. The Russian is a first pass by the agent: native review needed, P.18.",
+  "dashboard.judge.simulator.label": {
+    "en": "Judge mode simulator",
+    "ru": "Симулятор демо-режима"
+  },
+  "dashboard.judge.simulator.live": {
+    "en": "Simulator: live · last seen {ago} ago",
+    "ru": "Симулятор: работает · сигнал {ago} назад"
+  },
+  "dashboard.judge.simulator.stopped": {
+    "en": "Simulator: stopped · last seen {ago} ago",
+    "ru": "Симулятор: остановлен · сигнал {ago} назад"
+  },
+  "dashboard.judge.simulator.never": {
+    "en": "Simulator: stopped · not seen yet",
+    "ru": "Симулятор: остановлен · сигнала ещё не было"
+  },
+  "dashboard.judge.simulator.seconds": {
+    "en": "{count} s",
+    "ru": "{count} с"
+  },
+  "dashboard.judge.simulator.minutes": {
+    "en": "{count} min",
+    "ru": "{count} мин"
+  },
+  "dashboard.judge.simulator.hours": {
+    "en": "{count} h",
+    "ru": "{count} ч"
+  },
+  "dashboard.shell.role.observer": {
+    "en": "Observer",
+    "ru": "Наблюдатель"
+  }
+}

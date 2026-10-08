@@ -38,7 +38,7 @@ export async function loadLobby(examId: string, staff: StaffMember): Promise<Lob
   const exam = LobbyExam.safeParse(examQuery.data);
   if (!exam.success) return null;
 
-  const office = staff.role !== "proctor";
+  const office = staff.role === "exam_office" || staff.role === "admin";
   const [roster, sessions, assignment, requests] = await Promise.all([
     supabase
       .from("exam_students")
