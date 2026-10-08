@@ -39,9 +39,6 @@ vi.mock("next/link", () => ({
 const actions = vi.hoisted(() => ({ decideSession: vi.fn(), addSessionNote: vi.fn() }));
 vi.mock("../src/features/review/review-actions.ts", () => actions);
 
-/** Each test opens menus and popovers several times; a loaded CI runner needs more than Vitest's 5 s. */
-const TEST_TIMEOUT_MS = 20_000;
-
 const STILL = {
   frame_id: "f0000000-0000-4000-8000-000000000001",
   url: "http://127.0.0.1:55021/storage/v1/object/sign/frames/still-1.jpg?token=t",
@@ -117,7 +114,7 @@ afterEach(() => {
   expect(intlErrors.map((error) => error.message)).toEqual([]);
 });
 
-describe("3.2 Review queue", { timeout: TEST_TIMEOUT_MS }, () => {
+describe("3.2 Review queue", () => {
   it("shows the stat cards, Flag ≠ fail. and History's queue as Row/Session draws it", () => {
     renderQueue();
     expect(screen.getByText("Review / History of Kazakhstan · Test · finished 12:00")).toBeTruthy();
@@ -202,7 +199,7 @@ describe("3.2 Review queue", { timeout: TEST_TIMEOUT_MS }, () => {
   });
 });
 
-describe("3.3 Session review", { timeout: TEST_TIMEOUT_MS }, () => {
+describe("3.3 Session review", () => {
   it("shows the chips, the stamp, one card per flag and the timeline with the note", async () => {
     const fn = renderSession(7);
     expect(screen.getByText("Review / History of Kazakhstan · Test / 1 of 5")).toBeTruthy();
@@ -276,7 +273,7 @@ describe("3.3 Session review", { timeout: TEST_TIMEOUT_MS }, () => {
   });
 });
 
-describe("3.2 and 3.3 in Russian", { timeout: TEST_TIMEOUT_MS }, () => {
+describe("3.2 and 3.3 in Russian", () => {
   const ru = loadMessages("ru") as unknown as { dashboard: { review: Record<string, unknown> } };
   const expectRussian = () => {
     expect(rawKeys(document.body)).toEqual([]);
