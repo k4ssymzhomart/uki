@@ -5,15 +5,19 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
+  DESKTOP_MANIFEST,
   DETECTION_DIR,
   describeFile,
+  fileMatches,
   findPackageDir,
   formatProblem,
   MODEL_SPECS,
   npmSourcePath,
+  pinnedEntries,
   readManifest,
   sha256File,
   verifyManifest,
+  WORKER_MODEL_PATHS,
   writeManifest,
 } from "../scripts/model-files.ts";
 import { MODEL_PATHS, ModelManifest, modelUrls } from "../src/models.ts";
@@ -67,6 +71,17 @@ describe("manifest verify", () => {
     await rm(join(dir, "a.task"));
     problems = await verifyManifest(dir, m);
     expect(problems.find((p) => p.path === "a.task")?.problem).toBe("missing");
+  });
+
+  it("fileMatches wants the entry's size and hash", async () => {
+    const m = await manifest();
+    const [a] = m.files;
+    if (!a) throw new Error("no entry");
+    expect(await fileMatches(dir, a)).toBe(true);
+    await writeFile(join(dir, "a.task"), "model A");
+    expect(await fileMatches(dir, a)).toBe(false);
+    await rm(join(dir, "a.task"));
+    expect(await fileMatches(dir, a)).toBe(false);
   });
 
   it("refuses a manifest with a path that climbs out of the folder", () => {
@@ -123,6 +138,26 @@ describe("the committed model list", () => {
         "url" in spec.from ? spec.from.url : `npm:${spec.from.npm}/${spec.from.file}`,
       );
     }
+  });
+
+  it("pins the worker's own files for the /try demo, and nothing of the card match", async () => {
+    const m = await readManifest(DESKTOP_MANIFEST);
+    if (!m) throw new Error("no manifest");
+    const entries = pinnedEntries(m, WORKER_MODEL_PATHS);
+    expect(entries.map((entry) => entry.path)).toEqual([
+      "face_landmarker.task",
+      "efficientdet_lite0.tflite",
+      "wasm/vision_wasm_module_internal.js",
+      "wasm/vision_wasm_module_internal.wasm",
+    ]);
+    expect(() => pinnedEntries(m, ["nope.task"])).toThrow(/not in manifest\.json/);
+    const moved = {
+      ...m,
+      files: m.files.map((file) =>
+        file.path === MODEL_PATHS.faceLandmarker ? { ...file, source: "https://example.test/f" } : file,
+      ),
+    };
+    expect(() => pinnedEntries(moved, WORKER_MODEL_PATHS)).toThrow(/MODEL_SPECS/);
   });
 
   it.skipIf(!existsSync(join(modelsDir, MODEL_PATHS.faceLandmarker)))(

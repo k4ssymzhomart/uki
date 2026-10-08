@@ -22,7 +22,10 @@ describe("renderer to worker messages", () => {
       models,
       delegate: { face: "GPU", phone: "CPU" },
       debug: false,
+      stills: true,
     });
+    const demo = MainToWorker.parse({ type: "init", checks: {}, mode: "app", models, stills: false });
+    expect(demo.type === "init" && demo.stills).toBe(false);
   });
 
   it("frames carry the transferred bitmap itself", () => {

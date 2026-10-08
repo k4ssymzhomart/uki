@@ -95,7 +95,7 @@ async function handle(raw: unknown): Promise<void> {
         });
         pipeline = createPipeline(
           { face, phone, luma: sampleLuma },
-          { checks: msg.checks, mode: msg.mode, debug: msg.debug },
+          { checks: msg.checks, mode: msg.mode, debug: msg.debug, stills: msg.stills },
           post,
         );
         const phoneDelegate: Delegate = phone.delegate;

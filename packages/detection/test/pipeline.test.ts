@@ -45,6 +45,21 @@ describe("the stills gate", () => {
     });
   }
 
+  it("with stills off (the /try demo) the requests still arrive but no JPEG is made", async () => {
+    const run = fakePipeline({ stills: false });
+    run.run(loadFixture("look-away-3s"));
+    await run.settle();
+    const event = eventsOf(run.posted).find((e) => e.type === "gaze.off_screen");
+    expect(event).toBeDefined();
+    const requests = run.posted.flatMap((message) =>
+      message.type === "outputs" ? message.outputs.filter((output) => output.kind === "stills") : [],
+    );
+    expect(requests.map((request) => request.eventId)).toEqual([event?.id]);
+    expect(run.capture).not.toHaveBeenCalled();
+    expect(stillsOf(run.posted)).toEqual([]);
+    expect(run.pipeline.pendingStills).toBe(0);
+  });
+
   it("a lost camera cancels stills still waiting for a frame", async () => {
     const run = fakePipeline();
     const row = (at: number, faces: number): FrameRow => [at, "f", faces, 0, -5, 0, 0, 0, 0, 0.1];
