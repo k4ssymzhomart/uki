@@ -17,7 +17,7 @@ Ran on the development MacBook against a second local Supabase stack, project `u
 | `pnpm e2e` (dashboard smoke) against the second stack | pass | 4 tests, `next dev` on port 3141, after `pnpm seed:staff` on the second stack | 2026-10-08 |
 | `pnpm db:types` | pass | `packages/db/src/database.types.ts` regenerated from the second stack (`supabase gen types typescript --local`) | 2026-10-08 |
 | `pnpm functions:sync` | pass | 21 contract files copied into the functions, `--check` clean, function type check clean | 2026-10-08 |
-| CI on the pull request | pending | PR #10. Linux, macOS and Windows jobs | |
+| CI on the pull request | pass | PR #10 at 8c367b1: every job of the pull-request run 37762433261 and the push run 37762428367 passed. The jobs were lint, guards, types and unit tests; database, functions, desktop flow, dashboard smoke test and demo scripts (pgTAP 01 to 14 after `supabase start`); the web, mock portal and Lock builds; the macOS and Windows installers; and the secret scan. Merged as 2aed25d | 2026-10-08 |
 | The main local stack has the migration | pending | The coordinator runs `supabase migration up` on 547xx after the merge | |
 | The cloud project has the migration | pending | P.2: `pnpm supabase:deploy` from your machine. Then create the two Vault secrets in `docs/runbooks/cloud-setup.md` so that `retention_nightly` and pilot emails can call their functions | |
 
