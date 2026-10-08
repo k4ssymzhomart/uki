@@ -1,7 +1,7 @@
 // Judge mode (docs/runbooks/judge-mode.md): the always-live exam "Demo · Live" (DEMO-LIVE), its roster,
 // the read-only judge account, and the shapes of the calls the simulator, the setup script, the
 // dashboard's simulator indicator and the demo-live-purge function make
-// (supabase/migrations/20261013100100_judge_mode.sql).
+// (supabase/migrations/20261013130100_judge_mode.sql).
 import { z } from "zod";
 import { Timestamp, Uuid } from "./primitives.ts";
 import { ExamStatus, SessionState } from "./session.ts";

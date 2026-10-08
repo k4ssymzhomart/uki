@@ -1,4 +1,4 @@
--- Judge mode (20261013100000_observer_role.sql, 20261013100100_judge_mode.sql; docs/runbooks/judge-mode.md):
+-- Judge mode (20261013130000_observer_role.sql, 20261013130100_judge_mode.sql; docs/runbooks/judge-mode.md):
 --   the observer reads exactly what an assigned proctor reads, table by table and view by view, and every
 --   write it could reach is refused (each write RPC, and a direct statement on every table);
 --   session_heartbeat for the session owner only, with the 10-second throttle;

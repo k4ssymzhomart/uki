@@ -2,7 +2,7 @@
 -- and watch one exam, "Demo · Live" (code DEMO-LIVE), that never ends, with simulated students driven by
 -- the judge simulator (apps/judge-sim) on a small Windows VPS. This migration adds:
 --
---  1. The read-only staff role `observer` (enum value from 20261013100000_observer_role.sql). An observer
+--  1. The read-only staff role `observer` (enum value from 20261013130000_observer_role.sql). An observer
 --     assigned to an exam through proctor_assignments reads exactly what an assigned proctor reads: every
 --     read policy and RPC that admits a proctor (is_proctor_of, is_exam_staff) admits it. Every write it
 --     could reach is refused by one statement-level trigger, observer_read_only, on every table in
