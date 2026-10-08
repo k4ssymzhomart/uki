@@ -156,8 +156,25 @@ export type ClientPauseReason = z.infer<typeof ClientPauseReason>;
 /** A pause's reason as the wall shows it: a self pause's reason, or "proctor" for proctor.paused. */
 export const PauseReason = z.enum(["face_missing", "camera_lost", "proctor"]);
 export type PauseReason = z.infer<typeof PauseReason>;
-export const HelpTopic = z.enum(["identity", "question", "technical"]);
+/**
+ * Why a student asks the proctor. 1.3's Ask proctor sends `identity`; the sheet on 2.1 to 2.3 and in the
+ * Lock bar (E.5a) offers E.5a's four reasons: Question is unclear (`question`), Technical problem
+ * (`technical`), I need a break (`break`) and Something else (`other`). Phase 1 added the last two
+ * (20261010060000_help_topics.sql; docs/decisions.md, 1.6 Ask proctor).
+ */
+export const HELP_TOPICS = ["identity", "question", "technical", "break", "other"] as const;
+export const HelpTopic = z.enum(HELP_TOPICS);
 export type HelpTopic = z.infer<typeof HelpTopic>;
+/** The reasons E.5a's sheet offers, in its order (catalog lock.ask.reason.*). */
+export const ASK_REASONS = [
+  "question",
+  "technical",
+  "break",
+  "other",
+] as const satisfies readonly HelpTopic[];
+export type AskReason = (typeof ASK_REASONS)[number];
+/** The sheet's optional note: E.5a's counter reads "32/200". The server keeps up to 280 (MessageText). */
+export const HELP_NOTE_MAX = 200;
 /** `lock` when the extension or browser went away, `app` after an app crash. */
 export const DisconnectSide = z.enum(["lock", "app"]);
 export type DisconnectSide = z.infer<typeof DisconnectSide>;
