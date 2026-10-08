@@ -10,7 +10,14 @@ import {
 import type { UkiClient } from "../../packages/db/src/index.ts";
 import { stack } from "./world.ts";
 
-export type FunctionName = "ingest" | "frames" | "command" | "stills" | "send-invites" | "pilot-notify";
+export type FunctionName =
+  | "ingest"
+  | "frames"
+  | "command"
+  | "stills"
+  | "send-invites"
+  | "pilot-notify"
+  | "shared-report";
 
 export interface FunctionReply {
   status: number;
