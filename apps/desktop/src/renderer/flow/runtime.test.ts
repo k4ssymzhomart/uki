@@ -137,7 +137,7 @@ describe("the flow runtime", () => {
     expect(steps).toEqual(expect.arrayContaining(["checking", "identity", "rules"]));
     runtime.send({ type: "SET_AGREED", agreed: true });
     await advance(2500);
-    expect(api.statuses.at(-1)).toEqual({ step: "ready" });
+    expect(api.statuses.at(-1)).toEqual({ step: "ready", rules_locale: "kk" });
     expect(bridge.lockSent.at(-1)).toMatchObject({ type: "exam.state", phase: "lobby" });
 
     // The start time comes: 2.1 opens, lockdown on, the browser locked, the questions loaded.
@@ -482,6 +482,46 @@ describe("the flow runtime", () => {
     expect(api.ofType("tab.blocked")).toHaveLength(1);
     const seqs = [...api.events.values()].map((e) => e.seq).sort((a, b) => a - b);
     expect(seqs).toEqual(seqs.map((_, i) => i));
+  });
+
+  it("queues the Lock's Ask proctor (E.5a) as its own event and answers help.queued, also on a resend", async () => {
+    await restoredExam("writing");
+    await advance(3000);
+    const ask = {
+      id: uuidv7(),
+      at: new Date().toISOString(),
+      type: "student.help_requested" as const,
+      data: { topic: "technical" as const, text: "The calculator tab doesn’t open." },
+    };
+    bridge.fromLock({ type: "lock.event", event: ask });
+    await advance(2500);
+    expect(api.ofType("student.help_requested")).toHaveLength(1);
+    expect(api.ofType("student.help_requested")[0]).toMatchObject({ source: "lock", data: ask.data });
+    expect(bridge.lockSent.filter((m) => m.type === "help.queued")).toEqual([
+      { type: "help.queued", id: ask.id },
+    ]);
+    // The sheet did not hear back (the link dropped): the Lock sends the event again and is answered again.
+    bridge.fromLock({ type: "lock.event", event: ask });
+    await advance(2500);
+    expect(api.ofType("student.help_requested")).toHaveLength(1);
+    expect(bridge.lockSent.filter((m) => m.type === "help.queued")).toHaveLength(2);
+  });
+
+  it("queues the app's own Ask proctor from 2.1 in the outbox, through a network cut", async () => {
+    await restoredExam("writing");
+    await advance(3000);
+    api.online = false;
+    runtime.send({ type: "ASK_HELP", topic: "question", text: "Q 7: is it radians?" });
+    await advance(5000);
+    expect(api.ofType("student.help_requested")).toHaveLength(0);
+    expect(screen()).toMatchObject({ help: { requestedAt: expect.any(Number) } });
+    api.online = true;
+    await advance(35_000, 1000);
+    expect(api.ofType("student.help_requested")).toHaveLength(1);
+    expect(api.ofType("student.help_requested")[0]).toMatchObject({
+      source: "app",
+      data: { topic: "question", text: "Q 7: is it radians?" },
+    });
   });
 
   it("waits 2, 4, 8, 16, then 30 s between failed question loads, so join_exam's limit can clear", async () => {

@@ -132,6 +132,8 @@ function exam(locale: Locale): ExamModel {
     selfPause: null,
     proctorPause: null,
     notice: null,
+    canAskProctor: true,
+    help: null,
   };
 }
 
@@ -237,6 +239,7 @@ export function fixture(frame: Frame, locale: Locale = "en"): ScreenModel {
           since: almaty("10:49:30"),
           pausedMs: 75 * SECOND,
         },
+        canAskProctor: false,
       } satisfies ExamModel;
     case "2.1e":
       return {

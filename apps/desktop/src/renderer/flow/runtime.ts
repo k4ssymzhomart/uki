@@ -193,7 +193,11 @@ export class FlowRuntime {
         if (this.session) void this.deps.outbox.setMeta(metaLocked(this.session.id), true);
       },
       onSubmitted: () => this.send({ type: "LOCK_SUBMITTED" }),
-      onEvent: (event) => void this.queueLockEvent(event),
+      // E.5a: the Lock's Ask proctor is queued as the app's own event; help.queued tells its sheet.
+      onEvent: (event) =>
+        void this.queueLockEvent(event).then((queued) => {
+          if (queued && event.type === "student.help_requested") this.lockLink.helpQueued(event.id);
+        }),
       onDisconnected: () => void this.queueEvent("lock.app_disconnected", { side: "lock" }),
       // The Lock reads the exam's server times through it (its deadline and countdowns).
       clockOffsetMs: () => this.clock.offsetMs,
@@ -579,24 +583,27 @@ export class FlowRuntime {
     this.send({ type: "CHECK_ROWS", rows: { camera: row } });
   }
 
+  /** Queues an event in the outbox; true once it is there (also when a resent Lock event already was). */
   private async enqueue(
     build: (seq: number, sessionId: string) => ClientEventEnvelope | EventEnvelope,
     flush = true,
     fromLock = false,
-  ): Promise<void> {
+  ): Promise<boolean> {
     const session = this.session;
-    if (!session) return;
+    if (!session) return false;
     try {
       const envelope = (seq: number) => ClientEventEnvelope.parse(build(seq, session.id));
       const row = fromLock
         ? await this.deps.outbox.enqueueLockEvent(session.id, envelope)
         : await this.deps.outbox.enqueueEvent(session.id, envelope);
       // A Lock event sent again on a new link was queued before.
-      if (!row || !flush) return;
+      if (!row || !flush) return true;
       if (row.flag) this.sync?.flushNow();
       else this.sync?.kick();
+      return true;
     } catch (error) {
       if (import.meta.env.DEV) console.error("uki: event not queued", error);
+      return false;
     }
   }
 
@@ -604,7 +611,7 @@ export class FlowRuntime {
     type: ClientEventType,
     data: Record<string, unknown>,
     options: { flush?: boolean } = {},
-  ): Promise<void> {
+  ): Promise<boolean> {
     return this.enqueue(
       (seq, sessionId) => ({
         id: uuidv7(this.now()),
@@ -621,13 +628,13 @@ export class FlowRuntime {
     );
   }
 
-  private queueRuleEvent(event: Parameters<typeof toEnvelope>[0]): Promise<void> {
+  private queueRuleEvent(event: Parameters<typeof toEnvelope>[0]): Promise<boolean> {
     return this.enqueue((seq, sessionId) =>
       toEnvelope(event, { session_id: sessionId, seq, app_version: this.appVersion }),
     );
   }
 
-  private queueLockEvent(event: Exclude<LockEvent, { type: "exam.submitted" }>): Promise<void> {
+  private queueLockEvent(event: Exclude<LockEvent, { type: "exam.submitted" }>): Promise<boolean> {
     return this.enqueue(
       (seq, sessionId) =>
         lockEventToEnvelope(event, { session_id: sessionId, seq, app_version: this.appVersion }),

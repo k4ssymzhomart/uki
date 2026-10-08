@@ -345,6 +345,36 @@ describe("exams in the browser", () => {
     ]);
   });
 
+  it("E.5a: Ask proctor from the bar goes to the app as a Lock event, and help.queued confirms it on the bar", async () => {
+    const { h, fake, socket } = await locked();
+    const ask = {
+      type: "content.help",
+      topic: "technical",
+      text: "The calculator tab doesn’t open.",
+    } as const;
+    expect(await h.controller.handleRuntimeMessage(ask, "https://evil.example/")).toEqual({ ok: false });
+    const reply = await h.controller.handleRuntimeMessage(ask, PORTAL);
+    expect(reply.ok).toBe(true);
+    const sent = lockEvents(socket).filter((e) => e.type === "student.help_requested");
+    expect(sent).toHaveLength(1);
+    expect(sent[0]).toMatchObject({ id: reply.id, data: { topic: "technical", text: ask.text } });
+    const bar = () =>
+      fake.store.get(STORAGE_KEYS.bar) as { help?: { id: string; queued: boolean } | null } | undefined;
+    expect(bar()?.help).toMatchObject({ id: reply.id, queued: false });
+    // A stale id changes nothing; the right one marks it queued.
+    socket.receive({ type: "help.queued", id: "0199a000-0000-7000-8000-0000000000ff" });
+    await h.settle();
+    expect(bar()?.help?.queued).toBe(false);
+    socket.receive({ type: "help.queued", id: reply.id ?? "" });
+    await h.settle();
+    expect(bar()?.help).toMatchObject({ id: reply.id, queued: true });
+    expect(await h.controller.handleRuntimeMessage({ type: "content.help", topic: "lunch" }, PORTAL)).toEqual(
+      {
+        ok: false,
+      },
+    );
+  });
+
   it("asks for full screen again after an exit and counts the exits", async () => {
     const { h, fake, socket, main } = await locked();
     await vi.advanceTimersByTimeAsync(2000);

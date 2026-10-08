@@ -4,6 +4,7 @@ import { Banner, Button, CheckRow, type CheckRowStatus, shortName } from "@uki/u
 import { type ReactNode, useId } from "react";
 import { useTranslations } from "use-intl";
 import type { IdentityModel, IdentityRowState } from "../../flow/view-model.ts";
+import { NoticeBanners } from "../exam/notice-banners.tsx";
 import idScan from "../shared/assets/uki-3d-id-scan.png";
 import { CameraPreview, DashedFrame, FaceFrame, PREVIEW_ASPECT } from "../shared/camera-preview.tsx";
 import { CheckInStepper } from "../shared/check-in-stepper.tsx";
@@ -28,6 +29,8 @@ export type IdentityScreenProps = {
   onContinue: () => void;
   /** 1.3 only: opens 1.3a and asks the proctor for help. */
   onAskProctor: () => void;
+  /** Got it on a proctor's message over 1.3 or 1.3a (2.1e's banner). */
+  onGotIt?: () => void;
   onLanguage: (locale: Locale) => void;
   os?: DesktopOs;
 };
@@ -36,7 +39,8 @@ const ROW_STATUS: Record<IdentityRowState, CheckRowStatus> = { ok: "pass", fail:
 
 /**
  * 1.3 Identity and 1.3a Proctor help (Figma 51:2062, 151:11547): face, student card and one-person rows
- * beside the preview with the lime frames. Ask proctor is the only one in Phase 0.
+ * beside the preview with the lime frames. Ask proctor is the only one in Phase 0. Phase 1: a proctor's
+ * message (a reply, or a 1.5b hint) shows as 2.1e's banner above the help banner, until Got it.
  */
 export function IdentityScreen({
   model,
@@ -45,6 +49,7 @@ export function IdentityScreen({
   mirrored = false,
   onContinue,
   onAskProctor,
+  onGotIt = () => {},
   onLanguage,
   os,
 }: IdentityScreenProps) {
@@ -133,6 +138,9 @@ export function IdentityScreen({
             statusLabel={chip(person)}
             className="w-full"
           />
+          {model.notice?.message ? (
+            <NoticeBanners notice={model.notice} offline={null} locale={locale} onGotIt={onGotIt} />
+          ) : null}
           {help === null ? (
             helpMode ? null : (
               <p className="opacity-58 type-card-caption">{t("identity.privacy")}</p>

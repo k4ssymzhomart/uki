@@ -59,6 +59,7 @@ export function StudentScreen({ model, send, camera, cameraMirrored, os }: Stude
           onLanguage={onLanguage}
           onContinue={() => send({ type: "CONTINUE" })}
           onAskProctor={() => send({ type: "ASK_PROCTOR" })}
+          onGotIt={() => send({ type: "ACK_NOTICE" })}
         />
       );
     case "1.4":
@@ -104,6 +105,8 @@ export function StudentScreen({ model, send, camera, cameraMirrored, os }: Stude
           onImHere={() => send({ type: "IM_HERE" })}
           onGotIt={() => send({ type: "ACK_NOTICE" })}
           onRetryQuestions={() => send({ type: "RETRY_QUESTIONS" })}
+          onAskHelp={(topic, text) => send({ type: "ASK_HELP", topic, text })}
+          onHelpGotIt={() => send({ type: "ACK_HELP" })}
         />
       );
   }

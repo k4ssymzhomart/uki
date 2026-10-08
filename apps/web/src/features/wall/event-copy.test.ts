@@ -58,6 +58,18 @@ describe("event wording", () => {
     }
   });
 
+  it("names the help topic the student picked, as 2.4d does (E.5a's four reasons and 1.3's identity)", () => {
+    const topic = (value: string) =>
+      text(describeEvent(event(1, "student.help_requested", { topic: value }), context).detail);
+    expect(["identity", "question", "technical", "break", "other"].map(topic)).toEqual([
+      "Identity check",
+      "Question is unclear",
+      "Technical problem",
+      "I need a break",
+      "Something else",
+    ]);
+  });
+
   it("reads like the 2.4 feed and the 2.5 timeline", () => {
     const off = describeEvent(event(1, "gaze.off_screen", DATA["gaze.off_screen"]), context);
     expect([text(off.title), text(off.feed), text(off.detail)]).toEqual([

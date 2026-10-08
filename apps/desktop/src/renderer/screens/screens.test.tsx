@@ -118,13 +118,78 @@ describe("title bar", () => {
 });
 
 describe("Ask proctor", () => {
-  it("shows only on 1.3 in Phase 0", () => {
+  const EXAM_FRAMES: readonly Frame[] = ["2.1", "2.1a", "2.1c", "2.1e", "2.2", "2.3"];
+
+  it("shows on 1.3 and, from Phase 1, in the footer of every exam frame; 2.1c keeps it off", () => {
     for (const frame of FRAMES) {
       renderFrame(frame, "en");
       const buttons = screen.queryAllByRole("button", { name: messages("en").action.ask_proctor });
-      expect(buttons.length, frame).toBe(frame === "1.3" ? 1 : 0);
+      expect(buttons.length, frame).toBe(frame === "1.3" || EXAM_FRAMES.includes(frame) ? 1 : 0);
+      if (EXAM_FRAMES.includes(frame)) {
+        expect((buttons[0] as HTMLButtonElement).disabled, frame).toBe(frame === "2.1c");
+      }
       cleanup();
     }
+  });
+
+  it("opens E.5a's sheet on 2.1 and sends the reason and the note", () => {
+    const en = messages("en");
+    const { send } = renderFrame("2.1");
+    fireEvent.click(screen.getByRole("button", { name: en.action.ask_proctor }));
+    const sheet = screen.getByRole("dialog", { name: en.lock.ask.title });
+    const sendButton = within(sheet).getByRole("button", { name: en.lock.ask.send }) as HTMLButtonElement;
+    expect(sendButton.disabled).toBe(true);
+    fireEvent.click(within(sheet).getByRole("radio", { name: en.lock.ask.reason.unclear }));
+    fireEvent.change(within(sheet).getByLabelText(en.lock.ask.note.label), { target: { value: " Q 7 " } });
+    expect(within(sheet).getByText("Only your proctor sees this · 5/200")).toBeTruthy();
+    fireEvent.click(sendButton);
+    expect(send).toHaveBeenCalledWith({ type: "ASK_HELP", topic: "question", text: "Q 7" });
+    expect(screen.queryByRole("dialog", { name: en.lock.ask.title })).toBeNull();
+  });
+
+  it("reaches the sheet above 2.3's veil, and Cancel closes it without sending", () => {
+    const en = messages("en");
+    const { send } = renderFrame("2.3");
+    const button = screen.getByRole("button", { name: en.action.ask_proctor });
+    expect(button.closest("[inert]")).toBeNull();
+    fireEvent.click(button);
+    fireEvent.click(screen.getByRole("button", { name: en.action.cancel }));
+    expect(screen.queryByRole("dialog", { name: en.lock.ask.title })).toBeNull();
+    expect(send).not.toHaveBeenCalledWith(expect.objectContaining({ type: "ASK_HELP" }));
+  });
+
+  it("confirms a queued request with 1.3a's banner and E.5a's line, until Got it", () => {
+    const en = messages("en");
+    const model = {
+      ...(fixture("2.1") as ExamModel),
+      help: { requestedAt: Date.parse("2026-10-09T05:47:00Z") },
+    };
+    const { send } = renderFrame("2.1", "en", model);
+    expect(screen.getByText("Help requested at 10:47")).toBeTruthy();
+    expect(screen.getByText(en.lock.ask.body)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: en.message.ack }));
+    expect(send).toHaveBeenCalledWith({ type: "ACK_HELP" });
+  });
+
+  it("shows a proctor's message over 1.3a with Got it", () => {
+    const en = messages("en");
+    const base = fixture("1.3a");
+    const model = {
+      ...base,
+      notice: {
+        message: {
+          at: Date.parse("2026-10-09T03:53:00Z"),
+          proctorName: "Aigerim Sadykova",
+          text: "Tilt the card.",
+          preset: null,
+        },
+        timeAdded: null,
+      },
+    } as ScreenModel;
+    const { send } = renderFrame("1.3a", "en", model);
+    expect(screen.getByText("“Tilt the card.”")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: en.message.ack }));
+    expect(send).toHaveBeenCalledWith({ type: "ACK_NOTICE" });
   });
 
   it("sends ASK_PROCTOR on 1.3", () => {

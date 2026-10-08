@@ -119,6 +119,8 @@ export interface FlowContext {
   selfPause: { reason: "face_missing" | "camera_lost"; since: number } | null;
   proctorPause: { since: number; byName: string | null; text: string | null } | null;
   notice: NoticeModel | null;
+  /** Ask proctor on 2.1 to 2.3: when the request was queued, until Got it or the proctor's message. */
+  examHelp: { at: number } | null;
   offline: { since: number } | null;
   log: LogEntry[];
   /** Submit pressed or time up; why, for the Lock's release. */

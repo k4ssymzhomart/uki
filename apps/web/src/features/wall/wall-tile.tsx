@@ -4,6 +4,8 @@ import { isFinalState } from "@uki/contracts";
 import { ActionMenu, type MenuAction, StudentTile, StudentTileMore } from "@uki/ui";
 import { useTranslations } from "next-intl";
 import { memo, useState } from "react";
+import { hasOpenRequest } from "../help/help-model.ts";
+import { useHelp } from "../help/help-store.tsx";
 import { EndSessionDialog } from "./end-session-dialog.tsx";
 import { pronounFromName } from "./names.ts";
 import { useQuickMessageContent } from "./quick-message.tsx";
@@ -37,6 +39,8 @@ export const WallTile = memo(function WallTile({ sessionId, onOpenTimeline }: Wa
     const session = state.sessions[sessionId];
     return session === undefined ? undefined : state.students[session.studentId];
   });
+  // 2.4d: an on-screen student with an open Ask proctor request reads "raised hand · Q 8".
+  const raised = useHelp((state) => hasOpenRequest(state, sessionId));
   const { send } = useCommand();
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<MenuMode>("actions");
@@ -106,7 +110,14 @@ export const WallTile = memo(function WallTile({ sessionId, onOpenTimeline }: Wa
     <StudentTile
       state={view.tone}
       name={view.name}
-      detail={t(view.line.key, view.line.values)}
+      detail={
+        raised && view.state === "on_screen"
+          ? view.line.values?.question === undefined
+            ? t("help.tileNoQuestion")
+            : t("help.tile", { question: view.line.values.question })
+          : t(view.line.key, view.line.values)
+      }
+      data-help-raised={raised || undefined}
       stateLabel={t("tile.state", { state: view.state })}
       data-session-id={sessionId}
       data-wall-state={view.state}

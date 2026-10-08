@@ -456,7 +456,6 @@
           "title": "Запрещённый сайт закрыт"
         },
         "student_help_requested": {
-          "detail": "{topic, select, identity {Проверка личности} question {Вопрос по заданию} other {Техническая проблема}}",
           "feed": "просит помощи",
           "title": "Просит помощи"
         },
@@ -485,6 +484,18 @@
       },
       "grid": {
         "label": "Студенты"
+      },
+      "help": {
+        "button": "Запросы · {count}",
+        "done": "Готово",
+        "footer": "Ответ получит один студент, на своём языке.",
+        "open": "открыто: {count}",
+        "reply": "Ответить",
+        "text": "«{text}»",
+        "tile": "поднята рука · вопрос {question}",
+        "tileNoQuestion": "поднята рука",
+        "title": "Запросы",
+        "topic": "{topic, select, identity {Проверка личности} question {Вопрос непонятен} technical {Техническая проблема} break {Мне нужен перерыв} other {Другое}}"
       },
       "message": {
         "cancel": "Отмена",

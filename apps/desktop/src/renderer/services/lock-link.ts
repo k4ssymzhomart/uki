@@ -29,7 +29,10 @@ export interface LockLinkOptions {
   onStarted: (tabsClosed: number) => void;
   /** The exam tab reached lms_done_path (browser exams). */
   onSubmitted: () => void;
-  /** tab.blocked, site.closed, copy.blocked or lock.fullscreen_exit, to queue with source "lock". */
+  /**
+   * tab.blocked, site.closed, copy.blocked, lock.fullscreen_exit or (Phase 1) student.help_requested, to
+   * queue with source "lock".
+   */
   onEvent: (event: Exclude<LockEvent, { type: "exam.submitted" }>) => void;
   /**
    * The link stayed down 15 s while locked, or the Lock let go on its own clock (trigger deadline) while
@@ -118,6 +121,11 @@ export class LockLink {
     this.holder = null;
     this.downSince = null;
     void this.send({ type: "lock.release", reason });
+  }
+
+  /** E.5a: the Lock's student.help_requested is in the outbox (sent on every resend, so the sheet confirms). */
+  helpQueued(id: string): void {
+    void this.send({ type: "help.queued", id });
   }
 
   /** After an app restart while locked: the Lock is still locked to this exam. */

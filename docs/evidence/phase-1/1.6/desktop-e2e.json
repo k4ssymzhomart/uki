@@ -1,0 +1,216 @@
+{
+  "date": "2026-10-08T12:13:15.158Z",
+  "offlineSeconds": 20,
+  "kiosk": false,
+  "latencyMs": {
+    "start": 25,
+    "pause": 99,
+    "resume": 126,
+    "message": 35,
+    "add_time": 128,
+    "reply": 31,
+    "end": 40
+  },
+  "functionMs": {
+    "pause": 110,
+    "resume": 163,
+    "message": 35,
+    "add_time": 137
+  },
+  "commandRetries": {},
+  "checkAgainPresses": 0,
+  "pairing": {
+    "code": "6 digits",
+    "helloStudent": "Madina Tulegenova",
+    "paired": true
+  },
+  "offline": {
+    "cutSeconds": 20,
+    "bannerAfterMs": 5310,
+    "queuedAnswers": 5,
+    "recoveredAfterMs": 89,
+    "syncedAfterMs": 403,
+    "answersLocal": 9,
+    "answersServer": 9,
+    "answersWaitingAtReconnect": 5,
+    "eventsWaitingAtReconnect": 6,
+    "appEventsServer": 14,
+    "seqRange": [
+      0,
+      13
+    ],
+    "duplicates": 0,
+    "netOffline": {
+      "queued": 11,
+      "offline_ms": 20067
+    },
+    "netOfflineEvents": [
+      {
+        "queued": 11,
+        "offline_ms": 20067
+      }
+    ],
+    "framesDuringCut": [
+      "1s 2.1",
+      "5s 2.1a"
+    ],
+    "requestsThroughDuringCut": []
+  },
+  "identity": {
+    "recoveredAfterMs": 6328,
+    "event": {
+      "score": 0.93,
+      "tries": 5
+    }
+  },
+  "identityHelp": {
+    "cardNumberShown": "another student's (20230912)",
+    "helpFrameAfterMs": 11377,
+    "helpEventsOnServer": 1,
+    "helpEvent": {
+      "type": "student.help_requested",
+      "source": "app",
+      "review": "log",
+      "data": {
+        "topic": "identity"
+      }
+    },
+    "sessionStateDuringHelp": "identity",
+    "matchedOnTry": 5
+  },
+  "rules": {
+    "stamp": {
+      "rules_accepted_at": "2026-10-08T12:13:49.413054+00:00",
+      "rules_locale": "en"
+    },
+    "afterLanguageSwitches": {
+      "rules_accepted_at": "2026-10-08T12:13:49.413054+00:00",
+      "rules_locale": "en"
+    }
+  },
+  "askProctor": {
+    "request": {
+      "topic": "question",
+      "text": "Q 8: is the angle in radians or degrees?",
+      "done": false
+    },
+    "sendToServerMs": 802,
+    "replyToScreenMs": 31
+  },
+  "phone": {
+    "stillsConfirmed": 3,
+    "examPhoneScore": 0.7,
+    "scores": [
+      0,
+      0.76953125,
+      0.76953125,
+      0.76953125,
+      0.76953125,
+      0.76953125,
+      0.76953125,
+      0.76953125
+    ],
+    "phoneMs": [
+      47.1,
+      46,
+      51.7,
+      50.3,
+      45.9,
+      45.9,
+      45.9,
+      46.2
+    ],
+    "phoneChecksPerS": [
+      2,
+      2,
+      2,
+      2.5,
+      2.5,
+      2.5,
+      2,
+      2
+    ],
+    "fps": [
+      15,
+      16,
+      15,
+      14,
+      13,
+      13,
+      14,
+      15
+    ],
+    "rulesPaused": false,
+    "warningAfterMs": 573,
+    "review": "flag",
+    "data": {
+      "score": 0.77,
+      "held_ms": 465
+    },
+    "frameCount": 3
+  },
+  "receipt": {
+    "receiptId": "UKI-204-6334-MT",
+    "pdfBytes": 28401,
+    "timeUsedS": 50
+  },
+  "frames": [
+    "1.1-kk",
+    "1.1-ru",
+    "1.1-en",
+    "1.1a-en",
+    "1.1a-kk",
+    "1.1a-ru",
+    "1.2-en",
+    "1.2-kk",
+    "1.2-ru",
+    "E.3-app-en",
+    "E.3-app-kk",
+    "E.3-app-ru",
+    "1.3-checking-en",
+    "1.3a-en",
+    "1.3a-kk",
+    "1.3a-ru",
+    "1.3-en",
+    "1.3-kk",
+    "1.3-ru",
+    "1.4-en",
+    "1.4-kk",
+    "1.4-ru",
+    "1.4a-en",
+    "1.4a-kk",
+    "1.4a-ru",
+    "2.1-en",
+    "2.1-kk",
+    "2.1-ru",
+    "2.1a-en",
+    "2.1a-kk",
+    "2.1a-ru",
+    "2.1c-en",
+    "2.1c-kk",
+    "2.1c-ru",
+    "2.1e-en",
+    "2.1e-kk",
+    "2.1e-ru",
+    "2.1e-time-en",
+    "2.1-ask-en",
+    "2.1-ask-kk",
+    "2.1-ask-ru",
+    "2.1-help-requested-en",
+    "2.1e-reply-en",
+    "2.1e-reply-kk",
+    "2.1e-reply-ru",
+    "2.2-en",
+    "2.2-kk",
+    "2.2-ru",
+    "2.3-en",
+    "2.3-kk",
+    "2.3-ru",
+    "3.1-en",
+    "3.1-kk",
+    "3.1-ru",
+    "2.1d-en",
+    "2.1d-kk",
+    "2.1d-ru"
+  ]
+}

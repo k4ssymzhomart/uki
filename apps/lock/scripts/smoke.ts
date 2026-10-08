@@ -230,6 +230,39 @@ async function main(): Promise<void> {
     await portal.getByRole("radio").nth(1).click();
     await shot(portal, "e5-attempt");
 
+    // E.5a: Ask proctor in the bar. The sheet sends lock.event student.help_requested to the app; the app
+    // queues it as its own event and answers help.queued (played here by the smoke, as the relay's app
+    // side; the desktop runtime test covers the app's own handling), and the sheet confirms.
+    await portal.setViewportSize({ width: 1280, height: 800 });
+    await portal.getByRole("button", { name: "Ask proctor" }).click();
+    const sheet = portal.getByRole("dialog", { name: "Ask your proctor" });
+    await sheet.waitFor();
+    await sheet.getByRole("radio", { name: "Technical problem" }).click();
+    await sheet.getByLabel("Note (optional)").fill("The calculator tab doesn’t open.");
+    await sheet.getByText("Only your proctor sees this · 32/200").waitFor();
+    await shot(portal, "e5a-ask-proctor");
+    await sheet.getByRole("button", { name: "Send to proctor" }).click();
+    const asked = await until("student.help_requested", () =>
+      received.find(
+        (m): m is Extract<LockToApp, { type: "lock.event" }> =>
+          m.type === "lock.event" && m.event.type === "student.help_requested",
+      ),
+    );
+    assert.deepEqual(asked.event.data, { topic: "technical", text: "The calculator tab doesn’t open." });
+    assert.equal(asked.session_id, browserExam.session_id, "filed under the locked exam");
+    // Until the app answers, the sheet waits with Send loading.
+    await portal.locator('[data-uki-ask][data-state="sent"]').waitFor();
+    await portal.waitForTimeout(500);
+    assert.equal(await sheet.getAttribute("data-state"), "sent", "the sheet waits for the app");
+    assert.ok(relay.send({ type: "help.queued", id: asked.event.id }));
+    await sheet.getByText(/^Help requested at \d\d:\d\d$/).waitFor();
+    assert.equal(await sheet.getAttribute("data-state"), "queued");
+    await shot(portal, "e5a-help-requested");
+    await sheet.getByRole("button", { name: "Got it" }).click();
+    await sheet.waitFor({ state: "detached" });
+    await portal.setViewportSize({ width: 1280, height: 748 });
+    log(`E.5a: ${asked.event.type} ${JSON.stringify(asked.event.data)} confirmed by help.queued`);
+
     // E.6: copy is cancelled, the toast shows, the attempt is noted once per 10 s.
     await portal.evaluate(() => {
       const heading = document.querySelector("h1");

@@ -192,7 +192,9 @@ export function ingestStatus(snapshot: FlowSnapshot): IngestStatus | undefined {
         }),
       };
     case "rules":
-      return { step: context.agreed ? "ready" : "rules" };
+      // The agree box: ready with the language the rules were read in, which ingest stamps once with
+      // sessions.rules_accepted_at (the consent record A.3 shows).
+      return context.agreed ? { step: "ready", rules_locale: context.locale } : { step: "rules" };
     case "writing":
     case "selfPaused":
     case "proctorPaused":

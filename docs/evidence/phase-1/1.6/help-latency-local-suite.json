@@ -1,0 +1,179 @@
+{
+  "both": {
+    "n": 48,
+    "min": 17,
+    "p50": 34,
+    "p95": 93,
+    "max": 104
+  },
+  "first": {
+    "n": 24,
+    "min": 18,
+    "p50": 34,
+    "p95": 93,
+    "max": 104
+  },
+  "second": {
+    "n": 24,
+    "min": 17,
+    "p50": 34,
+    "p95": 93,
+    "max": 100
+  },
+  "skew": {
+    "aigerim": {
+      "skewMs": -0.5,
+      "roundTripMs": 1
+    },
+    "gulnara": {
+      "skewMs": 0.5,
+      "roundTripMs": 1
+    }
+  },
+  "samples": [
+    {
+      "id": "01a11b70-db6f-7138-ac9e-893694bb7d4a",
+      "atMs": 1791461743471,
+      "aigerimMs": 30,
+      "gulnaraMs": 34
+    },
+    {
+      "id": "01a11b70-dbbc-73fb-a32e-d0fcd9db7f50",
+      "atMs": 1791461743548,
+      "aigerimMs": 28,
+      "gulnaraMs": 25
+    },
+    {
+      "id": "01a11b70-dc08-77fd-a529-6f61bde550f9",
+      "atMs": 1791461743624,
+      "aigerimMs": 31,
+      "gulnaraMs": 33
+    },
+    {
+      "id": "01a11b70-dc5a-745a-a7b4-cf82ebf92a2f",
+      "atMs": 1791461743706,
+      "aigerimMs": 44,
+      "gulnaraMs": 42
+    },
+    {
+      "id": "01a11b70-dcc4-7647-b797-810b6298c98d",
+      "atMs": 1791461743812,
+      "aigerimMs": 23,
+      "gulnaraMs": 22
+    },
+    {
+      "id": "01a11b70-dd15-7441-ab5d-29d87e10519c",
+      "atMs": 1791461743893,
+      "aigerimMs": 34,
+      "gulnaraMs": 30
+    },
+    {
+      "id": "01a11b70-dd70-761b-81a5-3f3a4e030416",
+      "atMs": 1791461743984,
+      "aigerimMs": 24,
+      "gulnaraMs": 24
+    },
+    {
+      "id": "01a11b70-dda8-75a4-bac9-4c3afd5da115",
+      "atMs": 1791461744040,
+      "aigerimMs": 18,
+      "gulnaraMs": 17
+    },
+    {
+      "id": "01a11b70-dde7-741e-8965-4cda53e1684e",
+      "atMs": 1791461744103,
+      "aigerimMs": 27,
+      "gulnaraMs": 38
+    },
+    {
+      "id": "01a11b70-de46-738b-b46c-3b0400cd5e30",
+      "atMs": 1791461744198,
+      "aigerimMs": 92,
+      "gulnaraMs": 92
+    },
+    {
+      "id": "01a11b70-df21-76c9-86b4-47c99eda1f00",
+      "atMs": 1791461744417,
+      "aigerimMs": 79,
+      "gulnaraMs": 84
+    },
+    {
+      "id": "01a11b70-dfe8-713c-89ca-9b4452610cbb",
+      "atMs": 1791461744616,
+      "aigerimMs": 104,
+      "gulnaraMs": 100
+    },
+    {
+      "id": "01a11b70-e09b-7123-a05b-1e5459697895",
+      "atMs": 1791461744795,
+      "aigerimMs": 35,
+      "gulnaraMs": 39
+    },
+    {
+      "id": "01a11b70-e104-74c2-a2d7-1432d449bf1a",
+      "atMs": 1791461744900,
+      "aigerimMs": 55,
+      "gulnaraMs": 49
+    },
+    {
+      "id": "01a11b70-e16c-7058-b179-d75d523bfb90",
+      "atMs": 1791461745004,
+      "aigerimMs": 39,
+      "gulnaraMs": 39
+    },
+    {
+      "id": "01a11b70-e1bb-768a-b0d3-bda246059eee",
+      "atMs": 1791461745083,
+      "aigerimMs": 33,
+      "gulnaraMs": 33
+    },
+    {
+      "id": "01a11b70-e221-728b-851d-406e1e7c871a",
+      "atMs": 1791461745185,
+      "aigerimMs": 93,
+      "gulnaraMs": 93
+    },
+    {
+      "id": "01a11b70-e2b9-74b7-a5ed-5ec9b526424c",
+      "atMs": 1791461745337,
+      "aigerimMs": 52,
+      "gulnaraMs": 47
+    },
+    {
+      "id": "01a11b70-e326-7571-9c4e-6c3231e53c36",
+      "atMs": 1791461745446,
+      "aigerimMs": 34,
+      "gulnaraMs": 34
+    },
+    {
+      "id": "01a11b70-e381-72d4-b118-4601d87a1255",
+      "atMs": 1791461745537,
+      "aigerimMs": 20,
+      "gulnaraMs": 23
+    },
+    {
+      "id": "01a11b70-e3c8-7578-85b7-c0b9428edac5",
+      "atMs": 1791461745608,
+      "aigerimMs": 32,
+      "gulnaraMs": 33
+    },
+    {
+      "id": "01a11b70-e412-7612-8105-9e0a4ab1a5cf",
+      "atMs": 1791461745682,
+      "aigerimMs": 41,
+      "gulnaraMs": 43
+    },
+    {
+      "id": "01a11b70-e47d-7378-bbf2-605290bffcb6",
+      "atMs": 1791461745789,
+      "aigerimMs": 36,
+      "gulnaraMs": 36
+    },
+    {
+      "id": "01a11b70-e4dc-704a-9915-a9e04b9fd14e",
+      "atMs": 1791461745884,
+      "aigerimMs": 32,
+      "gulnaraMs": 28
+    }
+  ]
+}

@@ -145,6 +145,8 @@ export function createLockController(deps: LockControllerDeps): LockController {
   let lock: LockRecord | null = null;
   let released: ReleasedSummary | null = null;
   let outbox: OutboxEntry[] = [];
+  /** E.5a: the bar's latest Ask proctor request, until the lock ends (laptop clock). */
+  let help: { id: string; at: number; queued: boolean; session_id: string } | null = null;
   const sentThisLink = new Set<string>();
   const copyThrottle = createKindThrottle<CopyKind>();
   const written = new Map<string, string>();
@@ -252,6 +254,10 @@ export function createLockController(deps: LockControllerDeps): LockController {
       locale: currentLocale(),
       lms_url: lock.exam.lms_url,
       allowed_hosts: lock.mode === "browser" ? lock.exam.allowed_hosts : [],
+      help:
+        help && help.session_id === lock.exam.session_id
+          ? { id: help.id, at: help.at, queued: help.queued }
+          : null,
     };
   }
 
@@ -390,6 +396,11 @@ export function createLockController(deps: LockControllerDeps): LockController {
         break;
       case "lock.release":
         await release("app", message.reason);
+        break;
+      case "help.queued":
+        // E.5a: the app has the request in its outbox; the sheet confirms. Any other id is stale.
+        if (!help || help.id !== message.id || help.queued) return;
+        help = { ...help, queued: true };
         break;
       default:
         return;
@@ -568,6 +579,7 @@ export function createLockController(deps: LockControllerDeps): LockController {
       return;
     }
     lock = null;
+    help = null;
     clearLockTimers();
     await api.rules
       .updateSessionRules(releaseRulesUpdate())
@@ -907,6 +919,23 @@ export function createLockController(deps: LockControllerDeps): LockController {
             await publish();
           }
           return { ok: true, noted };
+        }
+        case "content.help": {
+          // E.5a: Ask proctor from the bar on the exam portal. The request waits in the outbox like
+          // every Lock event; the app queues it as its own and answers help.queued.
+          const record = lock;
+          if (record?.mode !== "browser") return { ok: false };
+          if (!isAllowedUrl(senderUrl, record.exam.allowed_hosts)) return { ok: false };
+          const event = emit(
+            "student.help_requested",
+            request.text === undefined
+              ? { topic: request.topic }
+              : { topic: request.topic, text: request.text },
+          );
+          if (!event) return { ok: false };
+          help = { id: event.id, at: now(), queued: false, session_id: record.exam.session_id };
+          await publish();
+          return { ok: true, id: event.id };
         }
       }
     });

@@ -1,9 +1,16 @@
 "use client";
 
 // Live wall data flow, steps 2 and 3: join the private exam:{exam_id} channel after setAuth(), feed
-// event, session and frame messages to the store, and catch up after every (re)subscribe, when the
+// event, session and frame messages to the store (and `help` messages to 2.4d's), and catch up after every (re)subscribe, when the
 // tab regains focus, and every RECONCILE_EVERY_MS. Step 4's ticker lives here too.
-import { EXAM_BROADCAST, examTopic, parseExamMessage, SessionTileMessage, Uuid } from "@uki/contracts";
+import {
+  EXAM_BROADCAST,
+  examTopic,
+  type HelpMessage,
+  parseExamMessage,
+  SessionTileMessage,
+  Uuid,
+} from "@uki/contracts";
 import { useEffect, useRef } from "react";
 import { type AnyClient, fetchEventsAfter, fetchSessions } from "./queries.ts";
 import { useWallStoreApi } from "./wall-store-context.tsx";
@@ -31,16 +38,26 @@ export function useExamChannel({
   examId,
   offsetMs,
   onStatus,
+  onHelp,
+  onCatchUp,
 }: {
   client: AnyClient;
   examId: string;
   /** Server clock minus this browser's clock. */
   offsetMs: number;
   onStatus?: (status: ChannelStatus) => void;
+  /** Phase 1: a `help` message (2.4d), from help_from_event or close_help_request. */
+  onHelp?: (message: HelpMessage) => void;
+  /** Phase 1: more to read on every catch-up (2.4d's open requests); runs beside the events read. */
+  onCatchUp?: () => Promise<void>;
 }): void {
   const store = useWallStoreApi();
   const onStatusRef = useRef(onStatus);
   onStatusRef.current = onStatus;
+  const onHelpRef = useRef(onHelp);
+  onHelpRef.current = onHelp;
+  const onCatchUpRef = useRef(onCatchUp);
+  onCatchUpRef.current = onCatchUp;
   // The catch-up reads the offset when it runs, so a new offset never re-joins the channel.
   const offsetRef = useRef(offsetMs);
   offsetRef.current = offsetMs;
@@ -78,6 +95,7 @@ export function useExamChannel({
             overlapMs,
           ),
           fetchSessions(client, examId),
+          onCatchUpRef.current?.(),
         ]);
         if (cancelled) return;
         actions.mergeEvents(events);
@@ -105,6 +123,10 @@ export function useExamChannel({
       .on("broadcast", { event: EXAM_BROADCAST.frame }, ({ payload }) => {
         const parsed = parseExamMessage(EXAM_BROADCAST.frame, payload);
         if (parsed?.event === "frame") actions.applyFrame(parsed.payload);
+      })
+      .on("broadcast", { event: EXAM_BROADCAST.help }, ({ payload }) => {
+        const parsed = parseExamMessage(EXAM_BROADCAST.help, payload);
+        if (parsed?.event === "help") onHelpRef.current?.(parsed.payload);
       });
 
     onStatusRef.current?.("connecting");

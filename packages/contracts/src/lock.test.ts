@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { EXAM_ID, SESSION_ID, T0 } from "../test/fixtures.ts";
 import { DEFAULT_BROWSER_RULES } from "./browser-rules.ts";
-import { ClientEventEnvelope } from "./events.ts";
+import { ASK_REASONS, ClientEventEnvelope, HELP_TOPICS } from "./events.ts";
 import { uuidv7 } from "./ids.ts";
 import {
   type AppToLock,
@@ -142,6 +142,18 @@ describe("Phase 1 additions", () => {
     expect(bad({ topic: "lunch" })).toBe(false);
     expect(bad({ topic: "question", text: "x".repeat(281) })).toBe(false);
     expect(bad({ topic: "question", text: "Is the angle in radians?" })).toBe(true);
+  });
+
+  it("takes each of E.5a's four reasons as a help topic", () => {
+    for (const topic of ASK_REASONS) {
+      const raw = JSON.stringify({
+        type: "lock.event",
+        event: { id: uuidv7(), at, type: "student.help_requested", data: { topic } },
+      });
+      expect(parseLockToApp(raw).ok).toBe(true);
+    }
+    expect(ASK_REASONS).toEqual(["question", "technical", "break", "other"]);
+    expect(HELP_TOPICS).toEqual(["identity", ...ASK_REASONS]);
   });
 
   it("sends a Lock help request to ingest as a valid lock event", () => {

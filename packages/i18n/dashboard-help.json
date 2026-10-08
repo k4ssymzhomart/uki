@@ -1,0 +1,43 @@
+{
+  "$comment": "WP 1.6 Ask proctor: 2.4d (Figma 155:11803) on the live wall. English from the frame; the topic arms identity, break and other and the bare tile line are not in 2.4d (break and other are E.5a's reasons, identity is 1.3's Ask proctor). The Russian is a first pass by the agent: native review needed, P.18.",
+  "dashboard.wall.help.button": {
+    "en": "Requests · {count}",
+    "ru": "Запросы · {count}"
+  },
+  "dashboard.wall.help.done": {
+    "en": "Mark done",
+    "ru": "Готово"
+  },
+  "dashboard.wall.help.footer": {
+    "en": "Replies go to one student, in their language.",
+    "ru": "Ответ получит один студент, на своём языке."
+  },
+  "dashboard.wall.help.open": {
+    "en": "{count} open",
+    "ru": "открыто: {count}"
+  },
+  "dashboard.wall.help.reply": {
+    "en": "Reply",
+    "ru": "Ответить"
+  },
+  "dashboard.wall.help.text": {
+    "en": "“{text}”",
+    "ru": "«{text}»"
+  },
+  "dashboard.wall.help.tile": {
+    "en": "raised hand · Q {question}",
+    "ru": "поднята рука · вопрос {question}"
+  },
+  "dashboard.wall.help.tileNoQuestion": {
+    "en": "raised hand",
+    "ru": "поднята рука"
+  },
+  "dashboard.wall.help.title": {
+    "en": "Requests",
+    "ru": "Запросы"
+  },
+  "dashboard.wall.help.topic": {
+    "en": "{topic, select, identity {Identity check} question {Question is unclear} technical {Technical problem} break {I need a break} other {Something else}}",
+    "ru": "{topic, select, identity {Проверка личности} question {Вопрос непонятен} technical {Техническая проблема} break {Мне нужен перерыв} other {Другое}}"
+  }
+}

@@ -17,7 +17,7 @@ import type { Locale } from "@uki/i18n";
 import { shortName } from "../../../packages/ui/src/data/short-name.ts";
 import { DESKTOP_DIR, type LaunchedApp, launchApp } from "./support/app.ts";
 import { connectFakeLock } from "./support/fake-lock.ts";
-import { createFixture, destroyWorkspace, type Fixture, STUDENTS } from "./support/fixture.ts";
+import { admin, createFixture, destroyWorkspace, type Fixture, STUDENTS } from "./support/fixture.ts";
 import { messagesFor } from "./support/messages.ts";
 import {
   armFrameWatch,
@@ -69,6 +69,9 @@ const evidence = {
   identity: {} as Record<string, unknown>,
   /** 1.3a: the failed tries, the help request on the server, and the recovery (P.8). */
   identityHelp: {} as Record<string, unknown>,
+  /** Phase 1 (WP 1.6): the rules stamp, Ask proctor from 2.1 and its reply. */
+  rules: {} as Record<string, unknown>,
+  askProctor: {} as Record<string, unknown>,
   phone: {} as Record<string, unknown>,
   receipt: {} as Record<string, unknown>,
   frames: [] as string[],
@@ -362,14 +365,37 @@ test("1.3 and 1.4: a later card match recovers, then the rules", async () => {
   await button(page, en.action.continue).click();
   await waitForFrame(page, "1.4");
   await shotInEveryLanguage(page, "1.4");
+  // 1.4a: "Where is the video?" opens its answer in place.
+  const faq = page.getByRole("button", { name: en.rules.faq.video.question });
+  await expect(faq).toHaveAttribute("aria-expanded", "false");
+  await faq.click();
+  await expect(faq).toHaveAttribute("aria-expanded", "true");
+  await expect(page.getByText(en.rules.faq.video.answer)).toBeVisible();
   await page.getByRole("checkbox").click();
   await expect(page.getByRole("checkbox")).toBeChecked();
+  await shotInEveryLanguage(page, "1.4a");
   await until(
     () => sessionOf(fixture, STUDENTS.madina.number),
     (s) => s?.state === "ready",
     90_000,
     "session ready on the server",
   );
+  // The agree box sent ready with the language the rules were read in; ingest stamped it once. The
+  // screenshots above switched the language twice after that, and the stamp did not move.
+  const stamp = await until(
+    () => rulesStampOf(STUDENTS.madina.number),
+    (r) => r?.rules_accepted_at !== null,
+    90_000,
+    "rules_accepted_at on the server",
+  );
+  // Russian on screen past the next heartbeat (every 10 s at most): ready goes out again with ru.
+  await setLocale(page, "ru");
+  await page.waitForTimeout(12_000);
+  await setLocale(page, "en");
+  const later = await rulesStampOf(STUDENTS.madina.number);
+  expect(stamp?.rules_locale).toBe("en");
+  expect(later).toEqual(stamp);
+  evidence.rules = { stamp, afterLanguageSwitches: later };
   const { events } = await recordOf(sessionId);
   const matched = events.find((e) => e.type === "identity.matched");
   expect(matched, "identity.matched reached the server").toBeTruthy();
@@ -563,6 +589,60 @@ test("2.1e: a message and added time", async () => {
   expect(session?.extra_min).toBe(10);
 });
 
+test("2.1 (Phase 1): Ask proctor reaches the proctor, and the reply shows as 2.1e", async () => {
+  const { page } = madina;
+  await waitForFrame(page, "2.1");
+  await button(page, en.action.ask_proctor).click();
+  const sheet = page.getByRole("dialog", { name: en.lock.ask.title });
+  await expect(sheet).toBeVisible();
+  await sheet.getByRole("radio", { name: en.lock.ask.reason.unclear }).click();
+  await sheet.getByLabel(en.lock.ask.note.label).fill("Q 8: is the angle in radians or degrees?");
+  await shotInEveryLanguage(page, "2.1-ask");
+  const askedAt = Date.now();
+  await sheet.getByRole("button", { name: en.lock.ask.send }).click();
+  // Through the outbox and ingest: one help request with the topic and the note. Polled every 300 ms
+  // from the click on, while the screen is checked and photographed.
+  const stored = until(
+    async () => {
+      const { data } = await admin()
+        .from("help_requests")
+        .select("id, topic, text, created_at, done_at")
+        .eq("session_id", sessionId)
+        .eq("topic", "question");
+      return data ?? [];
+    },
+    (rows) => rows.length === 1,
+    90_000,
+    "the help request on the server",
+  ).then((rows) => ({ rows, at: Date.now() }));
+  await expect(sheet).toBeHidden();
+  await expect(page.getByText(en.lock.ask.body)).toBeVisible();
+  await shot(page, "2.1-help-requested-en");
+  const { rows: help, at: storedAt } = await stored;
+  const request = help[0];
+  if (request === undefined) throw new Error("no help request");
+  expect(request.text).toBe("Q 8: is the angle in radians or degrees?");
+  const queuedMs = storedAt - askedAt;
+  // The lead proctor replies on 2.4d (close_help_request with a reply): a message command, shown as 2.1e.
+  const seen = await armFrameWatch(page, "2.1e");
+  const sentAt = Date.now();
+  const closed = await fixture.lead.client.rpc("close_help_request", { id: request.id, reply: "Radians." });
+  if (closed.error) throw new Error(`close_help_request: ${closed.error.message}`);
+  const at = await seen();
+  evidence.latencyMs.reply = at - sentAt;
+  await expect(page.getByText("“Radians.”")).toBeVisible();
+  // 2.1e takes the help-requested banner's place.
+  await expect(page.getByText(en.lock.ask.body)).toHaveCount(0);
+  await shotInEveryLanguage(page, "2.1e-reply");
+  await button(page, en.message.ack).click();
+  await waitForFrame(page, "2.1");
+  evidence.askProctor = {
+    request: { topic: request.topic, text: request.text, done: request.done_at !== null },
+    sendToServerMs: queuedMs,
+    replyToScreenMs: at - sentAt,
+  };
+});
+
 test("2.2: a phone in view shows the warning and flags it with stills", async () => {
   const { page } = madina;
   const shownAt = Date.now();
@@ -628,6 +708,15 @@ test("2.3: no face pauses the exam and I'm here resumes it", async () => {
   await setScene(page, { subject: "present" });
   const resume = button(page, en.exam.paused.resume);
   await expect(resume).toBeEnabled({ timeout: 15_000 });
+  // Phase 1: Ask proctor stays reachable above 2.3's veil (the first element at its centre is itself).
+  const ask = button(page, en.action.ask_proctor);
+  await expect(ask).toBeEnabled();
+  expect(
+    await ask.evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      return document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)?.closest("button") === el;
+    }),
+  ).toBe(true);
   await shotInEveryLanguage(page, "2.3");
   await resume.click();
   await waitForFrame(page, "2.1", 15_000);
@@ -731,10 +820,30 @@ test("2.1d: the proctor ends a second student's exam", async () => {
   }
 });
 
+/** sessions.rules_accepted_at and rules_locale of a student, read with the secret key. */
+async function rulesStampOf(studentNumber: string) {
+  const db = admin();
+  const student = await db
+    .from("students")
+    .select("id")
+    .eq("workspace_id", fixture.workspaceId)
+    .eq("student_number", studentNumber)
+    .single();
+  if (student.error) throw new Error(`student ${studentNumber}: ${student.error.message}`);
+  const { data, error } = await db
+    .from("sessions")
+    .select("rules_accepted_at, rules_locale")
+    .eq("exam_id", fixture.examId)
+    .eq("student_id", student.data.id)
+    .maybeSingle();
+  if (error) throw new Error(`rules stamp: ${error.message}`);
+  return data;
+}
+
 test("exit criterion 7: every proctor command reached the screen within 1 s", () => {
   // Measured above from just before the proctor's request left to the frame appearing in the window;
   // checked here, last, so one slow command does not stop the rest of the path from running.
-  for (const label of ["pause", "resume", "message", "add_time", "end"]) {
+  for (const label of ["pause", "resume", "message", "add_time", "reply", "end"]) {
     const latency = evidence.latencyMs[label];
     expect.soft(latency, `${label} measured`).toBeDefined();
     expect.soft(latency ?? Number.POSITIVE_INFINITY, `${label} within 1 s`).toBeLessThan(COMMAND_BUDGET_MS);
