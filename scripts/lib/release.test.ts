@@ -6,11 +6,12 @@ import { afterEach, describe, expect, it } from "vitest";
 import { extensionIdFromManifestKey } from "../../apps/lock/src/lib/extension-id.ts";
 import {
   assetFacts,
+  builtLockProblems,
   formatMegabytes,
-  lockPairing,
   pickSource,
   RELEASE_ASSETS,
   releaseDirProblems,
+  releaseExtensionId,
   releaseNotes,
   stagePlatform,
 } from "./release.ts";
@@ -138,28 +139,71 @@ describe("assetFacts and formatMegabytes", () => {
   });
 });
 
-describe("lockPairing", () => {
-  const key = generateKeyPairSync("rsa", { modulusLength: 2048 })
-    .publicKey.export({ type: "spki", format: "der" })
-    .toString("base64");
-  const id = extensionIdFromManifestKey(key);
+const key = generateKeyPairSync("rsa", { modulusLength: 2048 })
+  .publicKey.export({ type: "spki", format: "der" })
+  .toString("base64");
+const id = extensionIdFromManifestKey(key);
 
-  it("is unset when neither value is set, also when both are empty", () => {
-    expect(lockPairing({})).toEqual({ state: "unset" });
-    expect(lockPairing({ publicKey: "", extensionId: " " })).toEqual({ state: "unset" });
+describe("releaseExtensionId", () => {
+  it("gives the id when the key pair is set and the id is the key's", () => {
+    expect(releaseExtensionId({ publicKey: key, extensionId: id })).toBe(id);
+    expect(releaseExtensionId({ publicKey: ` ${key}\n`, extensionId: ` ${id} ` })).toBe(id);
   });
 
-  it("is paired when the id is the key's", () => {
-    expect(lockPairing({ publicKey: key, extensionId: id })).toEqual({ state: "paired", extensionId: id });
+  it("refuses a release without the pair, also when both are empty", () => {
+    expect(() => releaseExtensionId({})).toThrow(
+      /LOCK_DEV_PUBLIC_KEY and VITE_LOCK_EXTENSION_ID not set: the release needs the Üki Lock key pair/,
+    );
+    expect(() => releaseExtensionId({ publicKey: "", extensionId: " " })).toThrow(/not set/);
   });
 
   it("refuses one value without the other, and an id that is not the key's", () => {
-    expect(() => lockPairing({ publicKey: key })).toThrow(/VITE_LOCK_EXTENSION_ID is not/);
-    expect(() => lockPairing({ extensionId: id })).toThrow(/LOCK_DEV_PUBLIC_KEY is not/);
-    expect(() => lockPairing({ publicKey: key, extensionId: "a".repeat(32) })).toThrow(
-      /gives the extension id/,
+    expect(() => releaseExtensionId({ publicKey: key })).toThrow(/^VITE_LOCK_EXTENSION_ID not set/);
+    expect(() => releaseExtensionId({ extensionId: id })).toThrow(/^LOCK_DEV_PUBLIC_KEY not set/);
+    expect(() => releaseExtensionId({ publicKey: key, extensionId: "a".repeat(32) })).toThrow(
+      `LOCK_DEV_PUBLIC_KEY gives the extension id ${id}, but VITE_LOCK_EXTENSION_ID is ${"a".repeat(32)}`,
     );
-    expect(() => lockPairing({ publicKey: key, extensionId: "not-an-id" })).toThrow(/32 letters/);
+    expect(() => releaseExtensionId({ publicKey: key, extensionId: "not-an-id" })).toThrow(/32 letters/);
+  });
+});
+
+describe("builtLockProblems", () => {
+  const manifest = (fields: Record<string, unknown>) =>
+    JSON.stringify({ manifest_version: 3, name: "Üki Lock", version: "0.1.7", ...fields });
+
+  it("accepts a manifest whose key gives the app's id, at the release's version", () => {
+    expect(
+      builtLockProblems("Uki-Lock-chrome.zip", manifest({ key }), { extensionId: id, version: "0.1.7" }),
+    ).toEqual([]);
+    expect(builtLockProblems("Uki-Lock-edge.zip", manifest({ key }), { extensionId: id })).toEqual([]);
+  });
+
+  it("refuses a manifest without a key: the browser would give the Lock a random id", () => {
+    expect(builtLockProblems("Uki-Lock-edge.zip", manifest({}), { extensionId: id })).toEqual([
+      "Uki-Lock-edge.zip: the manifest has no key, so the browser gives the Lock a random id that the app refuses",
+    ]);
+  });
+
+  it("refuses another key, another version and a manifest that is not one", () => {
+    const other = generateKeyPairSync("rsa", { modulusLength: 2048 })
+      .publicKey.export({ type: "spki", format: "der" })
+      .toString("base64");
+    const otherId = extensionIdFromManifestKey(other);
+    expect(
+      builtLockProblems("Uki-Lock-chrome.zip", manifest({ key: other, version: "0.0.0" }), {
+        extensionId: id,
+        version: "0.1.7",
+      }),
+    ).toEqual([
+      `Uki-Lock-chrome.zip: the manifest's key gives the extension id ${otherId}, but the app accepts ${id}`,
+      "Uki-Lock-chrome.zip: version 0.0.0, expected 0.1.7",
+    ]);
+    expect(builtLockProblems("Uki-Lock-chrome.zip", "{", { extensionId: id })).toEqual([
+      "Uki-Lock-chrome.zip: manifest.json is not JSON",
+    ]);
+    expect(
+      builtLockProblems("Uki-Lock-chrome.zip", JSON.stringify({ key }), { extensionId: id }),
+    ).toHaveLength(2);
   });
 });
 
@@ -174,10 +218,11 @@ describe("releaseNotes", () => {
     sha: "0123456789abcdef0123456789abcdef01234567",
     repo: "k4ssymzhomart/uki",
     assets,
+    lockExtensionId: "abcdefghijklmnopabcdefghijklmnop",
   };
 
   it("lists every file with its stable link, what it is, its size and hash", () => {
-    const notes = releaseNotes({ ...base, lock: { state: "unset" } });
+    const notes = releaseNotes(base);
     for (const entry of RELEASE_ASSETS) {
       expect(notes).toContain(
         `[\`${entry.name}\`](https://github.com/k4ssymzhomart/uki/releases/latest/download/${entry.name}) | ${entry.what} |`,
@@ -189,32 +234,21 @@ describe("releaseNotes", () => {
   });
 
   it("has the unsigned-app steps for macOS, Windows and the Lock", () => {
-    const notes = releaseNotes({ ...base, lock: { state: "unset" } });
+    const notes = releaseNotes(base);
     expect(notes).toContain("right-click (or Control-click) Üki in Applications, choose Open");
     expect(notes).toContain("Open Anyway");
     expect(notes).toContain("xattr -dr com.apple.quarantine /Applications/Uki.app");
     expect(notes).toContain("choose More info, then Run anyway");
-    expect(notes).toContain("drag the zip onto that page, or unzip it and choose Load unpacked");
+    expect(notes).toContain("turn on Developer mode, choose Load unpacked and pick the unzipped folder");
   });
 
-  it("says the packaged app cannot pair when the Lock key pair is unset", () => {
-    const notes = releaseNotes({ ...base, lock: { state: "unset" } });
-    expect(notes).toContain("The packaged app cannot pair with Üki Lock in this release.");
-    expect(notes).toContain("LOCK_DEV_PUBLIC_KEY");
-  });
-
-  it("names the fixed extension id when the pair is set", () => {
-    const notes = releaseNotes({
-      ...base,
-      lock: { state: "paired", extensionId: "abcdefghijklmnopabcdefghijklmnop" },
-    });
-    expect(notes).toContain("`abcdefghijklmnopabcdefghijklmnop`");
+  it("names the Lock's fixed extension id", () => {
+    const notes = releaseNotes(base);
+    expect(notes).toContain("Üki Lock's extension id is `abcdefghijklmnopabcdefghijklmnop`");
     expect(notes).not.toContain("cannot pair");
   });
 
   it("refuses notes without the facts of every file", () => {
-    expect(() => releaseNotes({ ...base, assets: assets.slice(1), lock: { state: "unset" } })).toThrow(
-      /Uki-mac-arm64\.dmg/,
-    );
+    expect(() => releaseNotes({ ...base, assets: assets.slice(1) })).toThrow(/Uki-mac-arm64\.dmg/);
   });
 });

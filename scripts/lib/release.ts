@@ -6,6 +6,7 @@ import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
 import { copyFile, mkdir, readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
+import { z } from "zod";
 import { extensionIdFromManifestKey } from "../../apps/lock/src/lib/extension-id.ts";
 
 export type Platform = "mac" | "win" | "lock";
@@ -124,32 +125,79 @@ export function formatMegabytes(bytes: number): string {
   return `${(bytes / 1_000_000).toFixed(1)} MB`;
 }
 
-export type LockPairing = { state: "paired"; extensionId: string } | { state: "unset" };
+const EXTENSION_ID = /^[a-p]{32}$/;
 
 /**
- * The Lock key pair as the release sees it: LOCK_DEV_PUBLIC_KEY goes into the extension's manifest and
- * VITE_LOCK_EXTENSION_ID into the app, which then accepts only that id. Both set and matching: the
- * packaged app pairs with the released Lock. Neither set: it pairs with nothing, and the notes say so.
- * One without the other, or an id that is not the key's, would publish a pair that silently never
- * connects, so that throws.
+ * The Lock key pair the release is built with: LOCK_DEV_PUBLIC_KEY goes into the extension's manifest as
+ * `key`, which fixes its id, and VITE_LOCK_EXTENSION_ID into the app, which then accepts only that id.
+ * Returns the id. A release without the pair, with one half of it, or with an id that is not the key's
+ * would ship an app that silently never pairs with the Lock beside it, so each of those throws.
  */
-export function lockPairing(env: {
+export function releaseExtensionId(env: {
   publicKey?: string | undefined;
   extensionId?: string | undefined;
-}): LockPairing {
+}): string {
   const key = env.publicKey?.trim() || undefined;
   const id = env.extensionId?.trim() || undefined;
-  if (key === undefined && id === undefined) return { state: "unset" };
-  if (key === undefined) throw new Error("VITE_LOCK_EXTENSION_ID is set but LOCK_DEV_PUBLIC_KEY is not");
-  if (id === undefined) throw new Error("LOCK_DEV_PUBLIC_KEY is set but VITE_LOCK_EXTENSION_ID is not");
-  if (!/^[a-p]{32}$/.test(id))
+  if (key === undefined || id === undefined) {
+    const missing: string[] = [];
+    if (key === undefined) missing.push("LOCK_DEV_PUBLIC_KEY");
+    if (id === undefined) missing.push("VITE_LOCK_EXTENSION_ID");
+    throw new Error(
+      `${missing.join(" and ")} not set: the release needs the Üki Lock key pair (pnpm --filter lock make-key, docs/runbooks/lock-pairing.md)`,
+    );
+  }
+  if (!EXTENSION_ID.test(id))
     throw new Error("VITE_LOCK_EXTENSION_ID is not an extension id (32 letters a to p)");
   const fromKey = extensionIdFromManifestKey(key);
   if (fromKey !== id)
     throw new Error(
       `LOCK_DEV_PUBLIC_KEY gives the extension id ${fromKey}, but VITE_LOCK_EXTENSION_ID is ${id}`,
     );
-  return { state: "paired", extensionId: id };
+  return id;
+}
+
+const BuiltManifest = z.object({
+  name: z.string(),
+  version: z.string(),
+  key: z.string().min(1, "has an empty key").optional(),
+});
+
+/**
+ * Problems with one built Lock manifest (the `manifest.json` inside a Lock zip): it must carry the key
+ * whose id is `extensionId`, the only id the released app accepts, and the release's version. Empty when
+ * it is right.
+ */
+export function builtLockProblems(
+  file: string,
+  manifestJson: string,
+  expected: { extensionId: string; version?: string | undefined },
+): string[] {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(manifestJson);
+  } catch {
+    return [`${file}: manifest.json is not JSON`];
+  }
+  const parsed = BuiltManifest.safeParse(raw);
+  if (!parsed.success)
+    return parsed.error.issues.map((issue) => `${file}: manifest ${issue.path.join(".")} ${issue.message}`);
+  const manifest = parsed.data;
+  const problems: string[] = [];
+  if (manifest.key === undefined) {
+    problems.push(
+      `${file}: the manifest has no key, so the browser gives the Lock a random id that the app refuses`,
+    );
+  } else {
+    const id = extensionIdFromManifestKey(manifest.key);
+    if (id !== expected.extensionId)
+      problems.push(
+        `${file}: the manifest's key gives the extension id ${id}, but the app accepts ${expected.extensionId}`,
+      );
+  }
+  if (expected.version !== undefined && manifest.version !== expected.version)
+    problems.push(`${file}: version ${manifest.version}, expected ${expected.version}`);
+  return problems;
 }
 
 export type NotesInput = {
@@ -157,27 +205,19 @@ export type NotesInput = {
   sha: string;
   repo: string;
   assets: readonly AssetFacts[];
-  lock: LockPairing;
+  /** The Lock's fixed id, from releaseExtensionId. */
+  lockExtensionId: string;
 };
 
 /** The release notes, in Markdown. English only: GitHub's release page is not a product screen. */
 export function releaseNotes(input: NotesInput): string {
-  const { tag, sha, repo, assets, lock } = input;
+  const { tag, sha, repo, assets, lockExtensionId } = input;
   const latest = `https://github.com/${repo}/releases/latest/download`;
   const rows = RELEASE_ASSETS.map((asset) => {
     const facts = assets.find((entry) => entry.name === asset.name);
     if (facts === undefined) throw new Error(`no size and hash for ${asset.name}`);
     return `| [\`${asset.name}\`](${latest}/${asset.name}) | ${asset.what} | ${formatMegabytes(facts.bytes)} | \`${facts.sha256}\` |`;
   });
-
-  const pairing =
-    lock.state === "paired"
-      ? [
-          `Üki Lock's extension id is \`${lock.extensionId}\`, fixed by the key in its manifest, and this app accepts only that id. After loading the Lock, its card on \`chrome://extensions\` (or \`edge://extensions\`) shows this id.`,
-        ]
-      : [
-          "**The packaged app cannot pair with Üki Lock in this release.** The Lock key pair was not set when it was built, so the Lock has no fixed extension id and the packaged app refuses every extension (only development builds accept any extension). Browser exams need the pair: make it with `pnpm --filter lock make-key` (docs/runbooks/lock-pairing.md), set the repository variables `LOCK_DEV_PUBLIC_KEY` and `VITE_LOCK_EXTENSION_ID`, and run the Desktop installers workflow again. Exams in the Üki app do not need the Lock.",
-        ];
 
   return [
     `Üki ${tag}, built from ${sha.slice(0, 7)} on main by the Desktop installers workflow. The apps connect to the Üki cloud project in Frankfurt. The builds are unsigned: see "First launch" below.`,
@@ -199,11 +239,11 @@ export function releaseNotes(input: NotesInput): string {
     "",
     '**Windows.** If SmartScreen says "Windows protected your PC", choose More info, then Run anyway. For the zip, first right-click it, choose Properties and tick Unblock, then unzip it and run `Uki.exe`; the unzipped files then do not each ask again.',
     "",
-    "**Üki Lock (Chrome or Edge).** Open `chrome://extensions` (in Edge, `edge://extensions`) and turn on Developer mode. Then either drag the zip onto that page, or unzip it and choose Load unpacked with the unzipped folder (the one with `manifest.json` in it). Pin Üki Lock to the toolbar, start the Üki app, and click the Lock's face to pair with the 6-digit code the app shows.",
+    "**Üki Lock (Chrome or Edge).** Take `Uki-Lock-chrome.zip` for Chrome and `Uki-Lock-edge.zip` for Edge, and unzip it into a folder you keep: the browser loads the Lock from that folder every time it starts. Open `chrome://extensions` (in Edge, `edge://extensions`), turn on Developer mode, choose Load unpacked and pick the unzipped folder (the one with `manifest.json` in it). Pin Üki Lock to the toolbar, start the Üki app, and click the Lock's face to pair with the 6-digit code the app shows.",
     "",
     "## Pairing Üki Lock with the app",
     "",
-    ...pairing,
+    `Üki Lock's extension id is \`${lockExtensionId}\`, fixed by the key in its manifest, and the app in this release accepts only that id. After loading the Lock, its card on \`chrome://extensions\` (or \`edge://extensions\`) shows this id. Use the Lock and the app from the same release. Exams in the Üki app do not need the Lock.`,
     "",
   ].join("\n");
 }

@@ -16,9 +16,10 @@
 # Variables (Settings > Secrets and variables > Actions > Variables): VITE_SUPABASE_URL and
 # VITE_SUPABASE_PUBLISHABLE_KEY of the cloud project (only the publishable key goes into an app);
 # LOCK_DEV_PUBLIC_KEY and VITE_LOCK_EXTENSION_ID from `pnpm --filter lock make-key`
-# (docs/runbooks/lock-pairing.md). Without the Lock pair the release still builds, but the packaged app
-# refuses every extension, and the release notes say so. scripts/release-assets.ts names the files and
-# writes the notes.
+# (docs/runbooks/lock-pairing.md). The public key goes into the Lock's manifest and fixes its extension id;
+# the app accepts only VITE_LOCK_EXTENSION_ID. The run stops unless the key gives that id, and checks the
+# built app and the manifest inside each Lock zip against it, so the released app pairs with the released
+# Lock. scripts/release-assets.ts names the files, makes these checks and writes the notes.
 name: Desktop installers
 
 on:
@@ -54,7 +55,7 @@ jobs:
   preflight:
     name: Branch and build values
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - name: Only main publishes
         if: inputs.publish
@@ -67,6 +68,17 @@ jobs:
           case "$VITE_SUPABASE_URL" in https://*) ;; *) echo "::error::set the VITE_SUPABASE_URL variable to the cloud project"; exit 1;; esac
           case "$VITE_SUPABASE_PUBLISHABLE_KEY" in sb_publishable_*) ;; *) echo "::error::set VITE_SUPABASE_PUBLISHABLE_KEY (sb_publishable_…)"; exit 1;; esac
           echo "Release v$VERSION from $GITHUB_REF at $GITHUB_SHA"
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Before the long builds: both halves of the Lock key pair are set, and LOCK_DEV_PUBLIC_KEY gives
+      # VITE_LOCK_EXTENSION_ID as Chromium derives an id (apps/lock/src/lib/extension-id.ts, as make-key does).
+      - name: The Lock key pair is set and the id is the key's
+        run: pnpm release:assets lock-key
 
   mac:
     name: macOS dmg (arm64 and x64)
@@ -98,6 +110,10 @@ jobs:
       # Both architectures in one run (electron-builder.yml); the x64 Electron download happens here.
       - name: Build the dmg for arm64 and x64
         run: pnpm --filter desktop run dist --publish never
+      - name: The app talks to the cloud project and accepts only the release's Lock
+        run: |
+          grep -rqF "$VITE_SUPABASE_URL" apps/desktop/out/renderer || { echo "::error::the renderer has no $VITE_SUPABASE_URL"; exit 1; }
+          grep -rqF "$VITE_LOCK_EXTENSION_ID" apps/desktop/out/main || { echo "::error::the main process has no $VITE_LOCK_EXTENSION_ID"; exit 1; }
       - name: Rosetta 2 for the x64 launch
         run: arch -x86_64 /usr/bin/true 2> /dev/null || sudo softwareupdate --install-rosetta --agree-to-license
       - name: Each dmg holds its architecture's app, and the app starts from it (P.12)
@@ -143,6 +159,11 @@ jobs:
       # The shipped build only: dist:lab never runs here, so the lab zip cannot reach the release.
       - name: NSIS installer and zip (x64)
         run: pnpm --filter desktop run dist --publish never
+      - name: The app talks to the cloud project and accepts only the release's Lock
+        shell: bash
+        run: |
+          grep -rqF "$VITE_SUPABASE_URL" apps/desktop/out/renderer || { echo "::error::the renderer has no $VITE_SUPABASE_URL"; exit 1; }
+          grep -rqF "$VITE_LOCK_EXTENSION_ID" apps/desktop/out/main || { echo "::error::the main process has no $VITE_LOCK_EXTENSION_ID"; exit 1; }
       - name: The zip carries the keyboard hook's Koffi (WP 0.13)
         shell: pwsh
         run: |
@@ -177,8 +198,6 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: The Lock key pair matches the app's extension id, or neither is set
-        run: pnpm release:assets lock-key
       - name: The extension's version is the release's
         working-directory: apps/lock
         run: npm pkg set version="$VERSION"
@@ -186,6 +205,10 @@ jobs:
         run: pnpm --filter lock zip
       - name: Stable names
         run: pnpm release:assets stage --platform lock --out release-files
+      # The id the browser will give each released Lock, from the key in the manifest inside its zip, is
+      # the one the released app accepts.
+      - name: Each Lock zip's extension id is VITE_LOCK_EXTENSION_ID
+        run: pnpm release:assets lock-id --dir release-files --version "$VERSION"
       - uses: actions/upload-artifact@v4
         with:
           name: release-files-lock
@@ -204,7 +227,6 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       TAG: v0.1.${{ github.run_number }}
-      PUBLISH: ${{ inputs.publish }}
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
@@ -218,9 +240,10 @@ jobs:
           pattern: release-files-*
           merge-multiple: true
           path: release-files
-      - name: Exactly the six files, and the release notes
+      - name: Exactly the six files, the Lock's id once more, and the release notes
         run: |
           ls -l release-files
+          pnpm release:assets lock-id --dir release-files --version "$VERSION"
           pnpm release:assets notes --dir release-files --tag "$TAG" --sha "$GITHUB_SHA" --repo "$GITHUB_REPOSITORY" --out release-notes.md
           cat release-notes.md >> "$GITHUB_STEP_SUMMARY"
       - name: Keep the files and the notes (publish off)

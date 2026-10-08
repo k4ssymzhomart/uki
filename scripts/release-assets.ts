@@ -3,32 +3,38 @@
 //   pnpm release:assets stage --platform mac|win|lock --out <dir>
 //       copies one platform's build output to <dir> under the stable release names (Uki-mac-arm64.dmg, …)
 //   pnpm release:assets lock-key
-//       checks LOCK_DEV_PUBLIC_KEY against VITE_LOCK_EXTENSION_ID (both set and matching, or neither)
+//       checks that LOCK_DEV_PUBLIC_KEY and VITE_LOCK_EXTENSION_ID are both set and that the id is the key's
+//   pnpm release:assets lock-id --dir <dir> [--version <version>]
+//       checks the manifest.json inside each Lock zip in <dir> (Uki-Lock-chrome.zip, Uki-Lock-edge.zip):
+//       its key gives VITE_LOCK_EXTENSION_ID, the id the released app accepts, and its version is <version>
 //   pnpm release:assets notes --dir <dir> --tag <tag> --sha <commit> --repo <owner/name> --out <file>
-//       checks that <dir> holds exactly the six release files and writes the release notes to <file>;
-//       the Lock pairing paragraph follows LOCK_DEV_PUBLIC_KEY and VITE_LOCK_EXTENSION_ID
+//       checks that <dir> holds exactly the six release files and writes the release notes to <file>
 //
 // Exit 1 with a readable message on any problem.
+import { execFileSync } from "node:child_process";
 import { readdir, writeFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { join, resolve } from "node:path";
 import { z } from "zod";
 import { createLogger, parseCli, UsageError } from "./lib/cli.ts";
 import { ROOT } from "./lib/paths.ts";
 import {
   assetFacts,
+  builtLockProblems,
   formatMegabytes,
-  lockPairing,
+  RELEASE_ASSETS,
   releaseDirProblems,
+  releaseExtensionId,
   releaseNotes,
   stagePlatform,
 } from "./lib/release.ts";
 
 const log = createLogger("release");
 
-const lockEnv = () => ({
-  publicKey: process.env.LOCK_DEV_PUBLIC_KEY,
-  extensionId: process.env.VITE_LOCK_EXTENSION_ID,
-});
+const extensionId = () =>
+  releaseExtensionId({
+    publicKey: process.env.LOCK_DEV_PUBLIC_KEY,
+    extensionId: process.env.VITE_LOCK_EXTENSION_ID,
+  });
 
 async function stage(argv: readonly string[]): Promise<void> {
   const args = parseCli(
@@ -41,12 +47,26 @@ async function stage(argv: readonly string[]): Promise<void> {
 }
 
 function lockKey(): void {
-  const pairing = lockPairing(lockEnv());
-  if (pairing.state === "paired") log.info(`Üki Lock key pair set: extension id ${pairing.extensionId}`);
-  else
-    log.warn(
-      "LOCK_DEV_PUBLIC_KEY and VITE_LOCK_EXTENSION_ID are not set: the packaged app will refuse every extension",
-    );
+  log.info(`Üki Lock key pair set: extension id ${extensionId()}`);
+}
+
+/** The built extension's id, from the manifest inside each Lock zip (unzip ships with every runner). */
+function lockId(argv: readonly string[]): void {
+  const args = parseCli(
+    argv,
+    { dir: { type: "string" }, version: { type: "string" } },
+    z.object({ dir: z.string().min(1), version: z.string().min(1).optional() }),
+  );
+  const expected = { extensionId: extensionId(), version: args.version };
+  const problems: string[] = [];
+  for (const asset of RELEASE_ASSETS.filter((entry) => entry.platform === "lock")) {
+    const zip = join(resolve(args.dir), asset.name);
+    const manifest = execFileSync("unzip", ["-p", zip, "manifest.json"], { encoding: "utf8" });
+    const found = builtLockProblems(asset.name, manifest, expected);
+    if (found.length === 0) log.info(`${asset.name}: extension id ${expected.extensionId}`);
+    problems.push(...found);
+  }
+  if (problems.length > 0) throw new Error(problems.join("\n"));
 }
 
 async function notes(argv: readonly string[]): Promise<void> {
@@ -77,7 +97,7 @@ async function notes(argv: readonly string[]): Promise<void> {
     sha: args.sha,
     repo: args.repo,
     assets,
-    lock: lockPairing(lockEnv()),
+    lockExtensionId: extensionId(),
   });
   await writeFile(resolve(args.out), text);
   log.info(`notes written to ${args.out}`);
@@ -87,9 +107,10 @@ async function main(): Promise<void> {
   const [command, ...rest] = process.argv.slice(2);
   if (command === "stage") return stage(rest);
   if (command === "lock-key") return lockKey();
+  if (command === "lock-id") return lockId(rest);
   if (command === "notes") return notes(rest);
   throw new UsageError(
-    "usage: release-assets <stage|lock-key|notes> [options] (see the header of this file)",
+    "usage: release-assets <stage|lock-key|lock-id|notes> [options] (see the header of this file)",
   );
 }
 
