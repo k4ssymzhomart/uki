@@ -410,3 +410,85 @@ Recorded by the hardening run; you tune both on the MacBook Pro and, in the lab 
 - **2.1 has an error state for questions that fail to load for good:** after tries at 0, 2, 6, 14 and 30 s, `exam.questions.failed` shows in Figma's error Banner (145:2753) with Check again, and the app retries every 30 s. New catalog key (239 keys), first-pass Kazakh and Russian for native review.
 - **The dashboard tells "no session" from "lookup failed".** A network error, a 5xx or a failed staff-row read is retried once, then the page shows `dashboard.shell.lookupFailed.*` with Try again, instead of sending a signed-in proctor to sign-in. Sign-in reports "unavailable" rather than "not staff" in that case.
 - The Lock smoke and icon scripts use Playwright's `chromium.executablePath()` by default (`PW_CHROMIUM` still overrides).
+
+## 2026-10-08 · Phase 1 schema and contracts (WP 1.1)
+
+Choices that `20261009000000_phase1.sql` and the Phase 1 contracts make where the plan leaves room, or where a frame and the plan disagree. Where they conflict, the plan decides behaviour and Figma decides visuals.
+
+**Tables**
+- `help_requests`, `review_decisions` and `reports` are deleted with their session (`on delete cascade`). `help_requests` also goes with its event. Without this, `demo:reset`, `demo:simulate --cleanup` and the data-request delete would fail on the new foreign keys.
+- `reports.issued_at` records when the current verify code was made, for "Issued" on 3.5.
+- `pilot_requests` adds `exam_size`, `pilot_month` and `demo_invite`. Book a pilot (194:4014) asks for these three fields; the plan's DDL has none of them.
+- Every table gets the plan's read rights. Writes go through the functions, so each write leaves an audit row and the exam status stays correct:
+  - `review_decisions` only through `decide_session`.
+  - `reports` and `report_shares` only through `get_report` and `create_share`.
+  - `help_requests` only through the trigger and `close_help_request`.
+  - `invites` (exam office) and `data_requests` (exam office: insert and update, never delete) are also written directly under RLS.
+  - Revoking a share means setting `revoked_at` by hand, until the open question about 3.4 is answered.
+- `workspaces.settings` and `exams.browser_rules` have CHECK constraints with the same rules as `WorkspaceSettings` and `BrowserRules` in the contracts. A.4 updates `settings` through PostgREST; a column grant and an exam-office policy limit it to that column.
+- `exports` is the second bucket: private, JSON only, 10 MiB. The storage guard (`scripts/guards/storage-buckets.ts`) now allows it next to `frames`. Images still go only to `frames`.
+
+**Exam wizard**
+- `save_exam_draft` with no `id` creates the draft that `/exams/new` redirects to:
+  - Title, course and kind are empty, since those columns are `not null`. `schedule_exam` refuses to schedule them empty.
+  - The start is tomorrow at 09:00 in the workspace's time zone. Duration and checks come from `settings`; the faculty is the staff member's.
+  - `checks` and `browser_rules` merge into the stored values, `group_ids` replaces the exam's groups, and any other key is refused.
+  - Only drafts can be edited.
+- `import_roster` replaces the roster with the file:
+  - A student left out of the file leaves the exam, together with their invite.
+  - Seats follow the file order.
+  - An invite whose address changed goes back to `pending`.
+  - It works for draft and scheduled exams.
+  - The function checks again what the browser already checked. The first bad row is refused with `bad_request` and a detail such as `row 7: email`.
+- `assign_proctors` replaces the proctor table:
+  - Ranges start at seat 1 and follow each other. The error is `gap` or `overlap`, with the seats in the detail.
+  - When no lead is chosen, the proctor with seat 1 leads.
+  - A changed range clears `confirmed_at` and `change_request`.
+- `invites_sync_status` copies each invite state into `exam_students.invite_status`, so `send-invites` writes only `invites`.
+- How the exam code is built (shared by `exam_code_base` and `buildExamCode`):
+  - Kazakh and Russian letters are transliterated to Latin. Kazakh Қ becomes Q, as in the 2021 Latin alphabet.
+  - The course part is the first four letters of the first word, then any trailing digits, then every later word that contains a digit, at most 10 characters.
+  - The group part is the first group code in sort order. The seed's PHYS1-102-FRI is hand-written; the rule would give PHYS1-101-FRI.
+  - The day is the weekday in the workspace's time zone.
+  - On a clash, the digits 2 to 99 are added to the end: MATH2-204-FRI2.
+- Each `schedule_exam` error puts the problem in `message` and the step that fixes it in `detail`. `SCHEDULE_PROBLEMS` and `parseScheduleError` in `wizard.ts` map the 14 problems to their steps.
+
+**Help, review and notes**
+- `close_help_request` is for the exam's proctors, as the plan's RLS table says; the exam office can read but not close.
+  - A reply goes out through `issue_command` as a `message` command and its `proctor.message` event.
+  - No reply is sent when the session has already ended.
+  - Closing a request twice returns it unchanged.
+- An unknown help topic is stored as `technical`, and the text is cut to 280 characters. A bad payload never fails an ingest call.
+- `decide_session` moves only a `to_review` exam to `reviewed`. A live exam stays live after Mark reviewed.
+  - The queue rule: a session is open while it has a flag newer than its decision, compared on server receive time.
+  - The `review_queue` view applies the rule for 3.2. It is an addition to the plan.
+- Notes are limited to 500 characters, decision notes to 1000 and replies to 280. A seat change request is limited to 500 characters.
+- `proctor.note` uses two new keys that no frame shows: `dashboard.wall.event.proctor_note.title` ("Note") and `.detail`. Notes appear on the timeline and never in Live events.
+
+**Reports, verify codes and shares**
+- The verify code has 12 Crockford base32 characters, taken from the first 60 bits of SHA-256 of `<report id>:<content hash>`.
+  - The content hash covers the student, the exam, the result, the flags, the notes and the decision. It leaves out exam-wide counts.
+  - When the content changes, `get_report` makes a new code. An old printout first shows "found, not intact", then "not found" once a newer version is opened.
+- Conflict with 3.4 and 3.5: the frames print `UKI-RPT-0917-MT`, a short number plus initials. The plan's rule makes a 12-character code from the content.
+  - The code is printed as `UKI-RPT-XXXX-XXXX-XXXX`, keeping the frame's prefix (`formatVerifyCode`).
+  - `/verify` accepts the code with or without the prefix, spaces or hyphens.
+- 3.5's address bar shows `/r/UKI-RPT-0917-MT`. The real link is `/r/<43-character token>`, as the plan's sharing rules require.
+- The shared-report function calls `open_shared_report(token_hash)` with the secret key. That function:
+  - refreshes the verify code,
+  - returns the report with who shared it,
+  - writes one audit row per view (`actor_kind` `share`, no actor),
+  - refuses an unknown, revoked or expired token as `not_found`, with the reason in `detail`.
+
+**Views for A.1 and A.2**
+- A term runs from 1 September to 31 January (autumn) or from 1 February to 31 August (spring), by the exam's local date. Weeks are 7-day buckets from the first day of the term.
+- Every `term_*` view has one row per faculty and one row for all faculties (`all_faculties`), so the faculty picker needs no client-side totals.
+- "Median review time" (A.1) is measured from the exam's end to the decision. Opening a session is not recorded, so time spent looking at a session cannot be measured.
+- `student_overview` gives the counts and the last exam and decision. A.2 derives the status chip in its model.
+
+**Privacy and the cloud**
+- `audit_read(action, object_type, object_id)` lets the dashboard record a read of student data that no function records, such as A.2's list, A.3's profile or 3.3's session. Inserting new data requests and changing settings write their own audit rows.
+- The consent record: the first ingest call whose status step is `ready` stamps `rules_accepted_at` and `rules_locale`, even when the session has already moved past `ready`. The language comes from `status.rules_locale`; when an older app leaves it out, the session's locale is used.
+- `retention_nightly` and the pilot-request trigger call `call_edge_function`. It reads `uki_project_url` and `uki_secret_key` from Vault and sends the secret key in the `apikey` header. If either secret is missing, nothing is sent, so a fresh local stack never calls out. The two secrets are created by hand on the cloud project; see `docs/runbooks/cloud-setup.md`.
+- `serveApi({ auth: "secret" })` becomes `withSupabase({ auth: "secret:*" })`. The bare `"secret"` matches only the key named `default`, so rotating the secret key (P.17) would lock out retention and pilot-notify.
+- `retention`, `pilot-notify` and `shared-report` need `verify_jwt = false` in `config.toml` when they are added (1.9, 1.12, 1.13).
+- `request_pilot` adds a cap of 30 requests an hour across all addresses, on top of the plan's 3 per address a day, because each request sends you an email.
