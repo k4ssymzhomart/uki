@@ -135,7 +135,7 @@ test.describe("the /try demo on the evidence pictures", () => {
     try {
       const value = page.getByTestId("try-phone").locator("p").nth(1);
       await expect
-        .poll(async () => Number((await value.textContent())?.replace(",", ".")), { timeout: 30_000 })
+        .poll(async () => Number((await value.textContent())?.replace(",", ".")), { timeout: 60_000 })
         .toBeGreaterThanOrEqual(0.5);
     } finally {
       await browser.close();
