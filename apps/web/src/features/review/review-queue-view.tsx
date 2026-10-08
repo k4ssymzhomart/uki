@@ -85,7 +85,7 @@ export function useExamLine(): (exam: ReviewExam) => string {
 /** 3.2b: the row's flags cell opens a hover card with the top flag's first still (5-minute URL, audited). */
 function FlagsPreview({ session, flags }: { session: ReviewSession; flags: ReactElement }) {
   const t = useTranslations("dashboard.review");
-  const { describe, text } = useEventCopy();
+  const { describe, text, flagDetail } = useEventCopy();
   const getClient = useFunctionsClient();
   const [open, setOpen] = useState(false);
   const flag = session.top;
@@ -121,7 +121,7 @@ function FlagsPreview({ session, flags }: { session: ReviewSession; flags: React
       time={time}
       dateTime={flag.at}
       title={t("preview.title", { name: shortName(session.name), what: text(copy.feed ?? copy.title) })}
-      detail={copy.detail === undefined ? undefined : text(copy.detail)}
+      detail={flagDetail(flag)}
       link={
         <RowAction icon="arrow-right" iconPosition="end" asChild>
           <AppLink href={href}>{t("preview.open")}</AppLink>

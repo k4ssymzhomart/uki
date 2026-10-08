@@ -2,7 +2,7 @@
 // exams assigned to it, the exam office its workspace. Every read of student data writes its audit row
 // through `audit_read` before the page gets the data (CLAUDE.md, Rules).
 import { CompactEvent, Uuid } from "@uki/contracts";
-import type { SupabaseServerClient } from "../../lib/supabase/server.ts";
+import { createSupabaseServerClient, type SupabaseServerClient } from "../../lib/supabase/server.ts";
 import { readPages } from "../wall/queries.ts";
 import { EVENT_COLUMNS } from "../wall/rows.ts";
 import {
@@ -30,6 +30,18 @@ const QueueRow = Uuid;
 
 function unique(values: readonly string[]): string[] {
   return [...new Set(values)].sort();
+}
+
+/**
+ * Sessions in the review queue under the caller's RLS, for the sidebar's Review count (3.2). A count
+ * reads no student data, so it writes no audit row; a failed count shows no number.
+ */
+export async function countReviewQueue(): Promise<number> {
+  const supabase = await createSupabaseServerClient();
+  const { count, error } = await supabase
+    .from("review_queue")
+    .select("session_id", { count: "exact", head: true });
+  return error || count === null ? 0 : count;
 }
 
 /** Writes one audit row for a read of student data; throws when it cannot, so nothing is shown unaudited. */

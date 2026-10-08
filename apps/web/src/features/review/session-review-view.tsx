@@ -7,7 +7,6 @@ import {
   Button,
   Chip,
   type ChipStatus,
-  cn,
   EventRow,
   EvidenceCard,
   Input,
@@ -55,7 +54,7 @@ function FlagCard({
   onStills: (flagId: string, stills: Still[]) => void;
 }) {
   const t = useTranslations("dashboard.review");
-  const { describe, text } = useEventCopy();
+  const { describe, text, flagDetail } = useEventCopy();
   const getClient = useFunctionsClient();
   const stills = useStills({ eventId: flag.id, frameCount: flag.frame_count, confirmed: 0, getClient });
   useEffect(() => {
@@ -66,6 +65,7 @@ function FlagCard({
   const still = stills.stills[0];
   const time = formatTime(flag.at, "en", { seconds: true });
   const title = text(copy.title);
+  const detail = flagDetail(flag);
   return (
     <button
       type="button"
@@ -75,7 +75,7 @@ function FlagCard({
       className="flex min-w-0 cursor-pointer rounded-md text-left outline-none focus-visible:shadow-focus"
     >
       <EvidenceCard
-        className={cn("w-full", selected && "inset-ring-2 inset-ring-line-strong")}
+        className="w-full"
         image={
           still === undefined ? undefined : (
             // biome-ignore lint/performance/noImgElement: signed 5-minute URLs must not pass through the Next.js image cache
@@ -91,7 +91,7 @@ function FlagCard({
         time={timeOf(flag.at)}
         dateTime={flag.at}
         title={title}
-        detail={copy.detail === undefined ? undefined : text(copy.detail)}
+        detail={detail}
       />
     </button>
   );
