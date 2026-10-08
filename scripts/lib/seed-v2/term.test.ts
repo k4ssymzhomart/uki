@@ -1,11 +1,26 @@
 import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { EVENT_DATA, type EventType, serverReview } from "../../../packages/contracts/src/index.ts";
+import { ROOT } from "../paths.ts";
 import { createRng } from "../sim/rng.ts";
-import { A1_FRAME, apportion, buildTermPlan, MATH_WEEKS, reviewTimes, TERM_SEED, termExams } from "./term.ts";
+import { spliceTermData, termDataSql } from "./sql.ts";
+import {
+  A1_FRAME,
+  apportion,
+  buildTermPlan,
+  MATH_WEEKS,
+  mix,
+  receiptDigits,
+  reviewTimes,
+  SALT,
+  TERM_SEED,
+  termExams,
+} from "./term.ts";
 import { flagGroupShares, rate1, shares, termStats } from "./term-stats.ts";
-import { allStudents, PEOPLE, phase0Students, seedName } from "./world.ts";
+import { allStudents, PEOPLE, phase0Students, seedName, v2GroupBase } from "./world.ts";
 
 const plan = buildTermPlan();
 const math = termStats(plan, "mathematics");
@@ -39,7 +54,7 @@ describe("seed v2 term (fixed seed, fixed numbers)", () => {
       .update(JSON.stringify(buildTermPlan(TERM_SEED)))
       .digest("hex");
     expect(digest).toBe(createHash("sha256").update(JSON.stringify(plan)).digest("hex"));
-    expect(digest.slice(0, 16)).toBe("b361857735b1d3fa");
+    expect(digest.slice(0, 16)).toBe("158c9b0315cf21b9");
   });
 
   it("has 42 past exams in three faculties from 1 September to 7 October", () => {
@@ -49,8 +64,8 @@ describe("seed v2 term (fixed seed, fixed numbers)", () => {
     expect(days[0]).toBe("2026-09-01");
     expect(days[days.length - 1]).toBe("2026-10-07");
     expect(plan.sessions).toHaveLength(5346);
-    expect(plan.events).toHaveLength(534);
-    expect(plan.decisions).toHaveLength(330);
+    expect(plan.events).toHaveLength(537);
+    expect(plan.decisions).toHaveLength(332);
   });
 
   it("gives A.1 its frame's tiles for the Faculty of Mathematics", () => {
@@ -131,15 +146,63 @@ describe("seed v2 term (fixed seed, fixed numbers)", () => {
     expect(new Set(plan.decisions.map((d) => d.sessionId))).toEqual(new Set(lastFlag.keys()));
   });
 
-  it("leaves Madina, Aliya and the delete request's student present and unflagged", () => {
+  it("leaves Madina and Aliya present and unflagged", () => {
     const flagged = new Set(plan.events.map((e) => e.sessionId));
-    for (const number of [PEOPLE.madina, PEOPLE.aliya, PEOPLE.deleteRequest]) {
+    for (const number of [PEOPLE.madina, PEOPLE.aliya]) {
       const theirs = plan.sessions.filter((s) => s.number === number);
       expect(theirs.length).toBeGreaterThan(0);
       for (const session of theirs) expect(flagged.has(session.id)).toBe(false);
     }
     // Madina's five term exams and Mathematics 2 make A.2's six.
     expect(plan.sessions.filter((s) => s.number === PEOPLE.madina)).toHaveLength(5);
+  });
+
+  it("gives the delete request's student three flags in two History of Kazakhstan quizzes, decided", () => {
+    const theirs = new Set(plan.sessions.filter((s) => s.number === PEOPLE.deleteRequest).map((s) => s.id));
+    expect(theirs.size).toBe(2);
+    const flags = plan.events.filter((e) => theirs.has(e.sessionId));
+    expect(flags.map((e) => e.type)).toEqual(["gaze.off_screen", "phone.detected", "gaze.down"]);
+    expect(new Set(flags.map((e) => e.examId)).size).toBe(2);
+    expect(plan.decisions.filter((d) => theirs.has(d.sessionId)).map((d) => d.decision)).toEqual([
+      "talk",
+      "no_issue",
+    ]);
+  });
+
+  it("keeps History seats 7 and 21 out of the term, as WP 1.12's pgTAP test needs them", () => {
+    expect(plan.sessions.filter((s) => s.number === "20241007" || s.number === "20241021")).toHaveLength(0);
+    for (const index of [41, 42]) {
+      expect(plan.absent.find((row) => row.examIndex === index)?.numbers).toEqual(
+        expect.arrayContaining(["20241007", "20241021"]),
+      );
+    }
+  });
+});
+
+describe("seed v2 in supabase/seed.sql", () => {
+  it("has the generator's term data between its markers (pnpm seed:term writes it)", () => {
+    const seed = readFileSync(join(ROOT, "supabase", "seed.sql"), "utf8");
+    expect(spliceTermData(seed, termDataSql(plan)) === seed).toBe(true);
+  });
+
+  it("numbers the new groups as seed.sql does, and leaves 20249xxx to judge mode's DEMO group", () => {
+    expect(v2GroupBase("201")).toBe(20_242_000);
+    expect(v2GroupBase("207")).toBe(20_248_000);
+    expect(v2GroupBase("208")).toBe(20_240_000);
+    expect(allStudents().filter((s) => s.number.startsWith("20249"))).toHaveLength(0);
+    const seed = readFileSync(join(ROOT, "supabase", "seed.sql"), "utf8");
+    expect(seed).toContain("20240000 + ((g.code::int - 199) % 9) * 1000 + i");
+  });
+
+  it("keeps mix() exact in bigint and in a double, so seed.sql's seed_v2.mix gives the same values", () => {
+    const maxNumber = Math.max(...allStudents().map((s) => Number(s.number)));
+    const maxSalt = Math.max(...Object.values(SALT));
+    const linear = 42 * 73_856_093 + maxNumber * 19_349_663 + maxSalt * 83_492_791;
+    expect(linear).toBeLessThan(Number.MAX_SAFE_INTEGER);
+    expect(2_147_483_646 * 48_271).toBeLessThan(Number.MAX_SAFE_INTEGER);
+    expect(mix(42, maxNumber, maxSalt)).toBeGreaterThanOrEqual(0);
+    expect(mix(42, maxNumber, maxSalt)).toBeLessThan(2_147_483_647);
+    expect(receiptDigits(1, 1)).toBe("7919");
   });
 });
 

@@ -1,6 +1,7 @@
 // Creates or updates the four KRU staff accounts from "Demo script and seed data" in
-// docs/phase-0-plan.md, with their staff rows and proctor assignments. Idempotent: run it after every
-// `supabase db reset` (local) or once after loading seed.sql (cloud).
+// docs/phase-0-plan.md, with their staff rows and proctor assignments, then the review decisions of seed
+// v2's Autumn 2026 term (they name these staff as reviewers; scripts/lib/seed-v2/decisions.ts).
+// Idempotent: run it after every `supabase db reset` (local) or once after loading seed.sql (cloud).
 //
 // Reads SUPABASE_URL, SUPABASE_SECRET_KEY and SEED_STAFF_PASSWORD from the repository's .env. The
 // password is never printed.
@@ -10,6 +11,8 @@ import { config } from "dotenv";
 import { z } from "zod";
 import { createUkiAdminClient } from "../packages/db/src/admin.ts";
 import type { Enums, TablesInsert, UkiClient } from "../packages/db/src/index.ts";
+import { REVIEWER_EMAIL, writeTermDecisions } from "./lib/seed-v2/decisions.ts";
+import { buildTermPlan, type Reviewer } from "./lib/seed-v2/term.ts";
 
 config({ path: new URL("../.env", import.meta.url).pathname, quiet: true });
 
@@ -176,6 +179,17 @@ async function main(): Promise<void> {
     if (created.error) fail(`setting exams.created_by failed: ${created.error.message}`);
   }
 
+  // Seed v2's term: its decisions need these staff rows (supabase/seed.sql has the rest of the term).
+  const reviewers = Object.fromEntries(
+    await Promise.all(
+      Object.entries(REVIEWER_EMAIL).map(async ([key, email]) => [
+        key,
+        (await findUserId(admin, email)) ?? fail(`${email} was not created`),
+      ]),
+    ),
+  ) as Record<Reviewer, string>;
+  const decisions = await writeTermDecisions(admin, buildTermPlan(), reviewers);
+
   for (const seed of STAFF) {
     const where = seed.assignment
       ? `${seed.assignment.examCode}${seed.assignment.seatFrom === null ? "" : ` seats ${seed.assignment.seatFrom}-${seed.assignment.seatTo}`}${seed.assignment.isLead ? ", lead" : ""}`
@@ -183,6 +197,13 @@ async function main(): Promise<void> {
     console.log(`${seed.email.padEnd(28)} ${seed.role.padEnd(12)} ${where}`);
   }
   console.log(`${STAFF.length} staff accounts ready; the password is SEED_STAFF_PASSWORD from .env.`);
+  console.log(
+    "written" in decisions
+      ? `Autumn 2026 term: ${decisions.written} review decisions written.`
+      : decisions.skipped === "no term"
+        ? "Autumn 2026 term: not in this database (seed.sql before seed v2), so no decisions written."
+        : `Autumn 2026 term: ${decisions.sessions} of ${decisions.expected} sessions; run pnpm demo:reset to rebuild it.`,
+  );
 }
 
 main().catch((error: unknown) => {

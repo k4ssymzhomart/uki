@@ -268,9 +268,13 @@ export function phase0Students(): Omit<StudentSeed, "programme" | "year">[] {
   return rows;
 }
 
-/** The first student number of a group seed v2 adds: 201 -> 20242001, 208 -> 20249001. */
+/**
+ * The number before the first student of a group seed v2 adds: 201 -> 20242000 (its students are
+ * 20242001 to 20242124), up to 207 -> 20248000, and 208 -> 20240000. Nothing seeded uses 20249xxx: judge
+ * mode's DEMO group has 20249001 to 20249030. seed.sql has the same rule.
+ */
 export function v2GroupBase(code: string): number {
-  return 20240000 + (Number(code) - 200 + 1) * 1000;
+  return 20240000 + ((Number(code) - 199) % 9) * 1000;
 }
 
 /** The 836 students of groups 201 to 208 (without 204). */

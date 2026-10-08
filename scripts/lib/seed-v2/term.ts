@@ -140,6 +140,8 @@ export interface TermDecision {
 export interface TermPlan {
   exams: TermExam[];
   roster: TermRosterRow[];
+  /** Who missed each exam, by student number (seed.sql lists them; everyone else wrote). */
+  absent: { examIndex: number; numbers: string[] }[];
   sessions: TermSession[];
   events: TermEvent[];
   decisions: TermDecision[];
@@ -442,6 +444,80 @@ export function reviewTimes(count: number, median: number, rng: Rng): number[] {
 }
 
 // ---------------------------------------------------------------------------------------------------
+// A term session's details: the same formulas as seed_v2.mix and the term sessions in supabase/seed.sql
+// ---------------------------------------------------------------------------------------------------
+
+const MIX_MOD = 2_147_483_647;
+
+/**
+ * A deterministic whole number in [0, 2^31 - 1) from three small whole numbers (a Lehmer step twice
+ * over a linear mix). Every intermediate stays below 2^53, so Postgres' bigint gives the same value:
+ * supabase/seed.sql's seed_v2.mix is this function.
+ */
+export function mix(a: number, b: number, salt: number): number {
+  let h = (a * 73_856_093 + b * 19_349_663 + salt * 83_492_791) % MIX_MOD;
+  h = (h * 48_271) % MIX_MOD;
+  return (h * 48_271) % MIX_MOD;
+}
+
+/** The salts of mix() for each detail of a term session (seed.sql uses the same numbers). */
+export const SALT = {
+  joined: 1,
+  rules: 2,
+  started: 3,
+  used: 4,
+  os: 5,
+  identity: 6,
+  timeUp: 7,
+} as const;
+
+/** The receipt's four digits: distinct for every exam and place in the group, so never reused. */
+export function receiptDigits(examIndex: number, groupPos: number): string {
+  return String((((examIndex - 1) * 150 + groupPos) * 7919) % 10_000).padStart(4, "0");
+}
+
+/**
+ * One student's session of a term exam, from the exam, the student number and the student's place in
+ * their group (1 = lowest number): joined 4 to 14 minutes before the start, the rules 1 to 3 minutes
+ * later, started within 50 s of the start, 55 % to all but a minute of the time used, 1 in 100 out of
+ * time, 6 in 10 on Windows, an identity score from 0.70 to 0.96.
+ */
+export function termSession(
+  exam: TermExam,
+  student: Omit<StudentSeed, "programme" | "year">,
+  groupPos: number,
+): TermSession {
+  const n = Number(student.number);
+  const m = (salt: number) => mix(exam.index, n, salt);
+  const start = Date.parse(exam.startsAt);
+  const durationS = exam.durationMin * 60;
+  const joined = start - (240 + (m(SALT.joined) % 601)) * 1000;
+  const accepted = Math.min(joined + (60 + (m(SALT.rules) % 121)) * 1000, start - 30_000);
+  const started = start + (m(SALT.started) % 51) * 1000;
+  const timeUp = m(SALT.timeUp) % 100 === 0;
+  const low = Math.floor((exam.durationMin * 55 + 50) / 100) * 60;
+  const usedS = timeUp ? durationS : low + (m(SALT.used) % (durationS - 60 - low + 1));
+  const submitted = timeUp ? start + durationS * 1000 : started + usedS * 1000;
+  return {
+    id: termSessionId(exam.index, student.number),
+    examId: exam.id,
+    studentId: student.id,
+    number: student.number,
+    authUid: termAuthUid(exam.index, student.number),
+    state: timeUp ? "time_up" : "submitted",
+    locale: student.locale,
+    os: m(SALT.os) % 10 < 6 ? "windows" : "macos",
+    identityScore: (70 + (m(SALT.identity) % 27)) / 100,
+    joinedAt: iso(joined),
+    rulesAcceptedAt: iso(accepted),
+    startedAt: iso(started),
+    submittedAt: iso(submitted),
+    timeUsedS: usedS,
+    receiptId: `UKI-${student.groupCode}-${receiptDigits(exam.index, groupPos)}-${receiptInitials(student.fullName)}`,
+  };
+}
+
+// ---------------------------------------------------------------------------------------------------
 // The plan
 // ---------------------------------------------------------------------------------------------------
 
@@ -452,6 +528,13 @@ interface Built {
 
 /** Students no term flag or absence touches: the demo's own stories. */
 const PROTECTED = new Set<string>([PEOPLE.madina, PEOPLE.aliya, PEOPLE.deleteRequest]);
+
+/**
+ * Students who missed every term exam, so Phase 0's world stays as it was for them: History seats 7 and
+ * 21 sat only the History of Kazakhstan · Test, and WP 1.12's pgTAP test counts their exams, events and
+ * devices as Phase 0's seed made them. They count towards their exam's absences.
+ */
+const MISSED_TERM = new Set<string>(["20241007", "20241021"]);
 
 function studentsByGroup(): Map<string, Omit<StudentSeed, "programme" | "year">[]> {
   const map = new Map<string, Omit<StudentSeed, "programme" | "year">[]>();
@@ -469,8 +552,13 @@ export function buildTermPlan(seed: number = TERM_SEED): TermPlan {
   const root = createRng(seed);
   const exams = termExams();
   const byGroup = studentsByGroup();
+  const groupPos = new Map<string, number>();
+  for (const list of byGroup.values()) {
+    list.forEach((student, i) => {
+      groupPos.set(student.number, i + 1);
+    });
+  }
   const roster: TermRosterRow[] = [];
-  const receipts = new Set<string>();
   const rosterOf = new Map<string, Omit<StudentSeed, "programme" | "year">[]>();
   for (const exam of exams) {
     const students = exam.groups.flatMap((code) => byGroup.get(code) ?? []);
@@ -496,55 +584,25 @@ export function buildTermPlan(seed: number = TERM_SEED): TermPlan {
     absentCount.set(exam.id, Math.round((rosterOf.get(exam.id)?.length ?? 0) * 0.03));
   }
 
+  const absent = new Map<number, string[]>();
   const built: Built[] = exams.map((exam) => {
     const rng = root.fork(`sessions:${exam.index}`);
     const students = rosterOf.get(exam.id) ?? [];
-    const absentees = new Set(
-      shuffle(
-        students.filter((student) => !PROTECTED.has(student.number)),
+    const missed = students.filter((student) => MISSED_TERM.has(student.number));
+    const absentees = [
+      ...missed,
+      ...shuffle(
+        students.filter((student) => !PROTECTED.has(student.number) && !MISSED_TERM.has(student.number)),
         rng,
-      )
-        .slice(0, absentCount.get(exam.id) ?? 0)
-        .map((student) => student.id),
-    );
-    const start = Date.parse(exam.startsAt);
-    const sessions: TermSession[] = [];
-    for (const student of students) {
-      if (absentees.has(student.id)) continue;
-      const joined = start - rng.int(4 * 60, 14 * 60) * 1000;
-      const accepted = Math.min(joined + rng.int(60, 180) * 1000, start - 30_000);
-      const started = start + rng.int(0, 50) * 1000;
-      const timeUp = rng.chance(0.01);
-      const usedS = timeUp
-        ? exam.durationMin * 60
-        : rng.int(Math.round(exam.durationMin * 0.55) * 60, (exam.durationMin - 1) * 60);
-      const submitted = timeUp ? start + exam.durationMin * 60_000 : started + usedS * 1000;
-      let receipt = rng.int(0, 9999);
-      const prefix = `UKI-${student.groupCode}-`;
-      const suffix = `-${receiptInitials(student.fullName)}`;
-      while (receipts.has(`${prefix}${String(receipt).padStart(4, "0")}${suffix}`)) {
-        receipt = (receipt + 1) % 10_000;
-      }
-      const receiptId = `${prefix}${String(receipt).padStart(4, "0")}${suffix}`;
-      receipts.add(receiptId);
-      sessions.push({
-        id: termSessionId(exam.index, student.number),
-        examId: exam.id,
-        studentId: student.id,
-        number: student.number,
-        authUid: termAuthUid(exam.index, student.number),
-        state: timeUp ? "time_up" : "submitted",
-        locale: student.locale,
-        os: rng.chance(0.6) ? "windows" : "macos",
-        identityScore: round2(rng.between(0.7, 0.96)),
-        joinedAt: iso(joined),
-        rulesAcceptedAt: iso(accepted),
-        startedAt: iso(started),
-        submittedAt: iso(submitted),
-        timeUsedS: timeUp ? exam.durationMin * 60 : usedS,
-        receiptId,
-      });
-    }
+      ).slice(0, Math.max(0, (absentCount.get(exam.id) ?? 0) - missed.length)),
+    ]
+      .map((student) => student.number)
+      .sort();
+    absent.set(exam.index, absentees);
+    const away = new Set(absentees);
+    const sessions = students
+      .filter((student) => !away.has(student.number))
+      .map((student) => termSession(exam, student, groupPos.get(student.number) ?? 0));
     return { exam, sessions };
   });
 
@@ -696,8 +754,55 @@ export function buildTermPlan(seed: number = TERM_SEED): TermPlan {
     });
   }
 
-  return { exams, roster, sessions: built.flatMap((entry) => entry.sessions), events, decisions };
+  // The delete request's student (A.5a): two flags in History of Kazakhstan · Quiz 1 and one in Quiz 2,
+  // each with a still (story.ts), so a privacy delete has frames and events from two exams to remove.
+  const deleteRng = root.fork("delete-request");
+  for (const [course, kind, types, decision, note, reviewS] of DELETE_STUDENT_FLAGS) {
+    const entry = built.find((row) => row.exam.course === course && row.exam.kind === kind);
+    const session = entry?.sessions.find((row) => row.number === PEOPLE.deleteRequest);
+    if (!entry || !session)
+      throw new Error(`seed v2: the delete request's student missed ${course} · ${kind}`);
+    events.push(...writeFlags(entry.exam, session, [...types], deleteRng));
+    const end = Date.parse(entry.exam.startsAt) + entry.exam.durationMin * 60_000;
+    decisions.push({
+      sessionId: session.id,
+      examId: entry.exam.id,
+      decision,
+      note,
+      reviewer: "dana",
+      decidedAt: iso(end + reviewS * 1000),
+    });
+  }
+
+  return {
+    exams,
+    roster,
+    absent: [...absent].map(([examIndex, numbers]) => ({ examIndex, numbers })),
+    sessions: built.flatMap((entry) => entry.sessions),
+    events,
+    decisions,
+  };
 }
+
+/** The delete request's student's flags: course, kind, flag types, decision, note, review seconds. */
+const DELETE_STUDENT_FLAGS: readonly (readonly [
+  string,
+  string,
+  readonly EventType[],
+  Decision,
+  string | null,
+  number,
+])[] = [
+  [
+    "History of Kazakhstan",
+    "Quiz 1",
+    ["gaze.off_screen", "phone.detected"],
+    "talk",
+    "Talked after the exam; the phone was face down.",
+    6600,
+  ],
+  ["History of Kazakhstan", "Quiz 2", ["gaze.down"], "no_issue", null, 5400],
+];
 
 /** The groups seed v2 needs in the database (Phase 0's and its own). */
 export function termGroups(): readonly GroupSeed[] {
