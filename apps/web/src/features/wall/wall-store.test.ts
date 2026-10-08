@@ -1,13 +1,16 @@
 import { tileState } from "@uki/contracts";
 import { describe, expect, it } from "vitest";
 import { EXAM_ID, event, initialData, iso, NOW, sessionId, sessionRow, studentId } from "./test-helpers.tsx";
+import { selectHasOpenFlag, selectTileResult } from "./tiles.ts";
 import {
+  applyDecision,
   applyEvent,
   applyFrame,
   applySession,
   createWallStore,
   initialWallState,
   MAX_EVENTS_PER_SESSION,
+  mergeDecisions,
   mergeEvents,
   mergeSessions,
   tick,
@@ -209,5 +212,49 @@ describe("wall store reducers", () => {
     expect(store.getState().events[sessionId(3)]).toEqual([phone]);
     expect(store.getState().nowMs).toBe(NOW + 5000);
     expect(typeof store.getState().actions.mergeSessions).toBe("function");
+  });
+});
+
+describe("review decisions on the wall (WP 1.8)", () => {
+  it("keeps the latest decision per session, and returns the same state when nothing is newer", () => {
+    const state = initialWallState(
+      { ...initialData(), decisions: [{ sessionId: sessionId(1), decidedAt: iso(-60_000) }] },
+      NOW,
+    );
+    expect(state.decisions[sessionId(1)]).toBe(iso(-60_000));
+    const later = applyDecision(state, sessionId(1), iso(-1_000));
+    expect(later.decisions[sessionId(1)]).toBe(iso(-1_000));
+    expect(applyDecision(later, sessionId(1), iso(-60_000))).toBe(later);
+    const merged = mergeDecisions(later, [
+      { sessionId: sessionId(1), decidedAt: iso(-60_000) },
+      { sessionId: sessionId(2), decidedAt: iso(-2_000) },
+    ]);
+    expect(merged.decisions).toEqual({ [sessionId(1)]: iso(-1_000), [sessionId(2)]: iso(-2_000) });
+    expect(mergeDecisions(merged, [{ sessionId: sessionId(2), decidedAt: iso(-2_000) }])).toBe(merged);
+  });
+
+  it("counts a flag as reviewed up to the decision, and a later flag as open again", () => {
+    const phone = event(
+      1,
+      "phone.detected",
+      { score: 0.94 },
+      { at: iso(-30_000), received_at: iso(-29_000) },
+    );
+    const state = applyDecision(
+      initialWallState(initialData(undefined, [phone]), NOW),
+      sessionId(1),
+      iso(-10_000),
+    );
+    expect(selectHasOpenFlag(state, sessionId(1))).toBe(false);
+    expect(selectTileResult(state, sessionId(1))?.state).not.toBe("flagged");
+    const face = event(
+      1,
+      "face.second",
+      { duration_ms: 2000 },
+      { at: iso(-5_000), received_at: iso(-4_000) },
+    );
+    const reopened = applyEvent(state, face);
+    expect(selectHasOpenFlag(reopened, sessionId(1))).toBe(true);
+    expect(selectTileResult(reopened, sessionId(1))?.state).toBe("flagged");
   });
 });

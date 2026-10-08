@@ -646,7 +646,7 @@ Choices WP 1.8 makes for 3.2, 3.2a, 3.2b, 3.3, Mark reviewed (2.4a) and Add note
 - **Mark reviewed (2.4a)** sits after Pause exam, as Figma draws it, and calls `decide_session` with `no_issue` through a server action.
   - It is enabled while the wall holds a flag with no newer decision. The wall holds the last 60 minutes and every phone and second-face flag, so a session whose only flags are older is decided on 3.3.
   - The flags up to `decided_at` then count as reviewed (`reviewedEventIds` in `wall.ts`), so a Flagged tile turns back to its other state. A live exam stays live.
-  - The wall loads the exam's decisions with the page. Another proctor's decision appears on the next load, because decisions have no broadcast.
+  - The wall loads the exam's decisions with the page and reads them again on every catch-up (a reconnect, focus, or the 20 s reconcile). Decisions have no broadcast, so another proctor's Mark reviewed or a 3.3 decision reaches this wall within about 20 s.
 - **Add note (2.5)** is the ghost button beside Send, as Figma draws it. It swaps the quick message for a Note field (up to 500 characters) with Cancel and Add note, which no frame draws; the label is 3.3's “Note”. The `proctor.note` event reaches the timeline through the exam channel like any other event.
 - **The sidebar's Review item** carries a coral Count of the sessions in the queue under the caller's RLS (Figma 3.2: “7”).
 

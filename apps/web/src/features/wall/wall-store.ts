@@ -256,6 +256,16 @@ export function applyDecision(state: WallState, sessionId: string, decidedAt: st
   return { ...state, decisions: { ...state.decisions, [sessionId]: decidedAt } };
 }
 
+/** Decisions read again on a catch-up (another proctor's Mark reviewed, or 3.3); older ones are kept. */
+export function mergeDecisions(
+  state: WallState,
+  rows: readonly { sessionId: string; decidedAt: string }[],
+): WallState {
+  let next = state;
+  for (const row of rows) next = applyDecision(next, row.sessionId, row.decidedAt);
+  return next;
+}
+
 /** The ticker. */
 export function tick(state: WallState, nowMs: number): WallState {
   return state.nowMs === nowMs ? state : { ...state, nowMs };
@@ -268,6 +278,7 @@ export interface WallActions {
   mergeSessions: (rows: readonly SessionRow[], keep?: ReadonlySet<string>) => void;
   applyFrame: (frame: FrameMessage) => void;
   applyDecision: (sessionId: string, decidedAt: string) => void;
+  mergeDecisions: (rows: readonly { sessionId: string; decidedAt: string }[]) => void;
   tick: (nowMs: number) => void;
 }
 
@@ -290,6 +301,7 @@ export function createWallStore(data: WallInitialData, nowMs: number) {
         mergeSessions: (rows, keep) => apply((s) => mergeSessions(s, rows, keep)),
         applyFrame: (frame) => apply((s) => applyFrame(s, frame)),
         applyDecision: (sessionId, decidedAt) => apply((s) => applyDecision(s, sessionId, decidedAt)),
+        mergeDecisions: (rows) => apply((s) => mergeDecisions(s, rows)),
         tick: (now) => apply((s) => tick(s, now)),
       },
     };

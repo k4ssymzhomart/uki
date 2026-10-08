@@ -3,16 +3,8 @@
 // second-face flag (the Flagged tile has no time limit), and its review decisions (WP 1.8), all under
 // the caller's RLS.
 
-import { type AnyClient, fetchInitialEvents, fetchSessions, readPages } from "./queries.ts";
-import {
-  DecisionRow,
-  ExamGroupRow,
-  ExamRow,
-  parseQuestionCount,
-  parseRows,
-  RosterRow,
-  StaffRow,
-} from "./rows.ts";
+import { type AnyClient, fetchDecisions, fetchInitialEvents, fetchSessions, readPages } from "./queries.ts";
+import { ExamGroupRow, ExamRow, parseQuestionCount, parseRows, RosterRow, StaffRow } from "./rows.ts";
 import type { WallInitialData, WallStudent } from "./wall-store.ts";
 
 /** Null when the exam does not exist or the caller may not see it. */
@@ -51,14 +43,7 @@ export async function loadWall(
           .range(from, to),
       ),
       client.rpc("exam_question_count", { exam_id: examId }),
-      readPages((from, to) =>
-        client
-          .from("review_decisions")
-          .select("session_id, decided_at")
-          .eq("exam_id", examId)
-          .order("session_id")
-          .range(from, to),
-      ),
+      fetchDecisions(client, examId),
     ]);
 
   const groups = parseRows(ExamGroupRow, groupsResult.data)
@@ -72,7 +57,6 @@ export async function loadWall(
     seat: row.seat,
   }));
   const staff = parseRows(StaffRow, staffRows);
-  const decisions = parseRows(DecisionRow, decisionRows);
   // exam_question_count answers exam staff (proctors cannot read exam_questions); null is unknown.
   const questionCount = questionsResult.error === null ? parseQuestionCount(questionsResult.data) : null;
 
@@ -90,7 +74,7 @@ export async function loadWall(
     sessions,
     events,
     staff: staff.map((s) => ({ id: s.id, fullName: s.full_name })),
-    decisions: decisions.map((d) => ({ sessionId: d.session_id, decidedAt: d.decided_at })),
+    decisions: decisionRows.map((d) => ({ sessionId: d.session_id, decidedAt: d.decided_at })),
     serverNowMs: nowMs,
   };
 }

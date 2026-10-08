@@ -4,7 +4,15 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CompactEvent } from "@uki/contracts";
 import { FLAG_TILE_EVENT_TYPES, THRESHOLDS } from "@uki/contracts";
-import { EVENT_COLUMNS, parseEvents, parseSessions, SESSION_COLUMNS, type SessionRow } from "./rows.ts";
+import {
+  DecisionRow,
+  EVENT_COLUMNS,
+  parseEvents,
+  parseRows,
+  parseSessions,
+  SESSION_COLUMNS,
+  type SessionRow,
+} from "./rows.ts";
 
 /** PostgREST answers at most this many rows per request (supabase/config.toml max_rows). */
 export const PAGE_SIZE = 1000;
@@ -145,4 +153,17 @@ export async function fetchSessionTimeline(client: AnyClient, sessionId: string)
       .range(from, to),
   );
   return parseEvents(rows);
+}
+
+/** The exam's review decisions (WP 1.8): which session was decided when, for Mark reviewed and Flagged. */
+export async function fetchDecisions(client: AnyClient, examId: string): Promise<DecisionRow[]> {
+  const rows = await readPages((from, to) =>
+    client
+      .from("review_decisions")
+      .select("session_id, decided_at")
+      .eq("exam_id", examId)
+      .order("session_id")
+      .range(from, to),
+  );
+  return parseRows(DecisionRow, rows);
 }
