@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { Button } from "../controls/button.tsx";
 import { Banner } from "./banner.tsx";
 import { Dialog } from "./dialog.tsx";
+import { Drawer } from "./drawer.tsx";
 import { Spinner } from "./spinner.tsx";
 import { Toast } from "./toast.tsx";
 import { type ToastApi, useToast } from "./toast-context.ts";
@@ -103,6 +104,68 @@ describe("Dialog", () => {
     expect(confirm.getAttribute("aria-busy")).toBe("true");
     expect(screen.getByRole("textbox", { name: "Reason" })).toBeTruthy();
     expect(screen.getByRole("dialog").getAttribute("aria-describedby")).toBeNull();
+  });
+
+  it("with onCancel, the Secondary button runs it and keeps the dialog open (0.9a Ask for a change)", async () => {
+    const user = userEvent.setup();
+    const onCancel = vi.fn();
+    render(
+      <Dialog
+        open
+        title="Confirm Mathematics 2?"
+        cancelLabel="Ask for a change"
+        onCancel={onCancel}
+        confirmLabel="Confirm seats"
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Ask for a change" }));
+    expect(onCancel).toHaveBeenCalledOnce();
+    expect(screen.getByRole("dialog", { name: "Confirm Mathematics 2?" })).toBeTruthy();
+  });
+});
+
+describe("Drawer", () => {
+  function IdentityHelp() {
+    const [open, setOpen] = useState(false);
+    return (
+      <>
+        <Button onClick={() => setOpen(true)}>Identity help</Button>
+        <Drawer
+          open={open}
+          onOpenChange={setOpen}
+          title="Identity help"
+          closeLabel="Close"
+          footer={<Button>Send hint</Button>}
+        >
+          <p>Madina Tulegenova</p>
+        </Drawer>
+      </>
+    );
+  }
+
+  it("opens as a named modal on the right with its body and footer, and focuses inside it", async () => {
+    const user = userEvent.setup();
+    render(<IdentityHelp />);
+    await user.click(screen.getByRole("button", { name: "Identity help" }));
+    const drawer = screen.getByRole("dialog", { name: "Identity help" });
+    expect(drawer.className).toContain("right-0");
+    expect(drawer.className).toContain("w-115");
+    expect(drawer.contains(document.activeElement)).toBe(true);
+    expect(screen.getByText("Madina Tulegenova")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Send hint" })).toBeTruthy();
+  });
+
+  it("closes with the close icon and with Escape, and returns focus to the opener", async () => {
+    const user = userEvent.setup();
+    render(<IdentityHelp />);
+    const opener = screen.getByRole("button", { name: "Identity help" });
+    await user.click(opener);
+    await user.click(screen.getByRole("button", { name: "Close" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(document.activeElement).toBe(opener);
+    await user.click(opener);
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 });
 

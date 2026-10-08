@@ -23,6 +23,11 @@ export type DialogProps = {
   children?: ReactNode;
   /** Label of the Secondary button that closes the dialog. */
   cancelLabel: ReactNode;
+  /**
+   * When set, the Secondary button calls this instead of closing the dialog, for a second action such as
+   * 0.9a's "Ask for a change"; Escape and the scrim still close it.
+   */
+  onCancel?: () => void;
   /** Label of the Primary (or Danger) button. */
   confirmLabel: ReactNode;
   /** Called by the confirm button. The dialog stays open; close it through open/onOpenChange. */
@@ -55,6 +60,7 @@ export function Dialog({
   body,
   children,
   cancelLabel,
+  onCancel,
   confirmLabel,
   onConfirm,
   confirmLoading = false,
@@ -99,9 +105,15 @@ export function Dialog({
           </div>
           {children ? <div className="w-full">{children}</div> : null}
           <div className="flex w-full items-center justify-end gap-2.5">
-            <DialogPrimitive.Close asChild>
-              <Button variant="secondary">{cancelLabel}</Button>
-            </DialogPrimitive.Close>
+            {onCancel ? (
+              <Button variant="secondary" onClick={onCancel}>
+                {cancelLabel}
+              </Button>
+            ) : (
+              <DialogPrimitive.Close asChild>
+                <Button variant="secondary">{cancelLabel}</Button>
+              </DialogPrimitive.Close>
+            )}
             <Button
               variant={danger ? "danger" : "primary"}
               loading={confirmLoading}
