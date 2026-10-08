@@ -2,7 +2,8 @@
 # (docs/phase-0-plan.md, Pipelines). Vercel deploys the two web apps itself.
 #
 # Secrets: SUPABASE_ACCESS_TOKEN (a personal access token), SUPABASE_DB_PASSWORD, SUPABASE_PROJECT_REF.
-# Variables: UKI_ALLOWED_ORIGINS (optional; the Vercel origins the functions accept, set as a function
+# Variables: CLOUD_DEPLOY (set to "true" once the secrets above exist; until then nothing deploys),
+# UKI_ALLOWED_ORIGINS (optional; the Vercel origins the functions accept, set as a function
 # secret on every deploy), DEPLOY_FREEZE (set to "true" from the demo tag until Demo Day ends).
 # Runbook: docs/runbooks/cloud-setup.md.
 name: Deploy Supabase
@@ -25,6 +26,7 @@ jobs:
   deploy:
     name: supabase db push and functions deploy
     if: >-
+      vars.CLOUD_DEPLOY == 'true' &&
       vars.DEPLOY_FREEZE != 'true' &&
       (github.event_name == 'workflow_dispatch' ||
        (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'))
