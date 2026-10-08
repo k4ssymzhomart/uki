@@ -49,8 +49,8 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: 2.107.0
-      - name: Start the local stack (the edge runtime runs under functions serve)
-        run: supabase start -x vector,logflare,imgproxy,edge-runtime,studio
+      - name: Start the slim local stack (pnpm db:start; the edge runtime runs under functions serve)
+        run: pnpm db:start
       - name: Migrations and the seed, staff, and the demo as the script starts it
         run: |
           pnpm db:reset
