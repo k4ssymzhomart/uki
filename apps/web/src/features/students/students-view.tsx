@@ -112,7 +112,7 @@ export function StudentsView({ rows, flaggedThisTerm, scopeName, initialFilters 
           aria-labelledby="students-title"
           className="overflow-clip rounded-card border border-line-default bg-surface"
         >
-          <div className="flex items-center gap-3 py-4 pr-4 pl-5">
+          <div className="flex min-h-19 items-center gap-3 py-4 pr-4 pl-5">
             <h2 id="students-title" className="type-card-title">
               {t("table.title")}
             </h2>
@@ -194,9 +194,9 @@ export function StudentsView({ rows, flaggedThisTerm, scopeName, initialFilters 
                   <tr
                     key={row.id}
                     data-student-id={row.id}
-                    className="relative h-14.25 border-b border-line-default bg-surface text-fg-primary hover:bg-canvas"
+                    className="relative border-b border-line-default bg-surface text-fg-primary hover:bg-canvas"
                   >
-                    <td className={`${studentColumns.student} align-middle`}>
+                    <td className={`${studentColumns.student} py-2.5 align-middle`}>
                       <div className="flex min-w-0 items-center gap-3 overflow-clip">
                         <Avatar tone="paper" size="md" initials={initials(row.full_name, locale)} />
                         <div className="flex min-w-0 flex-col items-start gap-px overflow-clip whitespace-nowrap">

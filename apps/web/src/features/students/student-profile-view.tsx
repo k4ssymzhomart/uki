@@ -146,7 +146,7 @@ export function StudentProfileView({
               {history.length === 0 ? (
                 <p className="opacity-60 type-ui-caption">{t("profile.history.empty")}</p>
               ) : (
-                <ul className="flex w-full flex-col">
+                <ul className="flex w-full flex-col gap-3">
                   {history.map((row) => (
                     <li
                       key={row.sessionId}
