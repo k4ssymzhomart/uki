@@ -187,7 +187,8 @@ export class SupabaseApi {
   async upload(signedUrl: string, bytes: Uint8Array, token: string): Promise<void> {
     await this.send(signedUrl, {
       method: "PUT",
-      body: bytes,
+      // A copy on its own ArrayBuffer, which every fetch typing accepts as a body.
+      body: bytes.slice(),
       headers: { "content-type": "image/jpeg", "x-upsert": "false", "cache-control": "max-age=3600" },
       token,
     });
