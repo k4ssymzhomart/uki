@@ -84,19 +84,25 @@ export function bindWin32KeyboardHook(koffi: KoffiApi): NativeKeyboardHook {
   let registered: bigint | null = koffi.register(proc, koffi.pointer(LowLevelKeyboardProc));
   // For a low-level hook the module is only a formality; the executable's own handle is always valid.
   const module: unknown = GetModuleHandleW(null);
+  // Hooks installed and not yet removed: none may outlive the procedure they call.
+  const live = new Set<bigint>();
 
   return {
     install() {
       if (registered === null) throw new Error("keyboard hook: the binding was disposed");
       const handle: unknown = SetWindowsHookExW(WH_KEYBOARD_LL, registered, module, 0);
       if (typeof handle !== "bigint" || handle === 0n) throw new Error("SetWindowsHookExW returned NULL");
+      live.add(handle);
       return handle;
     },
     remove(handle) {
+      live.delete(handle);
       return Boolean(UnhookWindowsHookEx(handle));
     },
     dispose() {
       if (registered === null) return;
+      for (const handle of live) UnhookWindowsHookEx(handle);
+      live.clear();
       koffi.unregister(registered);
       registered = null;
     },

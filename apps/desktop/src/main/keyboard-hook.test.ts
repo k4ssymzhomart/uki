@@ -300,6 +300,23 @@ describe("the Win32 binding (Koffi mocked)", () => {
     expect(() => bindWin32KeyboardHook(fakeKoffi({ hookHandle: 0n }).koffi).install()).toThrow();
   });
 
+  it("removes every hook still installed before it releases the procedure", () => {
+    const fake = fakeKoffi();
+    const order: string[] = [];
+    fake.fns.UnhookWindowsHookEx.mockImplementation((handle: unknown) => {
+      order.push(`unhook ${String(handle)}`);
+      return true;
+    });
+    fake.koffi.unregister.mockImplementation(() => order.push("unregister"));
+    const native = bindWin32KeyboardHook(fake.koffi);
+    const first = native.install();
+    native.remove(first);
+    order.length = 0;
+    native.install();
+    native.dispose();
+    expect(order).toEqual(["unhook 30464", "unregister"]);
+  });
+
   it("unregisters the procedure on dispose, once, and cannot install after", () => {
     const fake = fakeKoffi();
     const native = bindWin32KeyboardHook(fake.koffi);
