@@ -3,7 +3,7 @@
 import { Button, Checkbox, Input, Select, SelectItem, TextArea } from "@uki/ui";
 import { Mascot } from "@uki/ui/art";
 import { useFormatter, useTranslations } from "next-intl";
-import { type ReactNode, useActionState, useMemo, useState } from "react";
+import { type ReactNode, useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { LandingLink } from "./landing-parts.tsx";
 import {
   demoDayCalendar,
@@ -170,6 +170,12 @@ function PilotSent({ state }: { state: Extract<PilotFormState, { status: "sent" 
   const t = useTranslations("dashboard.landing.pilot");
   const format = useFormatter();
   const { request, reference } = state;
+  const heading = useRef<HTMLHeadingElement>(null);
+  // Sent replaces the form: start the page from the top, and move focus to the new heading.
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+    heading.current?.focus({ preventScroll: true });
+  }, []);
   const calendarHref = useMemo(() => {
     const ics = demoDayCalendar({
       title: t("sent.calendarTitle"),
@@ -200,7 +206,9 @@ function PilotSent({ state }: { state: Extract<PilotFormState, { status: "sent" 
             className="absolute top-[19.17%] left-[10.21%] h-auto w-[79.7%]"
           />
         </div>
-        <h1 className="type-h2">{t("sent.title")}</h1>
+        <h1 ref={heading} tabIndex={-1} className="type-h2 outline-none">
+          {t("sent.title")}
+        </h1>
         <p className="max-w-125 opacity-72 type-body-m">{t("sent.body", { email: request.email })}</p>
         <dl className="flex w-full flex-col rounded-md bg-subtle px-5 py-2 text-left">
           {rows.map((row) => (

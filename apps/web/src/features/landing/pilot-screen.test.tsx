@@ -74,7 +74,8 @@ describe("/pilot", () => {
     expect((screen.getByLabelText("Full name") as HTMLInputElement).value).toBe("Dana Akhmetova");
   });
 
-  it("replaces the form with Sent once the request is stored", async () => {
+  it("replaces the form with Sent once the request is stored, from the top of the page", async () => {
+    const scrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
     const action = vi.fn(
       async (): Promise<PilotFormState> => ({
         status: "sent",
@@ -96,6 +97,8 @@ describe("/pilot", () => {
       fireEvent.click(screen.getByRole("button", { name: "Book a pilot" }));
     });
     await waitFor(() => expect(screen.getByRole("heading", { name: "Request sent." })).toBeTruthy());
+    expect(scrollTo).toHaveBeenCalledWith({ top: 0 });
+    expect(document.activeElement).toBe(screen.getByRole("heading", { name: "Request sent." }));
     expect(
       screen.getByText(
         "We’ll write to dana.akhmetova@kru.test within 2 working days to set up the 30-minute call.",
