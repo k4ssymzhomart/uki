@@ -257,7 +257,10 @@ function lockPhase(snapshot: FlowSnapshot): ExamStatePhase {
   }
 }
 
-/** The `exam.state` message for Üki Lock, sent on every change and every 5 s. */
+/**
+ * The `exam.state` message for Üki Lock, sent on every change and every 5 s. It carries the exam's browser
+ * rules (E.1): the Lock follows copy and paste, print, full screen and the calculator from them.
+ */
 export function lockExamState(snapshot: FlowSnapshot): Extract<AppToLock, { type: "exam.state" }> {
   const { context } = snapshot;
   const joined = context.joined;
@@ -277,6 +280,9 @@ export function lockExamState(snapshot: FlowSnapshot): Extract<AppToLock, { type
             allowed_hosts: allowedHosts(context),
             lms_url: joined.exam.lms_url,
             done_path: joined.exam.lms_done_path,
+            // Phase 1: E.1's rules from join_exam; null from a server that sends none (the Lock then
+            // applies every rule, effectiveBrowserRules in @uki/contracts).
+            browser_rules: joined.exam.browser_rules ?? null,
           }
         : null,
   };
