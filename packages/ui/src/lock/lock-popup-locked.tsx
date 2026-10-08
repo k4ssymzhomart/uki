@@ -87,7 +87,7 @@ export function LockPopupLocked({
       {allowed.length > 0 ? (
         <section className="flex flex-col items-stretch gap-0.5">
           <h2 className="type-mono-tag opacity-50">{allowedLabel}</h2>
-          <ul className="flex flex-col">
+          <ul className="flex flex-col gap-0.5">
             {allowed.map((site) => {
               const Icon = icons[site.icon];
               return (
