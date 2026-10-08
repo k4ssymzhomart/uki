@@ -282,6 +282,46 @@ export type Database = {
           },
         ]
       }
+      demo_live_views: {
+        Row: {
+          exam_id: string
+          seen_at: string
+          staff_id: string
+        }
+        Insert: {
+          exam_id: string
+          seen_at?: string
+          staff_id: string
+        }
+        Update: {
+          exam_id?: string
+          seen_at?: string
+          staff_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demo_live_views_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exam_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demo_live_views_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demo_live_views_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exam_groups: {
         Row: {
           exam_id: string
@@ -2063,6 +2103,15 @@ export type Database = {
         }
         Returns: Json
       }
+      demo_live_orphans: {
+        Args: { p_limit?: number }
+        Returns: {
+          storage_path: string
+        }[]
+      }
+      demo_live_seen: { Args: { exam_id: string }; Returns: Json }
+      demo_live_status: { Args: never; Returns: Json }
+      demo_live_tick: { Args: never; Returns: Json }
       exam_code_base: {
         Args: {
           p_course: string
@@ -2092,6 +2141,7 @@ export type Database = {
       exam_started: { Args: { p_exam_id: string }; Returns: boolean }
       exam_workspace: { Args: { p_exam_id: string }; Returns: string }
       get_report: { Args: { session_id: string }; Returns: Json }
+      guard_observer_writes: { Args: { p_table: unknown }; Returns: undefined }
       has_session_in: { Args: { p_exam_id: string }; Returns: boolean }
       help_broadcast: { Args: { p_id: string }; Returns: undefined }
       help_json: { Args: { p_id: string }; Returns: Json }
@@ -2114,6 +2164,7 @@ export type Database = {
         Returns: boolean
       }
       is_member_of: { Args: { p_workspace_id: string }; Returns: boolean }
+      is_observer: { Args: never; Returns: boolean }
       is_office_of_exam: { Args: { p_exam_id: string }; Returns: boolean }
       is_proctor_of: { Args: { p_exam_id: string }; Returns: boolean }
       is_staff_of: { Args: { p_workspace_id: string }; Returns: boolean }
@@ -2144,6 +2195,7 @@ export type Database = {
       make_receipt_id: { Args: { p_student_id: string }; Returns: string }
       new_verify_code: { Args: never; Returns: string }
       normalize_verify_code: { Args: { p: string }; Returns: string }
+      observer_unguarded_tables: { Args: never; Returns: string[] }
       open_shared_report: { Args: { p_token_hash: string }; Returns: Json }
       owns_session: { Args: { p_session_id: string }; Returns: boolean }
       pending_pause_s: {
@@ -2281,6 +2333,7 @@ export type Database = {
         Returns: string
       }
       session_exam: { Args: { p_session_id: string }; Returns: string }
+      session_heartbeat: { Args: { session_id: string }; Returns: Json }
       session_json: {
         Args: { s: Database["public"]["Tables"]["sessions"]["Row"] }
         Returns: Json
@@ -2376,7 +2429,7 @@ export type Database = {
         | "submitted"
         | "time_up"
         | "ended"
-      staff_role: "exam_office" | "proctor" | "admin"
+      staff_role: "exam_office" | "proctor" | "admin" | "observer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2536,7 +2589,7 @@ export const Constants = {
         "time_up",
         "ended",
       ],
-      staff_role: ["exam_office", "proctor", "admin"],
+      staff_role: ["exam_office", "proctor", "admin", "observer"],
     },
   },
 } as const

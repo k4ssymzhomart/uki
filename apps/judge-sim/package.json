@@ -1,0 +1,24 @@
+{
+  "name": "judge-sim",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Judge mode: simulated students for the always-live DEMO-LIVE exam, bundled into one file for the Windows VPS (docs/runbooks/judge-mode.md).",
+  "scripts": {
+    "build": "node build.mjs",
+    "dry-run": "node build.mjs && node dist/judge-sim/judge-sim.mjs --dry-run",
+    "typecheck": "tsc --noEmit -p .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@uki/contracts": "workspace:*",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.1",
+    "@uki/config": "workspace:*",
+    "esbuild": "0.28.2",
+    "typescript": "~5.9.3",
+    "vitest": "^5.0.3"
+  }
+}

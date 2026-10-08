@@ -208,6 +208,9 @@ describe("Start exam", () => {
 
   it("is disabled for other proctors, after the start and once the exam is live", () => {
     expect(canStartExam(exam, { role: "proctor", isLead: false }, now)).toBe(false);
+    // Judge mode's observer reads only, even if an assignment were marked lead.
+    expect(canStartExam(exam, { role: "observer", isLead: false }, now)).toBe(false);
+    expect(canStartExam(exam, { role: "observer", isLead: true }, now)).toBe(false);
     expect(canStartExam(exam, { role: "exam_office", isLead: false }, Date.parse(exam.starts_at))).toBe(
       false,
     );

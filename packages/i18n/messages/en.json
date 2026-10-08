@@ -70,6 +70,17 @@
       "todayTime": "Today · {time}",
       "withDetail": "{main} · {detail}"
     },
+    "judge": {
+      "simulator": {
+        "hours": "{count} h",
+        "label": "Judge mode simulator",
+        "live": "Simulator: live · last seen {ago} ago",
+        "minutes": "{count} min",
+        "never": "Simulator: stopped · not seen yet",
+        "seconds": "{count} s",
+        "stopped": "Simulator: stopped · last seen {ago} ago"
+      }
+    },
     "landing": {
       "cta": {
         "bookPilot": "Book a pilot",
@@ -1671,6 +1682,7 @@
       "role": {
         "admin": "Admin",
         "exam_office": "Exam office",
+        "observer": "Observer",
         "proctor": "Proctor"
       },
       "section": {

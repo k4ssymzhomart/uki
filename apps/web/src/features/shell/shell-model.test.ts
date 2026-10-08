@@ -54,6 +54,9 @@ describe("shell", () => {
     expect(navSections("proctor", ALL_BUILT)).toEqual([
       { id: "workspace", items: ["overview", "exams", "live", "review"] },
     ]);
+    // Judge mode's observer reads what a proctor reads, so its sidebar is a proctor's.
+    expect(navSections("observer", ALL_BUILT)).toEqual(navSections("proctor", ALL_BUILT));
+    expect(staffHomePath("observer")).toBe("/overview");
   });
 
   it("hides every item whose page is not built yet, and the empty Admin section with them", () => {

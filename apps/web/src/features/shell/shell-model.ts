@@ -38,7 +38,7 @@ export type NavSpec = {
 };
 
 const OFFICE: readonly StaffRole[] = ["exam_office", "admin"];
-const EVERYONE: readonly StaffRole[] = ["exam_office", "admin", "proctor"];
+const EVERYONE: readonly StaffRole[] = ["exam_office", "admin", "proctor", "observer"];
 
 export const NAV: Readonly<Record<NavId, NavSpec>> = {
   overview: { section: "workspace", icon: "layout-grid", roles: EVERYONE, built: true },

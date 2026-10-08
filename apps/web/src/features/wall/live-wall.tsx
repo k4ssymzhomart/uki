@@ -6,6 +6,8 @@ import { type ReactNode, useCallback, useContext, useEffect, useState } from "re
 import { useServerOffset } from "../../lib/use-now.ts";
 import type { HelpInitialData } from "../help/help-data.ts";
 import { HelpProvider, useHelpChannel } from "../help/help-store.tsx";
+import type { DemoLiveWall } from "../judge/judge-data.ts";
+import { SimulatorIndicator } from "../judge/simulator-indicator.tsx";
 import { browserSupabase } from "./browser-services.ts";
 import { DarkTheme } from "./dark-theme.tsx";
 import { LiveEvents } from "./live-events.tsx";
@@ -46,6 +48,8 @@ export interface LiveWallProps {
   getClient?: () => AnyClient;
   /** Server clock minus this browser's (lib/use-now.ts); tests pass a fake. Must be stable. */
   measureOffset?: () => Promise<number | null>;
+  /** Judge mode: set on the DEMO-LIVE wall only, which then shows the simulator indicator. */
+  demoLive?: DemoLiveWall;
 }
 
 /** 2.4 Live wall with 2.4a to 2.4e, 2.4d and the 2.5 drawer, fed by Realtime. */
@@ -54,6 +58,7 @@ export function LiveWall({
   help = NO_HELP,
   getClient = browserSupabase,
   measureOffset,
+  demoLive,
 }: LiveWallProps) {
   const [client, setClient] = useState<AnyClient | null>(null);
   const [view, setView] = useState<WallView>("flags");
@@ -81,6 +86,9 @@ export function LiveWall({
           <div data-theme="dark" className="flex w-full min-w-0 flex-1 flex-col bg-canvas text-fg-primary">
             <WallHeader />
             <div className="flex w-full flex-col gap-4.5 px-8 pt-6 pb-7">
+              {demoLive === undefined ? null : (
+                <SimulatorIndicator examId={demoLive.examId} startsAt={demoLive.startsAt} client={client} />
+              )}
               <WallStats />
               <WallToolbar view={view} onViewChange={setView} />
               <WallGrid options={options} onOpenTimeline={onOpenTimeline} />

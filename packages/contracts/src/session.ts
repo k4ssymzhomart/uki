@@ -54,7 +54,8 @@ export const EXAM_STATUSES = ["draft", "scheduled", "live", "to_review", "review
 export const ExamStatus = z.enum(EXAM_STATUSES);
 export type ExamStatus = z.infer<typeof ExamStatus>;
 
-export const STAFF_ROLES = ["exam_office", "proctor", "admin"] as const;
+/** `observer` (judge mode): reads what an assigned proctor reads, writes nothing (20261013130100_judge_mode.sql). */
+export const STAFF_ROLES = ["exam_office", "proctor", "admin", "observer"] as const;
 export const StaffRole = z.enum(STAFF_ROLES);
 export type StaffRole = z.infer<typeof StaffRole>;
 

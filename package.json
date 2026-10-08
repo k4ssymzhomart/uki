@@ -38,6 +38,7 @@
     "seed:check": "tsx scripts/seed-check.ts",
     "demo:reset": "tsx scripts/demo-reset.ts",
     "demo:simulate": "tsx scripts/demo-simulate.ts",
+    "judge:setup": "tsx scripts/judge-setup.ts",
     "typecheck:functions": "(tsx scripts/sync-contracts.ts --check || pnpm functions:sync) && tsc --noEmit -p supabase/functions/tsconfig.json && tsc --noEmit -p test/integration/tsconfig.json",
     "typecheck:scripts": "tsc --noEmit -p scripts/lib/tsconfig.json",
     "typecheck:e2e": "tsc --noEmit -p e2e/tsconfig.json",

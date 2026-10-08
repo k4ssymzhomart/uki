@@ -8,6 +8,7 @@ export * from "./exam-code.ts";
 export * from "./ids.ts";
 export * from "./invites.ts";
 export * from "./ipc.ts";
+export * from "./judge.ts";
 export * from "./lock.ts";
 export * from "./primitives.ts";
 export * from "./privacy.ts";
