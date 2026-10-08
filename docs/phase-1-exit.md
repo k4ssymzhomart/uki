@@ -454,7 +454,7 @@ Branch `wp/1.12-privacy` (PR #26). New: `20261012190000_privacy_requests.sql` (t
 
 ## 1.13 Landing: user decisions and judge path
 
-Branch `wp/1.13-jury-guide` (PR #29) on `origin/main` at ce12ed0 (WP 0.15's release merged). Two sets of user requests, neither drawn in Figma:
+Branch `wp/1.13-jury-guide` (PR #29) on `origin/main` at e86a4dc (WP 0.15's release and its v0.1.2 evidence merged). Two sets of user requests, neither drawn in Figma:
 
 - 8 October: Sign in to `/sign-in`, Book a pilot to the form at `/pilot` (no contact link), Download to the latest published GitHub release, and a jury guide with the mascot.
 - 9 October, the judge path: the Live demo button, `?email=` and a safe `?next=` on sign-in, `/demo/live` and the public jury page `/demo`.
