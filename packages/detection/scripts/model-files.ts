@@ -64,16 +64,17 @@ export const MODEL_SPECS: readonly ModelSpec[] = [
 ];
 
 /**
- * The files the detection worker itself loads: the Face Landmarker, the Object Detector and the
- * ES-module tasks-vision build (`forVisionTasks(base, true)` always picks it, SIMD included). The card
- * match (Human, Tesseract) is not among them. The browser demo on /try serves exactly these from
- * apps/web/public/models/ (apps/web/scripts/detection-models.ts).
+ * The files the /try demo in apps/web serves from public/models/ (apps/web/scripts/detection-models.ts):
+ * the Face Landmarker, the Object Detector and tasks-vision's classic SIMD build. Next.js starts the
+ * demo's worker as a classic script, so vision.ts picks the classic loader there (isModuleWorkerScope);
+ * the desktop app's module worker uses the ES-module build. The card match (Human, Tesseract) is not
+ * part of the demo.
  */
-export const WORKER_MODEL_PATHS: readonly string[] = [
+export const WEB_DEMO_MODEL_PATHS: readonly string[] = [
   MODEL_PATHS.faceLandmarker,
   MODEL_PATHS.objectDetector,
-  `${MODEL_PATHS.visionWasmDir}/vision_wasm_module_internal.js`,
-  `${MODEL_PATHS.visionWasmDir}/vision_wasm_module_internal.wasm`,
+  `${MODEL_PATHS.visionWasmDir}/vision_wasm_internal.js`,
+  `${MODEL_PATHS.visionWasmDir}/vision_wasm_internal.wasm`,
 ];
 
 export function sourceLabel(from: ModelSource): string {

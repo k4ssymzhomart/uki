@@ -1,5 +1,5 @@
 // Puts the detection worker's files into apps/web/public/models/ for the in-browser demo on /try:
-// the Face Landmarker, the Object Detector and the ES-module tasks-vision build (WORKER_MODEL_PATHS).
+// the Face Landmarker, the Object Detector and tasks-vision's classic build (WEB_DEMO_MODEL_PATHS).
 // `pnpm --filter web build` runs it before `next build`, on Vercel too, so the web app serves the models
 // itself and never loads one from a CDN at run time. Run it by hand before `next dev`:
 //
@@ -29,7 +29,7 @@ import {
   readManifest,
   sourceLabel,
   verifyManifest,
-  WORKER_MODEL_PATHS,
+  WEB_DEMO_MODEL_PATHS,
   writeManifest,
 } from "../../../packages/detection/scripts/model-files.ts";
 import type { ModelManifestEntry } from "../../../packages/detection/src/models.ts";
@@ -67,7 +67,7 @@ async function main(verifyOnly: boolean): Promise<number> {
     log(`${DESKTOP_MANIFEST} is missing`);
     return 1;
   }
-  const entries = pinnedEntries(manifest, WORKER_MODEL_PATHS);
+  const entries = pinnedEntries(manifest, WEB_DEMO_MODEL_PATHS);
   let failures = 0;
   if (!verifyOnly) {
     await mkdir(PUBLIC_MODELS, { recursive: true });
@@ -92,7 +92,7 @@ async function main(verifyOnly: boolean): Promise<number> {
     // The served subset of the lock file, so a deploy can be checked against it.
     await writeManifest(join(PUBLIC_MODELS, "manifest.json"), entries);
   }
-  const problems = await verifyManifest(PUBLIC_MODELS, { version: 1, files: entries }, WORKER_MODEL_PATHS);
+  const problems = await verifyManifest(PUBLIC_MODELS, { version: 1, files: entries }, WEB_DEMO_MODEL_PATHS);
   for (const problem of problems) log(`FAIL  ${formatProblem(problem)}`);
   if (problems.length === 0) {
     const bytes = entries.reduce((sum, entry) => sum + entry.bytes, 0);

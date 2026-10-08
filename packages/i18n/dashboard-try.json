@@ -1,0 +1,403 @@
+{
+  "$comment": "/try detection demo strings (judge mode): key to { en, ru }. No Figma frame: drafted from the Event names reference (212:2039), 2.1 (51:2074), 2.2 and 2.3 in the catalog, and the developer overlay's fields. The Russian is a first pass by the agent: native review needed, P.18.",
+  "dashboard.try.meta.title": {
+    "en": "Detection demo · Üki",
+    "ru": "Демо распознавания · Üki"
+  },
+  "dashboard.try.meta.description": {
+    "en": "Run Üki’s on-device face, gaze and phone checks on your own camera. Nothing leaves your browser.",
+    "ru": "Запустите проверки лица, взгляда и телефона Üki на своей камере. Ничего не покидает браузер."
+  },
+  "dashboard.try.band.overline": {
+    "en": "Detection demo",
+    "ru": "Демо распознавания"
+  },
+  "dashboard.try.band.title": {
+    "en": "Üki’s detection, on your camera",
+    "ru": "Распознавание Üki на вашей камере"
+  },
+  "dashboard.try.band.lead": {
+    "en": "The face, gaze and phone checks the Üki app runs during an exam, running in this tab with the same models and rules.",
+    "ru": "Проверки лица, взгляда и телефона, которые приложение Üki выполняет на экзамене, работают в этой вкладке с теми же моделями и правилами."
+  },
+  "dashboard.try.band.notice": {
+    "en": "Detection demo: lockdown and the exam need the desktop app",
+    "ru": "Демо распознавания: для блокировки и экзамена нужно приложение на компьютере"
+  },
+  "dashboard.try.privacy.title": {
+    "en": "Nothing leaves this browser",
+    "ru": "Ничего не покидает браузер"
+  },
+  "dashboard.try.privacy.body": {
+    "en": "The models run on this device. No video, image or event is uploaded, and this page makes no call to Üki’s servers.",
+    "ru": "Модели работают на этом устройстве. Видео, снимки и события никуда не загружаются, а страница не обращается к серверам Üki."
+  },
+  "dashboard.try.start.title": {
+    "en": "Start the camera",
+    "ru": "Включите камеру"
+  },
+  "dashboard.try.start.body": {
+    "en": "Your browser asks for the camera once. The first start loads the models from this site, about 21 MB.",
+    "ru": "Браузер один раз спросит доступ к камере. При первом запуске модели загружаются с этого сайта, около 21 МБ."
+  },
+  "dashboard.try.start.button": {
+    "en": "Start the demo",
+    "ru": "Запустить демо"
+  },
+  "dashboard.try.stop": {
+    "en": "Stop",
+    "ru": "Остановить"
+  },
+  "dashboard.try.retry": {
+    "en": "Try again",
+    "ru": "Попробовать снова"
+  },
+  "dashboard.try.status.camera": {
+    "en": "Opening the camera",
+    "ru": "Открываем камеру"
+  },
+  "dashboard.try.status.models": {
+    "en": "Loading the models",
+    "ru": "Загружаем модели"
+  },
+  "dashboard.try.status.running": {
+    "en": "Running on this device",
+    "ru": "Работает на этом устройстве"
+  },
+  "dashboard.try.error.denied.title": {
+    "en": "Camera access is off",
+    "ru": "Доступ к камере выключен"
+  },
+  "dashboard.try.error.denied.body": {
+    "en": "Allow the camera for this site in the address bar, then try again.",
+    "ru": "Разрешите камеру для этого сайта в адресной строке и попробуйте снова."
+  },
+  "dashboard.try.error.missing.title": {
+    "en": "No camera found",
+    "ru": "Камера не найдена"
+  },
+  "dashboard.try.error.missing.body": {
+    "en": "Connect a webcam, or open this page on a laptop with a built-in camera.",
+    "ru": "Подключите веб-камеру или откройте страницу на ноутбуке со встроенной камерой."
+  },
+  "dashboard.try.error.busy.title": {
+    "en": "The camera is in use",
+    "ru": "Камера занята"
+  },
+  "dashboard.try.error.busy.body": {
+    "en": "Close the other app or tab that uses the camera, then try again.",
+    "ru": "Закройте другое приложение или вкладку с камерой и попробуйте снова."
+  },
+  "dashboard.try.error.unsupported.title": {
+    "en": "This browser cannot run the demo",
+    "ru": "Этот браузер не может запустить демо"
+  },
+  "dashboard.try.error.unsupported.body": {
+    "en": "Open the page over HTTPS in a current Chrome, Edge, Safari or Firefox.",
+    "ru": "Откройте страницу по HTTPS в актуальном Chrome, Edge, Safari или Firefox."
+  },
+  "dashboard.try.error.models.title": {
+    "en": "The models did not load",
+    "ru": "Модели не загрузились"
+  },
+  "dashboard.try.error.models.body": {
+    "en": "Check the connection and try again.",
+    "ru": "Проверьте подключение и попробуйте снова."
+  },
+  "dashboard.try.camera.label": {
+    "en": "Your camera, shown only on this page",
+    "ru": "Ваша камера, видна только на этой странице"
+  },
+  "dashboard.try.camera.live": {
+    "en": "LIVE · LOCAL",
+    "ru": "КАМЕРА · ЛОКАЛЬНО"
+  },
+  "dashboard.try.camera.faces": {
+    "en": "{count, plural, one {# face} other {# faces}}",
+    "ru": "{count, plural, one {# лицо} few {# лица} many {# лиц} other {# лица}}"
+  },
+  "dashboard.try.cue.away": {
+    "en": "Looking away",
+    "ru": "Взгляд в сторону"
+  },
+  "dashboard.try.cue.phone": {
+    "en": "Phone in view",
+    "ru": "Телефон в кадре"
+  },
+  "dashboard.try.panel.title": {
+    "en": "What the app sees",
+    "ru": "Что видит приложение"
+  },
+  "dashboard.try.panel.faces": {
+    "en": "Faces",
+    "ru": "Лица"
+  },
+  "dashboard.try.panel.facesCaption": {
+    "en": "A second face flags after {second, number} s, none after {seconds, number} s",
+    "ru": "Второе лицо отмечается через {second, number} с, отсутствие лица через {seconds, number} с"
+  },
+  "dashboard.try.panel.look": {
+    "en": "Look",
+    "ru": "Взгляд"
+  },
+  "dashboard.try.panel.lookCaption": {
+    "en": "Flags after {seconds, number} s away or down",
+    "ru": "Отмечается через {seconds, number} с в сторону или вниз"
+  },
+  "dashboard.try.panel.phone": {
+    "en": "Phone score",
+    "ru": "Оценка телефона"
+  },
+  "dashboard.try.panel.phoneCaption": {
+    "en": "Flags at {threshold, number, ::.00} on two checks in a row",
+    "ru": "Отмечается от {threshold, number, ::.00} на двух проверках подряд"
+  },
+  "dashboard.try.look.on": {
+    "en": "On screen",
+    "ru": "На экран"
+  },
+  "dashboard.try.look.left": {
+    "en": "Left",
+    "ru": "Влево"
+  },
+  "dashboard.try.look.right": {
+    "en": "Right",
+    "ru": "Вправо"
+  },
+  "dashboard.try.look.up": {
+    "en": "Up",
+    "ru": "Вверх"
+  },
+  "dashboard.try.look.down": {
+    "en": "Down",
+    "ru": "Вниз"
+  },
+  "dashboard.try.look.no_face": {
+    "en": "No face",
+    "ru": "Нет лица"
+  },
+  "dashboard.try.timers.title": {
+    "en": "Rule timers",
+    "ru": "Таймеры правил"
+  },
+  "dashboard.try.timers.look": {
+    "en": "Look away held",
+    "ru": "Взгляд в сторону"
+  },
+  "dashboard.try.timers.noFace": {
+    "en": "No face",
+    "ru": "Нет лица"
+  },
+  "dashboard.try.timers.twoFaces": {
+    "en": "Two faces",
+    "ru": "Два лица"
+  },
+  "dashboard.try.timers.phoneHits": {
+    "en": "Phone hits in a row",
+    "ru": "Телефон подряд"
+  },
+  "dashboard.try.timers.seconds": {
+    "en": "{held, number, ::.0} of {limit, number} s",
+    "ru": "{held, number, ::.0} из {limit, number} с"
+  },
+  "dashboard.try.timers.hits": {
+    "en": "{hits, number} of {needed, number}",
+    "ru": "{hits, number} из {needed, number}"
+  },
+  "dashboard.try.overlay.title": {
+    "en": "Developer overlay",
+    "ru": "Панель разработчика"
+  },
+  "dashboard.try.overlay.caption": {
+    "en": "The numbers the app’s tuning overlay shows, twice a second.",
+    "ru": "Числа, которые показывает панель настройки приложения, дважды в секунду."
+  },
+  "dashboard.try.overlay.elapsed": {
+    "en": "Frame time",
+    "ru": "Время кадра"
+  },
+  "dashboard.try.overlay.fps": {
+    "en": "Tracking rate",
+    "ru": "Частота отслеживания"
+  },
+  "dashboard.try.overlay.fpsValue": {
+    "en": "{fps, number, ::.0} fps",
+    "ru": "{fps, number, ::.0} кадр/с"
+  },
+  "dashboard.try.overlay.faceMs": {
+    "en": "Face model",
+    "ru": "Модель лица"
+  },
+  "dashboard.try.overlay.phoneMs": {
+    "en": "Phone model",
+    "ru": "Модель телефона"
+  },
+  "dashboard.try.overlay.msValue": {
+    "en": "{ms, number, ::.0} ms",
+    "ru": "{ms, number, ::.0} мс"
+  },
+  "dashboard.try.overlay.phoneRate": {
+    "en": "Phone checks",
+    "ru": "Проверки телефона"
+  },
+  "dashboard.try.overlay.rateValue": {
+    "en": "{rate, number, ::.0} per s",
+    "ru": "{rate, number, ::.0} в с"
+  },
+  "dashboard.try.overlay.delegate": {
+    "en": "Runs on",
+    "ru": "Выполняется на"
+  },
+  "dashboard.try.overlay.delegateValue": {
+    "en": "face {face} · phone {phone}",
+    "ru": "лицо {face} · телефон {phone}"
+  },
+  "dashboard.try.overlay.input": {
+    "en": "Frame size",
+    "ru": "Размер кадра"
+  },
+  "dashboard.try.overlay.inputValue": {
+    "en": "{width, number} × {height, number}",
+    "ru": "{width, number} × {height, number}"
+  },
+  "dashboard.try.overlay.source": {
+    "en": "Frames from",
+    "ru": "Кадры из"
+  },
+  "dashboard.try.overlay.yaw": {
+    "en": "Head yaw",
+    "ru": "Поворот головы"
+  },
+  "dashboard.try.overlay.pitch": {
+    "en": "Head pitch",
+    "ru": "Наклон головы"
+  },
+  "dashboard.try.overlay.degValue": {
+    "en": "{deg, number, ::.0}°",
+    "ru": "{deg, number, ::.0}°"
+  },
+  "dashboard.try.overlay.lookLeft": {
+    "en": "Side look, left",
+    "ru": "Взгляд влево"
+  },
+  "dashboard.try.overlay.lookRight": {
+    "en": "Side look, right",
+    "ru": "Взгляд вправо"
+  },
+  "dashboard.try.overlay.lookDown": {
+    "en": "Look down",
+    "ru": "Взгляд вниз"
+  },
+  "dashboard.try.overlay.scoreValue": {
+    "en": "{score, number, ::.00}",
+    "ru": "{score, number, ::.00}"
+  },
+  "dashboard.try.overlay.fallback": {
+    "en": "Fallback",
+    "ru": "Облегчённый режим"
+  },
+  "dashboard.try.overlay.fallbackOn": {
+    "en": "On: 480 px frames, phone every 1 s",
+    "ru": "Включён: кадры 480 px, телефон раз в 1 с"
+  },
+  "dashboard.try.overlay.fallbackOff": {
+    "en": "Off",
+    "ru": "Выключен"
+  },
+  "dashboard.try.overlay.none": {
+    "en": "–",
+    "ru": "–"
+  },
+  "dashboard.try.events.title": {
+    "en": "Rule events",
+    "ru": "События правил"
+  },
+  "dashboard.try.events.caption": {
+    "en": "As the app would send them. A look is sent when it ends, with its full length.",
+    "ru": "Так, как их отправило бы приложение. Взгляд отправляется, когда заканчивается, с полной длительностью."
+  },
+  "dashboard.try.events.empty": {
+    "en": "No events yet. Look away for 2 s, hold up a phone or step out of the frame.",
+    "ru": "Событий пока нет. Отведите взгляд на 2 с, поднимите телефон или выйдите из кадра."
+  },
+  "dashboard.try.events.flag": {
+    "en": "Flag",
+    "ru": "Отметка"
+  },
+  "dashboard.try.events.log": {
+    "en": "Log",
+    "ru": "Журнал"
+  },
+  "dashboard.try.events.stills": {
+    "en": "{count, plural, one {The app takes # still} other {The app takes # stills}}; none is made here",
+    "ru": "{count, plural, one {Приложение делает # снимок} few {Приложение делает # снимка} many {Приложение делает # снимков} other {Приложение делает # снимка}}; здесь снимков нет"
+  },
+  "dashboard.try.event.gaze_on_screen.title": {
+    "en": "Eyes back on the screen",
+    "ru": "Взгляд снова на экране"
+  },
+  "dashboard.try.event.gaze_off_screen.title": {
+    "en": "Looked away for more than {seconds, number} s",
+    "ru": "Взгляд в сторону дольше {seconds, number} с"
+  },
+  "dashboard.try.event.gaze_off_screen.detail": {
+    "en": "{direction} · {duration, number, ::.0} s",
+    "ru": "{direction} · {duration, number, ::.0} с"
+  },
+  "dashboard.try.event.gaze_down.title": {
+    "en": "Looked down for more than {seconds, number} s",
+    "ru": "Взгляд вниз дольше {seconds, number} с"
+  },
+  "dashboard.try.event.duration": {
+    "en": "{duration, number, ::.0} s",
+    "ru": "{duration, number, ::.0} с"
+  },
+  "dashboard.try.event.phone_detected.title": {
+    "en": "Phone in the frame",
+    "ru": "Телефон в кадре"
+  },
+  "dashboard.try.event.phone_detected.detail": {
+    "en": "Confidence {score, number, ::.00}",
+    "ru": "Уверенность {score, number, ::.00}"
+  },
+  "dashboard.try.event.face_missing.title": {
+    "en": "No face for more than {seconds, number} s",
+    "ru": "Нет лица дольше {seconds, number} с"
+  },
+  "dashboard.try.event.face_second.title": {
+    "en": "A second face in the frame",
+    "ru": "Второе лицо в кадре"
+  },
+  "dashboard.try.event.face_second.detail": {
+    "en": "{faces, plural, one {# face} other {# faces}} · {duration, number, ::.0} s",
+    "ru": "{faces, plural, one {# лицо} few {# лица} many {# лиц} other {# лица}} · {duration, number, ::.0} с"
+  },
+  "dashboard.try.event.camera_lost.title": {
+    "en": "Camera stopped sending frames",
+    "ru": "Камера перестала передавать кадры"
+  },
+  "dashboard.try.event.session_paused.title": {
+    "en": "Session paused, timer stopped",
+    "ru": "Сессия на паузе, таймер остановлен"
+  },
+  "dashboard.try.event.session_resumed.title": {
+    "en": "Session resumed",
+    "ru": "Сессия продолжена"
+  },
+  "dashboard.try.event.session_resumed.detail": {
+    "en": "Paused {duration, number, ::.0} s",
+    "ru": "Пауза {duration, number, ::.0} с"
+  },
+  "dashboard.try.paused.title": {
+    "en": "The exam would pause here",
+    "ru": "Здесь экзамен встал бы на паузу"
+  },
+  "dashboard.try.paused.body": {
+    "en": "In the app the timer stops until the student is back in view and presses I’m here.",
+    "ru": "В приложении таймер останавливается, пока студент не вернётся в кадр и не нажмёт «Я здесь»."
+  },
+  "dashboard.try.paused.resume": {
+    "en": "I’m here",
+    "ru": "Я здесь"
+  }
+}

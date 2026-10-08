@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { toEnvelope } from "../src/envelope.ts";
 import { MainToWorker, WorkerToMain } from "../src/protocol.ts";
 import type { RuleEvent } from "../src/rules.ts";
-import { installModuleImport } from "../src/vision.ts";
+import { installModuleImport, isModuleWorkerScope } from "../src/vision.ts";
 import { fakeBitmap } from "./support/fake-pipeline.ts";
 
 const models = {
@@ -107,6 +107,19 @@ describe("loading the tasks-vision wasm loader in a module worker", () => {
     await scope.import?.("uki://app/resources/models/wasm/vision_wasm_module_internal.js");
     expect(scope.ModuleFactory).toBe(factory);
     expect(load).toHaveBeenCalledTimes(2);
+  });
+
+  it("tells a module worker from a classic one by importScripts with no URL", () => {
+    const classic = { importScripts: vi.fn() };
+    expect(isModuleWorkerScope(classic)).toBe(false);
+    expect(classic.importScripts).toHaveBeenCalledWith();
+    const module = {
+      importScripts: () => {
+        throw new TypeError("Module scripts don't support importScripts().");
+      },
+    };
+    expect(isModuleWorkerScope(module)).toBe(true);
+    expect(isModuleWorkerScope({})).toBe(true);
   });
 
   it("fails clearly for a loader without a default export", async () => {

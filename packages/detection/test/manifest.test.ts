@@ -17,7 +17,7 @@ import {
   readManifest,
   sha256File,
   verifyManifest,
-  WORKER_MODEL_PATHS,
+  WEB_DEMO_MODEL_PATHS,
   writeManifest,
 } from "../scripts/model-files.ts";
 import { MODEL_PATHS, ModelManifest, modelUrls } from "../src/models.ts";
@@ -143,12 +143,12 @@ describe("the committed model list", () => {
   it("pins the worker's own files for the /try demo, and nothing of the card match", async () => {
     const m = await readManifest(DESKTOP_MANIFEST);
     if (!m) throw new Error("no manifest");
-    const entries = pinnedEntries(m, WORKER_MODEL_PATHS);
+    const entries = pinnedEntries(m, WEB_DEMO_MODEL_PATHS);
     expect(entries.map((entry) => entry.path)).toEqual([
       "face_landmarker.task",
       "efficientdet_lite0.tflite",
-      "wasm/vision_wasm_module_internal.js",
-      "wasm/vision_wasm_module_internal.wasm",
+      "wasm/vision_wasm_internal.js",
+      "wasm/vision_wasm_internal.wasm",
     ]);
     expect(() => pinnedEntries(m, ["nope.task"])).toThrow(/not in manifest\.json/);
     const moved = {
@@ -157,7 +157,7 @@ describe("the committed model list", () => {
         file.path === MODEL_PATHS.faceLandmarker ? { ...file, source: "https://example.test/f" } : file,
       ),
     };
-    expect(() => pinnedEntries(moved, WORKER_MODEL_PATHS)).toThrow(/MODEL_SPECS/);
+    expect(() => pinnedEntries(moved, WEB_DEMO_MODEL_PATHS)).toThrow(/MODEL_SPECS/);
   });
 
   it.skipIf(!existsSync(join(modelsDir, MODEL_PATHS.faceLandmarker)))(
