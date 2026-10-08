@@ -10,6 +10,11 @@
 //   tile; those rows give event at to screen for the whole wall.
 // - The page also stamps each Realtime frame, so every time splits on the host clock into the server
 //   side (at to frame: ingest, Postgres, the trigger, Realtime) and the dashboard (frame to DOM).
+// - Two more probe students ask the proctor 20 times in all, spread over the window (WP 1.14, the
+//   plan's load row: "120 sessions plus 20 help requests: request to 2.4d under 1 s at p95"). Each
+//   request is timed from its `at` to the Requests count on Aigerim's wall (2.4d) taking its new value,
+//   stamped in the page by e2e/support/help-recorder.ts. The simulator plays no requests of its own
+//   (--help-requests 0), so the count is the probes' alone.
 // - Gulnara, proctor of Physics 1 only, signs in meanwhile: no Mathematics 2 on her overview, 404 on its
 //   lobby and wall, no rows under RLS, and Realtime refuses exam:{Mathematics 2}.
 //
@@ -25,6 +30,7 @@ import { parseServerTiming } from "../../scripts/lib/perf/stats.ts";
 import { NAMED_PARTS } from "../../scripts/lib/sim/cast.ts";
 import { examRow, pageStatus, signIn, waitForWallSubscribed } from "../support/dashboard.ts";
 import { ROOT } from "../support/env.ts";
+import { badgeMark, badgeReached, installBadgeRecorder } from "../support/help-recorder.ts";
 import { prefix } from "../support/messages.ts";
 import { EXAMS, STAFF } from "../support/seed.ts";
 import { describeLatency, type LatencySummary, summarize } from "../support/stats.ts";
@@ -46,6 +52,9 @@ const MAY_START = process.env.UKI_E2E_START === "1";
 const SIMULATED = 120;
 const PROBES = 3;
 const PROBE_EVERY_MS = 2000;
+/** Help requests during the window (the plan's load row), from probes of their own. */
+const HELP_REQUESTS = 20;
+const HELP_PROBES = 2;
 /** The plan's bar: an event shows on the proctor's wall within 1 s. */
 const BUDGET_MS = 1000;
 /**
@@ -294,7 +303,64 @@ async function tileCount(page: Page): Promise<number> {
   return page.locator("[data-session-id]").count();
 }
 
-test("the wall follows 120 simulated students within 1 s, and another exam's proctor sees none of it", async ({
+interface HelpLeg {
+  samples: { i: number; eventId: string; atMs: number; shownAt: number; ms: number }[];
+  /** Stored, but the Requests count did not reach its value within 15 s. */
+  misses: { i: number; reason: string }[];
+  /** The ingest call failed after retries: nothing to time. */
+  failures: { i: number; reason: string }[];
+}
+
+/**
+ * HELP_REQUESTS requests spread evenly over the window, from the help probes in turn, each timed from
+ * its `at` to the Requests count on the wall taking the value it adds (requests stay open, so the count
+ * climbs by one each time).
+ */
+async function askTheProctor(
+  page: Page,
+  askers: readonly JoinedStudent[],
+  windowStart: number,
+): Promise<HelpLeg> {
+  const leg: HelpLeg = { samples: [], misses: [], failures: [] };
+  const every = WINDOW_MS / HELP_REQUESTS;
+  let open = await page.evaluate(() => {
+    const button = document.querySelector("[data-help-count]");
+    return button === null ? 0 : Number(button.getAttribute("data-help-count"));
+  });
+  for (let i = 0; i < HELP_REQUESTS; i += 1) {
+    const asker = askers[i % askers.length];
+    if (asker === undefined) break;
+    await sleep(Math.max(0, windowStart + (i + 0.5) * every - Date.now()));
+    const mark = await badgeMark(page);
+    let sent: Awaited<ReturnType<typeof ingest>>["sent"];
+    try {
+      ({ sent } = await ingest(asker, [
+        draft("student.help_requested", {
+          topic: i % 2 === 0 ? "question" : "technical",
+          text: `Load test request ${i + 1} of ${HELP_REQUESTS}`,
+        }),
+      ]));
+    } catch (error) {
+      leg.failures.push({ i, reason: error instanceof Error ? error.message : String(error) });
+      continue;
+    }
+    open += 1;
+    const event = sent[0];
+    if (event === undefined) {
+      leg.misses.push({ i, reason: "ingest sent nothing" });
+      continue;
+    }
+    try {
+      const shownAt = await badgeReached(page, open, mark);
+      leg.samples.push({ i, eventId: event.id, atMs: event.atMs, shownAt, ms: shownAt - event.atMs });
+    } catch (error) {
+      leg.misses.push({ i, reason: error instanceof Error ? error.message : String(error) });
+    }
+  }
+  return leg;
+}
+
+test("the wall follows 120 simulated students and 20 help requests within 1 s, and another exam's proctor sees none of it", async ({
   page,
   browser,
 }, testInfo) => {
@@ -312,12 +378,15 @@ test("the wall follows 120 simulated students within 1 s, and another exam's pro
     );
   }
 
-  const probeNumbers = await pickProbeNumbers(PROBES);
+  const picked = await pickProbeNumbers(PROBES + HELP_PROBES);
+  const probeNumbers = picked.slice(0, PROBES);
   const simArgs = [
     "--sessions",
     String(SIMULATED),
     "--skip",
-    [MADINA, ...probeNumbers].join(","),
+    [MADINA, ...picked].join(","),
+    "--help-requests",
+    "0",
     "--seconds",
     String(Math.round((WINDOW_MS + 20 * 60_000) / 1000)),
     "--cleanup",
@@ -326,6 +395,7 @@ test("the wall follows 120 simulated students within 1 s, and another exam's pro
   ];
   const logPath = testInfo.outputPath("demo-simulate.log");
   const probes: JoinedStudent[] = [];
+  const helpProbes: JoinedStudent[] = [];
   const probeUids: string[] = [];
   const otherContext = await browser.newContext({
     baseURL: testInfo.project.use.baseURL,
@@ -342,11 +412,11 @@ test("the wall follows 120 simulated students within 1 s, and another exam's pro
     await signIn(page, STAFF.aigerim);
     const other = await otherContext.newPage();
     await signIn(other, STAFF.gulnara);
-    for (const number of probeNumbers) {
+    for (const number of picked) {
       for (let attempt = 1; ; attempt += 1) {
         try {
           const probe = await joinExam(EXAMS.math2.code, number);
-          probes.push(probe);
+          (probeNumbers.includes(number) ? probes : helpProbes).push(probe);
           probeUids.push(probe.uid);
           break;
         } catch (error) {
@@ -369,7 +439,9 @@ test("the wall follows 120 simulated students within 1 s, and another exam's pro
       },
       Math.max(60_000, exam.startsAtMs - Date.now() + 120_000),
     );
-    for (const probe of probes) await ingest(probe, [draft("exam.started", {})], { question: 1 });
+    for (const probe of [...probes, ...helpProbes]) {
+      await ingest(probe, [draft("exam.started", {})], { question: 1 });
+    }
     const writing = await until(
       `${SIMULATED - 10} simulated students writing`,
       async () => {
@@ -383,8 +455,9 @@ test("the wall follows 120 simulated students within 1 s, and another exam's pro
     const subscribed = waitForWallSubscribed(page, EXAMS.math2.id);
     await page.goto(`/exams/${EXAMS.math2.id}/live`);
     await subscribed;
-    await expect.poll(() => tileCount(page)).toBeGreaterThanOrEqual(SIMULATED - 10 + PROBES);
+    await expect.poll(() => tileCount(page)).toBeGreaterThanOrEqual(SIMULATED - 10 + PROBES + HELP_PROBES);
     await installWallRecorder(page);
+    await installBadgeRecorder(page);
 
     // Gulnara, during the load: nothing of Mathematics 2 on her screens, in the API or on Realtime.
     await other.goto("/overview");
@@ -414,6 +487,7 @@ test("the wall follows 120 simulated students within 1 s, and another exam's pro
     const counts = probes.map(() => 0);
     const recorder = recordFunctionAttempts();
     const windowStart = Date.now();
+    const helpLeg = askTheProctor(page, helpProbes, windowStart);
     let turn = 0;
     while (Date.now() - windowStart < WINDOW_MS) {
       const slot = Date.now();
@@ -474,6 +548,7 @@ test("the wall follows 120 simulated students within 1 s, and another exam's pro
       }
       await sleep(Math.max(0, PROBE_EVERY_MS - (Date.now() - slot)));
     }
+    const help = await helpLeg;
     const windowEnd = Date.now();
     recorder.stop();
     const attempts = recorder.attempts;
@@ -553,6 +628,7 @@ test("the wall follows 120 simulated students within 1 s, and another exam's pro
       serverAllEvents: summarize(feed.server),
       dashboardProbeTile: summarize(probeLegs.map((leg) => leg.dashboard)),
       dashboardFeedRow: summarize(feed.dashboard),
+      endToEndHelpRequest: summarize(help.samples.map((sample) => sample.ms)),
     } satisfies Record<string, LatencySummary>;
     const labels: Record<keyof typeof summaries, string> = {
       endToEndProbeTile: "end to end: probe event at -> tile update (app path through ingest)",
@@ -564,6 +640,7 @@ test("the wall follows 120 simulated students within 1 s, and another exam's pro
       serverAllEvents: "server side: event at -> Realtime frame (all flag and log events)",
       dashboardProbeTile: "dashboard: Realtime frame -> probe tile update",
       dashboardFeedRow: "dashboard: Realtime frame -> Live events row (all events)",
+      endToEndHelpRequest: "end to end: help request at -> Requests count on 2.4d",
     };
     const report = {
       window: {
@@ -574,6 +651,12 @@ test("the wall follows 120 simulated students within 1 s, and another exam's pro
       summaries,
       probeMisses,
       ingestFailures,
+      helpRequests: {
+        sent: help.samples.length + help.misses.length,
+        shown: help.samples.length,
+        misses: help.misses,
+        failures: help.failures,
+      },
       functionAttempts: {
         n: attempts.length,
         byStatus: Object.fromEntries(
@@ -618,7 +701,11 @@ test("the wall follows 120 simulated students within 1 s, and another exam's pro
     );
     writeFileSync(
       reportPath,
-      JSON.stringify({ ...report, labels, probeSamples, notShown: notShownDetail }, null, 2),
+      JSON.stringify(
+        { ...report, labels, probeSamples, helpSamples: help.samples, notShown: notShownDetail },
+        null,
+        2,
+      ),
     );
     await testInfo.attach("wall-under-load.json", { path: reportPath, contentType: "application/json" });
 
@@ -640,13 +727,22 @@ test("the wall follows 120 simulated students within 1 s, and another exam's pro
     expect.soft(simExit, "demo:simulate --watch exit code (1: a broadcast never arrived)").toBe(0);
     expect(probeMisses).toEqual([]);
     expect.soft(ingestFailures, "ingest calls that failed after retries").toEqual([]);
+    // 20 help requests, each on 2.4d's count; their p95 is checked with the other legs below.
+    expect(help.misses).toEqual([]);
+    expect.soft(help.failures, "help requests whose ingest call failed").toEqual([]);
+    expect(help.samples.length + help.failures.length).toBe(HELP_REQUESTS);
     expect(notShown.map((event) => `${event.type} ${event.at}`)).toEqual([]);
     // Each leg against the 1 s bar; soft, so one run reports every leg that misses it. The simulated
     // events' end to end is reported, not asserted: the simulator stamps `at` on the server-corrected
     // clock (the Docker VM's, which drifts from the host's by hundreds of ms), while the page measures on
     // the host clock. The probes time the same path on one clock, and the simulator's own --watch client
     // times send to broadcast on one clock.
-    for (const key of ["dashboardProbeTile", "dashboardFeedRow", "endToEndProbeTile"] as const) {
+    for (const key of [
+      "dashboardProbeTile",
+      "dashboardFeedRow",
+      "endToEndProbeTile",
+      "endToEndHelpRequest",
+    ] as const) {
       expect.soft(summaries[key].p95, `p95 of ${labels[key]}`).toBeLessThan(BUDGET_MS);
     }
   } finally {
@@ -654,7 +750,7 @@ test("the wall follows 120 simulated students within 1 s, and another exam's pro
     await gulnara.client.auth.signOut().catch(() => undefined);
     await otherContext.close();
     if (sim !== null) console.log(`demo:simulate stopped, exit ${await stopSimulator(sim)}`);
-    await removeProbes(probes, probeUids);
+    await removeProbes([...probes, ...helpProbes], probeUids);
     if (existsSync(logPath)) {
       const tail = readFileSync(logPath, "utf8").trim().split("\n").slice(-4).join("\n");
       console.log(`demo:simulate, last lines:\n${tail}`);

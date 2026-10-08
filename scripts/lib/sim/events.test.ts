@@ -30,6 +30,22 @@ describe("draftsFor", () => {
   });
 });
 
+describe("draftsFor help", () => {
+  it("asks the proctor with student.help_requested, a log event the help_from_event trigger turns into a request", () => {
+    const [draft] = draftsFor(
+      { kind: "help", topic: "question", text: "Q 8: is the angle in radians or degrees?" },
+      ctx,
+    );
+    expect(draft).toEqual({
+      type: "student.help_requested",
+      data: { topic: "question", text: "Q 8: is the angle in radians or degrees?" },
+      atMs: ctx.nowMs,
+    });
+    if (draft === undefined) return;
+    expect(toBatchEvent(SESSION, 9, draft)).toMatchObject({ source: "app", review: "log" });
+  });
+});
+
 describe("toBatchEvent", () => {
   it("sets the server's review and no stills", () => {
     const phone = toBatchEvent(SESSION, 4, {

@@ -2075,6 +2075,19 @@ export type Database = {
       exam_code_latin: { Args: { p: string }; Returns: string }
       exam_draft_json: { Args: { p_exam_id: string }; Returns: Json }
       exam_has_open_flags: { Args: { p_exam_id: string }; Returns: boolean }
+      exam_overview_counts: {
+        Args: { p_exam_id: string }
+        Returns: {
+          flagged_events: number
+          groups: string[]
+          joined: number
+          paused: number
+          proctor_count: number
+          roster_size: number
+          sessions_final: number
+          writing: number
+        }[]
+      }
       exam_question_count: { Args: { exam_id: string }; Returns: number }
       exam_started: { Args: { p_exam_id: string }; Returns: boolean }
       exam_workspace: { Args: { p_exam_id: string }; Returns: string }
@@ -2275,6 +2288,20 @@ export type Database = {
       session_tick: { Args: never; Returns: Json }
       staff_may_share: { Args: never; Returns: boolean }
       start_exam: { Args: { exam_id: string }; Returns: Json }
+      student_session_stats: {
+        Args: never
+        Returns: {
+          exams_taken: number
+          flags: number
+          last_exam_at: string
+          last_exam_id: string
+          last_exam_title: string
+          latest_decision: Database["public"]["Enums"]["review_decision"]
+          latest_decision_at: string
+          sessions_in_review: number
+          student_id: string
+        }[]
+      }
       submit_session: { Args: { session_id: string }; Returns: Json }
       term_exam_flag_types: {
         Args: { p_exam_id: string }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { planCast, shortName, WALL_ROLES } from "./cast.ts";
+import { HELP_PARTS, planCast, shortName, WALL_ROLES } from "./cast.ts";
 import { seedRoster } from "./fixtures.ts";
 
 const roster = seedRoster();
@@ -69,6 +69,40 @@ describe("planCast", () => {
     );
     // Arman's lobby part moves to a generic student.
     expect(small.members.find((m) => m.lobby === "help_app")?.number.startsWith("202350")).toBe(true);
+  });
+
+  it("gives 2.4d's two help requests to Saule T. and Kamila R., whose tiles stay calm", () => {
+    const saule = byNumber.get("20235055");
+    const kamila = byNumber.get("20235038");
+    expect(saule).toMatchObject({ wall: "normal", lobby: "normal", short: "Saule T." });
+    expect(saule?.help).toMatchObject({ topic: "technical", atSimMs: 70_000 });
+    expect(kamila).toMatchObject({ wall: "normal", lobby: "normal", short: "Kamila R." });
+    expect(kamila?.help).toMatchObject({
+      topic: "question",
+      text: "Q 8: is the angle in radians or degrees?",
+    });
+    expect(cast.members.filter((m) => m.help !== undefined)).toHaveLength(2);
+    for (const part of HELP_PARTS) expect(part.atSimMs).toBeLessThan(3 * 60_000);
+  });
+
+  it("hands a help request to a calm generic student when its named student is not simulated", () => {
+    const without = planCast(roster, {
+      ...defaults,
+      skipNumbers: new Set(["20231187", "20235055"]),
+      count: 120,
+    });
+    const helpers = without.members.filter((m) => m.help !== undefined);
+    expect(helpers).toHaveLength(2);
+    const stand = helpers.find((m) => m.number !== "20235038");
+    expect(stand).toMatchObject({ wall: "normal", lobby: "normal" });
+    expect(stand?.help?.topic).toBe("technical");
+  });
+
+  it("plays fewer help requests on request (e2e:load sends its own)", () => {
+    const none = planCast(roster, { ...defaults, count: 120, helpRequests: 0 });
+    expect(none.members.filter((m) => m.help !== undefined)).toHaveLength(0);
+    const one = planCast(roster, { ...defaults, count: 120, helpRequests: 1 });
+    expect(one.members.filter((m) => m.help !== undefined).map((m) => m.number)).toEqual(["20235055"]);
   });
 
   it("caps the cast at the free roster", () => {

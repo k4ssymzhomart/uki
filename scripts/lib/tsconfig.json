@@ -10,6 +10,9 @@
     "../demo-simulate.ts",
     "../release-assets.ts",
     "../dev.ts",
+    "../seed-term.ts",
+    "../seed-staff.ts",
+    "../seed-check.ts",
     "../guards/**/*.ts"
   ]
 }

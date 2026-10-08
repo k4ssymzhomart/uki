@@ -1,7 +1,8 @@
 // Who the simulator plays, and which part of the lobby (1.5) and live wall (2.4) script each one acts.
 // The named students keep the parts Figma draws for them; every part a named student cannot play (not
 // in the cast, or skipped because a real laptop uses that number) goes to the next generic student.
-import type { DesktopOs, Locale } from "../../../packages/contracts/src/index.ts";
+// Seed v2 adds the two Ask proctor requests 2.4d draws (HELP_PARTS).
+import type { DesktopOs, HelpTopic, Locale } from "../../../packages/contracts/src/index.ts";
 import { createRng } from "./rng.ts";
 
 /** Lobby parts (1.5, frame 61:3347). */
@@ -31,12 +32,21 @@ export interface RosterEntry {
   locale: Locale;
 }
 
+/** An Ask proctor request (2.4d): when, in simulated ms after the exam's start, and what it says. */
+export interface HelpPart {
+  atSimMs: number;
+  topic: HelpTopic;
+  text: string;
+}
+
 export interface CastMember extends RosterEntry {
   lobby: LobbyRole;
   wall: WallRole;
   os: DesktopOs;
   /** "Dias K." as the wall writes it. */
   short: string;
+  /** The help request this student sends, if any. */
+  help?: HelpPart;
 }
 
 interface NamedPart {
@@ -67,6 +77,28 @@ export const NAMED_PARTS: Readonly<Record<string, NamedPart>> = {
   // 1.5 "Not joined · Invite email bounced": joins only after the start, if at all
   "20230877": { lobby: "late" },
 };
+
+/**
+ * The two requests 2.4d draws (Figma 155:11803), both in the exam's first three minutes: Saule T. asks
+ * about her camera at 10:44 and Kamila R. about question 8 at 10:46. A request whose student is not in
+ * the cast goes to the next generic student with no other part. Their texts are what the simulated
+ * students type, like a student's answer, not product copy.
+ */
+export const HELP_PARTS: readonly (HelpPart & { number: string })[] = [
+  {
+    number: "20235055",
+    atSimMs: 70_000,
+    topic: "technical",
+    text: "My camera froze for a second. Is my exam still running?",
+  },
+  {
+    number: "20235038",
+    atSimMs: 160_000,
+    topic: "question",
+    text: "Q 8: is the angle in radians or degrees?",
+  },
+];
+const HELP_NUMBERS = new Set(HELP_PARTS.map((part) => part.number));
 
 /** The other names on the 2.4 wall, so a small cast still shows them first. */
 const WALL_NAMES = [
@@ -103,6 +135,8 @@ export interface CastOptions {
   /** Student ids that already have a session the simulator does not own. */
   takenStudentIds: ReadonlySet<string>;
   seed: number;
+  /** How many of HELP_PARTS to play, in order (default all of them). */
+  helpRequests?: number;
 }
 
 export interface Cast {
@@ -151,8 +185,9 @@ export function planCast(roster: readonly RosterEntry[], options: CastOptions): 
 
   // Hand every required part nobody plays yet to the next generic student, in seat order.
   const bySeat = [...members].sort((a, b) => (a.seat ?? 1e9) - (b.seat ?? 1e9));
+  // The two students who ask for help keep a calm tile, as 2.4d draws them.
   const generic = (taken: (m: CastMember) => boolean) =>
-    bySeat.find((m) => NAMED_PARTS[m.number] === undefined && !taken(m));
+    bySeat.find((m) => NAMED_PARTS[m.number] === undefined && !HELP_NUMBERS.has(m.number) && !taken(m));
   const lobbyNeeded = [...REQUIRED_LOBBY];
   for (const member of members) {
     const index = lobbyNeeded.indexOf(member.lobby);
@@ -172,6 +207,13 @@ export function planCast(roster: readonly RosterEntry[], options: CastOptions): 
     const member =
       generic((m) => m.wall !== "normal" || m.lobby !== "normal") ?? generic((m) => m.wall !== "normal");
     if (member) member.wall = role;
+  }
+
+  for (const part of HELP_PARTS.slice(0, options.helpRequests ?? HELP_PARTS.length)) {
+    const member =
+      members.find((m) => m.number === part.number && m.help === undefined) ??
+      generic((m) => m.wall !== "normal" || m.lobby !== "normal" || m.help !== undefined);
+    if (member) member.help = { atSimMs: part.atSimMs, topic: part.topic, text: part.text };
   }
 
   return {

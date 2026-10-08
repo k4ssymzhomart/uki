@@ -111,6 +111,10 @@ export function draftsFor(action: SimAction, ctx: DraftContext): EventDraft[] {
       ];
     case "tab_blocked":
       return [{ type: "tab.blocked", source: "lock", data: { host: action.host }, atMs: now }];
+    case "help":
+      return [
+        { type: "student.help_requested", data: { topic: action.topic, text: action.text }, atMs: now },
+      ];
     case "self_pause":
       return action.cause === "face_missing"
         ? [

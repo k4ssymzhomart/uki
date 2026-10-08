@@ -34,6 +34,8 @@
     "e2e:load": "node scripts/lib/local-stack.ts e2e:load && playwright test -c e2e/simulate/playwright.config.ts",
     "supabase:deploy": "pnpm functions:sync && supabase db push && supabase functions deploy",
     "seed:staff": "tsx scripts/seed-staff.ts",
+    "seed:term": "tsx scripts/seed-term.ts",
+    "seed:check": "tsx scripts/seed-check.ts",
     "demo:reset": "tsx scripts/demo-reset.ts",
     "demo:simulate": "tsx scripts/demo-simulate.ts",
     "typecheck:functions": "(tsx scripts/sync-contracts.ts --check || pnpm functions:sync) && tsc --noEmit -p supabase/functions/tsconfig.json && tsc --noEmit -p test/integration/tsconfig.json",

@@ -5,11 +5,13 @@
 // Lobby (1.5): students join over the first 45 s and walk through checking, identity and rules to
 // ready; three get stuck with a detail (a blocked app, a busy camera, an unreadable card) until the
 // exam starts. Live wall (2.4): after the start every student answers questions; the parts in cast.ts
-// play the frame's moments in the first three minutes; everyone else adds an occasional look away;
-// students submit between minute 55 and 85 (two submit after four to seven minutes).
+// play the frame's moments in the first three minutes, two of them ask the proctor (2.4d); everyone
+// else adds an occasional look away; students submit between minute 55 and 85 (two submit after four
+// to seven minutes).
 import {
   formatStatusDetail,
   type GazeDirection,
+  type HelpTopic,
   type StatusStep,
 } from "../../../packages/contracts/src/index.ts";
 import type { CastMember } from "./cast.ts";
@@ -42,6 +44,7 @@ export type SimAction =
   | { kind: "phone"; score: number; heldMs: number }
   | { kind: "second_face"; durationMs: number }
   | { kind: "tab_blocked"; host: string }
+  | { kind: "help"; topic: HelpTopic; text: string }
   | { kind: "self_pause"; cause: "face_missing" | "camera_lost"; pauseSimMs: number }
   | { kind: "resume" }
   | { kind: "go_offline"; realMs: number }
@@ -240,6 +243,14 @@ export function planExam(member: CastMember, rng: Rng, options: ExamPlanOptions)
     case "early_submit":
     case "normal":
       break;
+  }
+
+  // Ask proctor (2.4d): the request this student sends, if the cast gave them one.
+  if (member.help) {
+    plan.push({
+      atSimMs: member.help.atSimMs,
+      action: { kind: "help", topic: member.help.topic, text: member.help.text },
+    });
   }
 
   // Background noise across the class: about one look away a minute and a rare phone or empty seat.

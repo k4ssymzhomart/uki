@@ -1,0 +1,100 @@
+# `pnpm e2e:load` on a local stack in GitHub Actions (WP 1.14; docs/phase-1-plan.md, Testing: "Load:
+# 120 sessions plus 20 help requests: request to 2.4d under 1 s at p95"). The development Mac runs no
+# containers, so this is where the load test runs. It is reported, not a merge gate: a 4-core runner
+# carries Postgres, Realtime, the edge runtime, `next dev`, Chromium and 120 simulated students at once,
+# so its figures are an upper bound; the plan judges the 1 s bar on the cloud project. The run's figures
+# go to the job summary and the wall-under-load.json artifact.
+name: Load
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - e2e/simulate/**
+      - e2e/support/**
+      - scripts/demo-simulate.ts
+      - scripts/demo-reset.ts
+      - scripts/lib/sim/**
+      - scripts/lib/seed-v2/**
+      - .github/workflows/load.yml
+
+concurrency:
+  group: load-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+  TURBO_TELEMETRY_DISABLED: "1"
+  DO_NOT_TRACK: "1"
+  ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+
+jobs:
+  load:
+    name: Load test, 120 sessions and 20 help requests (reported, not a merge gate)
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.107.0
+      - name: Start the slim local stack (pnpm db:start; the edge runtime runs under functions serve)
+        run: pnpm db:start
+      - name: Migrations and the seed, staff, and the demo as the script starts it
+        run: |
+          pnpm db:reset
+          pnpm env:local
+          pnpm seed:staff
+          pnpm demo:reset
+      - name: Serve the Edge Functions
+        run: nohup pnpm functions:serve > functions-serve.log 2>&1 &
+      - name: pnpm e2e:load (starts Mathematics 2 through the simulator)
+        id: load
+        continue-on-error: true
+        env:
+          UKI_E2E_START: "1"
+          UKI_E2E_LOAD_SECONDS: "240"
+        run: pnpm e2e:load
+      - name: Figures
+        if: always()
+        run: |
+          report="$(find test-results/simulate -name wall-under-load.json -print -quit 2>/dev/null || true)"
+          {
+            echo "### e2e:load (${{ steps.load.outcome }})"
+            if [ -n "$report" ]; then
+              node --input-type=module -e "
+                import { readFileSync } from 'node:fs';
+                const r = JSON.parse(readFileSync(process.argv[1], 'utf8'));
+                console.log('| leg | n | p50 ms | p95 ms | max ms |');
+                console.log('| --- | --- | --- | --- | --- |');
+                for (const [key, s] of Object.entries(r.summaries)) {
+                  console.log('| ' + (r.labels[key] ?? key) + ' | ' + s.n + ' | ' + Math.round(s.p50 ?? NaN) + ' | ' + Math.round(s.p95 ?? NaN) + ' | ' + Math.round(s.max ?? NaN) + ' |');
+                }
+                console.log('');
+                console.log('Help requests: ' + JSON.stringify(r.helpRequests));
+              " "$report"
+            else
+              echo "No wall-under-load.json: the test stopped before its figures."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Logs and figures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-test
+          path: |
+            functions-serve.log
+            test-results/simulate/
+          if-no-files-found: ignore
+          retention-days: 14
