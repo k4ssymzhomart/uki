@@ -54,8 +54,28 @@ export interface FunctionsEnv {
 }
 
 /**
+ * The lowest port Linux gives an outgoing connection (macOS and Windows start at 49152). A connection,
+ * open or in TIME_WAIT, whose local port is the stub's makes the stub's listen() fail with EADDRINUSE,
+ * as it did in CI right after the demo scripts' traffic.
+ */
+const EPHEMERAL_PORTS_FROM = 32768;
+
+/** The stub's port from RESEND_BASE_URL in `file`, refused when the OS may give it to a connection. */
+export function stubPort(file: string, base: URL): number {
+  const port = Number(base.port);
+  if (port >= EPHEMERAL_PORTS_FROM) {
+    throw new Error(
+      `${file}: RESEND_BASE_URL's port ${port} is one the OS gives outgoing connections; ` +
+        `use a port below ${EPHEMERAL_PORTS_FROM} for the Resend stub`,
+    );
+  }
+  return port;
+}
+
+/**
  * Reads UKI_FUNCTIONS_ENV_FILE, or supabase/functions/local.env. Refuses to go on unless
- * RESEND_BASE_URL points at this machine, so no test ever reaches the real Resend.
+ * RESEND_BASE_URL points at this machine, so no test ever reaches the real Resend, and at a port
+ * below the ephemeral range, so no outgoing connection can be holding it.
  */
 export function readFunctionsEnv(): FunctionsEnv {
   const file = process.env.UKI_FUNCTIONS_ENV_FILE ?? join(ROOT, "supabase/functions/local.env");
@@ -66,7 +86,7 @@ export function readFunctionsEnv(): FunctionsEnv {
   }
   return {
     file,
-    port: Number(base.port),
+    port: stubPort(file, base),
     apiKey: vars.RESEND_API_KEY ?? "",
     sink: vars.UKI_EMAIL_SINK?.trim().toLowerCase() || null,
     webUrl: vars.UKI_WEB_URL?.replace(/\/+$/, "") || null,

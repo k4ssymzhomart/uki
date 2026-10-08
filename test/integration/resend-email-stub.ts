@@ -7,6 +7,7 @@
 import { readFileSync } from "node:fs";
 import { createServer, type IncomingMessage, type Server } from "node:http";
 import { isAbsolute, join } from "node:path";
+import { stubPort } from "./resend-stub.ts";
 import { parseEnvLines, ROOT } from "./stack.ts";
 
 /** One POST /emails the stub received. */
@@ -28,12 +29,13 @@ export function functionsEnvFile(): string {
 export function resendStubSettings(): { port: number; apiKey: string; sink: string | null } {
   const vars = parseEnvLines(readFileSync(functionsEnvFile(), "utf8"));
   const base = new URL(vars.RESEND_BASE_URL ?? "");
-  // Only ever a stub on this machine: refuse anything that could be the real API.
+  // Only ever a stub on this machine: refuse anything that could be the real API. The port stays below
+  // the ephemeral range, as for send-invites' stub (stubPort).
   if (!["host.docker.internal", "localhost", "127.0.0.1"].includes(base.hostname) || base.port === "") {
     throw new Error(`integration: RESEND_BASE_URL in ${functionsEnvFile()} is not a local stub`);
   }
   return {
-    port: Number(base.port),
+    port: stubPort(functionsEnvFile(), base),
     apiKey: vars.RESEND_API_KEY ?? "",
     sink: vars.UKI_EMAIL_SINK?.trim() || null,
   };

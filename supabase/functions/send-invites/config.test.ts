@@ -27,7 +27,7 @@ describe("readInviteConfig", () => {
     const config = readInviteConfig(
       env({
         RESEND_API_KEY: "k",
-        RESEND_BASE_URL: "http://host.docker.internal:54790",
+        RESEND_BASE_URL: "http://host.docker.internal:25790",
         UKI_EMAIL_FROM: "KRU <exams@kru.test>",
         UKI_EMAIL_SINK: " Me@Example.com ",
         UKI_WEB_URL: "https://uki-web.vercel.app/",
@@ -36,7 +36,7 @@ describe("readInviteConfig", () => {
     );
     expect(config).toEqual({
       apiKey: "k",
-      baseUrl: "http://host.docker.internal:54790",
+      baseUrl: "http://host.docker.internal:25790",
       from: "KRU <exams@kru.test>",
       sink: "me@example.com",
       assetsUrl: "https://uki-web.vercel.app/email",
