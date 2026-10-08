@@ -300,6 +300,25 @@ async function checkTerm(client: UkiClient, plan: TermPlan): Promise<void> {
 
 async function checkA1(client: UkiClient): Promise<void> {
   const math = FACULTY.mathematics;
+  // Exams outside seed v2 that A.1 counts for the faculty: any that ran and is not one of the term's.
+  // Judge mode's DEMO-LIVE is the likely one (live, in the Faculty of Mathematics): A.1 then shows it too.
+  const term = new Set(buildTermPlan().exams.map((exam) => exam.id));
+  const others = must(
+    await client
+      .from("exams")
+      .select("id, code, title")
+      .eq("workspace_id", WORKSPACE_ID)
+      .eq("faculty_id", math)
+      .in("status", ["live", "to_review", "reviewed"]),
+    "exams that ran",
+  ).filter((exam) => !term.has(exam.id));
+  if (others.length > 0) {
+    check(
+      "A.1 counts only the term",
+      false,
+      `also counted for the Faculty of Mathematics: ${others.map((exam) => exam.code ?? exam.title).join(", ")}; A.1 shows them with the term`,
+    );
+  }
   const kpi = must(
     await client
       .from("term_kpis")
