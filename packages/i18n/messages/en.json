@@ -731,6 +731,26 @@
     },
     "title": "Submitted."
   },
+  "email": {
+    "invite": {
+      "code_label": "Exam code",
+      "download": "Download Üki for macOS or Windows",
+      "footer_group": "Sent to {name} by the {office} exam office with Üki. You get this because you are in Group {group}.",
+      "footer_roster": "Sent to {name} by the {office} exam office with Üki. You get this because you are on the exam roster.",
+      "id_label": "Student ID",
+      "languages": "Қазақша · Русский · English",
+      "preview": "Exam code {code}. The lobby opens at {lobby}.",
+      "privacy": "Video stays on your laptop. Only events and flagged frames are sent.",
+      "step_check": "Run the system check before {weekday, select, mon {Monday} tue {Tuesday} wed {Wednesday} thu {Thursday} fri {Friday} sat {Saturday} sun {Sunday} other {Sunday}}.",
+      "step_install": "Install Üki on the laptop you will use.",
+      "step_join": "At {lobby}, join with your exam code and student ID.",
+      "subject": "{exam}: your exam code",
+      "subtitle": "{exam} · {day} {month, select, jan {January} feb {February} mar {March} apr {April} may {May} jun {June} jul {July} aug {August} sep {September} oct {October} nov {November} dec {December} other {December}} · lobby opens {lobby}",
+      "test_subject": "Test invite · {exam}: your exam code",
+      "title": "Your exam is on {weekday, select, mon {Monday} tue {Tuesday} wed {Wednesday} thu {Thursday} fri {Friday} sat {Saturday} sun {Sunday} other {Sunday}} at {time}.",
+      "wordmark_alt": "Üki"
+    }
+  },
   "ended": {
     "answered": {
       "title": "Answered",

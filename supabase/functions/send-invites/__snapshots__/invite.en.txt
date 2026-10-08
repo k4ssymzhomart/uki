@@ -1,0 +1,31 @@
+Қазақша · Русский · English
+
+Your exam is on Friday at 10:00.
+
+Mathematics 2 · Midterm · 9 October · lobby opens 09:40
+
+Exam code
+
+MATH2-204-FRI
+
+Student ID
+
+20231187
+
+1
+
+Install Üki on the laptop you will use.
+
+2
+
+Run the system check before Friday.
+
+3
+
+At 09:40, join with your exam code and student ID.
+
+Download Üki for macOS or Windows https://github.com/k4ssymzhomart/uki/releases/latest
+
+Video stays on your laptop. Only events and flagged frames are sent.
+
+Sent to Madina Tulegenova by the KRU exam office with Üki. You get this because you are in Group 204.

@@ -91,10 +91,18 @@ function syncFunctions() {
   if (!runSync(pnpmCommand(["functions:sync"])).ok) fail("pnpm functions:sync failed");
 }
 
-/** Serves the Edge Functions on the local API (the edge runtime is not part of `supabase start`). */
+/**
+ * Serves the Edge Functions on the local API (the edge runtime is not part of `supabase start`), with
+ * supabase/functions/local.env: Resend points at the local stub, so no real email leaves `pnpm dev`.
+ */
 function serveFunctions() {
-  const { command, args, shell } = fromPath("supabase", ["functions", "serve"]);
-  log("supabase functions serve");
+  const { command, args, shell } = fromPath("supabase", [
+    "functions",
+    "serve",
+    "--env-file",
+    "supabase/functions/local.env",
+  ]);
+  log("supabase functions serve --env-file supabase/functions/local.env");
   const child = spawn(command, args, { cwd: ROOT, stdio: "inherit", shell, env: process.env });
   child.on("error", (error) => log(`could not start supabase functions serve: ${error.message}`));
   return child;

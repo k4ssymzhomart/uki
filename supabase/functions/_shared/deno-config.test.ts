@@ -28,3 +28,28 @@ describe("deno.json import maps", () => {
     expect(shared.imports["@supabase/supabase-js"]).toBe(`npm:@supabase/supabase-js@${supabase.version}`);
   });
 });
+
+// send-invites renders 0.8 with React Email, so its import map adds React and the React Email parts on
+// top of the shared three. They must pin the versions the functions-unit tests render with.
+describe("send-invites/deno.json", () => {
+  const shared = read("../deno.json") as { imports: Record<string, string> };
+  const own = read("../send-invites/deno.json") as {
+    imports: Record<string, string>;
+    compilerOptions: Record<string, string>;
+  };
+  const extra = Object.entries(own.imports).filter(([name]) => !(name in shared.imports));
+
+  it("keeps the shared imports and compiles JSX with React", () => {
+    for (const [name, specifier] of Object.entries(shared.imports)) expect(own.imports[name]).toBe(specifier);
+    expect(own.compilerOptions).toEqual({ jsx: "react-jsx", jsxImportSource: "react" });
+  });
+
+  it("pins React and each React Email part to the version installed in the workspace", () => {
+    expect(extra.length).toBeGreaterThan(10);
+    for (const [name, specifier] of extra) {
+      const pkg = name.replace(/\/$/, "");
+      const { version } = read(`../../../node_modules/${pkg}/package.json`) as { version: string };
+      expect(specifier).toBe(name.endsWith("/") ? `npm:/${pkg}@${version}/` : `npm:${pkg}@${version}`);
+    }
+  });
+});

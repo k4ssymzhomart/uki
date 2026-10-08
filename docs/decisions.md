@@ -677,3 +677,57 @@ Choices WP 1.7 made for E.5b (153:11724), E.8 (98:9927) and E.1's rules in Üki 
 - **E.1's "Leaving it pauses the exam."** E.1's detail for Require full screen says the exam pauses. The Lock keeps Phase 0's behaviour: each exit is `lock.fullscreen_exit`, and the third one is a flag. Nothing pauses. The plan decides behaviour; the wording is WP 1.3's to settle on E.1.
 - **Catalog.** WP 1.7 adds 15 Üki Lock keys after `lock.calc.note`. Nine are from the frames: `lock.app.watching`, `lock.calc.clear`, `lock.noted.copy`, `lock.noted.site`, `lock.noted.tab` and `lock.status.built_in`, `.ends`, `.noted` and `.open`. Six are for lines no frame draws (`added-not-in-figma`): `lock.calc.error`, `lock.noted.kind.copy`, `.cut`, `.paste` and `.print`, and `lock.noted.outside`. Kazakh and Russian are first-pass translations for P.18.
 - **The Lock smoke reads the real toolbar popup.** Playwright does not attach to an action popup. The smoke opens it with `chrome.action.openPopup()` and reads it through Chrome's DevTools endpoint (`--remote-debugging-port=0`). Headless Chrome's screen is 800 × 600, which cut E.8 to the room under the toolbar, so the smoke sets `--screen-info={1440x960}`.
+
+## 2026-10-08 · 1.4 Invites
+
+Choices WP 1.4 made for `send-invites` and the invite email 0.8 (161:13438), where the plan leaves room or where the frame and the plan disagree. The plan decides behaviour and Figma decides visuals.
+
+**Who gets an invite, and when**
+- `{ exam_id }` sends the invites that have not gone out: `pending` and `failed`. A `sent` invite is never sent twice, and a `bounced` one waits until 0.3b fixes the address (a changed address puts the invite back to `pending`).
+- `{ exam_id, student_ids }` sends those students' invites again, whatever their state (0.3's Resend, 0.3b after a fix). A student id with no invite on the exam comes back in `failed` with "no invite for this student on the exam".
+- Real invites go out for `scheduled` and `live` exams only: a draft has no code yet. Any other exam answers `conflict`.
+- Only the exam office of the exam's workspace may call (`exam_office` or `admin`, through `is_office_of_exam` as the caller). Every read and write runs under the caller's row-level security; the secret key is used only for the staff member's sign-in address and the audit row.
+- One `audit_log` row per call, `invites.send` or `invites.test` on the exam, with the counts: the call reads the students' names and addresses.
+
+**The test invite (0.5)**
+- It goes to the signed-in staff member's sign-in address, in the first of their languages that is kk, ru or en, and is written for the first student of the roster by seat, so it shows exactly what students get. Its subject starts with "Test invite ·" (`email.invite.test_subject`, a new key). Nothing is written to `invites`.
+- It also works on a draft: the code is the one `buildExamCode` predicts, without a clash digit. An empty roster answers `conflict`.
+
+**UKI_EMAIL_SINK**
+- When it is set, every email goes to that inbox, the test invite included: the demo's staff addresses are not real inboxes, and Resend's test domain sends only to the account owner.
+- The content stays the student's: their language, code, student number and name. 0.8 shows no name, so the footer now starts "Sent to {name}" (below).
+
+**Copy that differs from 0.8**
+- The date joins the hero's second line: "Mathematics 2 · Midterm · 9 October · lobby opens 09:40". An invite can arrive more than a week early, and the title names only the weekday, as the frame does.
+- The footer is "Sent to {name} by the {office} exam office with Üki. You get this because you are in Group {group}." The frame's "· exams@kru.test" is left out: no workspace has a contact address, and the sender is Resend's test address until a domain is verified. A student without a group gets "…because you are on the exam roster." (`email.invite.footer_roster`, a new key).
+- "Қазақша · Русский · English" stays as the frame draws it, as text: each email is in one language, and the line says Üki speaks all three. It is not a switch.
+- The subject is the frame's mail header, "Mathematics 2 · Midterm: your exam code". A hidden preview line ("Exam code MATH2-204-FRI. The lobby opens at 09:40.") is added, so inboxes do not show the language line as the snippet.
+
+**Strings**
+- The 16 `email.invite.*` keys are catalog keys (group "0.8 Invite email") in en, kk and ru. `pnpm functions:sync` copies them into the functions as `email-messages.ts`, next to the contracts and as ignored by git as they are, and a small formatter in `send-invites/messages.ts` fills `{arg}` and `select`. A unit test checks it against use-intl for every key, language, weekday and month.
+- **The weekday and the month are catalog selects, not Intl names.** The Edge Runtime (supabase-edge-runtime 1.74.1, V8 11.6) has no Kazakh locale data: `kk-KZ` formats 9 October as "October 9". The selects also give each language its grammatical form: "в пятницу", "до пятницы", "жұма күніне дейін". Intl gives only the numbers, in the workspace's time zone. The runtime's time-zone data already has Asia/Almaty at UTC+5: 05:00 UTC prints as 10:00.
+- No-break spaces keep "at 10:00" and "9 October" on one line on a phone.
+
+**Look**
+- Inboxes take inline styles only, so the email cannot use the Tailwind classes. The colours, radii and spacing come from `packages/tokens` (`email-tokens.ts`, copied by `functions:sync`), and the sizes from 0.8's text styles. The frame dims some text with opacity, which not every inbox applies, so the email paints the blended colour instead (`over` in `theme.ts`).
+- The fonts are the system's: `-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif`, and a system monospace for the two labels. Inboxes load no web font, and the plan forbids fonts from a CDN. Each of these fonts draws the Kazakh letters, which the plan's risk table asks for. Geist's look is lost, as in every email.
+- `color-scheme: light only`: Apple Mail keeps the email light. The Gmail apps may still darken it in dark mode.
+- No frame draws the email on a phone. At 480 px or less, a media query narrows the card padding to 20 × 16, the hero to 16, the mascot to 64 px, the title to 21 px and the code and student ID to 19 px, so 390 px fits without a sideways scroll.
+
+**Images and links**
+- The wordmark, the waving mascot and icon/lock are Figma's 2x PNG exports of their nodes in 0.8 (161:13451, 161:13459, 161:13515), with the background each one sits on. They are served by the dashboard from `/email/` (`apps/web/public/email`), at `UKI_WEB_URL/email/…`. Without `UKI_WEB_URL` the email goes without images, and the wordmark is the text "Üki".
+- **No tracking.** Every recipient's email has the same three image addresses, with no query string, and one link, the download button. Loading the images cannot tell anyone who opened the email. Resend tracks opens and clicks only on a verified domain that turns tracking on; leave it off when a domain is added.
+- The button links to `UKI_DOWNLOAD_URL`. Without it, the link is the repository's latest release, `https://github.com/k4ssymzhomart/uki/releases/latest`. `desktop-dist.yml` makes a draft release, so publish it or set the secret before invites go to real students.
+
+**Sending**
+- Batches of at most 100, one after another, through Resend's batch endpoint, with each batch's outcomes written before the next is sent. Resend accepts or refuses a batch as a whole, so a refused batch marks all its invites `failed`, with Resend's message (cut to 500 characters) in `invites.error`.
+- A 429 is tried once more after Retry-After, at most 2 s, since nothing was sent. Nothing else is retried, so no student gets the email twice. A 2xx reply without one id per email counts as failed.
+- The function writes only `invites`; the `invites_sync_status` trigger (WP 1.1) copies the state into `exam_students.invite_status`.
+- Each update also matches the address, so an address that 0.3b changes during the send stays `pending` for the new one.
+- Each language is rendered once per call, with markers that each student's name, number and group replace (`fillInvite`, HTML-escaped as React escapes). A function gets 2 s of CPU per request, and rendering 100 emails one by one would spend it. A unit test checks the filled template against a direct render, and an integration test checks Deno's render against Node's.
+- A missing `RESEND_API_KEY` or a malformed setting answers `internal` before anything is sent.
+
+**No real email from a local run**
+- `pnpm functions:serve`, `pnpm dev` and CI's stack job serve the functions with `supabase/functions/local.env`. That file points `RESEND_BASE_URL` at `http://host.docker.internal:54790`, where the integration tests run a Resend stub (`test/integration/resend-stub.ts`). With nothing listening there, a local send marks its invites `failed`. The file holds no secret.
+- The integration tests read the served env file (`UKI_FUNCTIONS_ENV_FILE`, or `local.env`) to find the stub's port and the sink. CI runs `send-invites.test.ts` a second time with `UKI_EMAIL_SINK` set.
+- Biome skips `__snapshots__/`, where the email's HTML and text snapshots live.
