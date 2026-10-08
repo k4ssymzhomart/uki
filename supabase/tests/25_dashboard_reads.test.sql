@@ -1,8 +1,9 @@
--- WP 1.14 (20261013120000_dashboard_reads_per_exam.sql): exam_overview, term_sessions and student_overview
--- check access once per exam. For every role each view shows what its old definition showed: the exam
--- office every row of its workspace's exams, a proctor those of the exams assigned to them, a student
--- only their own session (and no term or student rows), the secret key everything, nobody an exam they
--- cannot see. With seed v2's term the exam office's reads stay well inside the 8 s statement timeout.
+-- WP 1.14 (20261013120000_dashboard_reads_per_exam.sql): exam_overview and student_overview check access
+-- once per exam, as WP 1.10 made term_sessions do. For every role each view shows what its old definition
+-- showed: the exam office every row of its workspace's exams, a proctor those of the exams assigned to
+-- them, a student only their own session (and no term or student rows), the secret key everything,
+-- nobody an exam they cannot see. With seed v2's term the exam office's reads, term_kpis included, stay
+-- well inside the 8 s statement timeout.
 begin;
 create extension if not exists pgtap with schema extensions;
 select no_plan();
@@ -275,8 +276,6 @@ reset role;
 select t.anon();
 select throws_ok($$ select * from public.exam_overview_counts('e0000000-0000-4000-8000-000000000001') $$, '42501',
   null, 'anonymous visitors cannot call exam_overview_counts');
-select throws_ok($$ select * from public.term_session_rows('e0000000-0000-4000-8000-000000000001') $$, '42501',
-  null, 'nor term_session_rows');
 select throws_ok($$ select * from public.student_session_stats() $$, '42501', null, 'nor student_session_stats');
 reset role;
 

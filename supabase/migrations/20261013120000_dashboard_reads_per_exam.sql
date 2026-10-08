@@ -1,46 +1,24 @@
--- WP 1.14: the dashboard's counting views check access once per exam, not once per row.
+-- WP 1.14: 0.1's and A.2's counting views check access once per exam, not once per row.
 --
 -- With seed v2's Autumn 2026 term (42 more exams, 5,510 roster rows, 5,346 sessions, 1,284 students)
--- three views passed the authenticated role's 8 s statement timeout on CI's stack, because they count
--- rows under the caller's row-level security and so ran is_exam_staff() (three nested security definer
--- calls) for every row they counted:
---   exam_overview     0.1 and every page's layout: roster, sessions and flags of each exam
---   term_sessions     A.2's "Flagged this term" (and A.1's term_* views on top of it)
---   student_overview  A.2: each student's sessions, flags and decisions, with no index on
---                     sessions.student_id, so every student scanned every session
+-- the exam office's exam_overview read passed the authenticated role's 8 s statement timeout on CI's
+-- stack (nine dashboard e2e tests failed through the layout every page loads), and student_overview
+-- (A.2) was on the same path. Both count rows under the caller's row-level security, so they ran
+-- is_exam_staff() (three nested security definer calls) for every row they counted; student_overview
+-- also scanned every session for each student, since sessions.student_id had no index. WP 1.10's
+-- 20261012180000_term_views_per_exam.sql did the same fix for the term views.
+--
 -- Each now reads an exam's rows through a security definer function that checks is_exam_staff() once
--- for that exam (or lets a caller that skips row-level security read everything, as it did before),
--- and every caller sees exactly the rows and numbers it saw before:
+-- per exam (1.10's invoker_bypasses_rls() lets the secret key and psql read everything, as before), and
+-- every caller sees exactly the rows and numbers it saw before:
 --   - the exam office sees every exam of its workspace, a proctor or observer the exams assigned to
 --     them, through is_exam_staff, the rule every policy on these tables comes down to for staff;
 --   - a student keeps exam_overview's old subqueries under row-level security (only their own
---     session), and sees no term_exams or students row, so term_sessions and student_overview stay
---     empty for them;
---   - the secret key and psql skip row-level security and read every row (caller_bypasses_rls).
+--     session), and sees no students row, so student_overview stays empty for them;
+--   - the secret key reads every row.
 -- The views keep their names, columns, types, grants and security_invoker; the exams and students
 -- themselves still come under the caller's row-level security. supabase/tests/25_dashboard_reads.test.sql
--- compares every view with its old definition for each role. WP 1.10's term_views_per_exam migration
--- does the same for the term views with functions of its own; whichever runs later defines
--- term_sessions, with the same result.
-
--- Whether the caller skips row-level security (the secret key's service_role, or postgres in psql), as
--- it did when the views read the tables directly. Inside a security definer function current_user is
--- the owner, but the `role` setting is still the caller's.
-create or replace function public.caller_bypasses_rls()
-returns boolean
-language sql
-stable
-set search_path = ''
-as $$
-  select coalesce((
-    select r.rolbypassrls or r.rolsuper
-    from pg_catalog.pg_roles r
-    where r.rolname = case when current_setting('role') = 'none' then session_user
-      else current_setting('role') end
-  ), false)
-$$;
-
-revoke execute on function public.caller_bypasses_rls() from public, anon, authenticated;
+-- compares each view with its old definition for each role.
 
 -- A.2 and A.3 read a student's sessions; without this index each read scanned every session.
 create index if not exists sessions_student on public.sessions (student_id);
@@ -146,46 +124,6 @@ left join lateral public.exam_overview_counts(e.id) c on true;
 grant select on public.exam_overview to authenticated, service_role;
 
 -- ---------------------------------------------------------------------------
--- term_sessions (A.2's "Flagged this term"; term_kpis, term_weekly_flags, term_decisions and
--- term_review_time read it)
--- ---------------------------------------------------------------------------
-
--- One exam's sessions with their flag count and decision, for its staff and for callers that skip
--- row-level security.
-create or replace function public.term_session_rows(p_exam_id uuid)
-returns table (session_id uuid, flags int, decision public.review_decision, decided_at timestamptz)
-language sql
-stable
-security definer
-set search_path = ''
-as $$
-  select
-    se.id,
-    (select count(*) from public.events ev where ev.session_id = se.id and ev.review = 'flag')::int,
-    d.decision,
-    d.decided_at
-  from public.sessions se
-  left join public.review_decisions d on d.session_id = se.id
-  where se.exam_id = p_exam_id
-    and (public.is_exam_staff(p_exam_id) or public.caller_bypasses_rls())
-$$;
-
-revoke execute on function public.term_session_rows(uuid) from public, anon;
-grant execute on function public.term_session_rows(uuid) to authenticated, service_role;
-
-create or replace view public.term_sessions
-with (security_invoker = on)
-as
-select
-  te.*,
-  s.session_id,
-  s.flags,
-  s.decision,
-  s.decided_at
-from public.term_exams te
-left join lateral public.term_session_rows(te.exam_id) s on true;
-
--- ---------------------------------------------------------------------------
 -- student_overview (A.2)
 -- ---------------------------------------------------------------------------
 
@@ -212,7 +150,7 @@ as $$
   with visible as (
     select e.id, e.title, e.starts_at
     from public.exams e
-    where public.caller_bypasses_rls() or public.is_exam_staff(e.id)
+    where public.invoker_bypasses_rls() or public.is_exam_staff(e.id)
   ),
   ses as (
     select se.id, se.student_id, v.id as exam_id, v.title, v.starts_at
@@ -291,4 +229,4 @@ left join public.groups g on g.id = st.group_id
 left join public.faculties f on f.id = g.faculty_id
 left join public.student_session_stats() s on s.student_id = st.id;
 
-grant select on public.exam_overview, public.term_sessions, public.student_overview to authenticated, service_role;
+grant select on public.exam_overview, public.student_overview to authenticated, service_role;

@@ -2040,7 +2040,6 @@ export type Database = {
         Args: { p_body?: Json; p_name: string }
         Returns: number
       }
-      caller_bypasses_rls: { Args: never; Returns: boolean }
       can_read_topic: { Args: { p_topic: string }; Returns: boolean }
       close_help_request: {
         Args: { id: string; reply?: string }
@@ -2321,15 +2320,6 @@ export type Database = {
         }[]
       }
       term_key: { Args: { d: string }; Returns: string }
-      term_session_rows: {
-        Args: { p_exam_id: string }
-        Returns: {
-          decided_at: string
-          decision: Database["public"]["Enums"]["review_decision"]
-          flags: number
-          session_id: string
-        }[]
-      }
       term_start: { Args: { d: string }; Returns: string }
       try_uuid: { Args: { p: string }; Returns: string }
       unused_verify_code: { Args: never; Returns: string }
