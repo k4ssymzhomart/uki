@@ -79,6 +79,16 @@ async function pages<T>(
 
 const sameTime = (a: string | null | undefined, b: string) => a != null && Date.parse(a) === Date.parse(b);
 
+/** JSON with object keys sorted: jsonb keeps its own key order, so two equal objects may print apart. */
+function canonical(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;
+  if (value !== null && typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b));
+    return `{${entries.map(([key, item]) => `${JSON.stringify(key)}:${canonical(item)}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
 // ---------------------------------------------------------------------------------------------------
 // The world and the term, row for row
 // ---------------------------------------------------------------------------------------------------
@@ -242,7 +252,7 @@ async function checkTerm(client: UkiClient, plan: TermPlan): Promise<void> {
       row.seq === event.seq &&
       sameTime(row.at, event.at) &&
       sameTime(row.received_at, event.receivedAt) &&
-      JSON.stringify(row.data) === JSON.stringify(event.data);
+      canonical(row.data) === canonical(event.data);
     return ok ? [] : [`${event.id}`];
   });
   check(
