@@ -4,13 +4,14 @@ import { Button, cn } from "@uki/ui";
 import { Icon } from "@uki/ui/icon";
 import { useTranslations } from "next-intl";
 import { useEffect, useId, useState } from "react";
+import { LIVE_DEMO_HREF } from "../demo/demo-model.ts";
 import { NAV_LINKS, sectionHref } from "./landing-model.ts";
 import { LandingLink } from "./landing-parts.tsx";
 
 /**
  * The menu button of the 390 header (Figma Nav 192:3588, Icon button with icon/menu). The frame has no
- * open state, so the list reuses the desktop header's links in a floating surface (docs/decisions.md).
- * Escape and any link close it.
+ * open state, so the list reuses the desktop header's links in a floating surface (docs/decisions.md),
+ * with Live demo after Sign in (the judge path). Escape and any link close it.
  */
 export function MobileMenu() {
   const t = useTranslations("dashboard.landing.nav");
@@ -63,6 +64,13 @@ export function MobileMenu() {
           className="rounded-sm px-3 py-2.5 type-label-m outline-none hover:bg-hover focus-visible:shadow-focus"
         >
           {t("signIn")}
+        </LandingLink>
+        <LandingLink
+          href={LIVE_DEMO_HREF}
+          onClick={() => setOpen(false)}
+          className="rounded-sm px-3 py-2.5 type-label-m outline-none hover:bg-hover focus-visible:shadow-focus"
+        >
+          {t("liveDemo")}
         </LandingLink>
         <Button variant="brand" asChild className="mt-1 w-full">
           <LandingLink href="/pilot" onClick={() => setOpen(false)}>

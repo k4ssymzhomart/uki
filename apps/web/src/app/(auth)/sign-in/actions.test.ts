@@ -50,11 +50,12 @@ function fakeSupabase(rows: RowAnswer[]) {
   return { signOut, reads: () => reads };
 }
 
-function form(): FormData {
+function form(next?: string): FormData {
   const data = new FormData();
   data.set("email", EMAIL);
   data.set("password", "correct horse");
   data.set("keep", "on");
+  if (next !== undefined) data.set("next", next);
   return data;
 }
 
@@ -85,6 +86,35 @@ describe("signIn", () => {
       errors: { password: "unavailable" },
     });
     expect(db.reads()).toBe(2);
+    expect(db.signOut).toHaveBeenCalledOnce();
+  });
+
+  it("follows a safe next path instead of the role landing (the judge path)", async () => {
+    fakeSupabase([{ data: ROW, error: null }]);
+    await expect(signIn(INITIAL, form("/demo/live"))).rejects.toThrow("redirect /demo/live");
+    fakeSupabase([{ data: { ...ROW, role: "proctor" }, error: null }]);
+    await expect(signIn(INITIAL, form("/review?session=1"))).rejects.toThrow("redirect /review?session=1");
+  });
+
+  it.each([
+    "//evil.example",
+    "/\\evil.example",
+    "https://evil.example",
+    "javascript:alert(1)",
+    "/..//evil.example",
+    "/sign-in",
+  ])("ignores the unsafe next %s and goes to the role landing", async (next) => {
+    fakeSupabase([{ data: ROW, error: null }]);
+    await expect(signIn(INITIAL, form(next))).rejects.toThrow(/^redirect \/overview$/);
+  });
+
+  it("refuses an account without a staff row even with a next path", async () => {
+    const db = fakeSupabase([{ data: null, error: null }]);
+    expect(await signIn(INITIAL, form("/demo/live"))).toEqual({
+      email: EMAIL,
+      keep: true,
+      errors: { email: "notStaff" },
+    });
     expect(db.signOut).toHaveBeenCalledOnce();
   });
 

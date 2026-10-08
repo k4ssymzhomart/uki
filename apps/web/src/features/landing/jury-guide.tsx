@@ -5,8 +5,9 @@ import { Mascot } from "@uki/ui/art";
 import { Icon } from "@uki/ui/icon";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { DEMO_PAGE_PATH } from "../demo/demo-model.ts";
 import { GUIDE_LOOK, GUIDE_STEPS } from "./guide-model.ts";
-import { LandingLink } from "./landing-parts.tsx";
+import { ArrowLink, LandingLink } from "./landing-parts.tsx";
 
 /** The speech bubble: a card whose corner nearest the mascot is tighter, as if Üki were saying it. */
 const BUBBLE = "rounded-card rounded-tl-sm px-4 py-3.5 text-fg-primary";
@@ -15,9 +16,9 @@ const BUBBLE = "rounded-card rounded-tl-sm px-4 py-3.5 text-fg-primary";
  * The jury guide (a user request of 8 October; no Figma frame, docs/decisions.md): a small floating
  * button with the waving mascot in the bottom corner of `/`, over the frames' sections without moving
  * them. It opens the kit's Drawer, where Üki walks the jury through five numbered steps in speech
- * bubbles: what Üki is, signing in (the demo login is given in person and never shown), the app, Üki
- * Lock and what to look at. Escape, the scrim, the close icon and any of its links close it, and the
- * focus goes back to the button. Motion is a fade only (the panel and the button fade in), so it reads
+ * bubbles: what Üki is, the Live demo (no login is ever shown; the password is on the jury's
+ * one-pager), the app, Üki Lock and what to look at, then a link to the jury page (/demo). Escape, the
+ * scrim, the close icon and any of its links close it, and the focus goes back to the button. Motion is a fade only (the panel and the button fade in), so it reads
  * the same with reduced motion.
  */
 export function JuryGuide() {
@@ -103,6 +104,9 @@ export function JuryGuide() {
             </li>
           ))}
         </ol>
+        <ArrowLink href={DEMO_PAGE_PATH} onClick={close} className="self-start">
+          {t("all")}
+        </ArrowLink>
       </Drawer>
     </>
   );

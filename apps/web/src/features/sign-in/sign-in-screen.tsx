@@ -9,13 +9,22 @@ import { INITIAL_SIGN_IN_STATE, type SignInState } from "./sign-in-form.ts";
 
 export type SignInAction = (previous: SignInState, form: FormData) => Promise<SignInState>;
 
+export type SignInScreenProps = {
+  action: SignInAction;
+  /** The email field's first value: `?email=`, already checked (sign-in-query.ts). */
+  email?: string;
+  /** Where to go after sign-in: `?next=`, already checked; the action checks it again. */
+  next?: string | null;
+};
+
 /**
  * A.0 Sign in (Figma 177:15946). Phase 0 hides the language switch (Russian arrives in Phase 1) and
- * "Forgot password?" (A.0a ships in Phase 2); a spacer keeps the form where Figma puts it.
+ * "Forgot password?" (A.0a ships in Phase 2); a spacer keeps the form where Figma puts it. The judge
+ * path (no frame) fills in the email from `?email=` and carries `?next=` in a hidden field.
  */
-export function SignInScreen({ action }: { action: SignInAction }) {
+export function SignInScreen({ action, email = "", next = null }: SignInScreenProps) {
   const t = useTranslations("dashboard.signIn");
-  const [state, formAction, pending] = useActionState(action, INITIAL_SIGN_IN_STATE);
+  const [state, formAction, pending] = useActionState(action, { ...INITIAL_SIGN_IN_STATE, email });
   const [keep, setKeep] = useState(state.keep);
   const emailError = state.errors.email;
   const passwordError = state.errors.password;
@@ -26,6 +35,7 @@ export function SignInScreen({ action }: { action: SignInAction }) {
       <div className="flex min-w-0 flex-1 flex-col items-center justify-between overflow-y-auto px-16 py-12">
         <span aria-hidden="true" className="h-7.75 w-full shrink-0" />
         <form action={formAction} noValidate className="flex w-100 max-w-full flex-col gap-7">
+          {next ? <input type="hidden" name="next" value={next} /> : null}
           <div className="flex flex-col gap-2.5">
             <h1 className="type-h2">{t("title")}</h1>
             <p className="opacity-72 type-body-m">{t("lead")}</p>

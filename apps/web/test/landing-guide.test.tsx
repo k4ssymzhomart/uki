@@ -1,6 +1,7 @@
 // The jury guide and the download block on `/` (the user's decisions of 8 October; no Figma frame):
 // both render from the messages in Russian and English with no next-intl error and no raw key, the guide
-// opens as a dialog from its button and closes again, and it never shows a login.
+// opens as a dialog from its button and closes again, and it never shows a login. Its second step is the
+// Live demo (9 October), and it ends with a link to the jury page.
 import { act, fireEvent, screen, within } from "@testing-library/react";
 import en from "@uki/i18n/messages/en.json";
 import ru from "@uki/i18n/messages/ru.json";
@@ -42,7 +43,12 @@ describe.each(["ru", "en"] as const)("the jury guide in %s", (locale) => {
       within(dialog)
         .getByRole("link", { name: t(locale, "dashboard.landing.guide.signIn.action") })
         .getAttribute("href"),
-    ).toBe("/sign-in");
+    ).toBe("/sign-in?email=judge%40kru.test&next=/demo/live");
+    expect(
+      within(dialog)
+        .getByRole("link", { name: t(locale, "dashboard.landing.guide.all") })
+        .getAttribute("href"),
+    ).toBe("/demo");
     for (const id of ["app", "lock"]) {
       expect(
         within(dialog)
@@ -53,8 +59,9 @@ describe.each(["ru", "en"] as const)("the jury guide in %s", (locale) => {
     for (const point of ["wall", "ask", "flag", "report", "video"]) {
       expect(within(dialog).getByText(t(locale, `dashboard.landing.guide.look.${point}.title`))).toBeTruthy();
     }
-    // The demo login is given in person: no address and no password on the page.
-    expect(dialog.textContent).not.toMatch(/@|password|пароль/i);
+    // No login in the guide: no address, no password field; the password is on the jury's one-pager.
+    expect(dialog.textContent).not.toMatch(/@/);
+    expect(dialog.querySelector("input")).toBeNull();
     expect(intlErrors).toEqual([]);
     expect(rawKeys(document.body)).toEqual([]);
 

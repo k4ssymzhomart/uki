@@ -44,6 +44,30 @@ describe("A.0 Sign in", () => {
     expect(form?.get("keep")).toBe("on");
   });
 
+  it("fills in ?email= and sends ?next= with the form (the judge path)", async () => {
+    const action = vi.fn(
+      async (state: SignInState, _form: FormData): Promise<SignInState> => ({ ...state, errors: {} }),
+    );
+    renderWithIntl(<SignInScreen action={action} email="judge@kru.test" next="/demo/live" />);
+    expect((screen.getByLabelText("Work email") as HTMLInputElement).value).toBe("judge@kru.test");
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+    });
+    const form = action.mock.calls[0]?.[1];
+    expect(form?.get("email")).toBe("judge@kru.test");
+    expect(form?.get("next")).toBe("/demo/live");
+  });
+
+  it("sends no next without one", async () => {
+    const action = vi.fn(async (state: SignInState, _form: FormData): Promise<SignInState> => state);
+    renderWithIntl(<SignInScreen action={action} />);
+    expect((screen.getByLabelText("Work email") as HTMLInputElement).value).toBe("");
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+    });
+    expect(action.mock.calls[0]?.[1].has("next")).toBe(false);
+  });
+
   it("shows and hides the password", () => {
     renderWithIntl(<SignInScreen action={vi.fn()} />);
     const input = screen.getByLabelText("Password", { selector: "input" });
