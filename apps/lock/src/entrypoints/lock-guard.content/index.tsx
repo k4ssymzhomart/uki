@@ -3,12 +3,13 @@
 // into the exam tab that is already open. It marks the page locked, cancels copy and print, and draws the
 // Lock bar and the E.6 toast in a shadow root, so page styles and Üki styles never mix. It talks only to
 // the service worker; the bar's data comes from chrome.storage.local. At release (the bar goes away) it
-// takes all of it off the page again, the copy guard's listeners included.
+// takes all of it off the page again, the copy guard's listeners included. Phase 1: the exam's rules
+// (E.1) in the bar state switch the copy guard and the print style, and show the Calculator tab (E.5b).
 // First: Kazakh Intl for Chrome, whose ICU has no Kazakh (the toast prints a time), before anything
 // creates a formatter. Content scripts have their own Intl, so the pages' own is untouched.
 import "@uki/i18n/polyfill";
 
-import type { AskReason } from "@uki/contracts";
+import { type AskReason, effectiveBrowserRules } from "@uki/contracts";
 import { isLocale } from "@uki/i18n";
 import { createRoot, type Root } from "react-dom/client";
 import { browser } from "wxt/browser";
@@ -39,6 +40,9 @@ function domReady(): Promise<void> {
 
 async function run(ctx: ContentScriptContext): Promise<void> {
   let bar = await readBar();
+  /** E.8: the popup's Ask proctor presses after this page loaded; an older one never reopens the sheet. */
+  let askSeen = bar?.ask_at ?? 0;
+  let askRequests = 0;
   let toast: ToastRequest | null = null;
   let unmark: (() => void) | null = null;
   let ui: ShadowRootContentScriptUi<Root> | null = null;
@@ -59,7 +63,7 @@ async function run(ctx: ContentScriptContext): Promise<void> {
     const locale = isLocale(bar.locale) ? bar.locale : "kk";
     root.render(
       <LockIntlProvider locale={locale}>
-        <LockOverlay bar={bar} toast={toast} locale={locale} onAskHelp={askHelp} />
+        <LockOverlay bar={bar} toast={toast} locale={locale} onAskHelp={askHelp} askRequests={askRequests} />
       </LockIntlProvider>,
     );
   };
@@ -72,8 +76,11 @@ async function run(ctx: ContentScriptContext): Promise<void> {
     void browser.runtime.sendMessage(request).catch(() => {});
   };
 
+  const rules = () => effectiveBrowserRules(bar?.browser_rules);
+
   const activate = async () => {
-    unmark ??= markLocked(document);
+    // Called on every change of the bar: the print style follows the print rule.
+    unmark = markLocked(document, { blockPrint: rules().print });
     if (!guard) {
       // Not ctx.addEventListener: it replaces the signal with the context's own, which outlives a release.
       const scope = new AbortController();
@@ -84,6 +91,7 @@ async function run(ctx: ContentScriptContext): Promise<void> {
         onBlocked: (hit) => {
           if (bar) onBlocked(hit);
         },
+        rules,
       });
     }
     if (!ui) {
@@ -116,6 +124,11 @@ async function run(ctx: ContentScriptContext): Promise<void> {
     const change = changes[STORAGE_KEYS.bar];
     if (area !== "local" || !change) return;
     bar = readStored(BarState.nullable(), change.newValue, null);
+    const askAt = bar?.ask_at ?? 0;
+    if (askAt > askSeen) {
+      askSeen = askAt;
+      askRequests += 1;
+    }
     if (bar?.mode === "browser") void activate();
     else deactivate();
   };

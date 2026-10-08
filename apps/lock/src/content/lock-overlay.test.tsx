@@ -1,4 +1,5 @@
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { DEFAULT_BROWSER_RULES } from "@uki/contracts";
 import { LOCALES, loadMessages } from "@uki/i18n";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LockIntlProvider } from "../lib/intl.tsx";
@@ -134,4 +135,90 @@ it("hides Ask proctor without a sender and on the block page of an app exam", ()
     </LockIntlProvider>,
   );
   expect(screen.queryByRole("button", { name: "Ask proctor" })).toBeNull();
+});
+
+describe.each(LOCALES)("E.5b the calculator in the bar, in %s", (locale) => {
+  const m = loadMessages(locale);
+
+  it("opens from the Calculator tab, computes, and is cleared when the student goes back to the portal", () => {
+    const { container } = render(
+      <LockIntlProvider locale={locale}>
+        <LockOverlay bar={{ ...bar, student_name: "Aliya Seitkali" }} toast={null} locale={locale} />
+      </LockIntlProvider>,
+    );
+    const portalTab = screen.getByRole("button", { name: m.lock.tab.portal });
+    expect(portalTab.getAttribute("aria-current")).toBe("page");
+    fireEvent.click(screen.getByRole("button", { name: m.lock.tab.calculator }));
+    expect(screen.getByRole("button", { name: m.lock.tab.calculator }).getAttribute("aria-current")).toBe(
+      "page",
+    );
+    const page = screen.getByRole("region", { name: m.lock.tab.calculator });
+    expect(within(page).getByRole("heading", { name: m.lock.calc.title })).toBeTruthy();
+    expect(within(page).getByText("Aliya Seitkali")).toBeTruthy();
+    expect(within(page).getByText(m.lock.calc.note)).toBeTruthy();
+    const key = (k: string) => {
+      const button = container.querySelector<HTMLButtonElement>(`[data-uki-calc-key="${k}"]`);
+      if (!button) throw new Error(`no key ${k}`);
+      fireEvent.click(button);
+    };
+    for (const k of ["2", "*", "2", "5", "/", "2", "="]) key(k);
+    expect(container.querySelector("[data-uki-calc-expression]")?.textContent).toBe("2 × 25 ÷ 2");
+    expect(container.querySelector("[data-uki-calc-value]")?.textContent).toBe("25");
+    // From the keyboard too: Escape clears, digits and operators type.
+    fireEvent.keyDown(page, { key: "Escape" });
+    for (const k of ["9", "-", "4", "Enter"]) fireEvent.keyDown(page, { key: k });
+    expect(container.querySelector("[data-uki-calc-value]")?.textContent).toBe("5");
+    // Back to the portal: the calculator goes away with its state.
+    fireEvent.click(screen.getByRole("button", { name: m.lock.tab.portal }));
+    expect(screen.queryByRole("region", { name: m.lock.tab.calculator })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: m.lock.tab.calculator }));
+    expect(container.querySelector("[data-uki-calc-value]")?.textContent).toBe("0");
+    expect(container.querySelector("[data-uki-calc-expression]")?.textContent).toBe("");
+  });
+});
+
+it("E.5b shows the division by zero error from the catalog", () => {
+  const { container } = render(
+    <LockIntlProvider locale="en">
+      <LockOverlay bar={bar} toast={null} locale="en" />
+    </LockIntlProvider>,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Calculator" }));
+  const page = screen.getByRole("region", { name: "Calculator" });
+  for (const k of ["7", "/", "0", "="]) fireEvent.keyDown(page, { key: k });
+  expect(container.querySelector("[data-uki-calc-value]")?.textContent).toBe(
+    loadMessages("en").lock.calc.error,
+  );
+});
+
+it("E.1: no Calculator tab when the calculator rule is off, and it closes when the rule goes off", () => {
+  const view = (rules: BarState["browser_rules"]) => (
+    <LockIntlProvider locale="en">
+      <LockOverlay bar={{ ...bar, browser_rules: rules }} toast={null} locale="en" />
+    </LockIntlProvider>
+  );
+  const { rerender } = render(view({ ...DEFAULT_BROWSER_RULES }));
+  fireEvent.click(screen.getByRole("button", { name: "Calculator" }));
+  expect(screen.getByRole("region", { name: "Calculator" })).toBeTruthy();
+  rerender(view({ ...DEFAULT_BROWSER_RULES, calculator: false }));
+  expect(screen.queryByRole("button", { name: "Calculator" })).toBeNull();
+  expect(screen.queryByRole("region", { name: "Calculator" })).toBeNull();
+});
+
+it("E.8: the popup's Ask proctor opens the sheet in the bar", () => {
+  const view = (askRequests: number) => (
+    <LockIntlProvider locale="en">
+      <LockOverlay
+        bar={bar}
+        toast={null}
+        locale="en"
+        onAskHelp={async () => null}
+        askRequests={askRequests}
+      />
+    </LockIntlProvider>
+  );
+  const { rerender } = render(view(0));
+  expect(screen.queryByRole("dialog")).toBeNull();
+  rerender(view(1));
+  expect(screen.getByRole("dialog", { name: "Ask your proctor" })).toBeTruthy();
 });

@@ -54,3 +54,41 @@ it("cancels copy and print while locked, and gives them back to the page at rele
   await vi.waitFor(() => expect(document.querySelector("uki-lock-bar")).not.toBeNull());
   expect(PROBES.map(cancelled)).toEqual(PROBES.map(() => true));
 });
+
+it("E.1: with copy and paste and print off the page keeps them, and the print style is gone", async () => {
+  const rules = { copy_paste: false, print: false, full_screen: true, calculator: true } as const;
+  await fakeBrowser.storage.local.set({
+    [STORAGE_KEYS.bar]: {
+      ...bar,
+      browser_rules: {
+        ...rules,
+        other_extensions: "phase2",
+        devtools: "managed_only",
+        screen_share: "detected",
+      },
+    },
+  });
+  script.main(ctx);
+  await vi.waitFor(() => expect(document.querySelector("uki-lock-bar")).not.toBeNull());
+  expect(document.documentElement.getAttribute("data-uki-lock")).toBe("locked");
+  expect(PROBES.map(cancelled)).toEqual(PROBES.map(() => false));
+  expect(document.querySelector("style[data-uki-lock-style]")?.textContent).not.toContain("@media print");
+
+  // The rules come back on during the exam: the guard follows at once.
+  await fakeBrowser.storage.local.set({ [STORAGE_KEYS.bar]: bar });
+  await vi.waitFor(() =>
+    expect(document.querySelector("style[data-uki-lock-style]")?.textContent).toContain("@media print"),
+  );
+  expect(PROBES.map(cancelled)).toEqual(PROBES.map(() => true));
+});
+
+it("E.8: a later Ask proctor from the popup opens the sheet in the bar; an older one does not", async () => {
+  await fakeBrowser.storage.local.set({ [STORAGE_KEYS.bar]: { ...bar, ask_at: 1000 } });
+  script.main(ctx);
+  await vi.waitFor(() => expect(document.querySelector("uki-lock-bar")).not.toBeNull());
+  const root = () => document.querySelector("uki-lock-bar")?.shadowRoot ?? null;
+  await vi.waitFor(() => expect(root()?.querySelector("[role=toolbar], div")).toBeTruthy());
+  expect(root()?.querySelector("[data-uki-ask]")).toBeNull();
+  await fakeBrowser.storage.local.set({ [STORAGE_KEYS.bar]: { ...bar, ask_at: 2000 } });
+  await vi.waitFor(() => expect(root()?.querySelector("[data-uki-ask]")).not.toBeNull());
+});

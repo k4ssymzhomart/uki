@@ -49,6 +49,10 @@ export function PopupRoot() {
       ask({ type: "popup.dismiss" });
       window.close();
     },
+    ask: () => {
+      ask({ type: "popup.ask" });
+      window.close();
+    },
   };
 
   const candidate = view.locked?.locale ?? view.exam_state?.locale ?? view.released?.locale;
