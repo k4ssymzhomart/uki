@@ -369,3 +369,31 @@ The coordinating agent ran the SQL, sign-in and secret checks on 8 October. For 
 | `docs/i18n/strings-review-kk.csv` | The 270 strings with Kazakh: key, where, en, kk, ru, notes |
 
 Edited Russian and Kazakh cells come back with `pnpm i18n:import <file.csv>`, which refuses the whole sheet on an unknown key or a string that fails the i18n build, such as a renamed placeholder (`packages/i18n/README.md`, "Review sheets"). The read-through itself is still yours (P.18, by Wednesday 14 October).
+
+## Release v0.1
+
+WP 0.15. After #27 merged, `desktop-dist.yml` ran on `main` at `ce12ed0`, started by hand with `publish=true` (`gh workflow run desktop-dist.yml --ref main -f publish=true`): run [37829519197](https://github.com/k4ssymzhomart/uki/actions/runs/37829519197), green. Its five jobs ran from 19:08 to 19:15 UTC on 8 October, about 7.5 minutes after a wait in the queue behind other branches' CI. It published [Üki v0.1.2](https://github.com/k4ssymzhomart/uki/releases/tag/v0.1.2) at 19:15:35 UTC: not a draft, not a pre-release, and `gh release list` marks it Latest. The tag is `v0.1.2`, not `v0.1.1`, because run 1 was the build-only run from the branch, which published nothing.
+
+| File | Stable link | Bytes | Size | SHA-256 |
+| --- | --- | --- | --- | --- |
+| `Uki-mac-arm64.dmg` | https://github.com/k4ssymzhomart/uki/releases/latest/download/Uki-mac-arm64.dmg | 157,125,789 | 157.1 MB | `31d6cb0ab5eebdf2cb3d4653e34628f180e4eaabc9173a6f8aed5868478f43c1` |
+| `Uki-mac-x64.dmg` | https://github.com/k4ssymzhomart/uki/releases/latest/download/Uki-mac-x64.dmg | 163,792,868 | 163.8 MB | `42f395d0e094406795e041d1507636075876ab2ac93bd5a1c99608311bff84ad` |
+| `Uki-Setup-win-x64.exe` | https://github.com/k4ssymzhomart/uki/releases/latest/download/Uki-Setup-win-x64.exe | 137,410,966 | 137.4 MB | `fd532ee3b6a782241d1cfdeb2ba3221b37daef0129e042ac41741843c3b7c619` |
+| `Uki-win-x64.zip` | https://github.com/k4ssymzhomart/uki/releases/latest/download/Uki-win-x64.zip | 183,231,466 | 183.2 MB | `10880979091ea35d24ad27b8dc53f359cd3747f272bf8dfeecb9e13a405bcb0b` |
+| `Uki-Lock-chrome.zip` | https://github.com/k4ssymzhomart/uki/releases/latest/download/Uki-Lock-chrome.zip | 1,225,782 | 1.2 MB | `62accfa374ce4fa4cefa0a3fe6dd43d12d0e326c764d0785f6d7bd77f122ded9` |
+| `Uki-Lock-edge.zip` | https://github.com/k4ssymzhomart/uki/releases/latest/download/Uki-Lock-edge.zip | 1,225,782 | 1.2 MB | `62accfa374ce4fa4cefa0a3fe6dd43d12d0e326c764d0785f6d7bd77f122ded9` |
+
+The two Lock zips are the same bytes (decisions, "0.15 Release").
+
+| Check | Status | Evidence | Date |
+| --- | --- | --- | --- |
+| The Lock key pair is set and the key gives the id | pass | Preflight: `Üki Lock key pair set: extension id enjmmceojibbmnjiplojklhkgmghcchp` | 2026-10-08 |
+| Each released Lock zip has the id the released app accepts | pass | The lock job and again the release job read `manifest.json` inside each zip: `Uki-Lock-chrome.zip` and `Uki-Lock-edge.zip` both give `enjmmceojibbmnjiplojklhkgmghcchp`, at version 0.1.2 | 2026-10-08 |
+| The apps are built against the cloud project and accept only that Lock | pass | The mac and Windows jobs found the cloud project's URL in the renderer and the extension id in the main process | 2026-10-08 |
+| The dmgs and the Windows builds start | pass | macOS: each dmg holds its architecture's app and the app starts from the image, x64 under Rosetta 2 (P.12's check). Windows: Koffi in the zip, and the launch test from the unpacked zip | 2026-10-08 |
+| Exactly the six files, and never the lab zip | pass | The release job refused anything but the six names; the release lists exactly `Uki-Lock-chrome.zip`, `Uki-Lock-edge.zip`, `Uki-mac-arm64.dmg`, `Uki-mac-x64.dmg`, `Uki-Setup-win-x64.exe`, `Uki-win-x64.zip` | 2026-10-08 |
+| Every `releases/latest/download/<file>` link answers | pass | In the run's last step, and again from this Mac at 19:19 UTC with `curl -sIL`: each of the six answers 200 after a redirect to `releases/download/v0.1.2/<file>`, with a `Content-Length` equal to the file's size above. `releases/latest` lands on `releases/tag/v0.1.2` | 2026-10-08 |
+| CI uploads the Üki Lock zips on `main` | pass | CI on `main` at `ce12ed0`, [37829454959](https://github.com/k4ssymzhomart/uki/actions/runs/37829454959), green on Linux, macOS and Windows, has the `uki-lock` artifact (2,451,842 bytes: `Uki-Lock-chrome.zip` and `Uki-Lock-edge.zip`). No earlier run on `main` had it | 2026-10-08 |
+| A downloaded dmg opens on the MacBook after the quarantine step (right-click Open, or `xattr -dr com.apple.quarantine /Applications/Uki.app`) | pending | Hand check (You) | |
+| The released installer and zip pass SmartScreen with More info, Run anyway, on a Windows 11 lab PC | pending | Lab session (You), `docs/runbooks/lab-session.md` | |
+| The released Lock loads unpacked in Chrome and Edge, shows the id `enjmmceojibbmnjiplojklhkgmghcchp`, and pairs with the released app | pending | Hand check (You), `docs/runbooks/lock-pairing.md` | |
