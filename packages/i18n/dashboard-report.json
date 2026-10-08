@@ -118,7 +118,7 @@
   },
   "dashboard.report.share.field": {
     "en": "Read-only link · expires in {days, plural, one {# day} other {# days}}",
-    "ru": "Ссылка только для чтения · действует {days, plural, one {# день} few {# дня} many {# дней} other {# дня}}"
+    "ru": "Ссылка для чтения · {days, plural, one {# день} few {# дня} many {# дней} other {# дня}}"
   },
   "dashboard.report.share.copy": {
     "en": "Copy link",
