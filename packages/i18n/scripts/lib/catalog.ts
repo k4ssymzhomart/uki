@@ -13,13 +13,17 @@ import {
 import { z } from "zod";
 
 /**
- * The i18n build: catalog.json (and dashboard.json, English only) to nested message objects for
- * en, kk and ru, with every check the plan asks for. Pure: the CLI in scripts/build.ts reads and
- * writes the files, tests call buildMessages directly.
+ * The i18n build: catalog.json (and the dashboard*.json files, English and Russian) to nested message
+ * objects for en, kk and ru, with every check the plan asks for. Pure: the CLI in scripts/build.ts
+ * reads and writes the files, tests call buildMessages directly.
  */
 
 export const LANGUAGES = ["en", "kk", "ru"] as const;
 export type Language = (typeof LANGUAGES)[number];
+
+/** The dashboard's languages (Phase 1 plan, Decisions: Dashboard language). Kazakh falls back to English. */
+export const DASHBOARD_LANGUAGES = ["en", "ru"] as const;
+export type DashboardLanguage = (typeof DASHBOARD_LANGUAGES)[number];
 
 /**
  * The plan's eight messages that depend on a count (Localization, Plurals). English and Russian must
@@ -61,8 +65,21 @@ export const catalogSchema = z.strictObject({
   keys: z.array(catalogEntrySchema),
 });
 
-/** dashboard.json: flat `dashboard.*` key to English text, filled from the Figma dashboard frames. */
-export const dashboardSchema = z.record(z.string(), z.string());
+/**
+ * One dashboard message: `{ "en": "...", "ru": "..." }`. Both languages are optional here so that a
+ * missing one is reported by name instead of as a schema error; buildMessages requires both.
+ */
+export const dashboardEntrySchema = z.strictObject({
+  en: z.string().optional(),
+  ru: z.string().optional(),
+});
+
+/**
+ * The merged dashboard*.json files: flat `dashboard.*` key to `{ en, ru }`, filled from the Figma
+ * dashboard frames. scripts/build.ts drops each file's optional `$comment` string before merging.
+ */
+export const dashboardSchema = z.record(z.string(), dashboardEntrySchema);
+export type DashboardEntry = z.infer<typeof dashboardEntrySchema>;
 
 export type Catalog = z.infer<typeof catalogSchema>;
 export type CatalogEntry = z.infer<typeof catalogEntrySchema>;
@@ -218,7 +235,15 @@ function schemaProblems(file: string, error: z.ZodError): string[] {
 // ---------------------------------------------------------------------------------------------
 // Build
 
-export function buildMessages(catalogInput: unknown, dashboardInput: unknown): BuildResult {
+/**
+ * `dashboardSources` names the file each dashboard key came from (scripts/build.ts merges several),
+ * so a problem points at dashboard-wall.json or dashboard-landing.json instead of dashboard.json.
+ */
+export function buildMessages(
+  catalogInput: unknown,
+  dashboardInput: unknown,
+  dashboardSources: Readonly<Record<string, string>> = {},
+): BuildResult {
   const problems: string[] = [];
   const catalogParsed = catalogSchema.safeParse(catalogInput);
   const dashboardParsed = dashboardSchema.safeParse(dashboardInput);
@@ -291,19 +316,37 @@ export function buildMessages(catalogInput: unknown, dashboardInput: unknown): B
   }
 
   let dashboardCount = 0;
-  for (const [key, text] of Object.entries(dashboard)) {
+  for (const [key, entry] of Object.entries(dashboard)) {
     dashboardCount += 1;
+    const file = dashboardSources[key] ?? "dashboard.json";
     if (!key.startsWith("dashboard.") || !isValidKey(key)) {
       problems.push(
-        `dashboard.json: ${key}: keys must start with "dashboard." and use [a-z0-9][a-zA-Z0-9_]* segments`,
+        `${file}: ${key}: keys must start with "dashboard." and use [a-z0-9][a-zA-Z0-9_]* segments`,
       );
       continue;
     }
-    const checked = checkMessage(text, "en", `dashboard.json: ${key}`);
-    problems.push(...checked.problems);
-    if (checked.ast) {
-      const collision = setNested(out.en, key, text);
-      if (collision) problems.push(`dashboard.json: ${collision}`);
+    const where = `${file}: ${key}`;
+    const asts = {} as Record<DashboardLanguage, MessageFormatElement[] | null>;
+    for (const language of DASHBOARD_LANGUAGES) {
+      const checked = checkMessage(entry[language], language, where);
+      problems.push(...checked.problems);
+      asts[language] = checked.ast;
+    }
+    if (asts.en && asts.ru) {
+      const expected = argumentNames(asts.en);
+      const actual = argumentNames(asts.ru);
+      const same = expected.size === actual.size && [...expected].every((name) => actual.has(name));
+      if (!same) {
+        const list = (names: Set<string>) => `{${[...names].sort().join(", ")}}`;
+        problems.push(`${where}: arguments differ, en has ${list(expected)} and ru has ${list(actual)}`);
+      }
+    }
+    for (const language of DASHBOARD_LANGUAGES) {
+      const text = entry[language];
+      if (!asts[language] || text === undefined) continue;
+      const collision = setNested(out[language], key, text);
+      // Report a collision once, from English; Russian shares the same keys.
+      if (collision && language === "en") problems.push(`${file}: ${collision}`);
     }
   }
 

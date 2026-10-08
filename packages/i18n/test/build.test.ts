@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { generateAll } from "../scripts/build.ts";
+import { dashboardFiles, generateAll, mergeDashboard } from "../scripts/build.ts";
 import { buildMessages, type Catalog, type CatalogEntry, COUNT_MESSAGES } from "../scripts/lib/catalog.ts";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
@@ -156,27 +156,122 @@ describe("i18n build fails on a bad catalog", () => {
   });
 });
 
-describe("dashboard.json", () => {
-  it("merges dashboard.* keys into English only", () => {
+describe("dashboard*.json", () => {
+  const entry = (en: string | undefined, ru: string | undefined) => ({
+    ...(en === undefined ? {} : { en }),
+    ...(ru === undefined ? {} : { ru }),
+  });
+
+  it("merges dashboard.* keys into English and Russian, not Kazakh", () => {
     const result = buildMessages(catalog, {
-      "dashboard.live.title": "Live wall",
-      "dashboard.live.flags": "{count, plural, one {# flag} other {# flags}}",
+      "dashboard.live.title": entry("Live wall", "Экран наблюдения"),
+      "dashboard.live.flags": entry(
+        "{count, plural, one {# flag} other {# flags}}",
+        "{count, plural, one {# отметка} few {# отметки} many {# отметок} other {# отметки}}",
+      ),
     });
     expect(result.problems).toEqual([]);
     expect(result.messages?.en.dashboard).toEqual({
       live: { flags: "{count, plural, one {# flag} other {# flags}}", title: "Live wall" },
     });
+    expect(result.messages?.ru.dashboard).toEqual({
+      live: {
+        flags: "{count, plural, one {# отметка} few {# отметки} many {# отметок} other {# отметки}}",
+        title: "Экран наблюдения",
+      },
+    });
     expect(result.messages?.kk.dashboard).toBeUndefined();
-    expect(result.messages?.ru.dashboard).toBeUndefined();
   });
 
-  it("checks dashboard messages like catalog messages", () => {
+  it("fails on a missing or empty Russian or English message", () => {
     expect(
-      problemsOf(catalog, { "dashboard.a": "", "live.title": "Live wall", "dashboard.b": "{x" }),
+      problemsOf(catalog, {
+        "dashboard.a": entry("Live wall", undefined),
+        "dashboard.b": entry("Live wall", " "),
+        "dashboard.c": entry(undefined, "Экран наблюдения"),
+        "dashboard.d": entry("", "Экран наблюдения"),
+      }),
     ).toEqual([
-      "dashboard.json: dashboard.a [en]: empty",
+      "dashboard.json: dashboard.a [ru]: missing",
+      "dashboard.json: dashboard.b [ru]: empty",
+      "dashboard.json: dashboard.c [en]: missing",
+      "dashboard.json: dashboard.d [en]: empty",
+    ]);
+  });
+
+  it("checks dashboard messages like catalog messages, in both languages", () => {
+    expect(
+      problemsOf(catalog, {
+        "live.title": entry("Live wall", "Экран наблюдения"),
+        "dashboard.b": entry("{x", "{x}"),
+        "dashboard.c": entry("Wall", "Экран {x"),
+        "dashboard.d": entry("{n} left", "осталось {count}"),
+        "dashboard.e": entry("{n, plural, one {# flag} other {# flags}}", "{n, plural, two {#} other {#}}"),
+      }),
+    ).toEqual([
       'dashboard.json: live.title: keys must start with "dashboard." and use [a-z0-9][a-zA-Z0-9_]* segments',
       expect.stringMatching(/^dashboard\.json: dashboard\.b \[en\]: does not parse as ICU/),
+      expect.stringMatching(/^dashboard\.json: dashboard\.c \[ru\]: does not parse as ICU/),
+      "dashboard.json: dashboard.d: arguments differ, en has {n} and ru has {count}",
+      'dashboard.json: dashboard.e [ru]: plural arm "two" of {n} is not one of the ru categories (one, few, many, other)',
     ]);
+  });
+
+  it("refuses the Phase 0 format, a plain English string, and unknown fields", () => {
+    expect(problemsOf(catalog, { "dashboard.a": "Live wall" })[0]).toMatch(
+      /^dashboard\.json: dashboard\.a: /,
+    );
+    expect(problemsOf(catalog, { "dashboard.a": { en: "A", ru: "Б", kk: "В" } })[0]).toMatch(
+      /^dashboard\.json: dashboard\.a: /,
+    );
+  });
+
+  it("names the file a problem comes from", () => {
+    expect(
+      buildMessages(
+        catalog,
+        { "dashboard.wall.x": entry("X", undefined) },
+        { "dashboard.wall.x": "dashboard-wall.json" },
+      ).problems,
+    ).toEqual(["dashboard-wall.json: dashboard.wall.x [ru]: missing"]);
+  });
+
+  it("merges the files, skips each file's $comment, and refuses a key two files define", () => {
+    const merged = mergeDashboard([
+      { file: "dashboard.json", data: { $comment: "first pass", "dashboard.a": entry("A", "А") } },
+      {
+        file: "dashboard-landing.json",
+        data: { "dashboard.b": entry("B", "Б"), "dashboard.a": entry("A", "А") },
+      },
+      { file: "dashboard-x.json", data: { $comment: 1 } },
+      { file: "dashboard-y.json", data: ["nope"] },
+    ]);
+    expect(merged.merged).toEqual({ "dashboard.a": entry("A", "А"), "dashboard.b": entry("B", "Б") });
+    expect(merged.sources).toEqual({
+      "dashboard.a": "dashboard.json",
+      "dashboard.b": "dashboard-landing.json",
+    });
+    expect(merged.problems).toEqual([
+      "dashboard-landing.json: dashboard.a: duplicate key, already in dashboard.json",
+      "dashboard-x.json: $comment: must be a string",
+      'dashboard-y.json: must be an object of dashboard.* keys to { "en": "...", "ru": "..." }',
+    ]);
+  });
+
+  it("ships every dashboard key in English and Russian, each file marked for the P.18 read-through", () => {
+    const files = dashboardFiles();
+    expect(files).toEqual(expect.arrayContaining(["dashboard-wall.json", "dashboard.json"]));
+    for (const file of ["dashboard.json", "dashboard-wall.json"]) {
+      const data = JSON.parse(readFileSync(join(ROOT, file), "utf8")) as Record<string, unknown>;
+      expect(data.$comment, file).toMatch(/native review needed, P\.18/);
+    }
+    const en = JSON.parse(readFileSync(join(ROOT, "messages/en.json"), "utf8")) as { dashboard: object };
+    const ru = JSON.parse(readFileSync(join(ROOT, "messages/ru.json"), "utf8")) as { dashboard: object };
+    const leaves = (node: object, prefix = ""): string[] =>
+      Object.entries(node).flatMap(([key, value]) =>
+        typeof value === "string" ? [`${prefix}${key}`] : leaves(value as object, `${prefix}${key}.`),
+      );
+    expect(leaves(ru.dashboard)).toEqual(leaves(en.dashboard));
+    expect(leaves(en.dashboard).length).toBeGreaterThan(280);
   });
 });

@@ -1,17 +1,17 @@
 # @uki/i18n
 
-Student app and Üki Lock strings in Kazakh, Russian and English, plus the English-only dashboard strings.
+Student app and Üki Lock strings in Kazakh, Russian and English, plus the dashboard strings in English and Russian.
 
 ## Files
 
 | File | What it is |
 | --- | --- |
 | `catalog.json` | Every student and Üki Lock string: key, group, source, en, kk, ru, notes. Edit this one. |
-| `dashboard.json` | Flat map of `dashboard.*` key to English text, taken from the Figma dashboard frames (A.0, 0.1, 1.5, 2.4, 2.5). Starts as `{}`; the web dashboard fills it. Keys use dot-separated segments of `[a-z0-9][a-zA-Z0-9_]*`. English only in Phase 0. |
-| `messages/{en,kk,ru}.json` | Generated nested messages. Commit them; apps import them. `en.json` also holds the `dashboard` namespace. |
+| `dashboard.json`, `dashboard-<part>.json` | The dashboard strings, one file per dashboard area (`dashboard-wall.json`, `dashboard-landing.json`, ...). Each is a flat map of `dashboard.*` key to `{ "en": "...", "ru": "..." }`, English from the Figma frames. A file may start with a `"$comment"` string for notes about the whole file; it is not a message. Keys use dot-separated segments of `[a-z0-9][a-zA-Z0-9_]*`, and no key may appear in two files. Add new keys in your own sorted block or your own file, so parallel branches rebase cleanly. |
+| `messages/{en,kk,ru}.json` | Generated nested messages. Commit them; apps import them. `en.json` and `ru.json` also hold the `dashboard` namespace; Kazakh has none and falls back to English in `loadMessages`. |
 | `src/kk-intl/kk-data.json` | Generated Kazakh number and date data plus the Asia/Almaty time zone for the Intl polyfill, from the installed `@formatjs` packages: `pnpm --filter @uki/i18n kk-intl-data`. A unit test fails when it is out of date. |
 
-`pnpm i18n:build` regenerates `messages/` and fails, writing nothing, on: a missing or empty message, an ICU parse error, a plural without `other` or with an arm the language does not have, argument names that differ between en, kk and ru, a key that is both a message and a namespace, a bad rename, and a count message whose en or ru text has no plural block. `pnpm --filter @uki/i18n build:check` only checks that `messages/` is up to date.
+`pnpm i18n:build` regenerates `messages/` and fails, writing nothing, on: a missing or empty message (a dashboard message needs both `en` and `ru`), an ICU parse error, a plural without `other` or with an arm the language does not have, argument names that differ between en, kk and ru (en and ru for the dashboard), a key that is both a message and a namespace, a dashboard key defined in two files, a bad rename, and a count message whose en or ru text has no plural block. `pnpm --filter @uki/i18n build:check` only checks that `messages/` is up to date.
 
 ## Use
 
@@ -54,3 +54,18 @@ import type {} from "@uki/i18n/app-config";
 ```
 
 That augments use-intl's `AppConfig` with `Messages` (from `messages/en.json`) and `Formats`. next-intl reads the same `AppConfig`; if a separate copy of use-intl ever breaks that, augment `next-intl` instead, as `src/app-config.d.ts` shows.
+
+## Dashboard Russian
+
+The Russian dashboard strings are a first pass by the agent (WP 1.2), marked in each file's `$comment`; the native read-through is P.18. Write Russian plurals with `one`, `few`, `many` and `other`.
+
+```json
+{
+  "$comment": "Native review needed, P.18.",
+  "dashboard.review.title": { "en": "Review", "ru": "Проверка" },
+  "dashboard.review.flags": {
+    "en": "{count, plural, one {# flag} other {# flags}}",
+    "ru": "{count, plural, one {# отметка} few {# отметки} many {# отметок} other {# отметки}}"
+  }
+}
+```
