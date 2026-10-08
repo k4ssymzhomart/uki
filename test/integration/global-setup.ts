@@ -1,4 +1,4 @@
-// Runs once before the integration project: finds the local stack and checks that the four Edge
+// Runs once before the integration project: finds the local stack and checks that the Edge
 // Functions are being served (`pnpm functions:serve`), then hands the stack to the tests via inject().
 import type { TestProject } from "vitest/node";
 import { readStackEnv, type StackEnv } from "./stack.ts";
@@ -9,7 +9,7 @@ declare module "vitest" {
   }
 }
 
-export const FUNCTIONS = ["ingest", "frames", "command", "stills"] as const;
+export const FUNCTIONS = ["ingest", "frames", "command", "stills", "send-invites"] as const;
 
 /** How long to wait for the Edge Runtime, which restarts whenever a file under supabase/functions changes. */
 const READY_TIMEOUT_MS = 180_000;

@@ -2296,6 +2296,150 @@
       "kk": "Üki-ді ашу",
       "ru": "Открыть Üki",
       "notes": "Tray menu during exams in the browser."
+    },
+    {
+      "key": "email.invite.code_label",
+      "group": "0.8 Invite email",
+      "source": "added",
+      "en": "Exam code",
+      "kk": "Емтихан коды",
+      "ru": "Код экзамена",
+      "notes": "0.8 (161:13438) \"EXAM CODE\"; the email shows it in capitals. Same words as join.code.label."
+    },
+    {
+      "key": "email.invite.download",
+      "group": "0.8 Invite email",
+      "source": "added",
+      "en": "Download Üki for macOS or Windows",
+      "kk": "Üki-ді macOS не Windows үшін жүктеп алу",
+      "ru": "Скачать Üki для macOS или Windows",
+      "notes": "0.8 button; links to UKI_DOWNLOAD_URL. Kazakh and Russian are a first pass: a native speaker must review them (P.18)."
+    },
+    {
+      "key": "email.invite.footer_group",
+      "group": "0.8 Invite email",
+      "source": "added",
+      "en": "Sent to {name} by the {office} exam office with Üki. You get this because you are in Group {group}.",
+      "kk": "Алушы: {name}. Хатты {office} емтихан бөлімі Üki арқылы жіберді. Сіз {group} тобында болғандықтан, бұл хатты алдыңыз.",
+      "ru": "Получатель: {name}. Письмо отправил экзаменационный отдел {office} через Üki. Вы получили его, потому что состоите в группе {group}.",
+      "notes": "0.8 footer. {name} is the student, so an invite redirected to UKI_EMAIL_SINK still says whose it is; {office} is the workspace name; {group} the student's group code. The frame's sender address is left out (decisions). Kazakh and Russian are a first pass: a native speaker must review them (P.18)."
+    },
+    {
+      "key": "email.invite.footer_roster",
+      "group": "0.8 Invite email",
+      "source": "added-not-in-figma",
+      "en": "Sent to {name} by the {office} exam office with Üki. You get this because you are on the exam roster.",
+      "kk": "Алушы: {name}. Хатты {office} емтихан бөлімі Üki арқылы жіберді. Сіз емтихан тізімінде болғандықтан, бұл хатты алдыңыз.",
+      "ru": "Получатель: {name}. Письмо отправил экзаменационный отдел {office} через Üki. Вы получили его, потому что внесены в список экзамена.",
+      "notes": "email.invite.footer_group for a student with no group. Kazakh and Russian are a first pass: a native speaker must review them (P.18)."
+    },
+    {
+      "key": "email.invite.id_label",
+      "group": "0.8 Invite email",
+      "source": "added",
+      "en": "Student ID",
+      "kk": "Студенттік ID",
+      "ru": "ID студента",
+      "notes": "0.8 \"STUDENT ID\"; the email shows it in capitals. Same words as join.student_id.label."
+    },
+    {
+      "key": "email.invite.languages",
+      "group": "0.8 Invite email",
+      "source": "added",
+      "en": "Қазақша · Русский · English",
+      "kk": "Қазақша · Русский · English",
+      "ru": "Қазақша · Русский · English",
+      "notes": "0.8 top right: the languages Üki speaks, each in its own language, the same in every email."
+    },
+    {
+      "key": "email.invite.preview",
+      "group": "0.8 Invite email",
+      "source": "added-not-in-figma",
+      "en": "Exam code {code}. The lobby opens at {lobby}.",
+      "kk": "Емтихан коды: {code}. Кіру уақыты: {lobby}.",
+      "ru": "Код экзамена: {code}. Вход с {lobby}.",
+      "notes": "Hidden preview line that inboxes show after the subject. {lobby} is a time like 09:40. Kazakh and Russian are a first pass: a native speaker must review them (P.18)."
+    },
+    {
+      "key": "email.invite.privacy",
+      "group": "0.8 Invite email",
+      "source": "added",
+      "en": "Video stays on your laptop. Only events and flagged frames are sent.",
+      "kk": "Бейне ноутбугыңызда қалады. Тек оқиғалар мен белгіленген кадрлар жіберіледі.",
+      "ru": "Видео остаётся на вашем ноутбуке. Передаются только события и отмеченные кадры.",
+      "notes": "0.8, beside the lock icon. Wording follows rules.video.title and rules.video.body."
+    },
+    {
+      "key": "email.invite.step_check",
+      "group": "0.8 Invite email",
+      "source": "added",
+      "en": "Run the system check before {weekday, select, mon {Monday} tue {Tuesday} wed {Wednesday} thu {Thursday} fri {Friday} sat {Saturday} sun {Sunday} other {Sunday}}.",
+      "kk": "Жүйені {weekday, select, mon {дүйсенбі} tue {сейсенбі} wed {сәрсенбі} thu {бейсенбі} fri {жұма} sat {сенбі} sun {жексенбі} other {жексенбі}} күніне дейін тексеріңіз.",
+      "ru": "Пройдите проверку системы до {weekday, select, mon {понедельника} tue {вторника} wed {среды} thu {четверга} fri {пятницы} sat {субботы} sun {воскресенья} other {воскресенья}}.",
+      "notes": "0.8 step 2. {weekday} is the exam day in the workspace time zone (mon to sun); the select keeps each language grammatical. Kazakh and Russian are a first pass: a native speaker must review them (P.18)."
+    },
+    {
+      "key": "email.invite.step_install",
+      "group": "0.8 Invite email",
+      "source": "added",
+      "en": "Install Üki on the laptop you will use.",
+      "kk": "Üki-ді емтиханда қолданатын ноутбугыңызға орнатыңыз.",
+      "ru": "Установите Üki на ноутбук, с которого будете сдавать экзамен.",
+      "notes": "0.8 step 1. Kazakh and Russian are a first pass: a native speaker must review them (P.18)."
+    },
+    {
+      "key": "email.invite.step_join",
+      "group": "0.8 Invite email",
+      "source": "added",
+      "en": "At {lobby}, join with your exam code and student ID.",
+      "kk": "Сағат {lobby} болғанда емтихан коды мен студенттік ID арқылы кіріңіз.",
+      "ru": "В {lobby} войдите по коду экзамена и ID студента.",
+      "notes": "0.8 step 3. {lobby} is when the lobby opens, like 09:40. Kazakh and Russian are a first pass: a native speaker must review them (P.18)."
+    },
+    {
+      "key": "email.invite.subject",
+      "group": "0.8 Invite email",
+      "source": "added",
+      "en": "{exam}: your exam code",
+      "kk": "{exam}: емтихан кодыңыз",
+      "ru": "{exam}: ваш код экзамена",
+      "notes": "0.8 subject line. {exam} is the exam title, like \"Mathematics 2 · Midterm\". Kazakh and Russian are a first pass: a native speaker must review them (P.18)."
+    },
+    {
+      "key": "email.invite.subtitle",
+      "group": "0.8 Invite email",
+      "source": "added",
+      "en": "{exam} · {day} {month, select, jan {January} feb {February} mar {March} apr {April} may {May} jun {June} jul {July} aug {August} sep {September} oct {October} nov {November} dec {December} other {December}} · lobby opens {lobby}",
+      "kk": "{exam} · {day} {month, select, jan {қаңтар} feb {ақпан} mar {наурыз} apr {сәуір} may {мамыр} jun {маусым} jul {шілде} aug {тамыз} sep {қыркүйек} oct {қазан} nov {қараша} dec {желтоқсан} other {желтоқсан}} · кіру уақыты: {lobby}",
+      "ru": "{exam} · {day} {month, select, jan {января} feb {февраля} mar {марта} apr {апреля} may {мая} jun {июня} jul {июля} aug {августа} sep {сентября} oct {октября} nov {ноября} dec {декабря} other {декабря}} · вход с {lobby}",
+      "notes": "0.8 hero, under the title. The date ({day} and {month}, jan to dec, in the workspace time zone) is added to the frame's line, because an invite can come more than a week early (decisions). The month is a select, not Intl: the Edge Runtime has no Kazakh month names. Kazakh and Russian are a first pass: a native speaker must review them (P.18)."
+    },
+    {
+      "key": "email.invite.test_subject",
+      "group": "0.8 Invite email",
+      "source": "added-not-in-figma",
+      "en": "Test invite · {exam}: your exam code",
+      "kk": "Сынақ шақыру · {exam}: емтихан кодыңыз",
+      "ru": "Тестовое приглашение · {exam}: ваш код экзамена",
+      "notes": "Subject of the test invite from 0.5, sent to the staff member. Kazakh and Russian are a first pass: a native speaker must review them (P.18)."
+    },
+    {
+      "key": "email.invite.title",
+      "group": "0.8 Invite email",
+      "source": "added",
+      "en": "Your exam is on {weekday, select, mon {Monday} tue {Tuesday} wed {Wednesday} thu {Thursday} fri {Friday} sat {Saturday} sun {Sunday} other {Sunday}} at {time}.",
+      "kk": "Емтиханыңыз {weekday, select, mon {дүйсенбі} tue {сейсенбі} wed {сәрсенбі} thu {бейсенбі} fri {жұма} sat {сенбі} sun {жексенбі} other {жексенбі}} күні, сағат {time}.",
+      "ru": "Ваш экзамен {weekday, select, mon {в понедельник} tue {во вторник} wed {в среду} thu {в четверг} fri {в пятницу} sat {в субботу} sun {в воскресенье} other {в воскресенье}} в {time}.",
+      "notes": "0.8 hero title. {weekday} is the exam day in the workspace time zone (mon to sun); the select keeps each language grammatical. {time} is the start, like 10:00. Kazakh and Russian are a first pass: a native speaker must review them (P.18)."
+    },
+    {
+      "key": "email.invite.wordmark_alt",
+      "group": "0.8 Invite email",
+      "source": "added-not-in-figma",
+      "en": "Üki",
+      "kk": "Üki",
+      "ru": "Üki",
+      "notes": "Alt text of the wordmark image in 0.8, for inboxes that block images."
     }
   ]
 }

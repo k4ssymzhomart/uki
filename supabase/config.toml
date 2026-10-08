@@ -433,3 +433,7 @@ verify_jwt = false
 
 [functions.stills]
 verify_jwt = false
+
+# The dashboard calls it with the staff member's token, which withSupabase verifies itself (WP 1.4).
+[functions.send-invites]
+verify_jwt = false

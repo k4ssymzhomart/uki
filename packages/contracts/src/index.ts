@@ -6,6 +6,7 @@ export * from "./commands.ts";
 export * from "./events.ts";
 export * from "./exam-code.ts";
 export * from "./ids.ts";
+export * from "./invites.ts";
 export * from "./ipc.ts";
 export * from "./lock.ts";
 export * from "./primitives.ts";

@@ -20,7 +20,8 @@
       "!supabase/functions/_shared/contracts",
       "!apps/desktop/resources",
       "!docs",
-      "!**/*.svg"
+      "!**/*.svg",
+      "!**/__snapshots__"
     ]
   },
   "plugins": [
