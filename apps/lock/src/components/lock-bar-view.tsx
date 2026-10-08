@@ -10,14 +10,18 @@ export interface LockBarViewProps {
   className?: string;
   /** The Exam portal tab; the block page uses it to go back to the exam. */
   onPortal?: () => void;
+  /** Phase 1, E.5a: Ask proctor in the bar (browser exams on the portal); hidden without it. */
+  onAskProctor?: () => void;
+  /** The Ask proctor sheet is open: the button shows lime. */
+  askProctorActive?: boolean;
 }
 
 /**
  * The Lock bar during an exam in the browser (Figma Ext/Lock bar 90:2549 on E.5, E.6, E.7). Phase 0 shows
- * only the portal tab; the calculator and Ask proctor wait for their phases. The watch label follows the
+ * only the portal tab; Phase 1 adds Ask proctor (E.5a) on the exam portal. The watch label follows the
  * app: "Phone found" while its phone warning is up.
  */
-export function LockBarView({ bar, className, onPortal }: LockBarViewProps) {
+export function LockBarView({ bar, className, onPortal, onAskProctor, askProctorActive }: LockBarViewProps) {
   const t = useTranslations();
   const left = useTimeLeft(bar, useNow());
   return (
@@ -28,6 +32,9 @@ export function LockBarView({ bar, className, onPortal }: LockBarViewProps) {
       watching={bar.watch === "phone_found" ? t("exam.phone.title") : t("lock.watching")}
       time={formatTimeLeft(left)}
       timeLabel={t("exam.timer.left")}
+      askProctorLabel={t("action.ask_proctor")}
+      onAskProctor={bar.mode === "browser" ? onAskProctor : undefined}
+      askProctorActive={askProctorActive}
       className={className}
     />
   );

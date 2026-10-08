@@ -1,4 +1,4 @@
-import { act, cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { LOCALES, loadMessages } from "@uki/i18n";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LockIntlProvider } from "../lib/intl.tsx";
@@ -71,4 +71,67 @@ it("stops the clock while the exam is paused", () => {
   );
   act(() => vi.advanceTimersByTime(1000));
   expect(screen.getByText("26:08")).toBeTruthy();
+});
+
+describe.each(LOCALES)("E.5a Ask proctor in the bar, in %s", (locale) => {
+  const m = loadMessages(locale);
+  const ID = "0199a000-0000-7000-8000-000000000a5a";
+
+  it("opens the sheet, sends the reason and the note, waits for help.queued and confirms", async () => {
+    const onAskHelp = vi.fn(async () => ID);
+    const view = (state: BarState) => (
+      <LockIntlProvider locale={locale}>
+        <LockOverlay bar={state} toast={null} locale={locale} onAskHelp={onAskHelp} />
+      </LockIntlProvider>
+    );
+    const { rerender } = render(view(bar));
+    const ask = screen.getByRole("button", { name: m.action.ask_proctor });
+    expect(ask.getAttribute("aria-expanded")).toBe("false");
+    fireEvent.click(ask);
+    expect(screen.getByRole("button", { name: m.action.ask_proctor }).getAttribute("aria-expanded")).toBe(
+      "true",
+    );
+    const sheet = screen.getByRole("dialog", { name: m.lock.ask.title });
+    expect(
+      within(sheet)
+        .getAllByRole("radio")
+        .map((r) => r.textContent),
+    ).toEqual([
+      m.lock.ask.reason.unclear,
+      m.lock.ask.reason.technical,
+      m.lock.ask.reason.break,
+      m.lock.ask.reason.other,
+    ]);
+    fireEvent.click(within(sheet).getByRole("radio", { name: m.lock.ask.reason.technical }));
+    fireEvent.change(within(sheet).getByLabelText(m.lock.ask.note.label), {
+      target: { value: "The calculator tab doesn’t open." },
+    });
+    await act(async () => {
+      fireEvent.click(within(sheet).getByRole("button", { name: m.lock.ask.send }));
+    });
+    expect(onAskHelp).toHaveBeenCalledWith("technical", "The calculator tab doesn’t open.");
+    expect(sheet.getAttribute("data-state")).toBe("sent");
+    // The app answered help.queued: the service worker marks it on the bar, and the sheet confirms.
+    rerender(view({ ...bar, help: { id: ID, at: NOW, queued: true } }));
+    expect(screen.getByRole("dialog", { name: m.lock.ask.title }).getAttribute("data-state")).toBe("queued");
+    expect(screen.getByText(m.identity.help.requested.replace("{time}", "14:13"))).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: m.message.ack }));
+    expect(screen.queryByRole("dialog", { name: m.lock.ask.title })).toBeNull();
+  });
+});
+
+it("hides Ask proctor without a sender and on the block page of an app exam", () => {
+  render(
+    <LockIntlProvider locale="en">
+      <LockOverlay bar={bar} toast={null} locale="en" />
+    </LockIntlProvider>,
+  );
+  expect(screen.queryByRole("button", { name: "Ask proctor" })).toBeNull();
+  cleanup();
+  render(
+    <LockIntlProvider locale="en">
+      <LockOverlay bar={{ ...bar, mode: "app" }} toast={null} locale="en" onAskHelp={async () => null} />
+    </LockIntlProvider>,
+  );
+  expect(screen.queryByRole("button", { name: "Ask proctor" })).toBeNull();
 });

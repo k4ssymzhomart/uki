@@ -8,6 +8,7 @@
 // creates a formatter. Content scripts have their own Intl, so the pages' own is untouched.
 import "@uki/i18n/polyfill";
 
+import type { AskReason } from "@uki/contracts";
 import { isLocale } from "@uki/i18n";
 import { createRoot, type Root } from "react-dom/client";
 import { browser } from "wxt/browser";
@@ -17,7 +18,7 @@ import { defineContentScript } from "wxt/utils/define-content-script";
 import { type GuardHit, installGuard, markLocked } from "../../content/guard.ts";
 import { LockOverlay, type ToastRequest } from "../../content/lock-overlay.tsx";
 import { LockIntlProvider } from "../../lib/intl.tsx";
-import type { RuntimeRequest } from "../../lib/messages.ts";
+import { RuntimeReply, type RuntimeRequest } from "../../lib/messages.ts";
 import { BarState, readStored, STORAGE_KEYS } from "../../lib/state.ts";
 import css from "../../styles.css?inline";
 
@@ -44,13 +45,21 @@ async function run(ctx: ContentScriptContext): Promise<void> {
   /** The copy guard's listeners, removed together at release. */
   let guard: AbortController | null = null;
 
+  /** E.5a: Send to proctor goes to the service worker, which answers with the event id. */
+  const askHelp = async (topic: AskReason, text: string | null): Promise<string | null> => {
+    const request: RuntimeRequest =
+      text === null ? { type: "content.help", topic } : { type: "content.help", topic, text };
+    const reply = RuntimeReply.safeParse(await browser.runtime.sendMessage(request).catch(() => null));
+    return reply.success && reply.data.ok ? (reply.data.id ?? null) : null;
+  };
+
   const render = () => {
     const root = ui?.mounted;
     if (!root || !bar) return;
     const locale = isLocale(bar.locale) ? bar.locale : "kk";
     root.render(
       <LockIntlProvider locale={locale}>
-        <LockOverlay bar={bar} toast={toast} locale={locale} />
+        <LockOverlay bar={bar} toast={toast} locale={locale} onAskHelp={askHelp} />
       </LockIntlProvider>,
     );
   };

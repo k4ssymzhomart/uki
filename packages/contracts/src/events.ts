@@ -172,7 +172,8 @@ export const ASK_REASONS = [
   "break",
   "other",
 ] as const satisfies readonly HelpTopic[];
-export type AskReason = (typeof ASK_REASONS)[number];
+export const AskReason = z.enum(ASK_REASONS);
+export type AskReason = z.infer<typeof AskReason>;
 /** The sheet's optional note: E.5a's counter reads "32/200". The server keeps up to 280 (MessageText). */
 export const HELP_NOTE_MAX = 200;
 /** `lock` when the extension or browser went away, `app` after an app crash. */

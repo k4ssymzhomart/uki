@@ -123,6 +123,11 @@ export const BarState = z.object({
   locale: Locale,
   lms_url: z.string().nullable(),
   allowed_hosts: z.array(z.string()),
+  /**
+   * Phase 1, E.5a: the latest Ask proctor request from the bar; `queued` once the app answered
+   * help.queued (it is in the app's outbox). `at` is on the laptop's clock.
+   */
+  help: z.object({ id: Uuid, at: z.number(), queued: z.boolean() }).nullable().optional(),
 });
 export type BarState = z.infer<typeof BarState>;
 
