@@ -1,0 +1,451 @@
+{
+  "$comment": "WP 1.11 Students and settings: A.2 (Figma 104:10579), A.3 (105:10746) and A.4 (106:10905). English from the frames; added, not in Figma: the group, programme and year filters, the empty lines, the paging buttons' names, the Lock without a browser, the consent and frames lines without data, 'Kept until a delete request', the default duration and lobby selects and the save messages (docs/decisions.md, 1.11). The Russian is a first pass by the agent: native review needed, P.18.",
+  "dashboard.settings.breadcrumb": {
+    "en": "Admin / Settings",
+    "ru": "Администрирование / Настройки"
+  },
+  "dashboard.settings.checks.gaze.detail": {
+    "en": "Flags looks away over the threshold.",
+    "ru": "Отмечает взгляд в сторону дольше порога."
+  },
+  "dashboard.settings.checks.gaze.title": {
+    "en": "Gaze control",
+    "ru": "Контроль взгляда"
+  },
+  "dashboard.settings.checks.identity.detail": {
+    "en": "Card and face, matched on the laptop.",
+    "ru": "Карта и лицо сверяются на ноутбуке."
+  },
+  "dashboard.settings.checks.identity.title": {
+    "en": "Identity check",
+    "ru": "Проверка личности"
+  },
+  "dashboard.settings.checks.lock.detail": {
+    "en": "Other tabs and apps stay closed.",
+    "ru": "Другие вкладки и приложения остаются закрытыми."
+  },
+  "dashboard.settings.checks.lock.title": {
+    "en": "Browser lock",
+    "ru": "Блокировка браузера"
+  },
+  "dashboard.settings.checks.phone.detail": {
+    "en": "Flags a phone in the camera view.",
+    "ru": "Отмечает телефон в кадре камеры."
+  },
+  "dashboard.settings.checks.phone.title": {
+    "en": "Phone detection",
+    "ru": "Обнаружение телефона"
+  },
+  "dashboard.settings.checks.second.detail": {
+    "en": "Flags a second face in the frame.",
+    "ru": "Отмечает второе лицо в кадре."
+  },
+  "dashboard.settings.checks.second.title": {
+    "en": "Second person",
+    "ru": "Второй человек"
+  },
+  "dashboard.settings.checks.title": {
+    "en": "Checks on by default",
+    "ru": "Проверки по умолчанию"
+  },
+  "dashboard.settings.defaults.caption": {
+    "en": "Every new exam starts with these. Each exam can change them.",
+    "ru": "Каждый новый экзамен начинается с них. В каждом экзамене их можно изменить."
+  },
+  "dashboard.settings.defaults.duration.label": {
+    "en": "Default duration",
+    "ru": "Длительность по умолчанию"
+  },
+  "dashboard.settings.defaults.duration.value": {
+    "en": "{minutes} min",
+    "ru": "{minutes} мин"
+  },
+  "dashboard.settings.defaults.gaze.label": {
+    "en": "Gaze threshold",
+    "ru": "Порог взгляда"
+  },
+  "dashboard.settings.defaults.gaze.value": {
+    "en": "{seconds, plural, one {# second} other {# seconds}}",
+    "ru": "{seconds, plural, one {# секунда} few {# секунды} many {# секунд} other {# секунды}}"
+  },
+  "dashboard.settings.defaults.lobby.label": {
+    "en": "Lobby opens",
+    "ru": "Лобби открывается"
+  },
+  "dashboard.settings.defaults.lobby.value": {
+    "en": "{minutes} min before the start",
+    "ru": "за {minutes} мин до начала"
+  },
+  "dashboard.settings.defaults.phone.label": {
+    "en": "Phone confidence",
+    "ru": "Уверенность для телефона"
+  },
+  "dashboard.settings.defaults.phone.value": {
+    "en": "{score, number, ::.00}",
+    "ru": "{score, number, ::.00}"
+  },
+  "dashboard.settings.defaults.retention.label": {
+    "en": "Keep flagged frames",
+    "ru": "Хранить отмеченные кадры"
+  },
+  "dashboard.settings.defaults.retention.value": {
+    "en": "{days, plural, one {# day} other {# days}}",
+    "ru": "{days, plural, one {# день} few {# дня} many {# дней} other {# дня}}"
+  },
+  "dashboard.settings.defaults.rulesLanguage.kk": {
+    "en": "Қазақша",
+    "ru": "Қазақша"
+  },
+  "dashboard.settings.defaults.rulesLanguage.label": {
+    "en": "Rules language",
+    "ru": "Язык правил"
+  },
+  "dashboard.settings.defaults.title": {
+    "en": "New exam defaults",
+    "ru": "Настройки новых экзаменов"
+  },
+  "dashboard.settings.error.failed": {
+    "en": "The settings were not saved. Try again.",
+    "ru": "Настройки не сохранены. Попробуйте ещё раз."
+  },
+  "dashboard.settings.error.forbidden": {
+    "en": "Only the exam office can change these settings.",
+    "ru": "Изменять эти настройки может только экзаменационный отдел."
+  },
+  "dashboard.settings.error.invalid": {
+    "en": "That value is not allowed.",
+    "ru": "Такое значение недопустимо."
+  },
+  "dashboard.settings.saved": {
+    "en": "Settings saved. The next new exam starts with them.",
+    "ru": "Настройки сохранены. Следующий новый экзамен начнётся с них."
+  },
+  "dashboard.settings.title": {
+    "en": "Settings",
+    "ru": "Настройки"
+  },
+  "dashboard.students.breadcrumb": {
+    "en": "Students / {scope}",
+    "ru": "Студенты / {scope}"
+  },
+  "dashboard.students.column.exams": {
+    "en": "Exams",
+    "ru": "Экзамены"
+  },
+  "dashboard.students.column.flags": {
+    "en": "Flags",
+    "ru": "Отметки"
+  },
+  "dashboard.students.column.group": {
+    "en": "Group",
+    "ru": "Группа"
+  },
+  "dashboard.students.column.lastExam": {
+    "en": "Last exam",
+    "ru": "Последний экзамен"
+  },
+  "dashboard.students.column.status": {
+    "en": "Status",
+    "ru": "Статус"
+  },
+  "dashboard.students.column.student": {
+    "en": "Student",
+    "ru": "Студент"
+  },
+  "dashboard.students.decision.committee": {
+    "en": "committee",
+    "ru": "комиссия"
+  },
+  "dashboard.students.decision.no_issue": {
+    "en": "no issue",
+    "ru": "без нарушений"
+  },
+  "dashboard.students.decision.talk": {
+    "en": "follow-up",
+    "ru": "беседа"
+  },
+  "dashboard.students.empty.filtered": {
+    "en": "No student matches the search and filters.",
+    "ru": "Ни один студент не подходит под поиск и фильтры."
+  },
+  "dashboard.students.empty.none": {
+    "en": "No students yet. They arrive with an exam’s roster.",
+    "ru": "Студентов пока нет. Они появляются со списком экзамена."
+  },
+  "dashboard.students.filter.group.all": {
+    "en": "All groups",
+    "ru": "Все группы"
+  },
+  "dashboard.students.filter.group.label": {
+    "en": "Group",
+    "ru": "Группа"
+  },
+  "dashboard.students.filter.programme.all": {
+    "en": "All programmes",
+    "ru": "Все программы"
+  },
+  "dashboard.students.filter.programme.label": {
+    "en": "Programme",
+    "ru": "Программа"
+  },
+  "dashboard.students.filter.year.all": {
+    "en": "All years",
+    "ru": "Все курсы"
+  },
+  "dashboard.students.filter.year.label": {
+    "en": "Year",
+    "ru": "Курс"
+  },
+  "dashboard.students.filter.year.value": {
+    "en": "Year {year}",
+    "ru": "{year} курс"
+  },
+  "dashboard.students.footer.next": {
+    "en": "Next page",
+    "ru": "Следующая страница"
+  },
+  "dashboard.students.footer.previous": {
+    "en": "Previous page",
+    "ru": "Предыдущая страница"
+  },
+  "dashboard.students.footer.range": {
+    "en": "{from}–{to} of {total}",
+    "ru": "{from}–{to} из {total}"
+  },
+  "dashboard.students.language.en": {
+    "en": "English",
+    "ru": "English"
+  },
+  "dashboard.students.language.kk": {
+    "en": "Қазақша",
+    "ru": "Қазақша"
+  },
+  "dashboard.students.language.ru": {
+    "en": "Русский",
+    "ru": "Русский"
+  },
+  "dashboard.students.profile.breadcrumb": {
+    "en": "Students / {group}",
+    "ru": "Студенты / {group}"
+  },
+  "dashboard.students.profile.consent.accepted": {
+    "en": "Accepted {date}, {time}",
+    "ru": "Приняты {date}, {time}"
+  },
+  "dashboard.students.profile.consent.notYet": {
+    "en": "Not accepted yet",
+    "ru": "Ещё не приняты"
+  },
+  "dashboard.students.profile.consent.rules": {
+    "en": "Exam rules",
+    "ru": "Правила экзамена"
+  },
+  "dashboard.students.profile.consent.rulesIn": {
+    "en": "Exam rules · {language}",
+    "ru": "Правила экзамена · {language}"
+  },
+  "dashboard.students.profile.consent.title": {
+    "en": "Consent",
+    "ru": "Согласие"
+  },
+  "dashboard.students.profile.devices.app": {
+    "en": "Üki {version} · seen {seen}",
+    "ru": "Üki {version} · в сети {seen}"
+  },
+  "dashboard.students.profile.devices.empty": {
+    "en": "No device yet: the app reports one when the student joins an exam.",
+    "ru": "Устройств пока нет: приложение сообщает о нём, когда студент входит на экзамен."
+  },
+  "dashboard.students.profile.devices.lock": {
+    "en": "Üki Lock",
+    "ru": "Üki Lock"
+  },
+  "dashboard.students.profile.devices.lockIn": {
+    "en": "Üki Lock in {browser}",
+    "ru": "Üki Lock в {browser}"
+  },
+  "dashboard.students.profile.devices.lockVersion": {
+    "en": "Üki Lock {version} · seen {seen}",
+    "ru": "Üki Lock {version} · в сети {seen}"
+  },
+  "dashboard.students.profile.devices.notSeen": {
+    "en": "not yet",
+    "ru": "ещё нет"
+  },
+  "dashboard.students.profile.devices.os.macos": {
+    "en": "macOS",
+    "ru": "macOS"
+  },
+  "dashboard.students.profile.devices.os.windows": {
+    "en": "Windows",
+    "ru": "Windows"
+  },
+  "dashboard.students.profile.devices.title": {
+    "en": "Devices",
+    "ru": "Устройства"
+  },
+  "dashboard.students.profile.history.detail": {
+    "en": "{time} · {flags}",
+    "ru": "{time} · {flags}"
+  },
+  "dashboard.students.profile.history.duration": {
+    "en": "{duration} min",
+    "ru": "{duration} мин"
+  },
+  "dashboard.students.profile.history.empty": {
+    "en": "No exams yet.",
+    "ru": "Экзаменов пока нет."
+  },
+  "dashboard.students.profile.history.flags": {
+    "en": "{count, plural, one {# flag} other {# flags}}",
+    "ru": "{count, plural, one {# отметка} few {# отметки} many {# отметок} other {# отметки}}"
+  },
+  "dashboard.students.profile.history.title": {
+    "en": "Exam history",
+    "ru": "История экзаменов"
+  },
+  "dashboard.students.profile.history.used": {
+    "en": "{used} of {duration} min",
+    "ru": "{used} из {duration} мин"
+  },
+  "dashboard.students.profile.kept.delete": {
+    "en": "Delete on request",
+    "ru": "Удалить по запросу"
+  },
+  "dashboard.students.profile.kept.deletedOn": {
+    "en": "Deleted on {date}",
+    "ru": "Удаляются {date}"
+  },
+  "dashboard.students.profile.kept.events": {
+    "en": "{count, plural, one {Event log · # exam} other {Event log · # exams}}",
+    "ru": "{count, plural, one {Журнал событий · # экзамен} few {Журнал событий · # экзамена} many {Журнал событий · # экзаменов} other {Журнал событий · # экзамена}}"
+  },
+  "dashboard.students.profile.kept.eventsKept": {
+    "en": "Kept until a delete request",
+    "ru": "Хранится до запроса на удаление"
+  },
+  "dashboard.students.profile.kept.frames": {
+    "en": "Flagged frames · {count}",
+    "ru": "Отмеченные кадры · {count}"
+  },
+  "dashboard.students.profile.kept.noFrames": {
+    "en": "None kept",
+    "ru": "Не хранятся"
+  },
+  "dashboard.students.profile.kept.title": {
+    "en": "Data kept",
+    "ru": "Хранимые данные"
+  },
+  "dashboard.students.profile.kept.video": {
+    "en": "Video · 0 MB",
+    "ru": "Видео · 0 МБ"
+  },
+  "dashboard.students.profile.kept.videoNever": {
+    "en": "Never uploaded",
+    "ru": "Никогда не загружается"
+  },
+  "dashboard.students.profile.stat.decisions.caption": {
+    "en": "{latest} · {committee} to committee",
+    "ru": "{latest} · в комиссию: {committee}"
+  },
+  "dashboard.students.profile.stat.decisions.label": {
+    "en": "Decisions",
+    "ru": "Решения"
+  },
+  "dashboard.students.profile.stat.exams.caption": {
+    "en": "since {date}",
+    "ru": "с {date}"
+  },
+  "dashboard.students.profile.stat.exams.label": {
+    "en": "Exams",
+    "ru": "Экзамены"
+  },
+  "dashboard.students.profile.stat.flags.caption": {
+    "en": "{count} in {course}",
+    "ru": "{count} по курсу «{course}»"
+  },
+  "dashboard.students.profile.stat.flags.label": {
+    "en": "Flags",
+    "ru": "Отметки"
+  },
+  "dashboard.students.profile.title": {
+    "en": "Student profile",
+    "ru": "Профиль студента"
+  },
+  "dashboard.students.row.group": {
+    "en": "Group {code}",
+    "ru": "Группа {code}"
+  },
+  "dashboard.students.row.noGroup": {
+    "en": "No group",
+    "ru": "Без группы"
+  },
+  "dashboard.students.row.programmeYear": {
+    "en": "{programme}, year {year}",
+    "ru": "{programme}, {year} курс"
+  },
+  "dashboard.students.search.label": {
+    "en": "Search students by name or student ID",
+    "ru": "Поиск студента по имени или номеру"
+  },
+  "dashboard.students.search.placeholder": {
+    "en": "Name or student ID",
+    "ru": "Имя или номер студента"
+  },
+  "dashboard.students.stat.flagged.caption": {
+    "en": "{share} of students",
+    "ru": "{share} студентов"
+  },
+  "dashboard.students.stat.flagged.label": {
+    "en": "Flagged this term",
+    "ru": "С отметками в этом семестре"
+  },
+  "dashboard.students.stat.students.caption": {
+    "en": "{count, plural, one {in # faculty} other {in # faculties}}",
+    "ru": "{count, plural, one {на # факультете} few {на # факультетах} many {на # факультетах} other {на # факультета}}"
+  },
+  "dashboard.students.stat.students.label": {
+    "en": "Students",
+    "ru": "Студенты"
+  },
+  "dashboard.students.status.clear": {
+    "en": "clear",
+    "ru": "без отметок"
+  },
+  "dashboard.students.status.committee": {
+    "en": "committee",
+    "ru": "комиссия"
+  },
+  "dashboard.students.status.followUp": {
+    "en": "follow-up",
+    "ru": "беседа"
+  },
+  "dashboard.students.status.inReview": {
+    "en": "in review",
+    "ru": "на проверке"
+  },
+  "dashboard.students.status.noIssue": {
+    "en": "no issue",
+    "ru": "без нарушений"
+  },
+  "dashboard.students.tab.all": {
+    "en": "All · {count}",
+    "ru": "Все · {count}"
+  },
+  "dashboard.students.tab.flagged": {
+    "en": "Flagged · {count}",
+    "ru": "С отметками · {count}"
+  },
+  "dashboard.students.tab.label": {
+    "en": "Show students",
+    "ru": "Показать студентов"
+  },
+  "dashboard.students.table.title": {
+    "en": "Students",
+    "ru": "Студенты"
+  },
+  "dashboard.students.title": {
+    "en": "Students",
+    "ru": "Студенты"
+  }
+}

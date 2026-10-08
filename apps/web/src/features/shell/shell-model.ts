@@ -46,8 +46,8 @@ export const NAV: Readonly<Record<NavId, NavSpec>> = {
   live: { section: "workspace", icon: "eyes", roles: EVERYONE, built: true },
   review: { section: "workspace", icon: "flag", roles: EVERYONE, built: true },
   reports: { section: "workspace", icon: "report", roles: EVERYONE, built: false },
-  students: { section: "workspace", icon: "users", roles: EVERYONE, built: false },
-  settings: { section: "admin", icon: "settings", roles: OFFICE, built: false },
+  students: { section: "workspace", icon: "users", roles: OFFICE, built: true },
+  settings: { section: "admin", icon: "settings", roles: OFFICE, built: true },
   privacy: { section: "admin", icon: "shield", roles: OFFICE, built: false },
 };
 

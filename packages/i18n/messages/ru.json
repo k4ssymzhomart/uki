@@ -492,6 +492,67 @@
         "tab_blocked": "Новая вкладка заблокирована"
       }
     },
+    "settings": {
+      "breadcrumb": "Администрирование / Настройки",
+      "checks": {
+        "gaze": {
+          "detail": "Отмечает взгляд в сторону дольше порога.",
+          "title": "Контроль взгляда"
+        },
+        "identity": {
+          "detail": "Карта и лицо сверяются на ноутбуке.",
+          "title": "Проверка личности"
+        },
+        "lock": {
+          "detail": "Другие вкладки и приложения остаются закрытыми.",
+          "title": "Блокировка браузера"
+        },
+        "phone": {
+          "detail": "Отмечает телефон в кадре камеры.",
+          "title": "Обнаружение телефона"
+        },
+        "second": {
+          "detail": "Отмечает второе лицо в кадре.",
+          "title": "Второй человек"
+        },
+        "title": "Проверки по умолчанию"
+      },
+      "defaults": {
+        "caption": "Каждый новый экзамен начинается с них. В каждом экзамене их можно изменить.",
+        "duration": {
+          "label": "Длительность по умолчанию",
+          "value": "{minutes} мин"
+        },
+        "gaze": {
+          "label": "Порог взгляда",
+          "value": "{seconds, plural, one {# секунда} few {# секунды} many {# секунд} other {# секунды}}"
+        },
+        "lobby": {
+          "label": "Лобби открывается",
+          "value": "за {minutes} мин до начала"
+        },
+        "phone": {
+          "label": "Уверенность для телефона",
+          "value": "{score, number, ::.00}"
+        },
+        "retention": {
+          "label": "Хранить отмеченные кадры",
+          "value": "{days, plural, one {# день} few {# дня} many {# дней} other {# дня}}"
+        },
+        "rulesLanguage": {
+          "kk": "Қазақша",
+          "label": "Язык правил"
+        },
+        "title": "Настройки новых экзаменов"
+      },
+      "error": {
+        "failed": "Настройки не сохранены. Попробуйте ещё раз.",
+        "forbidden": "Изменять эти настройки может только экзаменационный отдел.",
+        "invalid": "Такое значение недопустимо."
+      },
+      "saved": "Настройки сохранены. Следующий новый экзамен начнётся с них.",
+      "title": "Настройки"
+    },
     "shell": {
       "account": {
         "language": "Язык"
@@ -564,6 +625,143 @@
       "showPassword": "Показать пароль",
       "submit": "Войти",
       "title": "Вход в Üki."
+    },
+    "students": {
+      "breadcrumb": "Студенты / {scope}",
+      "column": {
+        "exams": "Экзамены",
+        "flags": "Отметки",
+        "group": "Группа",
+        "lastExam": "Последний экзамен",
+        "status": "Статус",
+        "student": "Студент"
+      },
+      "decision": {
+        "committee": "комиссия",
+        "no_issue": "без нарушений",
+        "talk": "беседа"
+      },
+      "empty": {
+        "filtered": "Ни один студент не подходит под поиск и фильтры.",
+        "none": "Студентов пока нет. Они появляются со списком экзамена."
+      },
+      "filter": {
+        "group": {
+          "all": "Все группы",
+          "label": "Группа"
+        },
+        "programme": {
+          "all": "Все программы",
+          "label": "Программа"
+        },
+        "year": {
+          "all": "Все курсы",
+          "label": "Курс",
+          "value": "{year} курс"
+        }
+      },
+      "footer": {
+        "next": "Следующая страница",
+        "previous": "Предыдущая страница",
+        "range": "{from}–{to} из {total}"
+      },
+      "language": {
+        "en": "English",
+        "kk": "Қазақша",
+        "ru": "Русский"
+      },
+      "profile": {
+        "breadcrumb": "Студенты / {group}",
+        "consent": {
+          "accepted": "Приняты {date}, {time}",
+          "notYet": "Ещё не приняты",
+          "rules": "Правила экзамена",
+          "rulesIn": "Правила экзамена · {language}",
+          "title": "Согласие"
+        },
+        "devices": {
+          "app": "Üki {version} · в сети {seen}",
+          "empty": "Устройств пока нет: приложение сообщает о нём, когда студент входит на экзамен.",
+          "lock": "Üki Lock",
+          "lockIn": "Üki Lock в {browser}",
+          "lockVersion": "Üki Lock {version} · в сети {seen}",
+          "notSeen": "ещё нет",
+          "os": {
+            "macos": "macOS",
+            "windows": "Windows"
+          },
+          "title": "Устройства"
+        },
+        "history": {
+          "detail": "{time} · {flags}",
+          "duration": "{duration} мин",
+          "empty": "Экзаменов пока нет.",
+          "flags": "{count, plural, one {# отметка} few {# отметки} many {# отметок} other {# отметки}}",
+          "title": "История экзаменов",
+          "used": "{used} из {duration} мин"
+        },
+        "kept": {
+          "delete": "Удалить по запросу",
+          "deletedOn": "Удаляются {date}",
+          "events": "{count, plural, one {Журнал событий · # экзамен} few {Журнал событий · # экзамена} many {Журнал событий · # экзаменов} other {Журнал событий · # экзамена}}",
+          "eventsKept": "Хранится до запроса на удаление",
+          "frames": "Отмеченные кадры · {count}",
+          "noFrames": "Не хранятся",
+          "title": "Хранимые данные",
+          "video": "Видео · 0 МБ",
+          "videoNever": "Никогда не загружается"
+        },
+        "stat": {
+          "decisions": {
+            "caption": "{latest} · в комиссию: {committee}",
+            "label": "Решения"
+          },
+          "exams": {
+            "caption": "с {date}",
+            "label": "Экзамены"
+          },
+          "flags": {
+            "caption": "{count} по курсу «{course}»",
+            "label": "Отметки"
+          }
+        },
+        "title": "Профиль студента"
+      },
+      "row": {
+        "group": "Группа {code}",
+        "noGroup": "Без группы",
+        "programmeYear": "{programme}, {year} курс"
+      },
+      "search": {
+        "label": "Поиск студента по имени или номеру",
+        "placeholder": "Имя или номер студента"
+      },
+      "stat": {
+        "flagged": {
+          "caption": "{share} студентов",
+          "label": "С отметками в этом семестре"
+        },
+        "students": {
+          "caption": "{count, plural, one {на # факультете} few {на # факультетах} many {на # факультетах} other {на # факультета}}",
+          "label": "Студенты"
+        }
+      },
+      "status": {
+        "clear": "без отметок",
+        "committee": "комиссия",
+        "followUp": "беседа",
+        "inReview": "на проверке",
+        "noIssue": "без нарушений"
+      },
+      "tab": {
+        "all": "Все · {count}",
+        "flagged": "С отметками · {count}",
+        "label": "Показать студентов"
+      },
+      "table": {
+        "title": "Студенты"
+      },
+      "title": "Студенты"
     },
     "wall": {
       "action": {
