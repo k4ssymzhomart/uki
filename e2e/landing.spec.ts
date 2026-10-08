@@ -301,6 +301,14 @@ async function expectLiveDemoSignIn(page: Page): Promise<void> {
   await expect(page.getByLabel(message("dashboard.signIn.password"), { exact: true })).toHaveValue("");
 }
 
+/**
+ * Waits until the page's path (not its query: `/sign-in?next=/students` ends in "/students" too) is
+ * `pathname`.
+ */
+async function expectPath(page: Page, pathname: string, message?: string): Promise<void> {
+  await expect.poll(() => new URL(page.url()).pathname, { message, timeout: 90_000 }).toBe(pathname);
+}
+
 /** Signs in through the form already on screen with the seeded staff password. */
 async function submitSignIn(page: Page, email: string): Promise<void> {
   await emailField(page).fill(email);
@@ -412,14 +420,17 @@ test.describe("the judge path with the stack", () => {
     // Through the form: the exam office signs in with next=/students and lands there.
     await page.goto("/sign-in?next=/students");
     await submitSignIn(page, STAFF.dana);
-    await expect(page).toHaveURL(/\/students$/, { timeout: 90_000 });
+    await expectPath(page, "/students");
+    await expect(
+      page.getByRole("heading", { level: 1, name: message("dashboard.students.title") }),
+    ).toBeVisible();
 
     // Signed in, sign-in sends a safe next on and everything else to the overview.
     await page.goto("/sign-in?next=/review");
-    await expect(page).toHaveURL(/\/review$/);
+    await expectPath(page, "/review");
     for (const next of UNSAFE_NEXT) {
       await page.goto(`/sign-in?next=${encodeURIComponent(next)}`);
-      await expect(page, next).toHaveURL(/\/overview$/);
+      await expectPath(page, "/overview", next);
     }
 
     // /demo/live opens DEMO-LIVE's wall, or says the exam is not there yet (the CI seed has none).
@@ -431,7 +442,7 @@ test.describe("the judge path with the stack", () => {
     expect(error).toBeNull();
     const response = await page.goto("/demo/live");
     if (demo) {
-      await expect(page).toHaveURL(new RegExp(`/exams/${demo.id}/live$`));
+      await expectPath(page, `/exams/${demo.id}/live`);
     } else {
       expect(response?.status()).toBe(404);
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(
@@ -446,7 +457,7 @@ test.describe("the judge path with the stack", () => {
     await page.goto(`/sign-in?next=${encodeURIComponent("//evil.example")}`);
     await expect(nextField(page)).toHaveCount(0);
     await submitSignIn(page, STAFF.dana);
-    await expect(page).toHaveURL(/\/overview$/, { timeout: 90_000 });
+    await expectPath(page, "/overview");
   });
 });
 
