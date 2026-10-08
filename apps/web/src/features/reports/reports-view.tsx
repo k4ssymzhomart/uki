@@ -199,24 +199,28 @@ export function ReportsView({ data, faculties, facultyId, workspaceName }: Repor
 
         <div className="grid grid-cols-4 gap-4 print:gap-3">
           <StatTile
+            data-kpi="exams"
             className="print:p-4"
             label={t("reports.kpi.exams.label")}
             value={format.number(kpis.exams_run)}
             caption={t("reports.kpi.exams.caption", { date: dayLabel(termStartOf(term)) })}
           />
           <StatTile
+            data-kpi="sessions"
             className="print:p-4"
             label={t("reports.kpi.sessions.label")}
             value={format.number(kpis.sessions)}
             caption={t("reports.kpi.sessions.caption")}
           />
           <StatTile
+            data-kpi="rate"
             className="print:p-4"
             label={t("reports.kpi.rate.label")}
             value={rateKpi.value === null ? none : rate(rateKpi.value)}
             caption={rateCaption}
           />
           <StatTile
+            data-kpi="committee"
             className="print:p-4"
             label={t("reports.kpi.committee.label")}
             value={

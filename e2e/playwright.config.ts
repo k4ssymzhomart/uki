@@ -21,6 +21,7 @@ export default defineConfig({
     "students.spec.ts",
     "landing.spec.ts",
     "report.spec.ts",
+    "reports.spec.ts",
     "wizard.spec.ts",
   ],
   // One worker: the tests share the seeded staff accounts, and latency figures stay honest.
