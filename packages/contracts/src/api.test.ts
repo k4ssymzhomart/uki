@@ -7,6 +7,7 @@ import {
   FramesRequest,
   IngestRequest,
   IngestResponse,
+  IngestStatus,
   isStillPathFor,
   JOIN_ERROR_CODES,
   JoinExamInput,
@@ -18,6 +19,7 @@ import {
   SubmitSessionOutput,
   stillPath,
 } from "./api.ts";
+import { DEFAULT_BROWSER_RULES } from "./browser-rules.ts";
 import { uuidv7 } from "./ids.ts";
 
 function event(overrides: Record<string, unknown> = {}) {
@@ -110,6 +112,25 @@ describe("join_exam", () => {
       ],
     });
     expect(parsed.questions?.[0]?.choices[0]?.id).toBe("a");
+  });
+
+  it("parses Phase 1's browser rules, rules language and room, and their absence from an older server", () => {
+    const parsed = JoinExamOutput.parse({
+      ...output,
+      exam: {
+        ...output.exam,
+        browser_rules: { ...DEFAULT_BROWSER_RULES, print: false },
+        rules_locale: "kk",
+        room: "204",
+      },
+    });
+    expect(parsed.exam.browser_rules?.print).toBe(false);
+    expect(parsed.exam.rules_locale).toBe("kk");
+    expect(JoinExamOutput.parse(output).exam.browser_rules).toBeUndefined();
+    expect(
+      JoinExamOutput.safeParse({ ...output, exam: { ...output.exam, browser_rules: { copy_paste: true } } })
+        .success,
+    ).toBe(false);
   });
 
   it("finds join error codes in a PostgREST error", () => {
@@ -385,5 +406,15 @@ describe("still paths", () => {
       `${EXAM_ID}/${SESSION_ID}/${eventId}-0.jpg/x`,
     ];
     for (const path of bad) expect(isStillPathFor(path, EXAM_ID, SESSION_ID), path).toBe(false);
+  });
+});
+
+describe("ingest status (Phase 1)", () => {
+  it("carries the rules language with step ready", () => {
+    expect(IngestStatus.parse({ step: "ready", rules_locale: "ru" })).toEqual({
+      step: "ready",
+      rules_locale: "ru",
+    });
+    expect(IngestStatus.safeParse({ step: "ready", rules_locale: "de" }).success).toBe(false);
   });
 });

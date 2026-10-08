@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { EXAM_ID, SESSION_ID, T0 } from "../test/fixtures.ts";
+import { DEFAULT_BROWSER_RULES } from "./browser-rules.ts";
 import { ClientEventEnvelope } from "./events.ts";
 import { uuidv7 } from "./ids.ts";
 import {
@@ -40,6 +41,20 @@ const lockToApp: LockToApp[] = [
   {
     type: "lock.event",
     session_id: SESSION_ID,
+    event: {
+      id: uuidv7(),
+      at,
+      type: "student.help_requested",
+      data: { topic: "question", text: "Q 8: radians?" },
+    },
+  },
+  {
+    type: "lock.event",
+    event: { id: uuidv7(), at, type: "student.help_requested", data: { topic: "technical" } },
+  },
+  {
+    type: "lock.event",
+    session_id: SESSION_ID,
     event: { id: uuidv7(), at, type: "exam.submitted", data: {} },
   },
   { type: "ping", at: T0 },
@@ -69,6 +84,24 @@ const appToLock: AppToLock[] = [
     },
     clock_offset_ms: -2_400_000,
   },
+  {
+    type: "exam.state",
+    phase: "writing",
+    watch: "watching",
+    locale: "kk",
+    exam: {
+      session_id: SESSION_ID,
+      mode: "browser",
+      title: "Physics 1 · Quiz 3",
+      starts_at: "2026-10-09T10:35:00+00:00",
+      ends_at: "2026-10-09T11:15:00+00:00",
+      allowed_hosts: ["uki-lms-mock.vercel.app"],
+      lms_url: "https://uki-lms-mock.vercel.app/physics-1/quiz-3",
+      done_path: "/physics-1/quiz-3/review",
+      browser_rules: { ...DEFAULT_BROWSER_RULES, copy_paste: false, calculator: false },
+    },
+  },
+  { type: "help.queued", id: uuidv7() },
   { type: "lock.start" },
   { type: "lock.release", reason: "submitted" },
   { type: "ping" },
@@ -92,7 +125,69 @@ describe("constants", () => {
       "copy.blocked",
       "lock.fullscreen_exit",
       "exam.submitted",
+      "student.help_requested",
     ]);
+  });
+});
+
+describe("Phase 1 additions", () => {
+  it("refuses a help request without a known topic or with an overlong text", () => {
+    const bad = (data: unknown) =>
+      parseLockToApp(
+        JSON.stringify({
+          type: "lock.event",
+          event: { id: uuidv7(), at, type: "student.help_requested", data },
+        }),
+      ).ok;
+    expect(bad({ topic: "lunch" })).toBe(false);
+    expect(bad({ topic: "question", text: "x".repeat(281) })).toBe(false);
+    expect(bad({ topic: "question", text: "Is the angle in radians?" })).toBe(true);
+  });
+
+  it("sends a Lock help request to ingest as a valid lock event", () => {
+    const event: LockEvent = {
+      id: uuidv7(),
+      at,
+      type: "student.help_requested",
+      data: { topic: "question" },
+    };
+    const envelope = lockEventToEnvelope(event, { session_id: SESSION_ID, seq: 9, app_version: "0.1.0" });
+    expect(envelope).toMatchObject({
+      type: "student.help_requested",
+      source: "lock",
+      data: { topic: "question" },
+    });
+    expect(ClientEventEnvelope.safeParse(envelope).success).toBe(true);
+  });
+
+  it("takes exam.state without browser_rules from an older app, and refuses unknown rule values", () => {
+    const exam = {
+      session_id: SESSION_ID,
+      mode: "app",
+      title: "Mathematics 2",
+      starts_at: "2026-10-09T10:35:00+00:00",
+      ends_at: "2026-10-09T12:05:00+00:00",
+      allowed_hosts: [],
+      lms_url: null,
+      done_path: null,
+    };
+    const state = (extra: Record<string, unknown>) =>
+      parseAppToLock(
+        JSON.stringify({
+          type: "exam.state",
+          phase: "lobby",
+          watch: "watching",
+          locale: "kk",
+          exam: { ...exam, ...extra },
+        }),
+      ).ok;
+    expect(state({})).toBe(true);
+    expect(state({ browser_rules: null })).toBe(true);
+    expect(state({ browser_rules: { ...DEFAULT_BROWSER_RULES, devtools: "blocked" } })).toBe(false);
+  });
+
+  it("confirms a queued help request by its event id", () => {
+    expect(parseAppToLock(JSON.stringify({ type: "help.queued", id: "nope" })).ok).toBe(false);
   });
 });
 

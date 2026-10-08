@@ -19,7 +19,7 @@ describe("topics", () => {
     expect(parseTopic(examTopic(EXAM_ID))).toEqual({ kind: "exam", id: EXAM_ID });
     expect(parseTopic(sessionTopic(SESSION_ID))).toEqual({ kind: "session", id: SESSION_ID });
     expect(parseTopic("room:1")).toBeNull();
-    expect(EXAM_BROADCAST).toEqual({ event: "event", session: "session", frame: "frame" });
+    expect(EXAM_BROADCAST).toEqual({ event: "event", session: "session", frame: "frame", help: "help" });
     expect(SESSION_BROADCAST).toEqual({ command: "command" });
   });
 });
@@ -75,5 +75,31 @@ describe("session channel messages", () => {
     expect(parseSessionMessage("command", payload)?.type).toBe("pause");
     expect(parseSessionMessage("event", payload)).toBeNull();
     expect(parseSessionMessage("command", { ...payload, type: "explode" })).toBeNull();
+  });
+});
+
+describe("help messages (Phase 1)", () => {
+  const help = {
+    id: uuidv7(),
+    session_id: SESSION_ID,
+    exam_id: EXAM_ID,
+    student_id: uuidv7(),
+    student_name: "Kamila Rakhimova",
+    topic: "question",
+    text: "Q 8: is the angle in radians or degrees?",
+    created_at: pgTime(T0),
+    reply: null,
+    done_at: null,
+    done_by: null,
+  };
+
+  it("parses a new request and its closing", () => {
+    expect(parseExamMessage("help", help)).toEqual({ event: "help", payload: help });
+    const closed = { ...help, reply: "Radians.", done_at: pgTime(T0 + 30_000), done_by: uuidv7() };
+    expect(parseExamMessage("help", closed)).toEqual({ event: "help", payload: closed });
+  });
+
+  it("drops a request with an unknown topic", () => {
+    expect(parseExamMessage("help", { ...help, topic: "lunch" })).toBeNull();
   });
 });

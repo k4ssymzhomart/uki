@@ -1,6 +1,7 @@
 // Input and output of every call in "Endpoints" (docs/phase-0-plan.md), the error shapes, and the
 // Storage layout of flagged stills.
 import { z } from "zod";
+import { BrowserRules } from "./browser-rules.ts";
 import { ExamChecks, THRESHOLDS } from "./checks.ts";
 import {
   AddTimePayload,
@@ -184,6 +185,11 @@ export const JoinExam = z.object({
   lms_url: z.string().nullable(),
   lms_done_path: z.string().nullable(),
   allowed_sites: z.array(z.string()),
+  /** Phase 1: E.1's rules, for the Lock's exam.state; optional so an older server still parses. */
+  browser_rules: BrowserRules.optional(),
+  /** Phase 1: the rules language the exam office picked on 0.4, and the room. */
+  rules_locale: Locale.nullish(),
+  room: z.string().nullish(),
 });
 export type JoinExam = z.infer<typeof JoinExam>;
 
@@ -218,6 +224,11 @@ export const IngestStatus = z.object({
   step: StatusStep.optional(),
   detail: StatusDetailText.optional(),
   question: z.number().int().positive().optional(),
+  /**
+   * Phase 1: the language the rules were read in on 1.4, sent with step `ready` after the agree box.
+   * ingest_batch stamps it with sessions.rules_accepted_at once; without it the session's locale counts.
+   */
+  rules_locale: Locale.optional(),
 });
 export type IngestStatus = z.infer<typeof IngestStatus>;
 

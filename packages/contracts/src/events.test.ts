@@ -46,6 +46,7 @@ const VALID: Record<EventType, Record<string, unknown>> = {
   "student.help_requested": { topic: "identity" },
   "lock.app_disconnected": { side: "lock" },
   "lock.fullscreen_exit": { count: 2 },
+  "proctor.note": { text: "Phone face down after the warning.", staff_id: STAFF_ID },
 };
 
 /** One invalid `data` per type that carries data. */
@@ -89,8 +90,9 @@ function envelope(overrides: Record<string, unknown> = {}) {
 }
 
 describe("event types and review", () => {
-  it("names exactly the plan's 27 events", () => {
-    expect(EVENT_TYPES).toHaveLength(27);
+  it("names exactly the plan's 27 Phase 0 events and Phase 1's proctor.note", () => {
+    expect(EVENT_TYPES).toHaveLength(28);
+    expect(EVENT_TYPES.at(-1)).toBe("proctor.note");
     expect(Object.keys(REVIEW).sort()).toEqual([...EVENT_TYPES].sort());
     expect(Object.keys(EVENT_DATA).sort()).toEqual([...EVENT_TYPES].sort());
   });
@@ -111,6 +113,7 @@ describe("event types and review", () => {
     expect(REVIEW["lock.fullscreen_exit"]).toBe("log");
     expect(REVIEW["copy.blocked"]).toBe("log");
     expect(REVIEW["gaze.on_screen"]).toBe("none");
+    expect(REVIEW["proctor.note"]).toBe("none");
   });
 
   it("flags the third full-screen exit of a session and every later one", () => {
@@ -131,6 +134,16 @@ describe("event types and review", () => {
     expect(PROCTOR_EVENT_TYPES.every((t) => t.startsWith("proctor."))).toBe(true);
     expect(CLIENT_EVENT_TYPES).toHaveLength(EVENT_TYPES.length - PROCTOR_EVENT_TYPES.length);
     expect(CLIENT_EVENT_TYPES).not.toContain("proctor.message");
+    expect(CLIENT_EVENT_TYPES).not.toContain("proctor.note");
+    expect(
+      ClientEventEnvelope.safeParse(envelope({ type: "proctor.note", data: VALID["proctor.note"] })).success,
+    ).toBe(false);
+  });
+
+  it("takes a note of 1 to 500 characters with the staff member", () => {
+    expect(parseEventData("proctor.note", { text: "  ", staff_id: STAFF_ID }).success).toBe(false);
+    expect(parseEventData("proctor.note", { text: "x".repeat(501), staff_id: STAFF_ID }).success).toBe(false);
+    expect(parseEventData("proctor.note", { text: "Talked to her", staff_id: "nope" }).success).toBe(false);
   });
 });
 

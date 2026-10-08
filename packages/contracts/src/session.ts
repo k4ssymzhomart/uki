@@ -82,6 +82,8 @@ export const SessionStatus = z.object({
   step: StatusStep.nullish(),
   detail: z.string().max(STATUS_DETAIL_MAX).nullish(),
   question: z.number().int().positive().nullish(),
+  /** Phase 1: the rules language sent with step `ready` (IngestStatus). */
+  rules_locale: Locale.nullish(),
 });
 export type SessionStatus = z.infer<typeof SessionStatus>;
 

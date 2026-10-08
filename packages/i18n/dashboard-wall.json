@@ -144,5 +144,7 @@
   "dashboard.wall.event.lock_app_disconnected.detail": "{side, select, lock {Üki Lock went away} other {The app closed}}",
   "dashboard.wall.event.lock_fullscreen_exit.title": "Left full screen",
   "dashboard.wall.event.lock_fullscreen_exit.feed": "left full screen",
-  "dashboard.wall.event.lock_fullscreen_exit.detail": "{count, plural, one {# time} other {# times}} this session"
+  "dashboard.wall.event.lock_fullscreen_exit.detail": "{count, plural, one {# time} other {# times}} this session",
+  "dashboard.wall.event.proctor_note.title": "Note",
+  "dashboard.wall.event.proctor_note.detail": "“{text}”"
 }

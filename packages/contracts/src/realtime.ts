@@ -5,6 +5,7 @@ import { z } from "zod";
 import { CommandBroadcast } from "./commands.ts";
 import { CompactEvent } from "./events.ts";
 import { Timestamp, Uuid } from "./primitives.ts";
+import { HelpRequest } from "./review.ts";
 import { SessionState, SessionStatus } from "./session.ts";
 
 /** `exam:{exam_id}`: proctors of the exam and the exam office. */
@@ -36,6 +37,11 @@ export const EXAM_BROADCAST = {
   session: "session",
   /** A confirmed still (`frames` function); payload FrameMessage. */
   frame: "frame",
+  /**
+   * Phase 1: a help request (`help_from_event`), and again when it closes (`close_help_request`, with
+   * done_at); payload HelpMessage.
+   */
+  help: "help",
 } as const;
 
 /** Broadcast event names on `session:{session_id}`. */
@@ -75,6 +81,10 @@ export const FrameMessage = z.object({
 });
 export type FrameMessage = z.infer<typeof FrameMessage>;
 
+/** `help` on `exam:{exam_id}`: 2.4d and the Requests badge on 2.4. */
+export const HelpMessage = HelpRequest;
+export type HelpMessage = z.infer<typeof HelpMessage>;
+
 /** `command` on `session:{session_id}`. */
 export const CommandMessage = CommandBroadcast;
 export type CommandMessage = z.infer<typeof CommandMessage>;
@@ -84,6 +94,7 @@ export const EXAM_MESSAGES = {
   event: ExamEventMessage,
   session: SessionTileMessage,
   frame: FrameMessage,
+  help: HelpMessage,
 } as const satisfies Record<ExamBroadcastEvent, z.ZodType>;
 
 /** Payload schema for each session channel event name. */
@@ -94,7 +105,8 @@ export const SESSION_MESSAGES = {
 export type ExamMessage =
   | { event: "event"; payload: ExamEventMessage }
   | { event: "session"; payload: SessionTileMessage }
-  | { event: "frame"; payload: FrameMessage };
+  | { event: "frame"; payload: FrameMessage }
+  | { event: "help"; payload: HelpMessage };
 
 /** Checks a broadcast received on an exam channel; null for an unknown event or a bad payload. */
 export function parseExamMessage(event: string, payload: unknown): ExamMessage | null {
@@ -110,6 +122,10 @@ export function parseExamMessage(event: string, payload: unknown): ExamMessage |
     case EXAM_BROADCAST.frame: {
       const result = FrameMessage.safeParse(payload);
       return result.success ? { event: "frame", payload: result.data } : null;
+    }
+    case EXAM_BROADCAST.help: {
+      const result = HelpMessage.safeParse(payload);
+      return result.success ? { event: "help", payload: result.data } : null;
     }
     default:
       return null;

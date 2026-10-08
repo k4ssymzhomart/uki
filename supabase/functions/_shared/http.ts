@@ -1,10 +1,15 @@
-// The one wrapper every Üki Edge Function uses: CORS, POST only, `withSupabase({ auth: "user" })` from
-// @supabase/server for the caller's token and the two clients, Zod on the request body and on the
-// reply, and `{ error, message }` bodies (contracts ApiError) for every failure, including the ones
+// The one wrapper every Üki Edge Function uses: CORS, POST only, `withSupabase` from @supabase/server for
+// the caller's credential and the two clients, Zod on the request body and on the reply, and
+// `{ error, message }` bodies (contracts ApiError) for every failure, including the ones
 // @supabase/server answers itself. Every reply carries Server-Timing (timing.ts): auth, body, handle
 // (with the handler's own calls), reply and total, plus boot on an isolate's first request.
+//
+// `auth` (auth-mode.ts) says who may call: "user" (the default: a signed-in user's token, as every
+// Phase 0 function), "none" (shared-report) or "secret" (retention, pilot-notify). Only "user" handlers
+// get a user id.
 import { ErrorCodeHeader, type SupabaseContext, withSupabase } from "@supabase/server";
 import type { z } from "zod";
+import { type ApiAuth, needsUserToken, withSupabaseAuth } from "./auth-mode.ts";
 import { API_ERROR_CODES, type ApiError, type ApiErrorCode } from "./contracts/index.ts";
 import { corsHeaders, isAllowedOrigin, parseAllowedOrigins } from "./cors.ts";
 import { API_ERROR_STATUS, ApiFailure, summarizeIssues } from "./errors.ts";
@@ -12,16 +17,17 @@ import { ServerTiming } from "./timing.ts";
 
 type Client = SupabaseContext["supabase"];
 
-/** What a handler gets besides its parsed input. */
-export interface ApiContext {
-  /** The caller's client: PostgREST and RPC run under RLS as this user. */
+export type { ApiAuth } from "./auth-mode.ts";
+
+/** What every handler gets besides its parsed input. */
+export interface ServiceApiContext {
+  /**
+   * The caller's client: PostgREST and RPC run under RLS as the signed-in user ("user"), or with no
+   * user at all ("none", "secret").
+   */
   supabase: Client;
   /** Secret-key client from the platform: bypasses RLS. Use only after checking the caller. */
   supabaseAdmin: Client;
-  /** `auth.uid()` of the caller, from the verified token. */
-  userId: string;
-  /** True for a student's anonymous sign-in. */
-  isAnonymous: boolean;
   /** The platform's SUPABASE_URL (internal under the local CLI; see public-url.ts). */
   supabaseUrl: string;
   /** The incoming request, for its headers. */
@@ -30,14 +36,27 @@ export interface ApiContext {
   timing: ServerTiming;
 }
 
-export interface ApiSpec<In extends z.ZodType, Out extends z.ZodType> {
+/** What a handler of a "user" function (the default) gets: the service context plus the caller. */
+export interface ApiContext extends ServiceApiContext {
+  /** `auth.uid()` of the caller, from the verified token. */
+  userId: string;
+  /** True for a student's anonymous sign-in. */
+  isAnonymous: boolean;
+}
+
+/** The context of a function with this `auth`. */
+export type ContextFor<A extends ApiAuth> = A extends "user" ? ApiContext : ServiceApiContext;
+
+export interface ApiSpec<In extends z.ZodType, Out extends z.ZodType, A extends ApiAuth = "user"> {
   /** The function's name, for logs. */
   name: string;
+  /** Who may call: "user" when left out. "none" and "secret" need verify_jwt = false in config.toml. */
+  auth?: A;
   /** Request body schema. A body that fails it gets 400 bad_request. */
   input: In;
   /** Reply schema. A reply that fails it is a bug: 500 internal, logged. */
   output: Out;
-  handle: (input: z.output<In>, ctx: ApiContext) => Promise<z.input<Out>>;
+  handle: (input: z.output<In>, ctx: ContextFor<A>) => Promise<z.input<Out>>;
 }
 
 const STATUS_CODES = new Map<number, ApiErrorCode>(
@@ -86,9 +105,10 @@ function withHeaders(response: Response, headers: Record<string, string>): Respo
 }
 
 /** Builds the `Deno.serve` handler for one function. */
-export function serveApi<In extends z.ZodType, Out extends z.ZodType>(
-  spec: ApiSpec<In, Out>,
+export function serveApi<In extends z.ZodType, Out extends z.ZodType, A extends ApiAuth = "user">(
+  spec: ApiSpec<In, Out, A>,
 ): (request: Request) => Promise<Response> {
+  const auth: ApiAuth = spec.auth ?? "user";
   const origins = parseAllowedOrigins(Deno.env.get("UKI_ALLOWED_ORIGINS"));
   const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
   // Isolate start to this point: loading and evaluating the function's modules.
@@ -99,16 +119,28 @@ export function serveApi<In extends z.ZodType, Out extends z.ZodType>(
 
   const authed = withSupabase(
     // CORS is answered below, before the auth gate, so a preflight never needs a token.
-    { auth: "user", cors: "disabled", errors: { detailed: false } },
+    { auth: withSupabaseAuth(auth), cors: "disabled", errors: { detailed: false } },
     async (request, ctx) => {
       const own = pending.get(request.headers);
       const timing = own?.timing ?? new ServerTiming();
       if (own) timing.add("auth", performance.now() - own.started);
       try {
-        const claims = ctx.jwtClaims;
-        const userId = ctx.userClaims?.id;
-        if (claims === null || userId === undefined || claims.role !== "authenticated") {
-          throw new ApiFailure("unauthorized", "a signed-in user's token is required");
+        const base: ServiceApiContext = {
+          supabase: ctx.supabase,
+          supabaseAdmin: ctx.supabaseAdmin,
+          supabaseUrl,
+          request,
+          timing,
+        };
+        let context: ServiceApiContext = base;
+        if (needsUserToken(auth)) {
+          const claims = ctx.jwtClaims;
+          const userId = ctx.userClaims?.id;
+          if (claims === null || userId === undefined || claims.role !== "authenticated") {
+            throw new ApiFailure("unauthorized", "a signed-in user's token is required");
+          }
+          const user: ApiContext = { ...base, userId, isAnonymous: claims.is_anonymous === true };
+          context = user;
         }
 
         const bodyStarted = performance.now();
@@ -122,16 +154,9 @@ export function serveApi<In extends z.ZodType, Out extends z.ZodType>(
         timing.add("body", performance.now() - bodyStarted);
         if (!parsed.success) throw new ApiFailure("bad_request", summarizeIssues(parsed.error.issues));
 
+        // needsUserToken(auth) built an ApiContext exactly when A is "user".
         const reply = await timing.measure("handle", () =>
-          spec.handle(parsed.data, {
-            supabase: ctx.supabase,
-            supabaseAdmin: ctx.supabaseAdmin,
-            userId,
-            isAnonymous: claims.is_anonymous === true,
-            supabaseUrl,
-            request,
-            timing,
-          }),
+          spec.handle(parsed.data, context as ContextFor<A>),
         );
 
         const replyStarted = performance.now();

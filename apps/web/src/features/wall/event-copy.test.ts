@@ -44,6 +44,7 @@ const DATA: Partial<Record<EventType, Record<string, unknown>>> = {
   "student.help_requested": { topic: "technical" },
   "lock.app_disconnected": { side: "app" },
   "lock.fullscreen_exit": { count: 3 },
+  "proctor.note": { text: "Phone face down after the warning.", staff_id: STAFF },
 };
 
 describe("event wording", () => {
