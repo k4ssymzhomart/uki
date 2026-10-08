@@ -37,7 +37,7 @@ Everything marked pass below ran on one shared development Mac (Apple M4, 16 GB,
 | 0.5 | Card match accepts your own card and rejects someone else's | You | pending | Print the two mock cards; tune `identity.minSimilarity` (0.5 let a different low-res photo through at 0.53) | |
 | 0.6 | Desktop unit, runtime and screen tests; typecheck of main, preload, renderer and test | Agent | pass | 41 files, 374 tests after the review repairs. Each of the 9 desktop repair tests failed with its fix reverted | 2026-10-07 |
 | 0.6 | Join to receipt in Electron on macOS against the local stack (`pnpm --filter desktop e2e`) | Agent | pass | 12/12 in 2.1 min (16:16 UTC). Synthetic camera; stand-in Lock paired by code; 1.3 matched at 0.93; 2.2 flagged with 3 confirmed stills; receipt `UKI-204-9166-MT` with a 28,130-byte PDF. 44 screenshots: 13 of the 14 frames and E.3 in en, kk and ru, plus two extra English states. 1.3a is missing because the card matched on the first try. `docs/evidence/desktop-e2e-2026-10-07.json`. Ran before the hardening and review changes and has not run since | 2026-10-07 |
-| 0.6 | The same run with real kiosk lockdown (`UKI_E2E_KIOSK=1`) | Agent | fail | Tests 1 to 11 passed: kiosk on during the exam, quit refused, Close Üki quits at 3.1. The criterion 7 test failed because resume took 7,832 ms; the command function alone took 8,125 ms on the loaded host. The Mac was not left in kiosk mode | 2026-10-07 |
+| 0.6 | The same run with real kiosk lockdown (`UKI_E2E_KIOSK=1`) | Agent | pass | Rerun on 2026-10-08 on the quiet host: 12/12, resume 22 ms (see "P.11 kiosk e2e rerun" below). The first run, on 2026-10-07: tests 1 to 11 passed: kiosk on during the exam, quit refused, Close Üki quits at 3.1. The criterion 7 test failed because resume took 7,832 ms; the command function alone took 8,125 ms on the loaded host. The Mac was not left in kiosk mode | 2026-10-07 |
 | 0.6 | A 2-minute network cut loses nothing | Agent | pass | `UKI_E2E_OFFLINE_S=120`, using Chromium's offline emulation. 2.1a after 5.3 s; no request got through during the cut. 9 answers on the laptop and 9 on the server, one of them changed offline; the 6 waiting events were stored once; seq 0 to 13, 0 duplicates; `net.offline` 126,122 ms with 11 queued. The file also records a second `net.offline` spell (27.1 s, 1 queued). `docs/evidence/desktop-e2e-offline-120s-2026-10-07.json` | 2026-10-07 |
 | 0.6 | Scripted commands show 2.1c, 2.1e and 2.1d within 1 s | Agent | pass | Desktop e2e, final run, from command to screen: start 169 ms, pause 132, resume 636, message 612, add time 190, end 150. Other quiet runs: pause 111 to 210 ms, message 22 to 118 ms. Under host load, up to 7.8 s for resume and 9.5 s for message, almost all inside the command function | 2026-10-07 |
 | 0.6 | The flow against the stack: ingest, frames, still uploads, commands, join to receipt (`pnpm test:integration:desktop`) | Agent | pass | 3/3 after the review repairs, on the third attempt: the first two timed out creating the fixture under load and left nothing behind. Commands reached the app in 12 to 579 ms in the WP 0.6 runs | 2026-10-07 |
@@ -142,3 +142,35 @@ The earlier end-to-end runs shared this laptop with four other Supabase stacks (
 | Two fixes from the comparison | pass | After the help request, 1.3a went on counting tries ("4 of 3 tries"); the count now stops at 3. The waiting button named the proctor in full; it now reads "Waiting for Aigerim S.", as in Figma and on 2.1c. Each new unit test fails with its fix reverted | 2026-10-08 |
 
 The same run measured the commands from request to screen: start 31 ms, pause 66 ms (2.1c), resume 112 ms, message 46 ms (2.1e), add time 89 ms, end 24 ms (2.1d).
+
+## P.11 kiosk e2e rerun
+
+`UKI_E2E_KIOSK=1 pnpm --filter desktop e2e` ran on the MacBook Pro (Apple M4) against the local stack, from branch `polish/p11-kiosk-e2e` (main at `e399267`). It started at 09:43:38 UTC on 2026-10-08, and 12 of 12 tests passed in 1.6 minutes. The Mac was in real kiosk lockdown from Start exam (2.1) until Close Üki on 3.1. The 2.1 test read `isKiosk()` as true and saw quit refused. The numbers are in `docs/evidence/desktop-e2e-kiosk-2026-10-08.json`, and the 44 screenshots are in `/Users/k4ssym/Downloads/qostanai/uki-wt/polish-p11-kiosk-e2e/apps/desktop/test/results/frames/`, kept on this Mac only.
+
+The host was quiet:
+
+- **Before the run:** load average 5.36, 6.25 and 5.90 (1, 5 and 15 minutes) on 10 cores. No Docker container was over 8 % CPU: the main stack, one other agent's stack and an unrelated database. Two minutes earlier, the busiest processes were macOS file indexing (`fseventsd`, `mds_stores`) and the Docker VM, and the run waited until the 1-minute load fell under 6.
+- **After the run:** load average 8.15.
+- **The 2026-10-07 run, for comparison:** load 13 to 48, with four Supabase stacks at 450 to 700 % CPU.
+
+Exit criterion 7, from the proctor's request to the frame on screen:
+
+| Command | Frame | Request to screen | Command function alone | Within 1 s |
+| --- | --- | --- | --- | --- |
+| start | 2.1 | 16 ms | (`start_exam` RPC) | yes |
+| pause | 2.1c | 45 ms | 47 ms | yes |
+| resume | 2.1 | 22 ms | 26 ms | yes |
+| message | 2.1e | 15 ms | 14 ms | yes |
+| add time | 2.1e | 22 ms | 23 ms | yes |
+| end | 2.1d | 57 ms | not timed | yes |
+
+The end command goes to the second student, whose app runs without kiosk. No command needed a retry. Resume took 7,832 ms on 2026-10-07, with 8,125 ms inside the command function on the loaded host. Now it took 22 ms, with 26 ms in the function. Nothing is over 1 s, so there was no cause to investigate. The slow resume was the host load, as the plan says.
+
+The rest of the run:
+
+- **Card match:** 0.93 on the first try, after 2.6 s.
+- **Network cut:** a 20 s cut showed 2.1a after 5.3 s. There were 9 answers on the laptop and 9 on the server, app events seq 0 to 12, and 0 duplicates.
+- **Phone:** the phone flag came with 3 confirmed stills. The model scored the phone 0.77 against the e2e's `phone_score` of 0.7.
+- **Receipt:** `UKI-204-6677-MT`, with a 27,733-byte PDF.
+
+After the run, `ps` showed no Electron process left and `ioreg` reported `IOConsoleLocked = No`. The app that had been in front before the run was in front again, so the Mac was not left locked.
