@@ -6,7 +6,7 @@ Oct 7, 2026 · @Kassymzhomart Shubay
 
 Phase 0 builds a walking skeleton of Üki in 4 days, from Wed 7 Oct to Oct 10, 2026: every surface runs end to end on seeded data, and the three riskiest parts are proven on real laptops. Phase 1 (Sun 11 to Thu 15 Oct) fills in the Demo Day screens on top of it, for Demo Day on Oct 16, 2026.
 
-This is a hackathon build for the Qostanai Industry Hackathon: ready-made models only, Supabase Cloud in Frankfurt, the dashboard on Vercel, and no legal, consent or data-residency work.
+This is a hackathon build for the Qostanai Industry Hackathon: ready-made models only, Supabase Cloud in Frankfurt, the dashboard on Vercel, and no legal, consent or data-residency work. You build on one MacBook Pro; Windows checks run on GitHub’s Windows runners and in short sessions on Windows 11 lab PCs at the university.
 
 At the end of Phase 0:
 
@@ -37,11 +37,11 @@ Phase 0 covers the in-app exam path end to end and the Lock pairing; exam creati
 | --- | --- | --- |
 | Repository | Monorepo, CI, tokens, fonts, UI primitives, i18n with the 222-key catalog | — |
 | Backend | Supabase locally and one Supabase Cloud project in Frankfurt; Phase 0 tables with row-level security; seed data for KRU; join, event ingest, realtime channels, frame storage | — |
-| Desktop app | Electron shell for macOS and Windows; join with code and student ID; system check; identity check; rules and lobby; exam with seeded questions; phone warning; paused; proctor pause, message, end; receipt; kiosk lock; offline queue | 1.1, 1.1a, 1.2, 1.3, 1.3a, 1.4, 2.1, 2.1a, 2.1c, 2.1d, 2.1e, 2.2, 2.3, 3.1 |
+| Desktop app | Electron shell for macOS and Windows; join with code and student ID; system check; identity check; rules and lobby; exam with seeded questions; phone warning; paused; proctor pause, message, end; receipt; kiosk lock with a Windows keyboard hook and a macOS guard; offline queue | 1.1, 1.1a, 1.2, 1.3, 1.3a, 1.4, 2.1, 2.1a, 2.1c, 2.1d, 2.1e, 2.2, 2.3, 3.1 |
 | Detection | Gaze, face count, phone; flagged stills; a developer overlay with fps and scores | — |
 | Web dashboard | Staff sign-in; app shell; exams overview from seed; lobby; live wall with realtime tiles; timeline drawer; tile actions with the end-session dialog | A.0, 0.1, 1.5, 2.4, 2.4a, 2.4b, 2.4c, 2.4e, 2.5 |
 | Üki Lock | Pairing with the app; one-tab lock; copy and paste block; block page; release; a mock exam portal for the browser-exam demo | E.3, E.4, E.5, E.6, E.7, E.9 |
-| Infrastructure | Supabase Cloud project; dashboard and mock portal on Vercel; CI checks | — |
+| Infrastructure | Supabase Cloud project; dashboard and mock portal on Vercel; CI on Linux, macOS and Windows | — |
 
 ### Not in Phase 0
 
@@ -67,14 +67,15 @@ Phase 0 covers the in-app exam path end to end and the Lock pairing; exam creati
 Phase 0 ends when every box below is ticked on real hardware.
 
 - [ ] On a clean MacBook, the README takes a new developer from clone to all four apps running in under 15 minutes.
-- [ ] CI passes on `main`: lint, type check, unit tests, and builds for web, desktop on macOS and Windows, and the extension.
-- [ ] On an M1 MacBook Air and on a Windows laptop with an 8th-gen Core i5, face tracking runs at 15 fps or more and phone checks at 2 fps or more, with the app under 40% CPU.
+- [ ] CI passes on `main`: lint, type check and unit tests on Linux and Windows, and builds for web, the extension and the desktop app on macOS and Windows, including the Windows zip that runs without install.
+- [ ] On your MacBook Pro and on a Windows 11 lab PC, face tracking runs at 15 fps or more and phone checks at 2 per second or more, with the app under 40% CPU.
 - [ ] A phone held in view for 1 second creates `phone.detected` on the live wall within 1 second at the 95th percentile, with one still attached.
 - [ ] A network capture of a 10-minute exam shows no image or video upload except flagged stills.
 - [ ] Looking away for more than 2 seconds creates `gaze.off_screen`; no face for 10 seconds pauses the session and the wall shows it.
 - [ ] Proctor pause, message and end reach the student app within 1 second and show 2.1c, 2.1e and 2.1d.
 - [ ] With the network cut for 2 minutes mid-exam, answers stay on the laptop and sync on reconnect with no loss and no duplicates.
 - [ ] Üki Lock pairs with the app by its 6-digit code, blocks a second tab and logs `tab.blocked`.
+- [ ] Lockdown holds on the MacBook and, in one lab session, on a Windows 11 lab PC: blocked keys do nothing, other apps and screenshots are caught, and the packaged app starts from a folder without admin rights.
 - [ ] Student screens switch between Kazakh, Russian and English from the catalog.
 - [ ] The dashboard runs on Vercel against the Supabase Cloud project, with seed data and row-level security on every table.
 
@@ -101,9 +102,11 @@ Phase 1 is the heaviest, 35 frames in five days; its own plan follows the Phase 
 | --- | --- | --- |
 | Repository | pnpm workspaces and Turborepo, TypeScript strict, Node.js 24 LTS ([release lines](https://nodejs.org/en/about/previous-releases)) | Four apps share one UI kit, one set of contracts and one token file |
 | Backend | Supabase Cloud: one project in Central EU (Frankfurt), `eu-central-1`, with Postgres, Auth, Realtime, Storage and Edge Functions; the Supabase CLI for local work ([regions](https://supabase.com/docs/guides/platform/regions)) | Nothing to host or patch; the default backend |
-| Hosting | Vercel for the dashboard and the mock portal; desktop installers built on the demo laptops | Push to deploy; no server to run |
+| Hardware | One MacBook Pro for development; Windows 11 lab PCs at the university for the Windows-only checks, in short sessions | What you have; lab PCs are the kind of machine KRU would run Üki on |
+| Hosting | Vercel for the dashboard and the mock portal; desktop builds from CI on macOS and Windows runners, with a Windows zip for lab PCs | Push to deploy; no server to run and no second laptop needed |
 | Web dashboard | Next.js 16 App Router, React 19, Tailwind CSS v4, Radix primitives restyled to Üki tokens. One app holds the dashboard, the shared report page and later the landing site ([Next.js 16.4](https://nextjs.org/blog), [Tailwind theme](https://tailwindcss.com/docs/theme)) | Server rendering for the public report and landing; one deployable |
-| Desktop app | Electron 44 with electron-vite and React, using the same UI package ([Electron releases](https://releases.electronjs.org/)) | Bundled Chromium runs the same detection code on macOS and Windows; content protection and kiosk mode; a Node main process for process checks and the pairing socket. Tauri is out: system web views differ per OS |
+| Desktop app | Electron 44 with electron-vite and React, using the same UI package ([Electron releases](https://releases.electronjs.org/)) | Bundled Chromium runs the same detection code on macOS and Windows; content protection and kiosk mode; a Node main process for process checks, the pairing socket and the Windows keyboard hook. Tauri is out: system web views differ per OS |
+| Windows lockdown | A low-level keyboard hook, `SetWindowsHookExW(WH_KEYBOARD_LL)`, called through Koffi 3 (MIT) from the main process while locked ([shortcut keys](https://learn.microsoft.com/en-us/windows/win32/dxtecharts/disabling-shortcut-keys-in-games), [Koffi callbacks](https://koffi.dev/callbacks)) | Kiosk mode on Windows is only full screen; the hook blocks the Windows keys, Alt+Tab, Alt+Esc and Ctrl+Esc for a standard user, with no native build step |
 | Browser extension | WXT 0.21, Manifest V3, React popup; builds for Chrome, Edge, Yandex Browser and Opera ([WXT](https://wxt.dev/)) | One codebase for every Chromium browser the design promises |
 | Pairing | A WebSocket server on 127.0.0.1 inside the Electron main process; the extension’s service worker connects and confirms a 6-digit code ([WebSockets in service workers](https://developer.chrome.com/docs/extensions/how-to/web-platform/websockets)) | No native host, no manifests, no registry; from Chrome 116, WebSocket messages keep the worker alive |
 | Gaze and faces | MediaPipe Face Landmarker in the desktop renderer: 478 landmarks with iris, up to 2 faces, blendshapes and the head transform ([Face Landmarker](https://ai.google.dev/edge/mediapipe/solutions/vision/face_landmarker)) | Iris position plus head pose gives on and off screen; the second face comes free |
@@ -116,7 +119,7 @@ Phase 1 is the heaviest, 35 frames in five days; its own plan follows the Phase 
 | Flagged stills | JPEG, 640 × 360, quality 0.7, up to 3 per flag, uploaded to the private `frames` bucket through a signed upload URL | The only images that leave the laptop, as A.5 promises |
 | Localization | ICU messages in `packages/i18n`; next-intl on the web, use-intl in the desktop app and extension. Students: Kazakh, Russian, English from the catalog. Dashboard: English source in Phase 0, Russian added in Phase 1 | Plural rules in Kazakh and Russian; one message format everywhere |
 | Fonts and icons | Geist and Geist Mono 1.800, OFL ([Fontsource](https://fontsource.org/fonts/geist/about)); icons from lucide-react only | Matches Figma; Lucide matches the Figma icon grid of 24 px with a 2 px stroke |
-| Testing | Vitest for logic, pgTAP for RLS, a Playwright smoke test for the dashboard; the desktop app and the Lock by hand on the two demo laptops | Enough for a hackathon; the risky logic still has tests |
+| Testing | Vitest for logic, pgTAP for RLS, a Playwright smoke test for the dashboard, and a Windows CI job with the unit tests and a launch of the packaged app; the desktop app and the Lock by hand on the MacBook and in lab sessions | Enough for a hackathon; Windows breakage shows up without lab time |
 | Delivery | GitHub Actions for checks and Supabase deploys; Vercel deploys `main`; desktop builds unsigned | Signing waits for a pilot |
 | Telemetry | Logs to stdout and Supabase logs only; no third-party analytics | Nothing extra to set up |
 
@@ -137,10 +140,11 @@ Closing other tabs at the start and keeping the exam the only tab use the tabs a
 
 ### Assumptions behind these decisions
 
-- Demo Day is a live demo on your own laptops: one MacBook and one Windows laptop as students, one laptop for the dashboard.
+- You have one MacBook Pro for development. Windows checks run on GitHub’s Windows runners and on Windows 11 lab PCs at the university, where students usually have no admin rights and some PCs have no webcam; check both on the first visit.
+- The student machine on Demo Day is still open: a KRU lab PC if the organizers allow it, a borrowed Windows laptop, or the MacBook (Open questions). The dashboard opens in any browser on a second screen.
 - Exams that run in the Üki app use single-choice questions seeded in the database until the question bank ships.
 - Demo students are you and friends holding mock student cards with your own photos; no real KRU student data is used.
-- Supabase’s default limit of 30 anonymous sign-ins per hour per IP is enough for a stage demo with two laptops.
+- Supabase’s default limit of 30 anonymous sign-ins per hour per IP is enough for a stage demo.
 
 ## Architecture
 
@@ -620,7 +624,7 @@ Detection runs in a Web Worker inside the desktop app: face tracking at 15 frame
 | Phone score of 0.85 or more (`phone_score`) | phone.detected | Two checks in a row, so at least 400 ms; the 2.2 warning shows at once |
 | Camera track ends or mutes | camera.lost, then session.paused | Immediately |
 
-These numbers are starting points; tuning on the two demo laptops changes them, and every change goes into `exams.checks` defaults, not into code.
+These numbers are starting points; tuning on the MacBook and a lab PC changes them, and every change goes into `exams.checks` defaults, not into code.
 
 ### Identity check on 1.3
 
@@ -633,7 +637,7 @@ Human runs in the renderer with its models under `resources/models/human/` and `
 
 ### Performance budget
 
-| Measure | Target on an M1 MacBook Air and an 8th-gen Core i5 laptop |
+| Measure | Target on your MacBook Pro and a Windows 11 lab PC |
 | --- | --- |
 | Face tracking | 15 fps or more |
 | Phone checks | 2 per second or more |
@@ -654,9 +658,9 @@ If face tracking stays under 10 fps for 5 seconds, the worker drops to 480 × 36
 
 ### Tuning
 
-Tune on the two demo laptops with the developer overlay (Ctrl+Shift+D in development builds), which shows fps, head angles, look scores, face count, phone score and the rule state. Run each demo moment 5 times on each laptop: look away for 3 seconds, lift a phone, leave the seat for 10 seconds, a second person behind you.
+Tune on the MacBook and, in the lab session, on a lab PC (with your USB webcam if it has none), using the developer overlay, which shows fps, head angles, look scores, face count, phone score and the rule state. It opens with Ctrl+Shift+D in development builds and in the lab build. Run each demo moment 5 times on each machine: look away for 3 seconds, lift a phone, leave the seat for 10 seconds, a second person behind you.
 
-Phase 0 target: every moment fires 5 times out of 5 on both laptops, and 5 minutes of normal writing raise no flag.
+Phase 0 target: every moment fires 5 times out of 5 on both machines, and 5 minutes of normal writing raise no flag. The first test on the MacBook scored a clearly held phone at 0.77, under the 0.85 default, so tuning starts with `phone_score`.
 
 ## Desktop app
 
@@ -694,8 +698,9 @@ apps/desktop/
 | Exam in the browser | none in the app | Window hidden; a tray or menu bar icon shows the watch state; detection keeps running |
 | After the exam | 3.1, 2.1d | Lockdown off; Close Üki quits |
 
-- **macOS.** Kiosk mode hides the Dock and menu bar and disables app switching, Force Quit and the Apple menu ([native\_window\_mac.mm](https://raw.githubusercontent.com/electron/electron/main/shell/browser/native_window_mac.mm)).
-- **Windows.** Kiosk mode is only full screen ([native\_window\_views.cc](https://raw.githubusercontent.com/electron/electron/main/shell/browser/native_window_views.cc)), so Alt+Tab and the Windows key still work. Every `blur` during lockdown calls `show()`, `setAlwaysOnTop(true, "screen-saver")` and `focus()`, and sends `tab.blocked` with `app: null` at most once per 5 seconds, even when Windows refuses the focus.
+- **macOS.** Kiosk mode hides the Dock and menu bar and disables app switching, Force Quit and the Apple menu ([native\_window\_mac.mm](https://raw.githubusercontent.com/electron/electron/main/shell/browser/native_window_mac.mm)). The MacBook may be the only student machine on Demo Day, so it gets the full guard: the blur rule below runs on macOS too, and the packaged build keeps no development escape; a proctor’s End session releases it.
+- **Windows.** Kiosk mode is only full screen ([native\_window\_views.cc](https://raw.githubusercontent.com/electron/electron/main/shell/browser/native_window_views.cc)), so lockdown adds the keyboard hook below. Every `blur` during lockdown still calls `show()`, `setAlwaysOnTop(true, "screen-saver")` and `focus()`, and sends `tab.blocked` with `app: null` at most once per 5 seconds, even when Windows refuses the focus.
+- **Windows keys.** While locked, the main process installs `SetWindowsHookExW(WH_KEYBOARD_LL)` through Koffi and swallows the Windows keys, Alt+Tab, Alt+Esc and Ctrl+Esc. A standard user account can do this, so lab PCs need no admin rights ([shortcut keys in games](https://learn.microsoft.com/en-us/windows/win32/dxtecharts/disabling-shortcut-keys-in-games)). The callback is a table lookup: Windows silently drops a hook that answers slower than 1 second, so lockdown reinstalls it every 10 seconds ([LowLevelKeyboardProc](https://learn.microsoft.com/en-us/windows/win32/winmsg/lowlevelkeyboardproc)). Ctrl+Alt+Del and Win+L stay with Windows; turning Win+L off takes a registry policy ([Microsoft Q&A](https://learn.microsoft.com/en-us/answers/questions/1286619/blocking-windows-hotkeys-in-an-application)), so the blur rule catches both. The hook goes on unlock and dies with the process.
 - **Capture.** Content protection removes the window from captures on Windows 10 2004 and later. On macOS, apps built on ScreenCaptureKit still capture it ([BrowserWindow](https://www.electronjs.org/docs/latest/api/browser-window)), so the process scan also looks for screen-sharing tools.
 - **Hidden window.** `backgroundThrottling: false` plus `powerSaveBlocker.start("prevent-app-suspension")` keep the camera and the worker at full speed while the window is hidden in browser exams; work package 0.5 measures it.
 
@@ -811,9 +816,10 @@ The app joins `session:{session_id}` right after join. Each command applies once
 
 ### Builds
 
-- electron-builder: dmg for macOS on arm64 and x64, NSIS for Windows on x64; unsigned in Phase 0.
+- electron-builder: dmg for macOS on arm64 and x64. For Windows x64: an NSIS installer whose install-mode page offers an install for the current user only, and a zip of the unpacked app that runs from any folder or a USB drive with no install ([Windows targets](https://www.electron.build/docs/win), [NSIS](https://www.electron.build/docs/nsis)). Unsigned in Phase 0. The bundle and executable are named Uki in ASCII; people see Üki.
+- CI also builds a lab variant of the Windows zip with the developer overlay and the development escape (Ctrl+Shift+Q) left on, so the lab session can measure fps and get out of a stuck lockdown. It is named `Uki-lab-<version>-x64.zip` and never ships.
 - `NSCameraUsageDescription` goes in `mac.extendInfo`; without it macOS refuses the camera.
-- The demo installers are built on the demo laptops themselves, so macOS adds no quarantine flag. A CI build copied to a Mac needs `xattr -dr com.apple.quarantine`, and Windows SmartScreen needs More info, then Run anyway; both go in `docs/runbooks/demo-laptops.md`.
+- The MacBook build is made on the MacBook itself, so macOS adds no quarantine flag. Windows builds come from the CI job. On a lab PC, Windows may show “Windows protected your PC” for the unsigned app (More info, then Run anyway), and antivirus may question the keyboard hook; both go in `docs/runbooks/lab-session.md`.
 
 ## Web dashboard
 
@@ -1073,11 +1079,12 @@ Camera video never leaves the laptop, only flagged stills travel, and row-level 
 ### Controls in Phase 0
 
 - Row-level security on every table, tested for each role (see Testing).
-- The apps carry only the publishable key. The secret key lives only in your local `.env`, for the seed and demo scripts; Edge Functions get theirs through `@supabase/server`. gitleaks runs in CI on every push.
+- The apps carry only the publishable key. The secret key lives only in your local `.env.cloud`, for the seed and demo scripts; Edge Functions get theirs through `@supabase/server`. gitleaks runs in CI on every push.
 - The `frames` bucket is private, accepts only `image/jpeg` up to 200 KB, and each upload URL is for one path under `frames/{exam_id}/{session_id}/`.
 - `join_exam` allows 10 tries a minute per user and answers `invalid_code` both for an unknown code and for a student number not on that roster.
 - A session binds to the first anonymous user that joins it. Another user gets `already_joined`, and the card match stops anyone writing with someone else’s card.
 - The local WebSocket listens on 127.0.0.1 only and accepts only the Üki Lock origin.
+- The Windows keyboard hook runs only during lockdown and only swallows the listed keys; it never records or sends a keystroke.
 - The desktop app and Üki Lock send no telemetry; the Lock runs no remote code and injects scripts only on allowed exam hosts.
 - Üki never decides alone. A flag is a signal for a person; no event ends an exam or labels a student, and only a proctor’s end command ends a session.
 
@@ -1098,10 +1105,13 @@ On Thursday 15 October the demo build gets the tag `demo-2026-10-16`, and `main`
 
 1. Create the project in the Supabase dashboard with the region Central EU (Frankfurt) ([regions](https://supabase.com/docs/guides/platform/regions)).
 2. Switch on anonymous sign-ins in its Auth settings ([anonymous sign-ins](https://supabase.com/docs/guides/auth/auth-anonymous)).
-3. Run `supabase link --project-ref <ref>`, then `pnpm supabase:deploy`: the migrations also enable `pg_cron` and schedule `session_tick`, and the four Edge Functions deploy.
-4. Load `supabase/seed.sql` once with `psql` and the project’s connection string, then run `scripts/seed-staff.ts`; `pnpm demo:reset` takes it from there.
-5. Create two Vercel projects from the repository, with the root directories `apps/web` and `apps/lms-mock`, and set their environment variables.
-6. Put the project URL and the publishable key into the desktop app’s build variables.
+3. Make the project sign its tokens with an asymmetric key: on the JWT signing keys page, Migrate JWT secret, then Rotate keys. `@supabase/server` rejects tokens signed with the legacy HS256 secret ([JWT signing keys](https://supabase.com/docs/guides/auth/signing-keys)).
+4. Run `supabase link --project-ref <ref>`, then `pnpm supabase:deploy`: the migrations also enable `pg_cron` and schedule `session_tick`, and the four Edge Functions deploy.
+5. Load `supabase/seed.sql` once with `psql` and the Session pooler connection string, then run `scripts/seed-staff.ts`; `pnpm demo:reset` takes it from there.
+6. Create two Vercel projects from the GitHub repository, with the root directories `apps/web` and `apps/lms-mock`, and set their environment variables. Vercel imports only a pushed repository.
+7. Put the project URL and the publishable key into the desktop app’s build variables and into the GitHub repository variables, so CI builds against the cloud project.
+
+Every click is in `docs/runbooks/cloud-setup.md`.
 
 The project uses the new API keys: publishable (`sb_publishable_…`) in the apps and secret (`sb_secret_…`) in scripts. The legacy `anon` and `service_role` keys are deprecated by the end of 2026, so Phase 0 never uses them ([API keys](https://supabase.com/docs/guides/api/api-keys)).
 
@@ -1109,20 +1119,22 @@ The project uses the new API keys: publishable (`sb_publishable_…`) in the app
 
 | Workflow | Runs on | Steps |
 | --- | --- | --- |
-| `ci.yml` | Every push and pull request | pnpm install with cache; `pnpm check`; `pnpm i18n:build`; gitleaks; `supabase start` with the database and function tests; the dashboard smoke test; builds of web and the Lock; desktop builds on macOS and Windows runners, unsigned |
+| `ci.yml` | Every push and pull request | pnpm install with cache; `pnpm check`; `pnpm i18n:build`; gitleaks; `supabase start` with the database and function tests; the dashboard smoke test; builds of web and the Lock; a Windows job with the unit tests, the zips and the installer, and a launch test of the packaged app; the macOS installer, unsigned |
 | `deploy-supabase.yml` | Push to `main` after CI passes | `supabase link`, `supabase db push`, `supabase functions deploy` |
 | Vercel | Every push | Preview deploys for branches, production for `main` |
-| `desktop-dist.yml` | Manual | Installers for macOS arm64 and x64 and Windows x64, attached to a draft GitHub release |
+| `desktop-dist.yml` | Manual | Installers for macOS arm64 and x64, and the Windows x64 installer and zips, attached to a draft GitHub release |
+
+None of this runs until the repository is pushed to github.com/k4ssymzhomart/uki.
 
 ### Secrets
 
 | Secret | Lives in | Used by |
 | --- | --- | --- |
-| Project URL and publishable key | Vercel environment variables; desktop build variables | Web, desktop app |
-| Secret key | Your local `.env` only | Seed and demo scripts |
+| Project URL and publishable key | Vercel environment variables; GitHub repository variables; the MacBook’s `.env` for desktop builds | Web, desktop app, CI builds |
+| Secret key | Your local `.env.cloud` only, which git ignores | Seed and demo scripts |
 | `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, `SUPABASE_PROJECT_REF` | GitHub secrets | `deploy-supabase.yml` |
 | `LOCK_DEV_PUBLIC_KEY` and its private key | Repository variable; the private key stays on your laptop | A fixed unpacked extension ID |
-| `SEED_STAFF_PASSWORD`, `SEED_LMS_URL` | Local `.env` | Seed scripts |
+| `SEED_STAFF_PASSWORD`, `SEED_LMS_URL` | `.env.cloud` | Seed scripts |
 
 Edge Functions read no key themselves: `@supabase/server` takes them from the platform ([Edge Function secrets](https://supabase.com/docs/guides/functions/secrets)).
 
@@ -1133,7 +1145,7 @@ Edge Functions read no key themselves: `@supabase/server` takes them from the pl
 
 ## Work plan
 
-Eleven work packages run from Wednesday 7 to Saturday 10 October in the order their Needs column allows; the detection and pairing spikes land on day 2 because they carry the most risk. Each package ends with a check: the Run by column says whether the agent or you run it, and the result goes into `docs/phase-0-exit.md`.
+Fourteen work packages run from Wednesday 7 to Saturday 10 October in the order their Needs column allows; the detection and pairing spikes land on day 2 because they carry the most risk. Packages 0.12 to 0.14 come from the hardware correction on Thursday 8 October: you build on one MacBook Pro and test Windows in CI and on lab PCs. Each package ends with a check: the Run by column says whether the agent or you run it, and the result goes into `docs/phase-0-exit.md`.
 
 | WP | Day | Builds | Needs | Done when | Run by |
 | --- | --- | --- | --- | --- | --- |
@@ -1141,34 +1153,42 @@ Eleven work packages run from Wednesday 7 to Saturday 10 October in the order th
 | 0.2 Design system | Wed 7 to Thu 8 | `packages/tokens` from `figma-variables.json` and the CSS printed in Design system in code; Tailwind theme, text styles, fonts; `packages/ui` primitives from the component table | 0.1 | A gallery route in web and desktop shows every primitive in every state next to its Figma screenshot; `pnpm tokens` reproduces the printed CSS | Agent |
 | 0.3 Database | Wed 7 to Thu 8 | Migrations, RLS, functions, triggers, the cron job, `seed.sql`, `seed-staff.ts`, generated types | 0.1 | `pnpm db:reset` and `supabase test db` pass: RLS for each role in Test layers; `join_exam` returns a session, `invalid_code`, `already_joined` and `lobby_closed`; every row of Session states holds | Agent |
 | 0.4 API and realtime | Thu 8 | `ingest`, `frames`, `command` and `stills` on `@supabase/server`; `start_exam`; Zod contracts | 0.3 | Integration tests: 50 events stored once with the server’s review value; a staff client gets the broadcast within 1 s; a command reaches the session channel; a still uploads and confirms | Agent |
-| 0.5 Detection | Thu 8 | Worker, Face Landmarker, Object Detector, rules engine, the card match with Human and Tesseract.js, stills, developer overlay | 0.1 | The performance budget holds on the M1 Air and the Core i5 laptop, also with the window hidden; every Tuning moment fires 5 times out of 5; the card match accepts your own card and rejects someone else’s | Agent builds; you measure on the laptops |
-| 0.6 Desktop app | Thu 8 to Fri 9 | Window and lockdown, the `uki://` protocol, `window.uki`, process scan, XState flow, the 14 screens on i18n keys, outbox, commands | 0.2, 0.4, 0.5 | Join to receipt on macOS and Windows; a 2-minute network cut loses nothing; scripted commands show 2.1c, 2.1d and 2.1e within 1 s | Agent; you run both laptops |
+| 0.5 Detection | Thu 8 | Worker, Face Landmarker, Object Detector, rules engine, the card match with Human and Tesseract.js, stills, developer overlay | 0.1 | The performance budget holds on the MacBook, also with the window hidden, and on a lab PC in 0.14; every Tuning moment fires 5 times out of 5; the card match accepts your own card and rejects someone else’s | Agent builds; you measure |
+| 0.6 Desktop app | Thu 8 to Fri 9 | Window and lockdown, the `uki://` protocol, `window.uki`, process scan, XState flow, the 14 screens on i18n keys, outbox, commands | 0.2, 0.4, 0.5 | Join to receipt on macOS, and on Windows in 0.14; a 2-minute network cut loses nothing; scripted commands show 2.1c, 2.1d and 2.1e within 1 s | Agent; you run the MacBook |
 | 0.7 Web dashboard | Fri 9 | Sign-in, overview, lobby, live wall, drawer, actions, dialogs | 0.2, 0.4 | With `pnpm demo:simulate` running 120 sessions, the wall follows events within 1 s; a proctor sees only assigned exams | Agent |
-| 0.8 Üki Lock | Thu 8 spike; Fri 9 to Sat 10 | Thursday: the app’s WebSocket server and a service worker that connects, pings and stays alive through 10 quiet minutes, in Chrome on macOS and in Chrome and Edge on Windows. Then the extension, pairing, lock and release, block page, mock portal | 0.1; 0.6 after the spike | Pairing by code; a second tab closed with `tab.blocked` on the wall; a blocked site on E.7 with `site.closed`; copy blocked; tabs restored on release | Agent; you run the real browsers |
+| 0.8 Üki Lock | Thu 8 spike; Fri 9 to Sat 10 | Thursday: the app’s WebSocket server and a service worker that connects, pings and stays alive through 10 quiet minutes in Chrome on macOS; Chrome and Edge on Windows follow in 0.14. Then the extension, pairing, lock and release, block page, mock portal | 0.1; 0.6 after the spike | Pairing by code; a second tab closed with `tab.blocked` on the wall; a blocked site on E.7 with `site.closed`; copy blocked; tabs restored on release | Agent; you run the real browsers |
 | 0.9 Languages | Sat 10 | A Vitest render test that switches every student and Lock screen between kk, ru and en | 0.6, 0.8 | No raw key and no missing message on any screen | Agent |
-| 0.10 Cloud deploy | Fri 9 | The linked Supabase project, `pnpm supabase:deploy`, `deploy-supabase.yml`, the two Vercel projects and their environment variables | 0.3, 0.4, the projects you create | The dashboard on Vercel signs in against the cloud project with seed data; a merge to `main` deploys migrations, functions and web | Agent, with the keys from you |
-| 0.11 Exit review | Sat 10 | Every exit criterion run against the cloud project, with evidence | All | All 11 exit criteria ticked, with a CI link, a network log and a screen recording; tag `phase-0` | You |
+| 0.10 Cloud deploy | Fri 9 | The linked Supabase project, `pnpm supabase:deploy`, `deploy-supabase.yml`, the two Vercel projects and their environment variables | 0.3, 0.4, 0.12, the projects you create | The dashboard on Vercel signs in against the cloud project with seed data; a merge to `main` deploys migrations, functions and web | Agent, with the keys from you |
+| 0.11 Exit review | Sat 10 | Every exit criterion run against the cloud project, with evidence | All | All 12 exit criteria ticked, with a CI link, a network log and a screen recording; tag `phase-0` | You |
+| 0.12 Windows CI | Thu 8 | The push to GitHub; a Windows job on `windows-latest`: install, unit tests, the zip, the lab zip and the NSIS installer, and a launch test that starts the packaged `Uki.exe`, checks it still runs with a window after 20 seconds, and stops it | 0.1, the push | The Windows job is green on `main` and its run offers both zips | Agent, after the push |
+| 0.13 Lockdown guard | Thu 8 to Fri 9 | The Windows keyboard hook through Koffi; the blur rule on macOS; the packaged MacBook build as the Demo Day fallback; `docs/runbooks/lab-session.md` in place of `demo-laptops.md` | 0.6 | Unit tests for the key filter and for installing and removing the hook; the Windows job loads the hook; the MacBook hand checks pass on the packaged build | Agent; you run the MacBook checks |
+| 0.14 Lab session | Fri 9 or Sat 10, whichever slot the lab gives | Nothing new: the lab checklist in Testing, run on a Windows 11 lab PC | 0.12, 0.13 | Every checklist item passes or is written into `docs/phase-0-exit.md` as a known limit | You |
 
 ### Your tasks
 
 These need you, not the agent:
 
-- [ ] Create the Supabase project in Frankfurt and the two Vercel projects, and put the keys into GitHub secrets and your local `.env`, on Wednesday 7 October.
-- [ ] Print two mock student cards on Thursday 8 October: your photo with 20231187, and the Windows laptop student’s photo with 20231455, both with large digits.
-- [ ] Have the Windows laptop with an 8th-gen Core i5 ready on Thursday 8 October.
-- [ ] Make the Üki Lock key pair and keep the private key out of the repository.
+- [ ] Push `main` and the work-package branches to github.com/k4ssymzhomart/uki, or tell the agent to, on Thursday 8 October; CI, the Windows job and Vercel all wait on it.
+- [ ] Create the Supabase project in Frankfurt with an asymmetric JWT signing key and the two Vercel projects, and put the keys into `.env.cloud` and GitHub secrets, on Thursday 8 October.
+- [ ] Book about an hour on a Windows 11 lab PC for Friday 9 or Saturday 10 October, and ask the lab whether you may run your own software there.
+- [ ] Bring a USB webcam and a USB drive with both Windows zips from CI to the lab session.
+- [ ] Ask the organizers whether you can demo on, or at least test the day before on, one of KRU’s lab PCs.
+- [ ] Print two mock student cards, 20231187 and 20231455, each with the photo of whoever plays that student.
+- [ ] Make the Üki Lock key pair (`pnpm --filter lock exec tsx scripts/make-key.ts`) and keep the private key out of the repository.
 
 ### Day by day
 
 &#91;embedded content: Phase 0 day by day · Wed 7 to Fri 16 October\]
 
-Thursday carries six packages at once. Anything unfinished on Saturday moves to Sunday morning, before Phase 1 starts.
+Anything unfinished on Saturday moves to Sunday morning, before Phase 1 starts.
 
 Phase 1, Sunday 11 to Thursday 15 October, builds the Demo Day screens on top of this skeleton; its own plan follows the Phase 0 exit review.
 
 ## Demo script and seed data
 
-The Phase 0 skeleton must run one exam in the app on a MacBook and one browser exam with Üki Lock on a Windows laptop, watched live from the dashboard. The seed rebuilds the KRU world from the Figma frames, and a simulator fills the rest of the wall.
+The Phase 0 skeleton must run one exam in the app and one browser exam with Üki Lock on the student machine, watched live from the dashboard on a second screen. The seed rebuilds the KRU world from the Figma frames, and a simulator fills the rest of the wall.
+
+The student machine is, in order of preference, a KRU lab PC if the organizers allow it, a borrowed Windows laptop, or the MacBook with its lockdown guard. The dashboard lives on Vercel, so it opens in any browser on the other screen: the MacBook when the student machine runs Windows, otherwise the venue’s presentation PC or a borrowed laptop.
 
 ### Seed
 
@@ -1192,7 +1212,7 @@ The Phase 0 skeleton must run one exam in the app on a MacBook and one browser e
 - Mathematics 2 seeds 20 single-choice questions in Kazakh, Russian and English, with question 7 as in 2.1.
 - The named students from 1.5 and 2.4 keep their numbers: Madina Tulegenova 20231187 at seat 23, Arman Bekzhanov 20230912, Dias Kenzhebekov 20231044, Aruzhan Kassymova 20231219, Zhansaya Omarova 20231302, Yerlan Tokhtarov 20230877. Other students get generated Kazakh names.
 - Aliya Seitkali, 20231455, writes Physics 1. Gulnara’s surname and Aliya’s number are seed values; Figma shows neither.
-- Two printed mock student cards carry 20231187 and 20231455 with the photos of the people at the two demo laptops, for the card match.
+- Two printed mock student cards carry 20231187 and 20231455 with the photo of whoever plays each student, for the card match; if you play both, both cards carry your photo.
 
 ### Demo commands
 
@@ -1206,25 +1226,25 @@ Simulated tiles are labelled as simulated in the presenter’s notes, and the pr
 ### Script
 
 1. Dashboard: Dana signs in (A.0). The overview (0.1) shows Mathematics 2 next, Physics 1 live, History to review, and 0 MB of video.
-2. Aigerim opens the Mathematics 2 lobby (1.5). Simulated students join; Madina’s MacBook joins with MATH2-204-FRI and 20231187.
-3. On the MacBook, 1.2 shows Telegram open in red and asks for Üki Lock; Madina closes Telegram, pairs the Lock by its code (E.3) and checks again. 1.3 matches her face to the card photo; 1.4 shows the rules.
-4. Aigerim presses Start exam. The MacBook goes to 2.1 within 1 second, browser locked.
+2. Aigerim opens the Mathematics 2 lobby (1.5). Simulated students join; the student machine joins as Madina with MATH2-204-FRI and 20231187.
+3. On the student machine, 1.2 shows Telegram open in red and asks for Üki Lock; Madina closes Telegram, pairs the Lock by its code (E.3) and checks again. 1.3 matches her face to the card photo; 1.4 shows the rules.
+4. Aigerim presses Start exam. The student machine goes to 2.1 within 1 second, browser locked.
 5. Madina looks away for 3 seconds: her tile turns to a warning and the event appears in Live events.
-6. Madina lifts a phone: 2.2 shows on the laptop, the tile shows “phone 0.94”, and the drawer (2.5) shows the still.
-7. Aigerim sends “Phones away, please” (2.4b). The MacBook shows 2.1e in Kazakh.
-8. Wi-Fi off for 30 seconds: 2.1a shows and answers keep saving. Wi-Fi back on: the events arrive and nothing is lost.
-9. Madina leaves the camera for 10 seconds: 2.3 pauses her and the wall shows it; I’m here resumes.
-10. Aigerim adds 10 minutes for everyone (2.4c): the MacBook timer shows +10 min. She pauses and resumes Madina (2.1c), and ends a simulated student with a reason (2.4e).
+6. Madina lifts a phone: 2.2 shows on the student machine, the tile shows “phone 0.94”, and the drawer (2.5) shows the still.
+7. Aigerim sends “Phones away, please” (2.4b). The student machine shows 2.1e in Kazakh.
+8. Network off for 30 seconds (Wi-Fi off, or the cable out on a lab PC): 2.1a shows and answers keep saving. Network back: the events arrive and nothing is lost.
+9. Madina presses Alt+Tab and the Windows key, or Cmd+Tab on the MacBook: nothing happens. She leaves the camera for 10 seconds: 2.3 pauses her and the wall shows it; I’m here resumes.
+10. Aigerim adds 10 minutes for everyone (2.4c): the student timer shows +10 min. She pauses and resumes Madina (2.1c), and ends a simulated student with a reason (2.4e).
 11. Madina submits and gets her receipt (3.1).
-12. Windows laptop: Aliya joins PHYS1-102-FRI in the Üki app, pairs Üki Lock by code (E.3), and presses Lock and start (E.4).
+12. On the same machine, Üki opens again and Aliya joins PHYS1-102-FRI; the Lock is already paired, so she presses Lock and start (E.4).
 13. In the locked portal (E.5), copy is blocked (E.6) and wikipedia.org lands on the block page (E.7); both appear on Gulnara’s wall.
 14. Aliya finishes the attempt: the Lock releases and her tabs come back (E.9).
 
-The run takes about 12 minutes. Rehearse it at the Phase 0 exit review on Saturday 10 October, and twice on the demo laptops before Demo Day, with a phone hotspot as the network fallback.
+The run takes about 12 minutes. Rehearse it at the Phase 0 exit review on Saturday 10 October, and twice on the Demo Day machines before Demo Day, with a phone hotspot as the network fallback.
 
 ## Testing and quality gates
 
-Pure logic gets unit tests, the database and functions run against a real local Supabase, and one Playwright smoke test covers the dashboard; the desktop app and Üki Lock are checked by hand on the two demo laptops. A merge to `main` needs CI green; the exit criteria need recorded evidence.
+Pure logic gets unit tests, the database and functions run against a real local Supabase, one Playwright smoke test covers the dashboard, and a Windows CI job runs the unit tests and launches the packaged app. The desktop app and Üki Lock are checked by hand on the MacBook and in lab sessions on a Windows 11 lab PC. A merge to `main` needs CI green; the exit criteria need recorded evidence.
 
 ### Test layers
 
@@ -1235,56 +1255,85 @@ Pure logic gets unit tests, the database and functions run against a real local 
 | Functions and realtime | Vitest against `supabase start` and `supabase functions serve` | `ingest` idempotency and the review map; `frames` path checks; `command` rights and group scope; a staff client receives a broadcast within 1 s |
 | Dashboard | Playwright | Sign-in, the live wall updating from injected events, a pause command reaching `session_commands` |
 
-### Hand checks on the demo laptops
+### Hand checks on the MacBook
 
-- The whole demo script on both laptops, against the cloud project.
-- macOS: Cmd+Tab, Force Quit and the menu bar do nothing during lockdown; a screenshot shows no exam window.
-- Windows: Alt+Tab and the Windows key refocus the exam and log `tab.blocked`; a screenshot shows no exam window.
-- Üki Lock pairs in Chrome on macOS, and in Chrome and Edge on Windows, and stays paired through 10 quiet minutes.
+- The whole demo script against the cloud project, with the MacBook as the student machine.
+- On the packaged build during lockdown: Cmd+Tab, Cmd+Q, Force Quit and the menu bar do nothing; Spotlight, Mission Control, Notification Center and the screenshot keys either do nothing or bring the exam back and log `tab.blocked`; a screenshot shows no exam window.
+- Üki Lock pairs in Chrome and stays paired through 10 quiet minutes.
 - A network log of a 10-minute exam from a development build shows no image upload outside `frames/`.
 - Every student screen shows the Kazakh letters in Geist, or in the fallback.
+
+### Lab session on a Windows 11 lab PC
+
+Lab time is scarce, so every Windows-only check sits in this one list, and `docs/runbooks/lab-session.md` holds the steps. A virtual machine on the MacBook cannot replace it: macOS takes the keys before the VM sees them. If a lockdown gets stuck, end the session from the dashboard; the lab zip also keeps Ctrl+Shift+Q.
+
+Before the session:
+
+- [ ] The lab allows you to run your own software; if security software blocks it, ask lab IT.
+- [ ] A USB webcam, in case the PC has none.
+- [ ] Both Windows zips and the Üki Lock zip from the latest green CI run, on a USB drive: the PC may wipe itself on reboot.
+- [ ] `pnpm demo:reset` against the cloud project, and a phone hotspot in case the lab network blocks websockets.
+
+In the session:
+
+- [ ] The app starts from the USB drive or a folder in your profile without admin rights; write down any SmartScreen or antivirus prompt and what got it past.
+- [ ] 1.2 sees the camera; if the Windows camera privacy settings are locked by policy, write it down.
+- [ ] During lockdown the Windows keys, Alt+Tab, Alt+Esc, Ctrl+Esc and Alt+F4 do nothing; Ctrl+Alt+Del and Win+L still work, and the wall shows the focus loss.
+- [ ] A blocked app on the PC turns 1.2 red, and one opened mid-exam sends `tab.blocked`.
+- [ ] PrtScn, Win+Shift+S and the Snipping Tool capture no exam window.
+- [ ] The lab zip’s overlay shows face tracking at 15 fps or more and phone checks at 2 per second or more, with the app under 40% CPU; write down the CPU model and whether the PC has a graphics card.
+- [ ] Üki Lock loads unpacked in Chrome and Edge, pairs by code and closes a second tab; if browser policy blocks unpacked extensions, write it down.
+- [ ] The NSIS installer installs for the current user and starts, if the lab allows installers.
+- [ ] One run of the demo script against the cloud project.
+
+Write each result, with a photo of the screen, into `docs/phase-0-exit.md`.
 
 ### Gates on every merge to main
 
 - `pnpm check`: Biome, `tsc --noEmit` and Vitest.
 - The database and function tests, and the dashboard smoke test.
+- The Windows job: unit tests, both zips and the installer, and the launch test.
 - A Biome GritQL plugin rejects JSX text that is not an i18n key; a CI search rejects colour literals and pixel sizes in component files.
 
 Every exit criterion gets a row in `docs/phase-0-exit.md` with its evidence: a CI run, a network log or a screen recording, and the date.
 
 ## Risks and fallbacks
 
-The biggest risks are detection speed and accuracy on ordinary laptops and the link between Üki Lock and the app; each has an early signal and a fallback that keeps Demo Day intact. Sorted by harm to Demo Day.
+The biggest risks are detection speed on lab-class PCs, Windows access, and the link between Üki Lock and the app; each has an early signal and a fallback that keeps Demo Day intact. Sorted by harm to Demo Day.
 
 | Risk | Early signal | Fallback |
 | --- | --- | --- |
-| Detection under 15 fps on the Core i5 laptop | The day-2 spike | 480 × 360 input; landmarks every second frame with time-based rules; phone checks once a second; CPU delegate if WebGL in the worker misbehaves |
-| Phone detection misses or false flags | Tuning on day 2 and 3 | Score 0.9 over 3 checks; the demo holds the phone upright to the camera |
+| Detection under 15 fps on a lab PC without a graphics card | The lab session | 480 × 360 input; landmarks every second frame with time-based rules; phone checks once a second; CPU delegate if WebGL in the worker misbehaves |
+| No Windows machine on Demo Day | The organizers’ answer about KRU lab PCs | A borrowed Windows laptop; else the MacBook with its lockdown guard |
+| Lab access falls through | No lab slot by Saturday 10 October | Borrow a Windows laptop for one evening; a virtual machine only shows that the app starts, not the lockdown |
+| SmartScreen, antivirus or lab policy blocks the unsigned app or its keyboard hook | The lab session | Run the zip from the USB drive, More info and Run anyway, ask lab IT; without the hook the blur rule still refocuses and logs |
+| Phone detection misses or false flags | Tuning on both machines; a held phone scored 0.77 on the first try | Tune `phone_score` per machine; the demo holds the phone upright to the camera |
 | Gaze fails with glasses, a headscarf or dim light | Tuning with the overlay | Head pose only with wider limits; a four-corner calibration on 1.4 in Phase 1 |
 | The card match rejects a real student | Rehearsals | Three tries, then 1.3a; a backup demo exam with `checks.identity` off; cards printed with a large, sharp photo and large digits |
 | The service worker loses the WebSocket | The Thursday pairing spike | Reconnect every 2 seconds with the saved pairing; `lock.app_disconnected` only after 15 seconds down |
 | Another local program connects to the app’s socket and poses as Üki Lock | Known limit | The origin check stops web pages; Phase 2 checks the connecting process: its code signature on macOS, its executable path on Windows |
 | Venue network blocks websockets or drops | A rehearsal at the venue | A phone hotspot; the outbox covers drops of minutes |
 | Kostanay to Frankfurt latency pushes events past 1 s | The day-2 realtime test from Kostanay | Flag events flush at once; if the 95th percentile stays above 1 s, the demo promises 2 s |
-| Realtime private channels refuse to connect | Function tests on day 2 | `postgres_changes` subscriptions under RLS, enough for two laptops and the simulator |
+| Realtime private channels refuse to connect | Function tests on day 2 | `postgres_changes` subscriptions under RLS, enough for one student machine and the simulator |
 | Rehearsals hit the limit of 30 anonymous sign-ins an hour | A join that fails with a rate-limit error | Raise the limit in the project’s Auth rate limits |
 | macOS screen recorders on ScreenCaptureKit still capture the exam | Known platform limit | The process scan names screen-sharing tools; documented as a limit |
-| Gatekeeper or SmartScreen blocks the unsigned app | First install on each demo laptop | Build on the laptop itself; the runbook steps for quarantine and SmartScreen |
+| Gatekeeper blocks the unsigned app on the MacBook | First install | Build on the MacBook itself; the runbook step for the quarantine flag |
 | Kazakh or Russian copy errors on stage | Native speakers read the demo screens | A read-through of the demo screens by Thursday 15 October |
 | Phase 1 work does not fit before Demo Day | Phase 0 exit slips past Sunday | Cut order: lobby polish, overview stat cards, the browser exam; the app exam and the live wall stay |
 
 ## Open questions
 
-Nine questions are open; the plan runs on the assumption in the second column until someone answers. The first blocks work this week.
+Ten questions are open; the plan runs on the assumption in the second column until someone answers. The first two block work this week.
 
 | Question | This plan assumes | Who answers | Needed by |
 | --- | --- | --- | --- |
-| Which laptops run Demo Day? | One MacBook (M1 Air or newer), one Windows laptop with an 8th-gen Core i5, one dashboard laptop | You | Oct 8, 2026 |
+| May you run your own software on the lab PCs, and do they have webcams? | Yes, from a USB drive without admin rights; you bring a USB webcam | Lab staff | Oct 9, 2026 |
+| Which machine runs the student app on Demo Day? | In order: a KRU lab PC, if the organizers allow a test the day before; a borrowed Windows laptop; the MacBook with its lockdown guard | You, with the organizers | Oct 12, 2026 |
 | Does Watch camera in 2.4a stay? | Hidden: live video contradicts “Video never leaves the laptop” | You | Oct 11, 2026 |
 | What does the app show while the exam runs in the browser? | The window hides to the tray after 1.4; no frame exists | You | Oct 11, 2026 |
 | Where do Resume exam (2.4a) and Submit (2.1) live? | A menu item and a button on the last question, with new strings | You | Oct 11, 2026 |
 | Which wording wins for `identity.help.privacy`? | The catalog line, not the one drawn in 1.3a | You | Oct 11, 2026 |
-| Who reviews the 87 added strings and the 13 without frames? | A Kazakh and a Russian speaker you trust | You | Oct 15, 2026 |
+| Who reviews the added strings and the 13 without frames? | A Kazakh and a Russian speaker you trust | You | Oct 15, 2026 |
 | Does the exam start on the clock or on Start exam? | Both: on the clock at `starts_at`, or earlier when the lead proctor presses Start exam | KRU exam office | Before the pilot |
 | Do face-missing pauses give time back? | Yes, up to 5 minutes per session; every pause is logged and flagged | KRU exam office | Before the pilot |
 | Which LMS does KRU use, and what is its finish page? | A mock portal with a fixed review path | KRU IT | Phase 2 |
@@ -1323,7 +1372,8 @@ This file ships as `CLAUDE.md` in the starter files and goes into the repository
 ## How to work
 
 - This is a hackathon build: ready-made models, nothing self-hosted, no legal or consent work. Pick the smallest solution the plan allows.
-- Work packages 0.1 to 0.11 from the plan, in the order their Needs column allows. One branch per package, for example `wp/0.5-detection`.
+- Hardware: one MacBook Pro for development; Windows 11 lab PCs at the university for Windows-only checks, in short sessions. Never assume another laptop. Every Windows-only behaviour gets a test in the Windows CI job and a line in the lab checklist, `docs/runbooks/lab-session.md`.
+- Work packages 0.1 to 0.14 from the plan, in the order their Needs column allows. One branch per package, for example `wp/0.5-detection`.
 - A package is done when its agent checks pass, its hand checks are listed as pending, and you have written the evidence into `docs/phase-0-exit.md`.
 - Compare every screen with the screenshot of its frame before you call it done.
 - When the plan and Figma disagree, Figma wins for visuals and the plan wins for behaviour. Write the conflict into `docs/decisions.md`.
@@ -1351,8 +1401,9 @@ This file ships as `CLAUDE.md` in the starter files and goes into the repository
 - No user-facing string in code: every string is an i18n key. No emoji in product copy.
 - Icons come from lucide-react only, through `packages/ui/src/icons.ts`.
 - Electron renderers run with `contextIsolation`, `sandbox` and no Node integration; the preload exposes one typed `window.uki`.
+- The Windows keyboard hook runs only during lockdown and only swallows the keys the plan lists; it never records or sends a keystroke.
 - Nothing leaves the laptop except events and flagged stills. Never use `MediaRecorder`, never upload an image outside `frames/`, never load models, wasm or fonts from a CDN.
-- Apps carry only the Supabase publishable key. The secret key stays in the local `.env` for scripts; Edge Functions use `withSupabase` from `@supabase/server`. Never use the legacy `anon` or `service_role` keys.
+- Apps carry only the Supabase publishable key. The secret key stays in the local `.env.cloud` for scripts; Edge Functions use `withSupabase` from `@supabase/server`. Never use the legacy `anon` or `service_role` keys.
 - Every table has row-level security; every new table gets pgTAP tests for each role.
 - No third-party analytics, crash reporting or tracking.
 - Client-made ids are UUIDv7. Timestamps are `timestamptz` in UTC; screens show `Asia/Almaty`.
@@ -1363,7 +1414,7 @@ This file ships as `CLAUDE.md` in the starter files and goes into the repository
 
 - Conventional Commits, for example `feat(desktop): join screen`.
 - Commits are authored as `k4ssymzhomart` and carry no co-author trailer.
-- One pull request per work package, merged when CI is green.
+- `origin` is github.com/k4ssymzhomart/uki. Push each work-package branch as soon as it has a commit, and merge it into `main` through a pull request once CI is green, so nothing lives only on this Mac.
 ```
 
 ## Sources
@@ -1411,3 +1462,13 @@ Every page below was opened while writing this plan; versions and limits were re
 - [Supabase anonymous sign-ins](https://supabase.com/docs/guides/auth/auth-anonymous): student sign-in; 30 an hour per IP by default
 - [Supabase Realtime Broadcast](https://supabase.com/docs/guides/realtime/broadcast): `realtime.send` from the database
 - [Supabase Realtime authorization](https://supabase.com/docs/guides/realtime/authorization): RLS on `realtime.messages`
+
+### Windows lockdown and builds
+
+- [Disabling shortcut keys in games](https://learn.microsoft.com/en-us/windows/win32/dxtecharts/disabling-shortcut-keys-in-games): a low-level keyboard hook blocks the Windows key, also for standard user accounts
+- [LowLevelKeyboardProc](https://learn.microsoft.com/en-us/windows/win32/winmsg/lowlevelkeyboardproc): swallowing a key, the 1-second timeout and the silent removal of a slow hook
+- [Blocking Windows hotkeys, Microsoft Q&A](https://learn.microsoft.com/en-us/answers/questions/1286619/blocking-windows-hotkeys-in-an-application): some combinations escape a hook; Win+L needs a registry policy
+- [Koffi callbacks](https://koffi.dev/callbacks) and [Koffi packaging](https://koffi.dev/packaging): registered JavaScript callbacks; packaging with electron-builder
+- [Koffi changelog](https://koffi.dev/changelog): MIT licence since 2.3.9
+- [electron-builder Windows targets](https://www.electron.build/docs/win) and [NSIS options](https://www.electron.build/docs/nsis): zip, portable and the per-user install mode
+- [Supabase JWT signing keys](https://supabase.com/docs/guides/auth/signing-keys): Migrate JWT secret, then Rotate keys
