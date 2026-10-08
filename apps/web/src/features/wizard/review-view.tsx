@@ -21,6 +21,7 @@ import {
   examTimes,
   previousStep,
   SEND_INVITES_READY,
+  sortLocales,
   stepHref,
 } from "./wizard-model.ts";
 
@@ -251,7 +252,7 @@ export function ReviewView({ exam, settings, groupCodes, rosterSize, assignments
                     {t("review.people.proctorValue", {
                       from: row.seat_from ?? 0,
                       to: row.seat_to ?? 0,
-                      languages: row.languages.map(language).join(", "),
+                      languages: sortLocales(row.languages).map(language).join(", "),
                       state: row.confirmed_at ? t("review.people.confirmed") : t("review.people.waiting"),
                     })}
                   </SummaryRow>

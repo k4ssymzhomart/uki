@@ -14,7 +14,6 @@ import {
   RadioOption,
   Toggle,
 } from "@uki/ui";
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Popover as PopoverPrimitive } from "radix-ui";
 import { useId, useState } from "react";
@@ -52,7 +51,6 @@ export type BrowserViewProps = { exam: ExamDraft };
 export function BrowserView({ exam: initial }: BrowserViewProps) {
   const t = useTranslations("dashboard");
   const tc = useTranslations();
-  const router = useRouter();
   const id = useId();
   const draft = useDraft(initial, initial.created_at);
   const { exam } = draft;
@@ -63,9 +61,8 @@ export function BrowserView({ exam: initial }: BrowserViewProps) {
   const host = lmsHost(exam.lms_url);
   const sites = exam.allowed_sites.filter((item) => item !== host);
 
-  const go = async (step: ReturnType<typeof nextStep>) => {
-    if (!step || !(await draft.flush())) return;
-    router.push(stepHref(exam.id, step));
+  const go = (step: ReturnType<typeof nextStep>) => {
+    if (step) void draft.leave(stepHref(exam.id, step));
   };
 
   const saveLink = () => {
@@ -99,10 +96,10 @@ export function BrowserView({ exam: initial }: BrowserViewProps) {
       error={draft.error ? t(`wizard.error.${draft.error}`) : null}
       actions={
         <>
-          <Button variant="ghost" onClick={() => void go(previousStep("browser", exam.mode))}>
+          <Button variant="ghost" onClick={() => go(previousStep("browser", exam.mode))}>
             {t("wizard.back")}
           </Button>
-          <Button onClick={() => void go(nextStep("browser", exam.mode))} loading={draft.saving}>
+          <Button onClick={() => go(nextStep("browser", exam.mode))} loading={draft.leaving}>
             {t("wizard.browser.next")}
           </Button>
         </>

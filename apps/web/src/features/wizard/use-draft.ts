@@ -1,6 +1,8 @@
 "use client";
 
 import type { ExamDraft } from "@uki/contracts";
+import type { Route } from "next";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { saveExamDraft, type WizardError } from "./wizard-actions.ts";
 import { applyPatch, mergePatch, type DraftPatch as Patch } from "./wizard-model.ts";
@@ -15,6 +17,10 @@ export type DraftState = {
   update: (patch: Patch, delay?: number) => void;
   /** Saves what is waiting now; resolves false when the save failed. */
   flush: () => Promise<boolean>;
+  /** True from Next or Back until the next page opens. */
+  leaving: boolean;
+  /** Next and Back: saves what is waiting, then opens `href`; stays when the save failed. */
+  leave: (href: string) => Promise<void>;
 };
 
 /**
@@ -27,6 +33,8 @@ export function useDraft(initial: ExamDraft, initialSavedAt: string | null, dela
   const [savedAt, setSavedAt] = useState(initialSavedAt);
   const [error, setError] = useState<WizardError | null>(null);
   const [saving, setSaving] = useState(false);
+  const [leaving, setLeaving] = useState(false);
+  const router = useRouter();
   const pending = useRef<Patch>({});
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const chain = useRef<Promise<boolean>>(Promise.resolve(true));
@@ -46,14 +54,9 @@ export function useDraft(initial: ExamDraft, initialSavedAt: string | null, dela
       if (result.ok) {
         setSavedAt(result.savedAt);
         setError(null);
-        // Keep what the page shows; take the values the database works out (the lobby time, groups).
-        setExam((current) => ({
-          ...current,
-          lobby_opens_at: result.exam.lobby_opens_at,
-          group_ids: Object.keys(pending.current).includes("group_ids")
-            ? current.group_ids
-            : result.exam.group_ids,
-        }));
+        // Keep what the page shows (a later change may be on its way); take only the lobby time, which
+        // the database works out from the start and the workspace's lobby minutes.
+        setExam((current) => ({ ...current, lobby_opens_at: result.exam.lobby_opens_at }));
       } else {
         setError(result.error);
       }
@@ -87,5 +90,14 @@ export function useDraft(initial: ExamDraft, initialSavedAt: string | null, dela
     };
   }, [flush]);
 
-  return { exam, savedAt, error, saving, update, flush };
+  const leave = useCallback(
+    async (href: string) => {
+      setLeaving(true);
+      if (await flush()) router.push(href as Route);
+      else setLeaving(false);
+    },
+    [flush, router],
+  );
+
+  return { exam, savedAt, error, saving, update, flush, leaving, leave };
 }

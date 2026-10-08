@@ -391,6 +391,12 @@ export function removeProctor(rows: readonly ProctorRow[], staffId: string): Pro
     .sort((a, b) => a.seat_from - b.seat_from);
 }
 
+/** Languages in the order the frames list them: Kazakh, Russian, English (the database keeps a set). */
+export function sortLocales<T extends string>(languages: readonly T[]): T[] {
+  const order = ["kk", "ru", "en"];
+  return [...languages].sort((a, b) => order.indexOf(a) - order.indexOf(b));
+}
+
 /** The seats Add proctor suggests: right after the last range, to the end of the roster. */
 export function nextSeatRange(rows: readonly ProctorRow[], rosterSize: number): { from: number; to: number } {
   const last = rows.reduce((max, row) => Math.max(max, row.seat_to), 0);

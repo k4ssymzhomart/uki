@@ -11,6 +11,7 @@ import {
   type ProctorRow,
   removeProctor,
   seatProblem,
+  sortLocales,
   uncoveredSeats,
   upsertProctor,
   type WizardProctor,
@@ -44,7 +45,9 @@ export function ProctorsCard({ examId, assignments, proctors, rosterSize, onSave
   const rows = assignmentRows(assignments);
   const gap = uncoveredSeats(rows, rosterSize);
   const languageList = (languages: readonly Locale[]) =>
-    languages.map((locale) => t(`language.${locale}`)).join(", ");
+    sortLocales(languages)
+      .map((locale) => t(`language.${locale}`))
+      .join(", ");
 
   const save = async (table: ProctorRow[]): Promise<boolean> => {
     const local = seatProblem(table);
@@ -243,14 +246,14 @@ function ProctorDialog({
         </Select>
         <div className="flex gap-4">
           <Input
-            className="flex-1"
+            className="min-w-0 flex-1"
             label={t("roster.proctors.dialog.from")}
             inputMode="numeric"
             value={from}
             onChange={(event) => setFrom(event.target.value.replace(/\D/g, ""))}
           />
           <Input
-            className="flex-1"
+            className="min-w-0 flex-1"
             label={t("roster.proctors.dialog.to")}
             inputMode="numeric"
             value={to}

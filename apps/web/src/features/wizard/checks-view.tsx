@@ -15,7 +15,6 @@ import {
   Toggle,
 } from "@uki/ui";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useId, useState } from "react";
 import laptopShieldArt from "../../assets/uki-3d-laptop-shield.png";
@@ -83,7 +82,6 @@ type PreviewLocale = (typeof PREVIEW_LOCALES)[number];
 export function ChecksView({ exam: initial, preview }: ChecksViewProps) {
   const t = useTranslations("dashboard");
   const tc = useTranslations();
-  const router = useRouter();
   const draft = useDraft(initial, initial.created_at);
   const { exam } = draft;
   const [language, setLanguage] = useState<PreviewLocale>("en");
@@ -91,9 +89,8 @@ export function ChecksView({ exam: initial, preview }: ChecksViewProps) {
   const next = nextStep("checks", exam.mode);
   const back = previousStep("checks", exam.mode);
 
-  const go = async (step: typeof next) => {
-    if (!step || !(await draft.flush())) return;
-    router.push(stepHref(exam.id, step));
+  const go = (step: typeof next) => {
+    if (step) void draft.leave(stepHref(exam.id, step));
   };
 
   const rules: { key: keyof typeof lines; icon: IconName; show: boolean }[] = [
@@ -112,10 +109,10 @@ export function ChecksView({ exam: initial, preview }: ChecksViewProps) {
       error={draft.error ? t(`wizard.error.${draft.error}`) : null}
       actions={
         <>
-          <Button variant="ghost" onClick={() => void go(back)}>
+          <Button variant="ghost" onClick={() => go(back)}>
             {t("wizard.back")}
           </Button>
-          <Button onClick={() => void go(next)} loading={draft.saving}>
+          <Button onClick={() => go(next)} loading={draft.leaving}>
             {next === "browser" ? t("wizard.checks.nextBrowser") : t("wizard.checks.next")}
           </Button>
         </>

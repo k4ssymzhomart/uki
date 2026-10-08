@@ -16,7 +16,6 @@ import {
   Select,
   SelectItem,
 } from "@uki/ui";
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useId } from "react";
 import { formatGroupCodes, timeOf } from "../../lib/format.ts";
@@ -55,7 +54,6 @@ const LOCALE_ORDER = ["kk", "ru", "en"] as const;
 export function DetailsView({ exam: initial, settings, groups, courses, examDays, nowMs }: DetailsViewProps) {
   const t = useTranslations("dashboard");
   const tc = useTranslations();
-  const router = useRouter();
   const id = useId();
   const draft = useDraft(initial, initial.created_at);
   const { exam } = draft;
@@ -67,10 +65,9 @@ export function DetailsView({ exam: initial, settings, groups, courses, examDays
   const kinds = withCurrent<string>(EXAM_KINDS, exam.kind);
   const rulesFirst = exam.rules_locale ?? "kk";
 
-  const go = async () => {
-    if (!(await draft.flush())) return;
-    const next = nextStep("details", exam.mode);
-    if (next) router.push(stepHref(exam.id, next));
+  const next = nextStep("details", exam.mode);
+  const go = () => {
+    if (next) void draft.leave(stepHref(exam.id, next));
   };
 
   return (
@@ -83,7 +80,7 @@ export function DetailsView({ exam: initial, settings, groups, courses, examDays
           <Button variant="ghost" asChild>
             <AppLink href="/overview">{t("wizard.cancel")}</AppLink>
           </Button>
-          <Button onClick={go} loading={draft.saving}>
+          <Button onClick={go} loading={draft.leaving}>
             {t("wizard.details.next")}
           </Button>
         </>
