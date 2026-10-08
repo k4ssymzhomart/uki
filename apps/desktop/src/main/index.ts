@@ -45,6 +45,13 @@ app.userAgentFallback = asciiUserAgent(app.userAgentFallback);
 
 const os = desktopOs(process.platform);
 const isDevelopmentBuild = !app.isPackaged;
+// The lab variant (`pnpm --filter desktop dist:lab`, "Builds" in docs/phase-0-plan.md): a packaged
+// production build that keeps the developer overlay and the development escape for a lab session. CI
+// builds it as Uki-lab-<version>-x64.zip; it never ships.
+const isLabBuild = import.meta.env.MODE === "lab";
+if (isLabBuild) {
+  console.warn("[desktop] lab build: the developer overlay (Ctrl+Shift+D) and Ctrl+Shift+Q are on");
+}
 // Development-only switches (dev-flags.ts); a packaged build reads none of them.
 const devFlags = readDevFlags(process.env, app.isPackaged);
 if (describeDevFlags(devFlags).length > 0) {
@@ -83,7 +90,7 @@ const lockdown = devFlags.noKiosk
     )
   : createLockdown({
       os,
-      devEscape: isDevelopmentBuild,
+      devEscape: isDevelopmentBuild || isLabBuild,
       onBlur: () => notify(IPC_CHANNELS.examBlur),
       onDevEscape: () => {
         // The running scan holds the app too: the escape hatch lets quit through again.

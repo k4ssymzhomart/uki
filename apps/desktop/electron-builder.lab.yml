@@ -1,0 +1,11 @@
+# The lab variant of the Windows zip ("Builds" in docs/phase-0-plan.md): the same app built with
+# `electron-vite build --mode lab`, so the developer overlay (Ctrl+Shift+D: fps, phone checks per second)
+# and the development escape (Ctrl+Shift+Q out of a stuck lockdown) stay on for a lab session on a Windows
+# 11 lab PC. Only the CI Windows job builds it, with `pnpm --filter desktop dist:lab`, which also limits
+# the targets to the x64 zip. It is named Uki-lab-<version>-x64.zip and never ships: desktop-dist.yml and
+# the release leave it out.
+extends: ./electron-builder.yml
+artifactName: Uki-lab-${version}-${arch}.${ext}
+directories:
+  output: release/lab
+  buildResources: build

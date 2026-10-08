@@ -5,6 +5,12 @@ import { describe, expect, it } from "vitest";
 
 const yml = readFileSync(new URL("../../electron-builder.yml", import.meta.url), "utf8");
 const afterPack = readFileSync(new URL("../../build/after-pack.cjs", import.meta.url), "utf8");
+const labYml = readFileSync(new URL("../../electron-builder.lab.yml", import.meta.url), "utf8");
+const scripts = (
+  JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8")) as {
+    scripts: Record<string, string>;
+  }
+).scripts;
 
 function value(key: string): string | undefined {
   return new RegExp(`^\\s*${key}:\\s*(.+)$`, "m").exec(yml)?.[1]?.trim();
@@ -22,10 +28,15 @@ describe("electron-builder.yml", () => {
     expect(value("NSCameraUsageDescription")).toBe(privacy?.en);
   });
 
-  it("builds unsigned dmg (arm64, x64) and NSIS (x64) with the models and the fuses hook", () => {
+  it("builds unsigned dmg (arm64, x64), NSIS and zip (x64) with the models and the fuses hook", () => {
     expect(value("identity")).toBe("null");
     expect(yml).toMatch(/target: dmg\s+arch:\s+- arm64\s+- x64/);
     expect(yml).toMatch(/target: nsis\s+arch:\s+- x64/);
+    // The zip of the unpacked app runs from any folder or a USB drive without an install (WP 0.12).
+    expect(yml).toMatch(/target: zip\s+arch:\s+- x64/);
+    // NSIS: an assisted installer whose install-mode page offers the current user only.
+    expect(value("oneClick")).toBe("false");
+    expect(value("perMachine")).toBe("false");
     expect(value("- from")).toBe("resources/models");
     expect(value("afterPack")).toBe("build/after-pack.cjs");
   });
@@ -54,5 +65,22 @@ describe("electron-builder.yml", () => {
       // The renderer and the models load over uki:// (protocol.ts), never from file://.
       GrantFileProtocolExtraPrivileges: false,
     });
+  });
+});
+
+describe("electron-builder.lab.yml", () => {
+  it("builds the lab zip from the same config under its own name and folder", () => {
+    expect(/^extends:\s*(.+)$/m.exec(labYml)?.[1]?.trim()).toBe("./electron-builder.yml");
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: electron-builder's own ${macro} syntax
+    expect(/^artifactName:\s*(.+)$/m.exec(labYml)?.[1]?.trim()).toBe("Uki-lab-${version}-${arch}.${ext}");
+    expect(/^\s+output:\s*(.+)$/m.exec(labYml)?.[1]?.trim()).toBe("release/lab");
+  });
+
+  it("is built in lab mode as the Windows x64 zip only, by its own script", () => {
+    expect(scripts["dist:lab"]).toBe(
+      "electron-vite build --mode lab && electron-builder --config electron-builder.lab.yml --win zip --x64",
+    );
+    // The shipped build never uses lab mode.
+    expect(scripts.dist).not.toMatch(/--mode|lab/);
   });
 });
