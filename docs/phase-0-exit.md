@@ -198,3 +198,25 @@ On 2026-10-08, P.9 ran on a second local Supabase stack. The stack used project 
 - `supabase test db`: pass, 8 files and 404 tests. Per file: `01_rls` 86, `02_join_exam` 40, `03_start_submit` 34, `04_session_states` 63, `05_ingest_frames` 50, `06_commands` 48, `07_realtime` 28, `08_command_followups` 55.
 - This closes the 0.3 row above. These 13 migrations were applied to the main local stack one at a time, partly by hand, under load. A full reset through the CLI now applies them cleanly. CI's `supabase start` repeats the reset on every push. The same reset with the Phase 1 migration added is evidence for WP 1.1 in `docs/phase-1-exit.md`.
 
+## P.1 CI green, 2026-10-08
+
+| Check | Status | Evidence | Date |
+| --- | --- | --- | --- |
+| `pnpm check` passes in CI on `main` (row 0.1) | pass | main's first run, [37756081782](https://github.com/k4ssymzhomart/uki/actions/runs/37756081782), failed in "Lint, guards, types and unit tests": the Edge Functions' copy of the contracts is generated and ignored by git, so a fresh checkout had none for `typecheck:functions`. #1 makes `typecheck:functions` sync it first. The next main run, [37757782353](https://github.com/k4ssymzhomart/uki/actions/runs/37757782353), passed all six jobs: check, secret scan, stack, builds, and the macOS and Windows installers | 2026-10-08 |
+| Deploy Supabase deploys nothing while `CLOUD_DEPLOY` is unset | pass | Its deploy job was skipped after the red run ([37756551152](https://github.com/k4ssymzhomart/uki/actions/runs/37756551152)) and after the green one ([37758275025](https://github.com/k4ssymzhomart/uki/actions/runs/37758275025)) | 2026-10-08 |
+
+## P.3 Windows CI
+
+WP 0.12. The CI job "Windows (unit tests, zips, installer, launch test)" runs on `windows-latest` (image `windows-2025-vs2026`, Windows Server 2025). Evidence run: [37758235170](https://github.com/k4ssymzhomart/uki/actions/runs/37758235170), PR #4 at `8aff5a5`, before its rebase onto `main`.
+
+| Check | Status | Evidence | Date |
+| --- | --- | --- | --- |
+| Text files check out with LF on Windows | pass | `.gitattributes`: `* text=auto eol=lf`, with images (the Figma SVGs included), fonts, models and archives marked binary. The first step finds no `w/crlf` file in `git ls-files --eol`; the index was already LF, so nothing renormalized | 2026-10-08 |
+| `pnpm check` on Windows (the whole check, not a subset) | pass | Biome; guards; turbo 22/22 tasks (desktop 43 files, 399 tests); functions, scripts and e2e type checks; functions-unit 58 tests; scripts 82 tests. The first run failed 2 receipt-PDF tests that expected `/` in a path built with `node:path`; the tests now expect the OS separator | 2026-10-08 |
+| NSIS installer and zip, x64 | pass | `Uki-0.0.0-x64.exe` (137 MB; `oneClick=false`, `perMachine=false`, so the install-mode page offers the current user) and `Uki-0.0.0-x64.zip` (183 MB, the unpacked app) | 2026-10-08 |
+| Launch test from the zip, in a new folder | pass | `.github/scripts/windows-launch-test.ps1`: unzipped into a fresh temp folder, then "Uki.exe still runs after 20 s with a window titled 'Üki' (4 Uki processes)"; stopped afterwards | 2026-10-08 |
+| Current-user install, then the launch test | pass | `Uki-0.0.0-x64.exe /S /currentuser` installed to `%LOCALAPPDATA%\Programs\Uki`, and the installed `Uki.exe` passed the same 20 s window check. The runner is an administrator, so starting without admin rights stays a lab check | 2026-10-08 |
+| The lab zip, never shipped | pass | `pnpm --filter desktop dist:lab` (`electron-vite build --mode lab` with `electron-builder.lab.yml`) gave `Uki-lab-0.0.0-x64.zip`, with the developer overlay (Ctrl+Shift+D) and Ctrl+Shift+Q on. The job checks that the lab renderer has the overlay chunk and the shipped renderer does not; `desktop-dist.yml` never uploads `release/lab` | 2026-10-08 |
+| Artifacts for the lab session | pass | `uki-windows-x64-zip`, `uki-windows-x64-lab-zip`, `uki-windows-x64-installer`, and `windows-launch-test` (screenshots of both launches), kept 14 days. To get them: the run's Summary page, Artifacts | 2026-10-08 |
+| P.9 in CI: a clean `pnpm db:reset` of every migration | pass | Stack job step "Clean db reset with every migration and the seed (P.9)", right after `supabase start`: `db reset: 13 of 13 migrations applied; seed: 5 exams`. pgTAP after it: 8 files, 404 tests | 2026-10-08 |
+| On a Windows 11 lab PC: the zip from a USB drive or profile folder without admin rights, SmartScreen, the NSIS install for the current user | pending | Lab session (P.5) with the artifacts above | |
