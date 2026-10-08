@@ -477,14 +477,27 @@ export function inviteAction(status: InviteStatus | "parsed"): "edit" | "fixEmai
   return "resend";
 }
 
-/** 0.3's tabs: All, Invited, Not opened. Opens are not tracked, so only seed rows are ever `opened`. */
-export const ROSTER_TABS = ["all", "invited", "notOpened"] as const;
+/**
+ * 0.3's tabs: All, Invited and Needs a fix (0.3a and 0.3b draw it; opens are not tracked, so 0.3's
+ * "Not opened" has nothing to count). Before the import, All is the valid rows of the file and Needs a
+ * fix its bad rows; after it, Needs a fix is the bounced and failed invites.
+ */
+export const ROSTER_TABS = ["all", "invited", "needsFix"] as const;
 export type RosterTab = (typeof ROSTER_TABS)[number];
 
-export function inTab(status: InviteStatus | "parsed", tab: RosterTab): boolean {
-  if (tab === "all") return true;
-  if (tab === "invited") return status === "sent" || status === "opened";
-  return status === "sent";
+/** Whether an invite needs 0.3b's Fix email. */
+export function needsFix(status: InviteStatus | "parsed"): boolean {
+  return status === "bounced" || status === "failed";
+}
+
+export function inTab(
+  row: { status: InviteStatus | "parsed"; fix: boolean },
+  tab: RosterTab,
+  beforeImport: boolean,
+): boolean {
+  if (tab === "needsFix") return row.fix;
+  if (tab === "invited") return row.status === "sent" || row.status === "opened";
+  return beforeImport ? !row.fix : true;
 }
 
 /** Search on 0.3: a part of the name or of the student number, without case. */

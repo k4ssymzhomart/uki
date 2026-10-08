@@ -8,6 +8,10 @@
     "en": "Exams / New exam",
     "ru": "Экзамены / Новый экзамен"
   },
+  "dashboard.wizard.breadcrumbExam": {
+    "en": "Exams / {title}",
+    "ru": "Экзамены / {title}"
+  },
   "dashboard.wizard.stepper.label": {
     "en": "Steps",
     "ru": "Шаги"
@@ -408,6 +412,10 @@
     "en": "Saved · {time}",
     "ru": "Сохранено · {time}"
   },
+  "dashboard.wizard.browser.title": {
+    "en": "Browser rules",
+    "ru": "Правила браузера"
+  },
   "dashboard.wizard.browser.next": {
     "en": "Next: students",
     "ru": "Далее: студенты"
@@ -519,10 +527,6 @@
   "dashboard.wizard.roster.next": {
     "en": "Next: review",
     "ru": "Далее: обзор"
-  },
-  "dashboard.wizard.roster.nextErrors": {
-    "en": "Next",
-    "ru": "Далее"
   },
   "dashboard.wizard.roster.empty.title": {
     "en": "Drop the dean’s office CSV here",
@@ -676,9 +680,9 @@
     "en": "Invited",
     "ru": "Приглашены"
   },
-  "dashboard.wizard.roster.tab.notOpened": {
-    "en": "Not opened · {count}",
-    "ru": "Не открыли · {count}"
+  "dashboard.wizard.roster.tab.needsFix": {
+    "en": "Needs a fix · {count}",
+    "ru": "Нужно исправить · {count}"
   },
   "dashboard.wizard.roster.search": {
     "en": "Find a student",

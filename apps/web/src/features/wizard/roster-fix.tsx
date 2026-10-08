@@ -9,6 +9,11 @@ import { problemKey, type RosterCells } from "./roster-csv.ts";
 
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
+/** "Fix Yerlan’s email": 0.3b names the student by the first name. */
+function firstName(fullName: string): string {
+  return fullName.trim().split(/\s+/)[0] ?? "";
+}
+
 /** The panel of 0.3b (Figma "Fix email popover" 160:13621): 380 wide, surface, Shadow/Float. */
 function FixPanel({
   title,
@@ -30,9 +35,9 @@ function FixPanel({
   return (
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Content
-        side="left"
-        align="start"
-        sideOffset={12}
+        side="top"
+        align="end"
+        sideOffset={8}
         collisionPadding={16}
         className="z-50 flex w-95 flex-col gap-3.5 rounded-md bg-surface p-4.5 text-fg-primary shadow-float inset-ring inset-ring-line-default outline-none"
       >
@@ -124,7 +129,7 @@ export function RowFix({ row, cells, issues, groups, onSave, trigger }: RowFixPr
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(cells[column]);
   const [invalid, setInvalid] = useState(false);
-  const name = cells.full_name;
+  const name = firstName(cells.full_name);
 
   const title = (() => {
     if (!issue) return t("roster.fix.titleEdit", { name });
@@ -245,7 +250,11 @@ export function InviteFix({ name, email, state, scheduled, onSave, trigger }: In
     >
       {trigger}
       <FixPanel
-        title={broken ? t("roster.fix.titleEmail", { name }) : t("roster.fix.titleEdit", { name })}
+        title={
+          broken
+            ? t("roster.fix.titleEmail", { name: firstName(name) })
+            : t("roster.fix.titleEdit", { name: firstName(name) })
+        }
         body={
           state === "bounced"
             ? t("roster.fix.bounced")

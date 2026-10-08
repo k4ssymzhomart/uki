@@ -90,6 +90,7 @@ export function BrowserView({ exam: initial }: BrowserViewProps) {
 
   return (
     <WizardFrame
+      examTitle={exam.title}
       step="browser"
       gap="lg"
       footer={draft.savedAt ? t("wizard.browser.footer", { time: timeOf(draft.savedAt) }) : null}

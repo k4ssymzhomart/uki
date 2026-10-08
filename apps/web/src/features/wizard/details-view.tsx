@@ -72,6 +72,7 @@ export function DetailsView({ exam: initial, settings, groups, courses, examDays
 
   return (
     <WizardFrame
+      examTitle={exam.title}
       step="details"
       footer={draft.savedAt ? t("wizard.details.footer", { time: timeOf(draft.savedAt) }) : null}
       error={draft.error ? t(`wizard.error.${draft.error}`) : null}

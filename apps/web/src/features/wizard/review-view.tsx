@@ -146,6 +146,7 @@ export function ReviewView({ exam, settings, groupCodes, rosterSize, assignments
 
   return (
     <WizardFrame
+      examTitle={exam.title}
       step="review"
       footer={
         waiting.length > 0

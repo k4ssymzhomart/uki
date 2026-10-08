@@ -6,6 +6,7 @@ import {
   Icon,
   type IconName,
   Popover,
+  PopoverAnchor,
   PopoverInfo,
   PopoverTrigger,
   Select,
@@ -103,6 +104,7 @@ export function ChecksView({ exam: initial, preview }: ChecksViewProps) {
 
   return (
     <WizardFrame
+      examTitle={exam.title}
       step="checks"
       gap="lg"
       footer={draft.savedAt ? t("wizard.checks.footer", { time: timeOf(draft.savedAt) }) : null}
@@ -164,29 +166,33 @@ export function ChecksView({ exam: initial, preview }: ChecksViewProps) {
           />
           <div className="flex w-full items-start gap-4 pt-1.5">
             <Popover>
-              <Select
-                className="flex-1"
-                label={
-                  <span className="inline-flex items-center gap-1.5">
-                    {t("wizard.checks.gazeThreshold.label")}
-                    <PopoverTrigger
-                      aria-label={t("wizard.checks.gazeThreshold.info")}
-                      className="inline-flex cursor-pointer items-center rounded-pill outline-none focus-visible:shadow-focus"
-                    >
-                      <Icon name="info" className="size-3.5" />
-                    </PopoverTrigger>
-                  </span>
-                }
-                helper={t("wizard.checks.gazeThreshold.helper")}
-                value={String(exam.checks.gaze_s)}
-                onValueChange={(value) => draft.update({ checks: { gaze_s: Number(value) } }, 0)}
-              >
-                {withCurrent<number>(GAZE_OPTIONS, exam.checks.gaze_s).map((seconds) => (
-                  <SelectItem key={seconds} value={String(seconds)}>
-                    {t("wizard.checks.gazeThreshold.value", { seconds })}
-                  </SelectItem>
-                ))}
-              </Select>
+              <PopoverAnchor asChild>
+                <div className="flex min-w-0 flex-1">
+                  <Select
+                    className="flex-1"
+                    label={
+                      <span className="inline-flex items-center gap-1.5">
+                        {t("wizard.checks.gazeThreshold.label")}
+                        <PopoverTrigger
+                          aria-label={t("wizard.checks.gazeThreshold.info")}
+                          className="inline-flex cursor-pointer items-center rounded-pill outline-none focus-visible:shadow-focus"
+                        >
+                          <Icon name="info" className="size-3.5" />
+                        </PopoverTrigger>
+                      </span>
+                    }
+                    helper={t("wizard.checks.gazeThreshold.helper")}
+                    value={String(exam.checks.gaze_s)}
+                    onValueChange={(value) => draft.update({ checks: { gaze_s: Number(value) } }, 0)}
+                  >
+                    {withCurrent<number>(GAZE_OPTIONS, exam.checks.gaze_s).map((seconds) => (
+                      <SelectItem key={seconds} value={String(seconds)}>
+                        {t("wizard.checks.gazeThreshold.value", { seconds })}
+                      </SelectItem>
+                    ))}
+                  </Select>
+                </div>
+              </PopoverAnchor>
               <PopoverInfo
                 side="top"
                 align="start"

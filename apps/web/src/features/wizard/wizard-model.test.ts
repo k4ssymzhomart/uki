@@ -20,6 +20,7 @@ import {
   matchesSearch,
   mergePatch,
   monthGrid,
+  needsFix,
   nextSeatRange,
   nextStep,
   normaliseHost,
@@ -285,10 +286,16 @@ describe("invites in the students table", () => {
   });
 
   it("filters by tab and by name or number", () => {
-    expect(inTab("sent", "notOpened")).toBe(true);
-    expect(inTab("opened", "notOpened")).toBe(false);
-    expect(inTab("opened", "invited")).toBe(true);
-    expect(inTab("pending", "invited")).toBe(false);
+    const row = (status: Parameters<typeof inTab>[0]["status"], fix = false) => ({ status, fix });
+    expect(inTab(row("bounced", true), "needsFix", false)).toBe(true);
+    expect(inTab(row("sent"), "needsFix", false)).toBe(false);
+    expect(inTab(row("opened"), "invited", false)).toBe(true);
+    expect(inTab(row("pending"), "invited", false)).toBe(false);
+    expect(inTab(row("bounced", true), "all", false)).toBe(true);
+    expect(inTab(row("parsed", true), "all", true)).toBe(false);
+    expect(inTab(row("parsed", true), "needsFix", true)).toBe(true);
+    expect(needsFix("failed")).toBe(true);
+    expect(needsFix("sent")).toBe(false);
     const madina = { full_name: "Madina Tulegenova", student_number: "20231187" };
     expect(matchesSearch(madina, "madina")).toBe(true);
     expect(matchesSearch(madina, "1187")).toBe(true);

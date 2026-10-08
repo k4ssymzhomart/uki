@@ -137,8 +137,8 @@ export async function assignProctors(input: unknown): Promise<AssignProctorsResu
 }
 
 /**
- * 0.3b: a new address for one student's invite. The invite goes back to `pending` (the trigger keeps
- * exam_students.invite_status in step); "Also fix it in the roster" writes it to the student too, for
+ * 0.3b: a new address for one student's invite. The invite goes back to `pending` (made when the
+ * roster has none yet; the trigger keeps exam_students.invite_status in step); "Also fix it in the roster" writes it to the student too, for
  * later exams. Once send-invites exists, a scheduled exam's invite is sent again to the new address.
  */
 export async function fixInviteEmail(
@@ -150,11 +150,32 @@ export async function fixInviteEmail(
     if (!parsed.success) return { ok: false, error: "invalid" };
     const { exam_id, student_id, email, roster } = parsed.data;
     const supabase = await createSupabaseServerClient();
-    const invite = await supabase
-      .from("invites")
-      .update({ email, state: "pending", error: null, provider_id: null, sent_at: null })
+    // The student must be on this exam's roster; their invite row may not exist yet (the Phase 0 seed
+    // has none), so the address is upserted with the student's language.
+    const onRoster = await supabase
+      .from("exam_students")
+      .select("student:students(locale)")
       .eq("exam_id", exam_id)
       .eq("student_id", student_id)
+      .maybeSingle();
+    if (onRoster.error) return { ok: false, error: codeOf(onRoster.error) };
+    const locale = onRoster.data?.student?.locale;
+    if (!locale) return { ok: false, error: "forbidden" };
+    const invite = await supabase
+      .from("invites")
+      .upsert(
+        {
+          exam_id,
+          student_id,
+          email,
+          locale,
+          state: "pending",
+          error: null,
+          provider_id: null,
+          sent_at: null,
+        },
+        { onConflict: "exam_id,student_id" },
+      )
       .select("id");
     if (invite.error) return { ok: false, error: codeOf(invite.error) };
     if ((invite.data ?? []).length === 0) return { ok: false, error: "forbidden" };

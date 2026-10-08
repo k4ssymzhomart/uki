@@ -1582,6 +1582,7 @@
     "wizard": {
       "back": "Back",
       "breadcrumb": "Exams / New exam",
+      "breadcrumbExam": "Exams / {title}",
       "browser": {
         "footer": "Saved · {time}",
         "link": {
@@ -1630,7 +1631,8 @@
           "remove": "Remove {host}",
           "removeCalculator": "Turn off the calculator",
           "title": "Open during the exam"
-        }
+        },
+        "title": "Browser rules"
       },
       "cancel": "Cancel",
       "checks": {
@@ -1948,7 +1950,6 @@
           "sent": "Sent · not opened"
         },
         "next": "Next: review",
-        "nextErrors": "Next",
         "none": "No students match.",
         "problem": {
           "email_empty": "Email is empty",
@@ -1996,7 +1997,7 @@
           "all": "All",
           "invited": "Invited",
           "label": "Filter students",
-          "notOpened": "Not opened · {count}"
+          "needsFix": "Needs a fix · {count}"
         }
       },
       "save": "Save",

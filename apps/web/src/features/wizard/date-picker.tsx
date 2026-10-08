@@ -25,8 +25,8 @@ export type DatePickerProps = {
 /**
  * 0.4's "Date and start" field with Popover/Date picker (Figma 147:2727) under it: the month in Asia/
  * Almaty, Monday first; days before today are disabled, today is outlined, the chosen day is ink and
- * days with another exam carry a dot. The footer shows the chosen day with its start time, which can be
- * typed; Apply saves both.
+ * days with another exam carry a dot. The footer shows the chosen day with its start time, typed as
+ * 24-hour HH:MM (a native time field would show AM and PM in some browsers); Apply saves both.
  */
 export function DatePicker({ label, value, examDays, nowMs, onApply }: DatePickerProps) {
   const t = useTranslations("dashboard.wizard");
@@ -150,12 +150,14 @@ export function DatePicker({ label, value, examDays, nowMs, onApply }: DatePicke
                 <span>{dayOf(dayInstant(day), locale)}</span>
                 <span aria-hidden="true">·</span>
                 <input
-                  type="time"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={5}
                   aria-label={t("picker.time")}
+                  aria-invalid={applied === null || undefined}
                   value={time}
-                  step={300}
-                  onChange={(event) => setTime(event.target.value)}
-                  className="rounded-sm bg-transparent type-ui-label outline-none focus-visible:shadow-focus"
+                  onChange={(event) => setTime(event.target.value.replace(/[^\d:]/g, ""))}
+                  className="w-11 rounded-sm bg-transparent type-ui-label outline-none focus-visible:shadow-focus aria-invalid:text-fg-danger"
                 />
               </p>
               <Button

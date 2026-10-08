@@ -38,6 +38,7 @@ import {
   inviteAction,
   inviteChip,
   matchesSearch,
+  needsFix,
   nextStep,
   previousStep,
   proctorOfSeat,
@@ -219,6 +220,7 @@ export function RosterView({
     };
     return (
       <WizardFrame
+        examTitle={exam.title}
         step="roster"
         footer={t("roster.footerErrors", { count: bad.length })}
         actions={
@@ -226,7 +228,7 @@ export function RosterView({
             <Button variant="ghost" onClick={() => go(previousStep("roster", exam.mode))}>
               {t("back")}
             </Button>
-            <Button disabled>{t("roster.nextErrors")}</Button>
+            <Button disabled>{t("roster.next")}</Button>
           </>
         }
       >
@@ -305,22 +307,26 @@ export function RosterView({
         </section>
         <StudentsCard
           title={t("roster.students.titleValid", { count: validCount })}
-          tabs={false}
-          rows={file.check.validRows.map((row) => {
-            const cells = file.rows[row - 1] as RosterCells;
+          beforeImport
+          fixCount={bad.length}
+          rows={file.rows.map((cells, index) => {
+            const row = index + 1;
+            const issues = file.check.issues.filter((issue) => issue.row === row);
+            const seat = file.check.validRows.indexOf(row) + 1;
             return {
               key: `row-${row}`,
               name: cells.full_name,
               number: cells.student_number,
               group: cells.group,
               detail: null,
-              proctor: proctorOfSeat(assignments, file.check.validRows.indexOf(row) + 1)?.full_name ?? null,
+              proctor: seat > 0 ? (proctorOfSeat(assignments, seat)?.full_name ?? null) : null,
               status: "parsed" as const,
+              fix: issues.length > 0,
               action: (
                 <RowFix
                   row={row}
                   cells={cells}
-                  issues={[]}
+                  issues={issues}
                   groups={codes}
                   onSave={(changed) => settle(file.name, replaceRow(file.rows, row, changed))}
                   trigger={<RowActionTrigger label={t("roster.action.edit")} />}
@@ -343,6 +349,7 @@ export function RosterView({
 
   return (
     <WizardFrame
+      examTitle={exam.title}
       step="roster"
       footer={t("roster.footer")}
       error={
@@ -432,8 +439,8 @@ export function RosterView({
       {rosterSize > 0 ? (
         <StudentsCard
           title={t("roster.students.title", { count: rosterSize })}
-          tabs
-          notOpened={roster.filter((entry) => entry.invite_status === "sent").length}
+          beforeImport={false}
+          fixCount={roster.filter((entry) => needsFix(entry.invite?.state ?? entry.invite_status)).length}
           rows={roster.map((entry) => {
             const status = entry.invite?.state ?? entry.invite_status;
             const shown = entry.invite_status === "opened" ? "opened" : status;
@@ -450,6 +457,7 @@ export function RosterView({
                   : null,
               proctor: proctorOfSeat(assignments, entry.seat)?.full_name ?? null,
               status: shown,
+              fix: needsFix(shown),
               action:
                 action === "resend" ? (
                   <RowActionButton
@@ -500,14 +508,16 @@ type StudentRow = {
   detail: string | null;
   proctor: string | null;
   status: Parameters<typeof inviteChip>[0];
+  /** The row needs 0.3a's Edit (a bad row of the file) or 0.3b's Fix email (a bounced invite). */
+  fix: boolean;
   action: ReactNode;
 };
 
 /** 0.3's Students card (55:2857): the title, the filter tabs, Find a student and the Row/Lobby table. */
 function StudentsCard({
   title,
-  tabs,
-  notOpened = 0,
+  beforeImport,
+  fixCount,
   rows,
   tab,
   onTab,
@@ -515,8 +525,9 @@ function StudentsCard({
   onQuery,
 }: {
   title: string;
-  tabs: boolean;
-  notOpened?: number;
+  /** 0.3a: the rows are the file's, before anything is written. */
+  beforeImport: boolean;
+  fixCount: number;
   rows: StudentRow[];
   tab: RosterTab;
   onTab: (tab: RosterTab) => void;
@@ -527,7 +538,7 @@ function StudentsCard({
   const id = useId();
   const visible = rows.filter(
     (row) =>
-      (!tabs || inTab(row.status, tab)) &&
+      inTab(row, tab, beforeImport) &&
       matchesSearch({ full_name: row.name, student_number: row.number }, query),
   );
   return (
@@ -539,22 +550,18 @@ function StudentsCard({
         <h2 id={`${id}-title`} className="type-card-title">
           {title}
         </h2>
-        {tabs ? (
-          <TabGroup
-            variant="plain"
-            value={tab}
-            onValueChange={(value) => onTab(value as RosterTab)}
-            aria-label={t("roster.tab.label")}
-          >
-            {ROSTER_TABS.map((item) => (
-              <Tab key={item} value={item}>
-                {item === "notOpened"
-                  ? t("roster.tab.notOpened", { count: notOpened })
-                  : t(`roster.tab.${item}`)}
-              </Tab>
-            ))}
-          </TabGroup>
-        ) : null}
+        <TabGroup
+          variant="plain"
+          value={tab}
+          onValueChange={(value) => onTab(value as RosterTab)}
+          aria-label={t("roster.tab.label")}
+        >
+          {ROSTER_TABS.map((item) => (
+            <Tab key={item} value={item}>
+              {item === "needsFix" ? t("roster.tab.needsFix", { count: fixCount }) : t(`roster.tab.${item}`)}
+            </Tab>
+          ))}
+        </TabGroup>
         <div className="flex-1" />
         <SearchField
           label={t("roster.search")}
