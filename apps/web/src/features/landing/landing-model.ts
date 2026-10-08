@@ -13,7 +13,10 @@ export function homeRedirect(lookup: StaffLookup): "/overview" | null {
 
 /** Section anchors on `/`, shared by the header, the footer and the sections themselves. */
 export const SECTION = {
+  /** What Üki does: the pillars, on both layouts. */
   product: "product",
+  /** The three feature rows, 1024 and up only. */
+  liveWall: "live-wall",
   lock: "lock",
   review: "review",
   howItWorks: "how-it-works",

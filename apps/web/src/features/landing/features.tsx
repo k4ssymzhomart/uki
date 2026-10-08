@@ -4,7 +4,7 @@ import { SECTION } from "./landing-model.ts";
 import { ArrowLink, CheckPoint, cx, Overline } from "./landing-parts.tsx";
 
 const FEATURES = [
-  { id: "liveWall", anchor: SECTION.product, art: "/landing/feature-live-wall.webp", artFirst: false },
+  { id: "liveWall", anchor: SECTION.liveWall, art: "/landing/feature-live-wall.webp", artFirst: false },
   { id: "lock", anchor: SECTION.lock, art: "/landing/feature-lock.webp", artFirst: true },
   { id: "review", anchor: SECTION.review, art: "/landing/feature-review.webp", artFirst: false },
 ] as const;
@@ -17,17 +17,10 @@ const FEATURES = [
 export async function Features() {
   const t = await getTranslations("dashboard.landing.features");
   return (
-    <section
-      id={SECTION.product}
-      className="hidden scroll-mt-6 bg-canvas px-16 pt-10 pb-35 text-fg-primary lg:block"
-    >
+    <section className="hidden bg-canvas px-16 pt-10 pb-35 text-fg-primary lg:block">
       <div className="flex flex-col gap-30">
         {FEATURES.map((feature) => (
-          <article
-            key={feature.id}
-            id={feature.anchor === SECTION.product ? undefined : feature.anchor}
-            className="flex scroll-mt-6 items-center gap-18"
-          >
+          <article key={feature.id} id={feature.anchor} className="flex scroll-mt-6 items-center gap-18">
             <div
               className={cx("flex w-120 shrink-0 flex-col items-start gap-5", feature.artFirst && "order-2")}
             >

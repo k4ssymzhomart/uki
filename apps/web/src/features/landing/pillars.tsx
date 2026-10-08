@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
+import { SECTION } from "./landing-model.ts";
 import { Overline } from "./landing-parts.tsx";
 
 const PILLARS = [
@@ -15,7 +16,10 @@ const PILLARS = [
 export async function Pillars() {
   const t = await getTranslations("dashboard.landing.pillars");
   return (
-    <section className="bg-canvas px-6 py-14 text-fg-primary lg:px-16 lg:py-32">
+    <section
+      id={SECTION.product}
+      className="scroll-mt-6 bg-canvas px-6 py-14 text-fg-primary lg:px-16 lg:py-32"
+    >
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:gap-12">
         <div className="flex flex-1 flex-col gap-4">
           <Overline className="lg:text-fg-primary lg:opacity-55">{t("overline")}</Overline>

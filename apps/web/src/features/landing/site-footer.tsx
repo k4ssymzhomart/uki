@@ -14,7 +14,7 @@ const COLUMNS = [
     links: [
       { key: "app", href: sectionHref(SECTION.howItWorks) },
       { key: "lock", href: sectionHref(SECTION.lock) },
-      { key: "liveWall", href: sectionHref(SECTION.product) },
+      { key: "liveWall", href: sectionHref(SECTION.liveWall) },
       { key: "reports", href: sectionHref(SECTION.review) },
     ],
   },
