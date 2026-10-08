@@ -43,6 +43,23 @@ Phase 1: two Vault secrets let the database call Edge Functions through `pg_net`
 
 Check: `select name from vault.secrets` in the SQL editor shows both names (it never shows the values).
 
+Phase 1: the invite email (`send-invites`, WP 1.4) needs these function secrets. Set them yourself; never paste the key into chat:
+
+```sh
+supabase secrets set --project-ref <ref> RESEND_API_KEY=<your Resend API key> UKI_EMAIL_SINK=<your inbox> \
+  UKI_WEB_URL=https://<web>.vercel.app
+```
+
+| Secret | What it does |
+| --- | --- |
+| `RESEND_API_KEY` | Required. Without it `send-invites` sends nothing and answers 500 |
+| `UKI_EMAIL_SINK` | Every invite, the test invite included, goes to this inbox instead, still written for its student. Keep it set for rehearsals and the demo: Resend's test sender delivers only to your own address |
+| `UKI_WEB_URL` | The dashboard's address; the email's three images are its `/email/*.png`. Without it the email has no images |
+| `UKI_DOWNLOAD_URL` | Optional: where the download button points. Default: the repository's latest release |
+| `UKI_EMAIL_FROM` | Optional: the sender, `Üki <onboarding@resend.dev>` until a domain is verified. With a verified domain, leave Resend's open and click tracking off |
+
+Check: Send a test invite on 0.5 (or `send-invites` with `{ "exam_id": "…", "test": true }`) and the email reaches the sink.
+
 ## 3. Load the seed once
 
 `supabase/seed.sql` builds the KRU world relative to the time you load it. Load it **once**; a second run fails on duplicate keys (use `pnpm demo:reset` afterwards, never the seed again).
