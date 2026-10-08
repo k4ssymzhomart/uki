@@ -145,9 +145,19 @@ interface Frame {
 }
 
 interface Reply {
+  /** When Playwright reported the finished request (laptop ms), the clock every arrival uses. */
   at: number;
   via: Exclude<CommandPath, "broadcast">;
   body: string;
+  /** Chromium's timing: when the request left (laptop ms) and how long until its last byte. */
+  startedAt: number | null;
+  durationMs: number | null;
+}
+
+/** One ingest call, from Chromium's timing. */
+export interface IngestCall {
+  startedAt: number;
+  durationMs: number;
 }
 
 /** Phoenix's v2 text frame: [join_ref, ref, topic, event, payload]. */
@@ -163,10 +173,11 @@ function phoenix(text: string): PhoenixFrame | null {
   }
 }
 
-/** When the response's last byte arrived (laptop ms), from Chromium's timing when it has one. */
-function finishedAt(request: Request): number {
+function requestTiming(request: Request): { startedAt: number | null; durationMs: number | null } {
   const timing = request.timing();
-  return timing.startTime > 0 && timing.responseEnd > 0 ? timing.startTime + timing.responseEnd : Date.now();
+  return timing.startTime > 0 && timing.responseEnd > 0
+    ? { startedAt: timing.startTime, durationMs: timing.responseEnd }
+    : { startedAt: null, durationMs: null };
 }
 
 /**
@@ -189,13 +200,16 @@ export class WindowNetwork {
           ? "catch_up"
           : null;
       if (!via) return;
-      const at = finishedAt(request);
+      // Stamped here, like the Realtime frames, so arrivals compare on one clock. Playwright hears of
+      // each a few ms after the window does (more on a loaded host).
+      const at = Date.now();
+      const timing = requestTiming(request);
       const read = request
         .response()
         .then((response) => response?.text() ?? "")
         .then(
           (body) => {
-            this.replies.push({ at, via, body });
+            this.replies.push({ at, via, body, ...timing });
           },
           () => {},
         )
@@ -239,6 +253,38 @@ export class WindowNetwork {
       if (reply.body.includes(commandId)) found.push({ via: reply.via, at: reply.at });
     }
     return found.sort((a, b) => a.at - b.at);
+  }
+
+  /** Ingest calls that left inside a window, oldest first, from Chromium's timing. */
+  ingestCallsBetween(from: number, to: number): IngestCall[] {
+    const calls: IngestCall[] = [];
+    for (const reply of this.replies) {
+      if (reply.via !== "ingest" || reply.startedAt === null || reply.durationMs === null) continue;
+      if (reply.startedAt >= from && reply.startedAt <= to)
+        calls.push({ startedAt: reply.startedAt, durationMs: reply.durationMs });
+    }
+    return calls.sort((a, b) => a.startedAt - b.startedAt);
+  }
+
+  /** Ms left of an ingest call in flight at `at` (laptop ms), from Chromium's timing; 0 when none. */
+  ingestLeftInFlightAt(at: number): number {
+    let left = 0;
+    for (const reply of this.replies) {
+      if (reply.via !== "ingest" || reply.startedAt === null || reply.durationMs === null) continue;
+      const end = reply.startedAt + reply.durationMs;
+      if (reply.startedAt <= at && end > at) left = Math.max(left, end - at);
+    }
+    return left;
+  }
+
+  /** The ingest call whose reply first carried a command, from Chromium's timing. */
+  carryingIngestCall(commandId: string): IngestCall | null {
+    const reply = this.replies
+      .filter((r) => r.via === "ingest" && r.body.includes(commandId))
+      .sort((a, b) => a.at - b.at)[0];
+    return reply && reply.startedAt !== null && reply.durationMs !== null
+      ? { startedAt: reply.startedAt, durationMs: reply.durationMs }
+      : null;
   }
 
   /** Ingest replies (laptop ms) inside a window, for the heartbeat's spacing. */
