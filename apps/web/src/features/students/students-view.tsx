@@ -112,7 +112,7 @@ export function StudentsView({ rows, flaggedThisTerm, scopeName, initialFilters 
           aria-labelledby="students-title"
           className="overflow-clip rounded-card border border-line-default bg-surface"
         >
-          <div className="flex min-h-19 items-center gap-3 py-4 pr-4 pl-5">
+          <div className="flex min-h-19 flex-wrap items-center gap-3 py-4 pr-4 pl-5">
             <h2 id="students-title" className="type-card-title">
               {t("table.title")}
             </h2>
@@ -150,7 +150,9 @@ export function StudentsView({ rows, flaggedThisTerm, scopeName, initialFilters 
               value={filters.year}
               onChange={(year) => update({ year })}
             />
+            {/* The search is 300 wide when there is room and gives way first; below 160 it wraps to the right. */}
             <SearchField
+              className="ml-auto min-w-40 max-w-75 shrink basis-40 grow-100"
               label={t("search.label")}
               placeholder={t("search.placeholder")}
               value={filters.query}

@@ -42,7 +42,7 @@ export function FilterMenu<T extends string | number>({
         )}
       >
         <span className="min-w-0 truncate">{chosen === undefined ? allLabel : valueLabel(chosen)}</span>
-        <Icon name="chevron-down" className="size-4.5" />
+        <Icon name="chevron-down" className="size-4.5 shrink-0" />
       </MenuTrigger>
       <MenuContent align="end" className="max-h-96 overflow-y-auto">
         {facets.map((facet) => (
