@@ -1,0 +1,525 @@
+{
+  "date": "2026-10-08T13:02:25.470Z",
+  "container": "supabase_realtime_uki",
+  "rounds": [
+    {
+      "round": 1,
+      "variant": "stop",
+      "dockerDoneAfterMs": 6274,
+      "realtimeDownAfterMs": 1041,
+      "appSocketClosedAfterMs": 28,
+      "pauseSentAfterMs": 12080,
+      "channelJoinedWhenPauseSent": false,
+      "pauseShownAfterMs": 22124,
+      "realtimeAnsweredWhenPauseShown": false,
+      "realtimeUpAfterMs": 33270,
+      "channelRejoinedAfterMs": 44026,
+      "resumeSentAfterMs": 22170,
+      "resumeShownAfterMs": 32146,
+      "realtimeAnsweredWhenResumeShown": false,
+      "pause": {
+        "id": "9c86b093-d76c-4870-938c-f1bb5a9b9ba3",
+        "sentAt": 1791464564532,
+        "functionMs": 57,
+        "shownAfterMs": 10044,
+        "serverMs": 105,
+        "via": "ingest",
+        "carriers": [
+          {
+            "via": "ingest",
+            "afterMs": 10042
+          }
+        ],
+        "sinceLastIngestMs": 15,
+        "ingestCall": {
+          "startedAfterMs": 9995,
+          "durationMs": 48
+        },
+        "realtimeRunningWhenShown": false
+      },
+      "resume": {
+        "id": "6e5427ae-c580-4e77-9692-22bbc351bb3b",
+        "sentAt": 1791464574622,
+        "functionMs": 22,
+        "shownAfterMs": 9976,
+        "serverMs": 40,
+        "via": "ingest",
+        "carriers": [
+          {
+            "via": "ingest",
+            "afterMs": 9972
+          }
+        ],
+        "sinceLastIngestMs": 48,
+        "ingestCall": {
+          "startedAfterMs": 9955,
+          "durationMs": 18
+        },
+        "realtimeRunningWhenShown": false
+      },
+      "ingest": {
+        "calls": 6,
+        "maxIdleMs": 10006,
+        "maxCallMs": 48,
+        "log": [
+          [
+            2004,
+            17,
+            200
+          ],
+          [
+            12026,
+            43,
+            200
+          ],
+          [
+            22075,
+            48,
+            200
+          ],
+          [
+            32125,
+            18,
+            200
+          ],
+          [
+            42147,
+            31,
+            200
+          ],
+          [
+            52179,
+            30,
+            200
+          ]
+        ]
+      },
+      "pauseAckedOnServer": true,
+      "heldOn21ForMs": 12000
+    },
+    {
+      "round": 2,
+      "variant": "restart",
+      "dockerDoneAfterMs": 6268,
+      "realtimeDownAfterMs": 3061,
+      "appSocketClosedAfterMs": 28,
+      "pauseSentAfterMs": 3102,
+      "channelJoinedWhenPauseSent": false,
+      "pauseShownAfterMs": 8074,
+      "realtimeAnsweredWhenPauseShown": true,
+      "realtimeUpAfterMs": 7929,
+      "channelRejoinedAfterMs": 8060,
+      "resumeSentAfterMs": 8104,
+      "resumeShownAfterMs": 8118,
+      "realtimeAnsweredWhenResumeShown": true,
+      "pause": {
+        "id": "f38ea1b5-23d0-4bc4-ad18-d91e1d73e5e9",
+        "sentAt": 1791464611811,
+        "functionMs": 30,
+        "shownAfterMs": 4972,
+        "serverMs": 30,
+        "via": "catch_up",
+        "carriers": [
+          {
+            "via": "catch_up",
+            "afterMs": 4970
+          }
+        ],
+        "sinceLastIngestMs": 3076,
+        "ingestCall": null,
+        "realtimeRunningWhenShown": true
+      },
+      "resume": {
+        "id": "7b6c563a-21df-48b8-b005-5f4d163c382a",
+        "sentAt": 1791464616813,
+        "functionMs": 14,
+        "shownAfterMs": 14,
+        "serverMs": 14,
+        "via": "broadcast",
+        "carriers": [
+          {
+            "via": "broadcast",
+            "afterMs": 13
+          }
+        ],
+        "sinceLastIngestMs": 8078,
+        "ingestCall": null,
+        "realtimeRunningWhenShown": true
+      },
+      "ingest": {
+        "calls": 3,
+        "maxIdleMs": 10006,
+        "maxCallMs": 44,
+        "log": [
+          [
+            8,
+            19,
+            200
+          ],
+          [
+            10032,
+            44,
+            200
+          ],
+          [
+            20082,
+            34,
+            200
+          ]
+        ]
+      },
+      "pauseAckedOnServer": true,
+      "heldOn21ForMs": 12000
+    },
+    {
+      "round": 3,
+      "variant": "reconnect",
+      "dockerDoneAfterMs": 6331,
+      "realtimeDownAfterMs": 1047,
+      "appSocketClosedAfterMs": 37,
+      "pauseSentAfterMs": 8223,
+      "channelJoinedWhenPauseSent": false,
+      "pauseShownAfterMs": 10049,
+      "realtimeAnsweredWhenPauseShown": true,
+      "realtimeUpAfterMs": 8190,
+      "channelRejoinedAfterMs": 13101,
+      "resumeSentAfterMs": 13123,
+      "resumeShownAfterMs": 13139,
+      "realtimeAnsweredWhenResumeShown": true,
+      "pause": {
+        "id": "6d70cb04-7c54-49fe-9863-451f315ef4c7",
+        "sentAt": 1791464637341,
+        "functionMs": 31,
+        "shownAfterMs": 1826,
+        "serverMs": 45,
+        "via": "ingest",
+        "carriers": [
+          {
+            "via": "ingest",
+            "afterMs": 1825
+          }
+        ],
+        "sinceLastIngestMs": 8192,
+        "ingestCall": {
+          "startedAfterMs": 1812,
+          "durationMs": 14
+        },
+        "realtimeRunningWhenShown": true
+      },
+      "resume": {
+        "id": "62a9af8d-dd1f-4e11-80fd-b1bc37c7f35d",
+        "sentAt": 1791464642241,
+        "functionMs": 15,
+        "shownAfterMs": 16,
+        "serverMs": 15,
+        "via": "broadcast",
+        "carriers": [
+          {
+            "via": "broadcast",
+            "afterMs": 16
+          }
+        ],
+        "sinceLastIngestMs": 3075,
+        "ingestCall": null,
+        "realtimeRunningWhenShown": true
+      },
+      "ingest": {
+        "calls": 3,
+        "maxIdleMs": 10004,
+        "maxCallMs": 30,
+        "log": [
+          [
+            15,
+            16,
+            200
+          ],
+          [
+            10035,
+            14,
+            200
+          ],
+          [
+            20050,
+            30,
+            200
+          ]
+        ]
+      },
+      "pauseAckedOnServer": true,
+      "heldOn21ForMs": 12000
+    },
+    {
+      "round": 4,
+      "variant": "stop",
+      "dockerDoneAfterMs": 6235,
+      "realtimeDownAfterMs": 1055,
+      "appSocketClosedAfterMs": 25,
+      "pauseSentAfterMs": 10067,
+      "channelJoinedWhenPauseSent": false,
+      "pauseShownAfterMs": 20087,
+      "realtimeAnsweredWhenPauseShown": false,
+      "realtimeUpAfterMs": 32165,
+      "channelRejoinedAfterMs": 43842,
+      "resumeSentAfterMs": 20120,
+      "resumeShownAfterMs": 30115,
+      "realtimeAnsweredWhenResumeShown": false,
+      "pause": {
+        "id": "39ee427c-fdb2-4021-af65-4ae56f100c70",
+        "sentAt": 1791464664589,
+        "functionMs": 17,
+        "shownAfterMs": 10020,
+        "serverMs": 47,
+        "via": "ingest",
+        "carriers": [
+          {
+            "via": "ingest",
+            "afterMs": 10018
+          }
+        ],
+        "sinceLastIngestMs": 15,
+        "ingestCall": {
+          "startedAfterMs": 9990,
+          "durationMs": 30
+        },
+        "realtimeRunningWhenShown": false
+      },
+      "resume": {
+        "id": "2f1f5bb3-7320-4674-ae45-f8a6baaf262c",
+        "sentAt": 1791464674642,
+        "functionMs": 10,
+        "shownAfterMs": 9995,
+        "serverMs": 31,
+        "via": "ingest",
+        "carriers": [
+          {
+            "via": "ingest",
+            "afterMs": 9990
+          }
+        ],
+        "sinceLastIngestMs": 35,
+        "ingestCall": {
+          "startedAfterMs": 9971,
+          "durationMs": 21
+        },
+        "realtimeRunningWhenShown": false
+      },
+      "ingest": {
+        "calls": 6,
+        "maxIdleMs": 10005,
+        "maxCallMs": 30,
+        "log": [
+          [
+            11,
+            9,
+            200
+          ],
+          [
+            10025,
+            29,
+            200
+          ],
+          [
+            20057,
+            30,
+            200
+          ],
+          [
+            30091,
+            21,
+            200
+          ],
+          [
+            40115,
+            26,
+            200
+          ],
+          [
+            50144,
+            18,
+            200
+          ]
+        ]
+      },
+      "pauseAckedOnServer": true,
+      "heldOn21ForMs": 12000
+    },
+    {
+      "round": 5,
+      "variant": "restart",
+      "dockerDoneAfterMs": 6287,
+      "realtimeDownAfterMs": 1146,
+      "appSocketClosedAfterMs": 33,
+      "pauseSentAfterMs": 1192,
+      "channelJoinedWhenPauseSent": false,
+      "pauseShownAfterMs": 8076,
+      "realtimeAnsweredWhenPauseShown": false,
+      "realtimeUpAfterMs": 8085,
+      "channelRejoinedAfterMs": 8061,
+      "resumeSentAfterMs": 8109,
+      "resumeShownAfterMs": 8120,
+      "realtimeAnsweredWhenResumeShown": true,
+      "pause": {
+        "id": "e77bfd8e-fe79-41ff-af55-62a489ad0a32",
+        "sentAt": 1791464711835,
+        "functionMs": 38,
+        "shownAfterMs": 6884,
+        "serverMs": 38,
+        "via": "catch_up",
+        "carriers": [
+          {
+            "via": "catch_up",
+            "afterMs": 6881
+          }
+        ],
+        "sinceLastIngestMs": 1160,
+        "ingestCall": null,
+        "realtimeRunningWhenShown": true
+      },
+      "resume": {
+        "id": "4048d4dd-8a1c-47a9-aa06-fec7adefc788",
+        "sentAt": 1791464718752,
+        "functionMs": 11,
+        "shownAfterMs": 11,
+        "serverMs": 11,
+        "via": "broadcast",
+        "carriers": [
+          {
+            "via": "broadcast",
+            "afterMs": 10
+          }
+        ],
+        "sinceLastIngestMs": 8077,
+        "ingestCall": null,
+        "realtimeRunningWhenShown": true
+      },
+      "ingest": {
+        "calls": 3,
+        "maxIdleMs": 10013,
+        "maxCallMs": 37,
+        "log": [
+          [
+            7,
+            26,
+            200
+          ],
+          [
+            10037,
+            37,
+            200
+          ],
+          [
+            20087,
+            28,
+            200
+          ]
+        ]
+      },
+      "pauseAckedOnServer": true,
+      "heldOn21ForMs": 12000
+    },
+    {
+      "round": 6,
+      "variant": "reconnect",
+      "dockerDoneAfterMs": 6277,
+      "realtimeDownAfterMs": 1054,
+      "appSocketClosedAfterMs": 27,
+      "pauseSentAfterMs": 8120,
+      "channelJoinedWhenPauseSent": true,
+      "pauseShownAfterMs": 8144,
+      "realtimeAnsweredWhenPauseShown": true,
+      "realtimeUpAfterMs": 8090,
+      "channelRejoinedAfterMs": 8056,
+      "resumeSentAfterMs": 8183,
+      "resumeShownAfterMs": 8193,
+      "realtimeAnsweredWhenResumeShown": true,
+      "pause": {
+        "id": "bd4eb6fc-a191-4d26-8476-df40abd055a3",
+        "sentAt": 1791464739169,
+        "functionMs": 22,
+        "shownAfterMs": 24,
+        "serverMs": 22,
+        "via": "broadcast",
+        "carriers": [
+          {
+            "via": "broadcast",
+            "afterMs": 20
+          }
+        ],
+        "sinceLastIngestMs": 8095,
+        "ingestCall": null,
+        "realtimeRunningWhenShown": true
+      },
+      "resume": {
+        "id": "be770ce4-1a13-4320-a728-7c910aa5ed7a",
+        "sentAt": 1791464739232,
+        "functionMs": 10,
+        "shownAfterMs": 10,
+        "serverMs": 10,
+        "via": "broadcast",
+        "carriers": [
+          {
+            "via": "broadcast",
+            "afterMs": 9
+          }
+        ],
+        "sinceLastIngestMs": 8158,
+        "ingestCall": null,
+        "realtimeRunningWhenShown": true
+      },
+      "ingest": {
+        "calls": 2,
+        "maxIdleMs": 10013,
+        "maxCallMs": 271,
+        "log": [
+          [
+            7,
+            18,
+            200
+          ],
+          [
+            10038,
+            271,
+            200
+          ]
+        ]
+      },
+      "pauseAckedOnServer": true,
+      "heldOn21ForMs": 12000
+    }
+  ],
+  "start": {
+    "startToScreenMs": 28
+  },
+  "finalCheck": {
+    "serverCommands": [
+      "start",
+      "pause",
+      "resume",
+      "pause",
+      "resume",
+      "pause",
+      "resume",
+      "pause",
+      "resume",
+      "pause",
+      "resume",
+      "pause",
+      "resume"
+    ],
+    "appliedByApp": 13,
+    "appliedIdsUnique": true,
+    "sessionState": "writing",
+    "frame": "2.1"
+  },
+  "realtimeRunningAfterRun": true,
+  "loadBefore": [
+    3.44,
+    2.73,
+    3.37
+  ],
+  "loadAfter": [
+    1.89,
+    2.47,
+    3.13
+  ]
+}

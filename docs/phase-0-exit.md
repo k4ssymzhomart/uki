@@ -27,7 +27,7 @@ Everything marked pass below ran on one shared development Mac (Apple M4, 16 GB,
 | 0.4 | A command reaches the session channel; a still uploads and confirms | Agent | pass | Integration tests: command broadcast, group scope, add_time, 403 for another proctor; upload via signed URL, frames confirm, stills signed URL + audit row | 2026-10-07 |
 | 0.4 | `pnpm test:integration` after the hardening changes | Agent | pass | Full run after the ingest change: 14 files, 78 tests, with `functions serve`. After the review repairs only `ingest.test.ts` (8/8) and `stills.test.ts` (6/6) ran, each alone; the first attempt failed in setup on an Auth 504 under load | 2026-10-07 |
 | 0.4 | A quiet heartbeat writes nothing, and one ingest call is one transaction | Agent | pass | Per-call counters, 2 × 50 calls per kind. A quiet heartbeat before: 1 row version, 1 broadcast row, 2 transaction ids, about 0.75 KB of WAL; after: none. Function time p50 went from 8.6 and 9.0 ms to 5.9 and 7.9 ms (2 rounds of 120 sequential heartbeats) | 2026-10-07 |
-| 0.4 | A command whose broadcast is lost reaches the app through the ingest reply | Agent | pending | Unit and runtime tests pass: the command applies once, and the test fails with delivery turned off. Live check not run: restart `supabase_realtime_uki` during an exam, pause from the wall, and expect 2.1c within about 10 s, applied once | |
+| 0.4 | A command whose broadcast is lost reaches the app through the ingest reply | Agent | pass | P.10 below: `pnpm --filter desktop e2e:realtime` stopped and restarted `supabase_realtime_uki` during an exam. With Realtime stopped, the pause and the resume each came with an ingest reply, 2.1c after 10.0 to 10.3 s when the pause left right after a heartbeat; each command applied once. A 12 s heartbeat seen once under load is fixed | 2026-10-08 |
 | 0.5 | Detection rules fire for every Tuning moment; 5 minutes of writing raise no flag | Agent | pass | `pnpm --filter @uki/detection test`: 103 tests replaying traces | 2026-10-07 |
 | 0.5 | Models ship with a SHA-256 manifest; nothing from a CDN | Agent | pass | `pnpm --filter @uki/detection models` + `models:verify`: 15 files, 55.9 MB | 2026-10-07 |
 | 0.5 | A held phone scores at or above the 0.85 `phone_score` default | Agent | fail | Desktop e2e, synthetic camera showing the brand kit's held-phone picture: EfficientDet-Lite0 int8 scored 0.77 on every check, so the default never fires `phone.detected`. The e2e lowers its exam's `phone_score` to 0.7. Not a real phone; tune on the laptops (see decisions, "Detection thresholds") | 2026-10-07 |
@@ -273,3 +273,56 @@ WP 0.13: the Windows keyboard hook through Koffi, the blur rule on macOS, and `d
 - Ctrl+Alt+Del, Win+L and Ctrl+Shift+Esc still work, and the wall shows the focus loss.
 - Ctrl+Shift+Q leaves lockdown in the lab zip.
 - Any antivirus prompt about the hook is written down.
+
+## P.10 Realtime restart
+
+`pnpm --filter desktop e2e:realtime` (`apps/desktop/test/realtime-restart.spec.ts`) ran on the MacBook Pro (Apple M4) against the main local stack: Realtime v2.107.5 in the container `supabase_realtime_uki`, CLI 2.107.0. Branch `polish/p10-realtime-restart`, PR #13. Each run was the e2e build of the real app with the synthetic camera, one throwaway exam, and the command Edge Function called as the exam's lead proctor, as the wall calls it. The lead proctor is the fixture's copy of the seed's Aigerim Sadykova, in the fixture's own workspace; the seeded exams are not touched.
+
+Each run checks in, starts the exam, answers three questions, then plays rounds. In every round the student answers a question, the round takes Realtime down with Docker, the proctor pauses, 2.1c must show, Realtime comes back, the proctor resumes, and 2.1 must show and hold for 12 s, past the next heartbeat. The rounds take turns:
+
+- **stop:** `docker stop`, then the pause right after the next ingest reply. That is the worst case: the pause waits a whole heartbeat. Then the resume, still with Realtime stopped, and only then `docker start`. Only ingest replies can carry these two commands, and the test asserts that they did.
+- **restart:** `docker restart`, and the pause as soon as Realtime stops answering its ping. The resume goes out after the app's channel has joined again.
+- **reconnect:** `docker restart`, and the pause as soon as Realtime answers its ping again, while the app's channel rejoins. The resume goes out after the rejoin.
+
+The test reads the window's network: Realtime frames, ingest replies and the `session_commands` reads that catch up after a rejoin. The first of these to carry the command id is the path that applied it. Every time below runs from just before the request to the command function to the frame appearing in the window. The numbers are in `docs/evidence/realtime-restart-2026-10-08-run1.json` and `-run2.json`.
+
+| Check | Status | Evidence | Date |
+| --- | --- | --- | --- |
+| With Realtime stopped, a pause reaches 2.1c through the ingest reply within about 10 s | pass | 10 of 10 stop rounds after the fix; before it, 23 of 24, and the 24th took 12,007 ms (below). After the fix, the pause left 6 to 16 ms after an ingest reply. 2.1c showed after 10,010 to 10,262 ms, always with the next ingest reply, which left 9,988 to 10,002 ms after the pause. No Realtime frame and no catch-up read carried it. Docker reported the container stopped when 2.1c showed | 2026-10-08 |
+| With Realtime still stopped, the resume brings 2.1 back the same way | pass | 10 of 10 after the fix: 9,976 to 10,021 ms, through the ingest reply | 2026-10-08 |
+| A pause sent while Realtime restarts shows 2.1c within about 10 s | pass | restart rounds: 10 of 10 after the fix. The pause went out 1.1 to 3.2 s after `docker restart`. 8 came with an ingest reply after 6,906 to 9,141 ms. 2 came with the catch-up read when the channel joined again, after 4,972 and 6,884 ms | 2026-10-08 |
+| A pause sent when Realtime answers again, before the channel rejoins, shows 2.1c within about 10 s | pass | reconnect rounds: 10 of 10 after the fix. 8 came with an ingest reply after 1,612 to 2,025 ms, while the channel was still away. In 2 rounds the channel had already joined, and the broadcast brought the pause in 24 and 217 ms | 2026-10-08 |
+| Broadcasts work again after the restart | pass | Every resume sent after the rejoin came by broadcast in 8 to 32 ms. Realtime answered its ping again 7.3 to 8.4 s after `docker restart`. The app's channel joined again 8.1 to 18.1 s after `docker restart`, as supabase-js retries after 1, 2 and 5 s, then every 10 s. In the stop rounds it joined again 10 to 12 s after Realtime answered | 2026-10-08 |
+| Each command applies once and is acked | pass | Per run: 13 rows on the server (start, then 6 pauses and 6 resumes), all with `acked_at`. The outbox has one row per command, stamped when the command applied. 2.1 held for 12 s after every resume, and the session ended each run in `writing` | 2026-10-08 |
+| The ingest heartbeat is 10 s | pass | After the fix, in every round, the longest wait from an ingest reply to the next call was 10,004 to 10,013 ms | 2026-10-08 |
+| Realtime is left running, also when the test fails | pass | Every round starts Realtime again in its `finally`; `afterAll` and the global teardown (`test/support/realtime-teardown.ts`) start it if it is stopped. An error thrown inside a round while Realtime was stopped: the round's `finally` started the container again before the run ended. SIGINT to the runner and the worker while Realtime was stopped: running again within a second, exit 130. Each run ended with the container running and healthy. The interrupted run left its fixture workspace; it was removed by hand, and `pnpm --filter desktop e2e:cleanup` does the same | 2026-10-08 |
+| `pnpm check` | pass | Exit 0 after the rebase onto main at f78b7ad: Biome 800 files, guards 829, turbo 22 of 22 tasks (desktop 450 tests passed, 2 skipped), functions-unit 61, scripts 83 | 2026-10-08 |
+| `pnpm --filter desktop e2e` after the fix | pass | 15 of 15 against the main stack, with WP 1.6's Ask proctor test. Commands from request to screen: start 26 ms, pause 55, resume 9, message 10, add time 20, reply 18, end 36. A 20 s network cut showed 2.1a after 5.3 s and lost nothing, with 0 duplicates | 2026-10-08 |
+| `pnpm test:integration:desktop` after the fix | pass | 3 of 3 | 2026-10-08 |
+
+The two runs after the fix, 6 rounds each. Times in seconds count from the Docker command; command times are in ms. The last column is the longest wait from an ingest reply to the next call.
+
+| Round | Kind | Pause sent | Realtime back | Channel rejoined | 2.1c after | Path | 2.1 after resume | Path | Heartbeat |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1.1 | stop | 12.1 | 33.6 | 43.9 | 10,262 | ingest | 9,996 | ingest | 10,011 |
+| 1.2 | restart | 1.1 | 8.2 | 13.1 | 8,988 | ingest | 20 | broadcast | 10,005 |
+| 1.3 | reconnect | 8.2 | 8.1 | 18.1 | 1,901 | ingest | 16 | broadcast | 10,010 |
+| 1.4 | stop | 10.1 | 32.2 | 44.0 | 10,015 | ingest | 9,981 | ingest | 10,006 |
+| 1.5 | restart | 1.2 | 8.1 | 13.1 | 8,899 | ingest | 21 | broadcast | 10,006 |
+| 1.6 | reconnect | 8.2 | 8.1 | 13.1 | 1,917 | ingest | 12 | broadcast | 10,005 |
+| 2.1 | stop | 12.1 | 33.3 | 44.0 | 10,044 | ingest | 9,976 | ingest | 10,006 |
+| 2.2 | restart | 3.1 | 7.9 | 8.1 | 4,972 | catch-up | 14 | broadcast | 10,006 |
+| 2.3 | reconnect | 8.2 | 8.2 | 13.1 | 1,826 | ingest | 16 | broadcast | 10,004 |
+| 2.4 | stop | 10.1 | 32.2 | 43.8 | 10,020 | ingest | 9,995 | ingest | 10,005 |
+| 2.5 | restart | 1.2 | 8.1 | 8.1 | 6,884 | catch-up | 11 | broadcast | 10,013 |
+| 2.6 | reconnect | 8.1 | 8.1 | 8.1 | 24 | broadcast | 10 | broadcast | 10,013 |
+
+The load average was 2.0 to 3.7 during these two runs.
+
+**The 12 s case, and its fix.** Before the fix, 38 rounds ran with the same checks, at load averages from 3 to 21. In one stop round, as the load rose to 11, 2.1c took 12,007 ms (`docs/evidence/realtime-restart-2026-10-08-before-fix.json`, round 4). The ingest call that carried the pause left 11,972 ms after the pause, and no call failed in between. The cause is in the sync loop. It checked the 10 s heartbeat only on its 2 s ticks, and each tick counts from the end of the run before it. On a loaded laptop, slow runs pushed the ticks later, so a tick could land at 9.95 s, just short of 10 s, and the heartbeat waited for the next tick at 11.95 s. The loop now schedules its next run no later than 10 s after the last ingest reply (`apps/desktop/src/renderer/outbox/sync.ts`, `untilNextRun`). The regression test, "keeps the heartbeat at 10 s when a slow run shifts the 2 s ticks (P.10)" in `sync.test.ts`, makes one run 1.95 s slow. On the old loop it fails with 11,950 ms. After the fix the heartbeat took 10,004 to 10,013 ms in all 30 rounds. Those rounds ran on a quiet host (load 2 to 5), so the loaded case is covered by the unit test, not live. In the other 37 rounds before the fix, the pause came with an ingest reply, or once with a catch-up read. The app's own share of each trip, the time not spent in the command function or an ingest call, was at most 10.03 s. The command function was slow on the loaded host (up to 4.9 s), and in one reconnect round that stretched the whole trip to 15.0 s.
+
+**Not covered:**
+
+- The cloud project. Realtime there cannot be restarted on demand, so this check stays local.
+- The real wall in a browser. The command function is called exactly as the wall calls it.
+- A Realtime outage that keeps the channel subscribed but drops broadcasts. The same ingest reply covers it, because every reply carries the unacked commands.
