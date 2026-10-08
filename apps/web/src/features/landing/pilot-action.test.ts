@@ -31,9 +31,9 @@ beforeEach(() => {
 });
 
 describe("Book a pilot's server action", () => {
-  it("calls request_pilot with the plan's five arguments and shows Sent", async () => {
+  it("calls request_pilot with the PilotRequest arguments and shows Sent", async () => {
     rpc.mockResolvedValue({ data: { status: "ok" }, error: null });
-    const state = await requestPilot(INITIAL, form(FILLED));
+    const state = await requestPilot(INITIAL, form({ ...FILLED, email: "Dana.Akhmetova@KRU.test" }));
     expect(rpc).toHaveBeenCalledWith("request_pilot", {
       name: "Dana Akhmetova",
       email: "dana.akhmetova@kru.test",
@@ -44,17 +44,15 @@ describe("Book a pilot's server action", () => {
       pilot_month: "2026-11",
       demo_invite: true,
     });
-    expect(state).toMatchObject({ status: "sent", request: { email: "dana.akhmetova@kru.test" } });
+    expect(state).toMatchObject({ status: "sent", request: { name: "Dana Akhmetova" } });
   });
 
   it("sends no message when none was typed, and the invite as unticked", async () => {
     rpc.mockResolvedValue({ data: { status: "ok" }, error: null });
     const { demoDay: _ticked, ...unticked } = FILLED;
     await requestPilot(INITIAL, form({ ...unticked, message: "  " }));
-    expect(rpc).toHaveBeenCalledWith(
-      "request_pilot",
-      expect.objectContaining({ message: null, demo_invite: false }),
-    );
+    expect(rpc.mock.calls[0]?.[1]).not.toHaveProperty("message");
+    expect(rpc).toHaveBeenCalledWith("request_pilot", expect.objectContaining({ demo_invite: false }));
   });
 
   it("shows the refusal and keeps what was typed when the address hit the daily limit", async () => {
