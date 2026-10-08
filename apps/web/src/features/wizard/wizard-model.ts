@@ -2,6 +2,7 @@ import {
   BROWSER_RULE_SWITCHES,
   type BrowserRuleSwitch,
   checkSeatRanges,
+  ExamCode,
   ExamDraft,
   type ExamDraftInput,
   type ExamMode,
@@ -9,9 +10,11 @@ import {
   type Locale,
   type ProctorAssignment,
   parseScheduleError,
+  ROSTER_ROWS_MAX,
   type ScheduleProblem,
   type SeatRangeProblem,
   toMs,
+  Uuid,
   WIZARD_STEPS,
   type WizardStep,
   WorkspaceSettings,
@@ -445,12 +448,6 @@ export function proctorOfSeat<T extends { seat_from: number | null; seat_to: num
 // Invites in the students table (0.3, 0.3a, 0.3b)
 // ---------------------------------------------------------------------------------------------------
 
-/**
- * send-invites (WP 1.4) does not exist yet. Until it lands, Send a test invite and Resend stay
- * disabled with the reason shown; WP 1.4 turns this on together with the function.
- */
-export const SEND_INVITES_READY = false;
-
 export type InviteChip = { status: ChipStatus; key: "notSent" | "sent" | "opened" | "bounced" | "failed" };
 
 /** The INVITE chip of a roster row: 0.3a's "Not sent", 0.3's "Sent · not opened", "Opened", "Email bounced". */
@@ -507,15 +504,6 @@ export function matchesSearch(row: { full_name: string; student_number: string }
   return row.full_name.toLocaleLowerCase().includes(q) || row.student_number.includes(q);
 }
 
-/** 0.3b's input: the new address of one student's invite, and whether the roster keeps it too. */
-export const FixInviteEmailInput = z.object({
-  exam_id: z.uuid(),
-  student_id: z.uuid(),
-  email: z.string().trim().toLowerCase().max(254).pipe(z.email()),
-  roster: z.boolean(),
-});
-export type FixInviteEmailInput = z.infer<typeof FixInviteEmailInput>;
-
 // ---------------------------------------------------------------------------------------------------
 // Review (0.5)
 // ---------------------------------------------------------------------------------------------------
@@ -537,5 +525,35 @@ export function scheduleFailure(error: unknown): { problem: ScheduleProblem; ste
   return parseScheduleError(error);
 }
 
-/** "MATH2-204-FRI": what the overview's toast may show from its query string. */
-export const ExamCodeParam = z.string().regex(/^[A-Z0-9-]{3,40}$/);
+/** What Schedule exam (0.5) hands 0.1 in its query string: the code, and the invites that did not go out. */
+export type ScheduledNotice = { code: string; examId: string | null; unsent: number };
+
+/**
+ * 0.1's `?scheduled=<code>&exam=<id>&unsent=<n>` after Schedule exam, or null when it is missing or
+ * not well formed (the address bar is the user's to type into, so every part is checked).
+ */
+export function parseScheduledNotice(params: {
+  scheduled?: string | string[] | undefined;
+  exam?: string | string[] | undefined;
+  unsent?: string | string[] | undefined;
+}): ScheduledNotice | null {
+  const code = ExamCode.safeParse(params.scheduled);
+  if (!code.success) return null;
+  const exam = Uuid.safeParse(params.exam);
+  const unsent = z.coerce.number().int().min(0).max(ROSTER_ROWS_MAX).safeParse(params.unsent);
+  return {
+    code: code.data,
+    examId: exam.success ? exam.data : null,
+    unsent: exam.success && unsent.success ? unsent.data : 0,
+  };
+}
+
+/** The overview address Schedule exam returns to; `unsent` only when an invite did not go out. */
+export function scheduledHref(code: string, examId: string, unsent: number): `/overview?${string}` {
+  const query = new URLSearchParams({ scheduled: code });
+  if (unsent > 0) {
+    query.set("exam", examId);
+    query.set("unsent", String(unsent));
+  }
+  return `/overview?${query.toString()}`;
+}

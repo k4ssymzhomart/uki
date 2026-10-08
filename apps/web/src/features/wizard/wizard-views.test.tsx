@@ -15,9 +15,12 @@ import {
 import { loadMessages } from "@uki/i18n";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DANA, intlErrors, rawKeys, renderWithIntl } from "../../../test/render.tsx";
+import { parseOverviewRows } from "../overview/overview-model.ts";
+import { OverviewView } from "../overview/overview-view.tsx";
 import { BrowserView } from "./browser-view.tsx";
 import { ChecksView } from "./checks-view.tsx";
 import { DetailsView } from "./details-view.tsx";
+import { ScheduledNotice } from "./new-exam-button.tsx";
 import { ReviewView } from "./review-view.tsx";
 import { RosterView } from "./roster-view.tsx";
 import type { RosterEntry } from "./wizard-data.ts";
@@ -41,6 +44,7 @@ const actions = vi.hoisted(() => ({
   importRoster: vi.fn(),
   assignProctors: vi.fn(),
   fixInviteEmail: vi.fn(),
+  resendInvite: vi.fn(),
   scheduleExam: vi.fn(),
   sendTestInvite: vi.fn(),
   createExamDraft: vi.fn(),
@@ -310,6 +314,74 @@ describe("every wizard page in Russian", () => {
   });
 });
 
+describe("0.1 and 0.3 after the invites in Russian", () => {
+  it("0.1 after Schedule exam with invites that did not go out, and the roster link", async () => {
+    const rows = parseOverviewRows([
+      {
+        id: EXAM_ID,
+        faculty_id: null,
+        title: "Mathematics 2 · Midterm",
+        course: "Mathematics 2",
+        status: "scheduled",
+        starts_at: "2026-10-09T05:00:00Z",
+        duration_min: 90,
+        lobby_opens_at: "2026-10-09T04:40:00Z",
+        checks: DEFAULT_EXAM_CHECKS,
+        groups: ["204"],
+        proctor_count: 2,
+        roster_size: 24,
+        joined: 0,
+        writing: 0,
+        flagged_events: 0,
+        sessions_final: 0,
+      },
+    ]);
+    renderWithIntl(
+      <>
+        <OverviewView rows={rows} groupCount={4} readiness={{ ready: 21, total: 24 }} nowMs={NOW} />
+        <ScheduledNotice notice={{ code: "MATH2-204-FRI2", examId: EXAM_ID, unsent: 3 }} />
+      </>,
+      DANA,
+      "ru",
+    );
+    expect(
+      await screen.findByText("Экзамен запланирован. Студенты входят по коду MATH2-204-FRI2."),
+    ).toBeTruthy();
+    expect(
+      await screen.findByText("3 приглашения не ушли. Причина указана в списке студентов."),
+    ).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Исправить 3 адреса" }).getAttribute("href")).toBe(
+      `/exams/${EXAM_ID}/edit/roster`,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Открыть список" }));
+    expect(router.push).toHaveBeenCalledWith(`/exams/${EXAM_ID}/edit/roster`);
+    expectRussian();
+  });
+
+  it("0.3's Resend on a scheduled exam", async () => {
+    actions.resendInvite.mockResolvedValue({ ok: true });
+    renderWithIntl(
+      <RosterView
+        exam={{ ...exam, status: "scheduled", code: "MATH2-204-FRI" }}
+        roster={roster}
+        assignments={assignments}
+        proctors={proctors}
+        groups={GROUPS}
+      />,
+      DANA,
+      "ru",
+    );
+    const row = screen.getByText("Arman Bekzhanov").closest("tr") as HTMLElement;
+    await act(async () => {
+      fireEvent.click(
+        within(row).getByRole("button", { name: text("dashboard.wizard.roster.action.resend") }),
+      );
+    });
+    expect(await screen.findByText("Приглашение снова отправлено: Arman Bekzhanov.")).toBeTruthy();
+    expectRussian();
+  });
+});
+
 describe("0.3a: the roster file", () => {
   function renderRoster() {
     return renderWithIntl(
@@ -407,7 +479,47 @@ describe("0.3a: the roster file", () => {
 });
 
 describe("0.5 and E.1 behaviour", () => {
-  it("keeps the test invite disabled with its reason until send-invites exists", () => {
+  it("sends a test invite to the signed-in staff member, and waits for a roster before it can", async () => {
+    actions.sendTestInvite.mockResolvedValue({ ok: true });
+    const view = renderWithIntl(
+      <ReviewView
+        exam={exam}
+        settings={DEFAULT_WORKSPACE_SETTINGS}
+        groupCodes={["204"]}
+        rosterSize={24}
+        assignments={assignments}
+      />,
+      DANA,
+    );
+    expect(screen.getByText("Nurlan Bekov hasn’t confirmed yet. You can schedule now.")).toBeTruthy();
+    expect(screen.queryByText(/reminder/)).toBeNull();
+    expect(screen.getByText("Seats 1–12 · Kazakh, Russian · confirmed")).toBeTruthy();
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Send a test invite to me" }));
+    });
+    expect(actions.sendTestInvite).toHaveBeenCalledWith({ exam_id: EXAM_ID });
+    expect(await screen.findByText("Test invite sent. Check your inbox.")).toBeTruthy();
+    view.unmount();
+
+    renderWithIntl(
+      <ReviewView
+        exam={exam}
+        settings={DEFAULT_WORKSPACE_SETTINGS}
+        groupCodes={["204"]}
+        rosterSize={0}
+        assignments={[]}
+      />,
+      DANA,
+    );
+    const button = screen.getByRole("button", { name: "Send a test invite to me" });
+    expect(button.hasAttribute("disabled")).toBe(true);
+    expect(
+      screen.getByText("The test invite is written for the first student, so it waits for the roster."),
+    ).toBeTruthy();
+  });
+
+  it("says when the test invite did not go out", async () => {
+    actions.sendTestInvite.mockResolvedValue({ ok: false, error: "failed" });
     renderWithIntl(
       <ReviewView
         exam={exam}
@@ -418,14 +530,73 @@ describe("0.5 and E.1 behaviour", () => {
       />,
       DANA,
     );
-    expect(screen.getByRole("button", { name: "Send a test invite to me" }).hasAttribute("disabled")).toBe(
-      true,
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Send a test invite to me" }));
+    });
+    expect(await screen.findByText("The test invite could not be sent.")).toBeTruthy();
+  });
+
+  it("resends a sent invite from 0.3, and fixes a bounced address through 0.3b on a scheduled exam", async () => {
+    actions.resendInvite.mockResolvedValue({ ok: true });
+    actions.fixInviteEmail.mockResolvedValue({ ok: true });
+    const scheduled = { ...exam, status: "scheduled" as const, code: "MATH2-204-FRI" };
+    renderWithIntl(
+      <RosterView
+        exam={scheduled}
+        roster={roster}
+        assignments={assignments}
+        proctors={proctors}
+        groups={GROUPS}
+      />,
+      DANA,
     );
-    expect(screen.getByText("Invites go out once the invite service is switched on.")).toBeTruthy();
+    await act(async () => {
+      const row = screen.getByText("Arman Bekzhanov").closest("tr") as HTMLElement;
+      fireEvent.click(within(row).getByRole("button", { name: "Resend" }));
+    });
+    expect(actions.resendInvite).toHaveBeenCalledWith({
+      exam_id: EXAM_ID,
+      student_id: "b0000000-0000-4000-8000-000020230912",
+    });
+    expect(await screen.findByText("The invite went out again to Arman Bekzhanov.")).toBeTruthy();
+    expect(router.refresh).toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Fix email" }));
+    const panel = await screen.findByRole("dialog");
+    expect(within(panel).getByText("The invite goes out again to the new address.")).toBeTruthy();
+    fireEvent.change(within(panel).getByLabelText("New email"), {
+      target: { value: "Yerlan.Tokhtarov@Student.KRU.test" },
+    });
+    await act(async () => {
+      fireEvent.click(within(panel).getByRole("button", { name: "Save" }));
+    });
+    expect(actions.fixInviteEmail).toHaveBeenCalledWith({
+      exam_id: EXAM_ID,
+      student_id: "b0000000-0000-4000-8000-000020230877",
+      email: "yerlan.tokhtarov@student.kru.test",
+      roster: true,
+    });
+  });
+
+  it("says when a resend did not go out", async () => {
+    actions.resendInvite.mockResolvedValue({ ok: false, error: "failed" });
+    renderWithIntl(
+      <RosterView
+        exam={{ ...exam, status: "scheduled" }}
+        roster={roster}
+        assignments={assignments}
+        proctors={proctors}
+        groups={GROUPS}
+      />,
+      DANA,
+    );
+    await act(async () => {
+      const row = screen.getByText("Arman Bekzhanov").closest("tr") as HTMLElement;
+      fireEvent.click(within(row).getByRole("button", { name: "Resend" }));
+    });
     expect(
-      screen.getByText("Nurlan Bekov hasn’t confirmed yet. You can schedule now; they get a reminder."),
+      await screen.findByText("The invite to Arman Bekzhanov could not be sent. Try again in a minute."),
     ).toBeTruthy();
-    expect(screen.getByText("Seats 1–12 · Kazakh, Russian · confirmed")).toBeTruthy();
   });
 
   it("saves an E.1 switch into browser_rules", async () => {

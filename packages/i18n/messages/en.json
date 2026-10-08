@@ -1774,8 +1774,11 @@
         "ru": "Russian"
       },
       "overview": {
+        "fixRoster": "{count, plural, one {Fix # address} other {Fix # addresses}}",
         "newExam": "New exam",
-        "scheduled": "Exam scheduled. Students join with the code {code}."
+        "openRoster": "Open roster",
+        "scheduled": "Exam scheduled. Students join with the code {code}.",
+        "unsent": "{count, plural, one {# invite did not go out.} other {# invites did not go out.}} The roster says why."
       },
       "picker": {
         "apply": "Apply",
@@ -1818,8 +1821,7 @@
           "whenValue": "{date} {year} · {start}–{end} · {minutes} min"
         },
         "footerReady": "Everything is in place. Schedule the exam when you are ready.",
-        "footerWaiting": "{names} hasn’t confirmed yet. You can schedule now; they get a reminder.",
-        "invitesUnavailable": "Invites go out once the invite service is switched on.",
+        "footerWaiting": "{names} hasn’t confirmed yet. You can schedule now.",
         "next": {
           "end": "Exam ends",
           "endDetail": "Review opens for flagged sessions",
@@ -1871,6 +1873,7 @@
         },
         "testInvite": "Send a test invite to me",
         "testInviteFailed": "The test invite could not be sent.",
+        "testInviteNeedsRoster": "The test invite is written for the first student, so it waits for the roster.",
         "testInviteSent": "Test invite sent. Check your inbox."
       },
       "roster": {
@@ -1988,6 +1991,8 @@
           "waiting": "Not confirmed"
         },
         "programme": "{programme}, year {year}",
+        "resendFailed": "The invite to {name} could not be sent. Try again in a minute.",
+        "resent": "The invite went out again to {name}.",
         "search": "Find a student",
         "students": {
           "title": "Students · {count}",

@@ -14,6 +14,7 @@ import {
   TabGroup,
   Table,
   TableHeaderCell,
+  useToast,
 } from "@uki/ui";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -30,7 +31,7 @@ import {
 } from "./roster-csv.ts";
 import { InviteFix, RowActionButton, RowActionTrigger, RowFix } from "./roster-fix.tsx";
 import { ProctorsCard } from "./roster-proctors.tsx";
-import { fixInviteEmail, importRoster, type WizardError } from "./wizard-actions.ts";
+import { fixInviteEmail, importRoster, resendInvite, type WizardError } from "./wizard-actions.ts";
 import type { RosterEntry } from "./wizard-data.ts";
 import { WizardFrame } from "./wizard-frame.tsx";
 import {
@@ -44,7 +45,6 @@ import {
   proctorOfSeat,
   ROSTER_TABS,
   type RosterTab,
-  SEND_INVITES_READY,
   stepHref,
   type WizardGroup,
   type WizardProctor,
@@ -114,8 +114,27 @@ export function RosterView({
   const [query, setQuery] = useState("");
   const [dragging, setDragging] = useState(false);
   const [lastFile, setLastFile] = useState<{ name: string; valid: number; total: number } | null>(null);
+  const [resending, setResending] = useState<ReadonlySet<string>>(new Set());
+  const toast = useToast();
   const codes = groups.map((group) => group.code);
   const scheduled = exam.status === "scheduled";
+
+  /** 0.3's Resend: the student's invite goes out again; the row's chip follows after the refresh. */
+  const resend = async (studentId: string, name: string) => {
+    setResending((current) => new Set(current).add(studentId));
+    const result = await resendInvite({ exam_id: exam.id, student_id: studentId });
+    setResending((current) => {
+      const next = new Set(current);
+      next.delete(studentId);
+      return next;
+    });
+    toast.show(
+      result.ok
+        ? { kind: "success", message: t("roster.resent", { name }) }
+        : { kind: "error", message: t("roster.resendFailed", { name }) },
+    );
+    router.refresh();
+  };
 
   useEffect(() => setLastFile(rememberedFile(exam.id)), [exam.id]);
   useEffect(() => setAssignments(initialAssignments), [initialAssignments]);
@@ -462,8 +481,8 @@ export function RosterView({
                 action === "resend" ? (
                   <RowActionButton
                     label={t("roster.action.resend")}
-                    disabled={!SEND_INVITES_READY}
-                    title={SEND_INVITES_READY ? undefined : t("review.invitesUnavailable")}
+                    disabled={resending.has(entry.student_id)}
+                    onClick={() => void resend(entry.student_id, entry.student.full_name)}
                   />
                 ) : (
                   <InviteFix

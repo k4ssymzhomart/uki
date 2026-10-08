@@ -147,4 +147,24 @@ describe("0.1 Overview", () => {
       "/exams/e0000000-0000-4000-8000-000000000004/lobby",
     );
   });
+
+  it("links the exam office to the next exam's roster when an invite bounced (0.3b)", () => {
+    renderWithIntl(
+      <OverviewView rows={rows} groupCount={4} readiness={{ ready: 127, total: 128 }} nowMs={now} />,
+      DANA,
+    );
+    expect(screen.getByRole("link", { name: "Fix 1 address" }).getAttribute("href")).toBe(
+      "/exams/e0000000-0000-4000-8000-000000000001/edit/roster",
+    );
+    renderOverview();
+    expect(screen.getAllByRole("link", { name: /^Fix \d+ address/ })).toHaveLength(1);
+  });
+
+  it("gives a proctor no roster link", () => {
+    renderWithIntl(
+      <OverviewView rows={rows} groupCount={4} readiness={{ ready: 127, total: 128 }} nowMs={now} />,
+      { ...DANA, role: "proctor" },
+    );
+    expect(screen.queryByRole("link", { name: "Fix 1 address" })).toBeNull();
+  });
 });

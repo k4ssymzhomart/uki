@@ -13,6 +13,7 @@ import {
   overviewStats,
   parseOverviewRows,
   rowsInFaculty,
+  shownOnOverview,
   statusChip,
 } from "./overview-model.ts";
 
@@ -54,6 +55,16 @@ describe("overview rows", () => {
   it("parses view rows and drops a row that does not fit, instead of showing it wrong", () => {
     expect(rows).toHaveLength(5);
     expect(parseOverviewRows([{ id: "nope" }, exam(6, "scheduled", "2026-10-08T09:00:00Z")])).toHaveLength(1);
+  });
+
+  it("leaves out a draft New exam made and nobody named yet, and keeps every titled exam", () => {
+    const untitled = exam(6, "draft", "2026-10-09T04:00:00Z", { title: " ", course: "", groups: [] });
+    expect(shownOnOverview(untitled)).toBe(false);
+    expect(shownOnOverview({ ...untitled, title: "Physics 2 · Final" })).toBe(true);
+    expect(shownOnOverview({ ...untitled, status: "scheduled" })).toBe(true);
+    expect(
+      parseOverviewRows([untitled, exam(7, "draft", "2026-10-09T04:00:00Z")]).map((row) => row.id),
+    ).toEqual(["e0000000-0000-4000-8000-000000000007"]);
   });
 
   it("orders the table like Figma: next scheduled, live, to review, draft, reviewed", () => {

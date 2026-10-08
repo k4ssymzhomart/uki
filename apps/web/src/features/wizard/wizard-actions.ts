@@ -4,33 +4,36 @@ import {
   AssignProctorsInput,
   AssignProctorsOutput,
   type ExamDraft,
+  FixInviteEmailInput,
   ImportRosterInput,
   ImportRosterOutput,
   type ProctorAssignment,
+  ResendInviteInput,
   SaveExamDraftInput,
   ScheduleExamInput,
   ScheduleExamOutput,
   type ScheduleProblem,
   type SeatRangeProblem,
+  SendInvitesInput,
+  SendInvitesOutput,
   type WizardStep,
 } from "@uki/contracts";
 import { redirect, unstable_rethrow } from "next/navigation";
 import { requireStaff } from "../../lib/auth.ts";
 import { createSupabaseServerClient } from "../../lib/supabase/server.ts";
-import { SendInvitesInput, SendInvitesOutput } from "./send-invites.ts";
 import {
   examDraftFromRow,
-  FixInviteEmailInput,
   parseSeatError,
-  SEND_INVITES_READY,
+  scheduledHref,
   scheduleFailure,
   stepHref,
 } from "./wizard-model.ts";
 
 /**
  * The wizard's writes, as the signed-in exam office member under RLS: save_exam_draft from every
- * step, import_roster and assign_proctors from 0.3, the invite address from 0.3b, schedule_exam and the
- * test invite from 0.5. Every input is checked with the contracts' Zod schemas before it leaves and
+ * step, import_roster and assign_proctors from 0.3, the invite address from 0.3b and 0.3's Resend,
+ * schedule_exam and the test invite from 0.5, and send-invites (WP 1.4) after Schedule exam, 0.3b and
+ * Resend. Every input is checked with the contracts' Zod schemas before it leaves and
  * every reply after it arrives; a failure comes back as a code the page translates.
  */
 
@@ -138,8 +141,9 @@ export async function assignProctors(input: unknown): Promise<AssignProctorsResu
 
 /**
  * 0.3b: a new address for one student's invite. The invite goes back to `pending` (made when the
- * roster has none yet; the trigger keeps exam_students.invite_status in step); "Also fix it in the roster" writes it to the student too, for
- * later exams. Once send-invites exists, a scheduled exam's invite is sent again to the new address.
+ * roster has none yet; the trigger keeps exam_students.invite_status in step); "Also fix it in the
+ * roster" writes it to the student too, for later exams. On a scheduled exam the invite then goes out
+ * again to the new address (send-invites with this student's id); its outcome shows on the row.
  */
 export async function fixInviteEmail(
   input: unknown,
@@ -183,11 +187,9 @@ export async function fixInviteEmail(
       const student = await supabase.from("students").update({ email }).eq("id", student_id);
       if (student.error) return { ok: false, error: codeOf(student.error) };
     }
-    if (SEND_INVITES_READY) {
-      const exam = await supabase.from("exams").select("status").eq("id", exam_id).maybeSingle();
-      if (exam.data?.status === "scheduled") {
-        await callSendInvites({ exam_id, student_ids: [student_id] });
-      }
+    const exam = await supabase.from("exams").select("status").eq("id", exam_id).maybeSingle();
+    if (exam.data?.status === "scheduled") {
+      await callSendInvites({ exam_id, student_ids: [student_id] });
     }
     return { ok: true };
   } catch (error) {
@@ -201,12 +203,13 @@ export type ScheduleResult =
   | { ok: false; error: WizardError };
 
 /**
- * 0.5's Schedule exam: schedule_exam checks every step and makes the code. On success the invites go
- * out (once send-invites exists) and the exam office returns to 0.1, which shows the code. A problem
- * comes back with the step that fixes it.
+ * 0.5's Schedule exam: schedule_exam checks every step and makes the code; then send-invites sends
+ * every invite, and the exam office returns to 0.1, which shows the code and, when some invites did not
+ * go out, how many (their rows on 0.3 say why). A schedule_exam problem comes back with the step that
+ * fixes it. The exam stays scheduled whatever the invites do.
  */
 export async function scheduleExam(input: unknown): Promise<ScheduleResult> {
-  let code: string;
+  let href: ReturnType<typeof scheduledHref>;
   try {
     if (!(await officeOnly())) return { ok: false, error: "forbidden" };
     const parsed = ScheduleExamInput.safeParse(input);
@@ -219,33 +222,77 @@ export async function scheduleExam(input: unknown): Promise<ScheduleResult> {
     }
     const result = ScheduleExamOutput.safeParse(data);
     if (!result.success) return { ok: false, error: "failed" };
-    code = result.data.code;
-    if (SEND_INVITES_READY) await callSendInvites({ exam_id: parsed.data.exam_id });
+    const examId = parsed.data.exam_id;
+    await callSendInvites({ exam_id: examId });
+    href = scheduledHref(result.data.code, examId, await unsentInvites(examId));
   } catch (error) {
     unstable_rethrow(error);
     return { ok: false, error: "failed" };
   }
-  redirect(`/overview?scheduled=${encodeURIComponent(code)}`);
+  redirect(href);
 }
 
-export type TestInviteResult = { ok: true; sent: number } | { ok: false; error: WizardError | "unavailable" };
+/**
+ * The exam's invites that have not gone out after a send: pending (the call never reached Resend),
+ * failed or bounced. Counted from `invites` under RLS rather than from the reply, so a call that failed
+ * as a whole counts every invite.
+ */
+async function unsentInvites(examId: string): Promise<number> {
+  const supabase = await createSupabaseServerClient();
+  const { count, error } = await supabase
+    .from("invites")
+    .select("id", { count: "exact", head: true })
+    .eq("exam_id", examId)
+    .neq("state", "sent");
+  return error ? 0 : (count ?? 0);
+}
 
-/** 0.5's Send a test invite to me: send-invites with `test: true`, which mails the signed-in staff member. */
+export type ResendResult = { ok: true } | { ok: false; error: WizardError };
+
+/** 0.3's Resend on a sent invite: send-invites with this student's id, whatever the invite's state. */
+export async function resendInvite(input: unknown): Promise<ResendResult> {
+  try {
+    if (!(await officeOnly())) return { ok: false, error: "forbidden" };
+    const parsed = ResendInviteInput.safeParse(input);
+    if (!parsed.success) return { ok: false, error: "invalid" };
+    const reply = await callSendInvites({
+      exam_id: parsed.data.exam_id,
+      student_ids: [parsed.data.student_id],
+    });
+    return reply !== null && reply.sent > 0 && reply.failed.length === 0
+      ? { ok: true }
+      : { ok: false, error: "failed" };
+  } catch (error) {
+    unstable_rethrow(error);
+    return { ok: false, error: "failed" };
+  }
+}
+
+export type TestInviteResult = { ok: true } | { ok: false; error: WizardError };
+
+/**
+ * 0.5's Send a test invite to me: send-invites with `test: true`, which mails the signed-in staff
+ * member the invite of the roster's first student, in the staff member's language. Nothing is written.
+ */
 export async function sendTestInvite(input: unknown): Promise<TestInviteResult> {
   try {
     if (!(await officeOnly())) return { ok: false, error: "forbidden" };
     const parsed = ScheduleExamInput.safeParse(input);
     if (!parsed.success) return { ok: false, error: "invalid" };
-    if (!SEND_INVITES_READY) return { ok: false, error: "unavailable" };
     const reply = await callSendInvites({ exam_id: parsed.data.exam_id, test: true });
-    return reply ? { ok: true, sent: reply.sent } : { ok: false, error: "failed" };
+    return reply !== null && reply.sent > 0 && reply.failed.length === 0
+      ? { ok: true }
+      : { ok: false, error: "failed" };
   } catch (error) {
     unstable_rethrow(error);
     return { ok: false, error: "failed" };
   }
 }
 
-/** The send-invites Edge Function (WP 1.4) as the signed-in staff member; null when it failed. */
+/**
+ * The send-invites Edge Function (WP 1.4) as the signed-in staff member, with the contracts' input and
+ * output; null when the call failed or its reply does not parse.
+ */
 async function callSendInvites(body: SendInvitesInput): Promise<SendInvitesOutput | null> {
   const request = SendInvitesInput.safeParse(body);
   if (!request.success) return null;

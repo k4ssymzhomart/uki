@@ -748,6 +748,14 @@
     "en": "Resend",
     "ru": "Отправить снова"
   },
+  "dashboard.wizard.roster.resent": {
+    "en": "The invite went out again to {name}.",
+    "ru": "Приглашение снова отправлено: {name}."
+  },
+  "dashboard.wizard.roster.resendFailed": {
+    "en": "The invite to {name} could not be sent. Try again in a minute.",
+    "ru": "Не удалось отправить приглашение: {name}. Попробуйте через минуту."
+  },
   "dashboard.wizard.roster.none": {
     "en": "No students match.",
     "ru": "Нет подходящих студентов."
@@ -1072,13 +1080,13 @@
     "en": "The test invite could not be sent.",
     "ru": "Не удалось отправить тестовое приглашение."
   },
-  "dashboard.wizard.review.invitesUnavailable": {
-    "en": "Invites go out once the invite service is switched on.",
-    "ru": "Приглашения начнут уходить, когда включат сервис приглашений."
+  "dashboard.wizard.review.testInviteNeedsRoster": {
+    "en": "The test invite is written for the first student, so it waits for the roster.",
+    "ru": "Тестовое приглашение пишется для первого студента списка, поэтому сначала загрузите список."
   },
   "dashboard.wizard.review.footerWaiting": {
-    "en": "{names} hasn’t confirmed yet. You can schedule now; they get a reminder.",
-    "ru": "{names}: места ещё не подтверждены. Можно планировать сейчас; придёт напоминание."
+    "en": "{names} hasn’t confirmed yet. You can schedule now.",
+    "ru": "{names}: места ещё не подтверждены. Можно планировать сейчас."
   },
   "dashboard.wizard.review.footerReady": {
     "en": "Everything is in place. Schedule the exam when you are ready.",
@@ -1179,5 +1187,17 @@
   "dashboard.wizard.overview.scheduled": {
     "en": "Exam scheduled. Students join with the code {code}.",
     "ru": "Экзамен запланирован. Студенты входят по коду {code}."
+  },
+  "dashboard.wizard.overview.unsent": {
+    "en": "{count, plural, one {# invite did not go out.} other {# invites did not go out.}} The roster says why.",
+    "ru": "{count, plural, one {# приглашение не ушло.} few {# приглашения не ушли.} many {# приглашений не ушло.} other {# приглашения не ушли.}} Причина указана в списке студентов."
+  },
+  "dashboard.wizard.overview.openRoster": {
+    "en": "Open roster",
+    "ru": "Открыть список"
+  },
+  "dashboard.wizard.overview.fixRoster": {
+    "en": "{count, plural, one {Fix # address} other {Fix # addresses}}",
+    "ru": "{count, plural, one {Исправить # адрес} few {Исправить # адреса} many {Исправить # адресов} other {Исправить # адреса}}"
   }
 }

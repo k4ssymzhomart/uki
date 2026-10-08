@@ -36,11 +36,22 @@ export type OverviewRow = z.infer<typeof OverviewRow>;
 export const OVERVIEW_COLUMNS =
   "id, faculty_id, title, course, status, starts_at, duration_min, lobby_opens_at, checks, groups, proctor_count, roster_size, joined, writing, flagged_events, sessions_final";
 
-/** Parses the view's rows; a row that does not parse is left out rather than shown wrong. */
+/**
+ * Whether 0.1 lists an exam. A draft without a title is left out: New exam (WP 1.3) makes the draft
+ * before 0.4 is filled in, and an abandoned one would be a row with no name, no course and no groups.
+ */
+export function shownOnOverview(row: Pick<OverviewRow, "status" | "title">): boolean {
+  return row.status !== "draft" || row.title.trim() !== "";
+}
+
+/**
+ * Parses the view's rows; a row that does not parse is left out rather than shown wrong, and so is an
+ * untitled draft (shownOnOverview).
+ */
 export function parseOverviewRows(rows: readonly unknown[]): OverviewRow[] {
   return rows.flatMap((row) => {
     const parsed = OverviewRow.safeParse(row);
-    return parsed.success ? [parsed.data] : [];
+    return parsed.success && shownOnOverview(parsed.data) ? [parsed.data] : [];
   });
 }
 

@@ -8,6 +8,7 @@ import { scopesFaculty } from "../../../features/shell/scope.ts";
 import { loadOverviewScope } from "../../../features/shell/scope-data.ts";
 import { StaffLookupFailed } from "../../../features/shell/staff-lookup-failed.tsx";
 import { ScheduledNotice } from "../../../features/wizard/new-exam-button.tsx";
+import { parseScheduledNotice } from "../../../features/wizard/wizard-model.ts";
 import { requireStaff } from "../../../lib/auth.ts";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -19,7 +20,8 @@ export async function generateMetadata(): Promise<Metadata> {
  * 0.1 Overview (Figma 51:2046), rendered on the server as the staff member under RLS: the exam office
  * sees its workspace's exams, within the faculty chosen in the workspace menu (0.1c), a proctor only
  * the exams assigned to it. The exam office also sees which exams have a proctor's change request
- * (0.9a, WP 1.5). After Schedule exam (0.5) `?scheduled=<code>` shows the new code once.
+ * (0.9a, WP 1.5). After Schedule exam (0.5) `?scheduled=<code>` shows the new code once, and
+ * `&exam=<id>&unsent=<n>` the invites that did not go out.
  */
 export default async function OverviewPage({ searchParams }: PageProps<"/overview">) {
   const staff = await requireStaff();
@@ -33,7 +35,7 @@ export default async function OverviewPage({ searchParams }: PageProps<"/overvie
   const bounced = next ? await loadBouncedInvites(next.id) : 0;
   const t = await getTranslations("dashboard.shell.workspace");
   const faculty = scope.faculties.find((item) => item.id === scope.facultyId);
-  const scheduled = (await searchParams).scheduled;
+  const notice = parseScheduledNotice(await searchParams);
   return (
     <>
       <OverviewView
@@ -44,7 +46,7 @@ export default async function OverviewPage({ searchParams }: PageProps<"/overvie
         changeRequests={changeRequests}
         scopeName={scopesFaculty(staff.role) ? (faculty?.name ?? t("allFaculties")) : undefined}
       />
-      <ScheduledNotice code={typeof scheduled === "string" ? scheduled : undefined} />
+      <ScheduledNotice notice={notice} />
     </>
   );
 }

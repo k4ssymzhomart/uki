@@ -64,7 +64,8 @@ function examHref(row: OverviewRow, office: boolean): string | undefined {
 /**
  * 0.1 Overview (Figma 51:2046): stat cards, the exams table with client-side filters, and the next
  * exam's card with Open lobby, and 0.1b behind Video uploaded. New exam (WP 1.3) shows for the exam
- * office; Import CSV stays hidden (no Phase 1 frame imports exams).
+ * office; Import CSV stays hidden (no Phase 1 frame imports exams). When an invite of the next exam
+ * bounced, the readiness card links the exam office to the roster, where 0.3b fixes the address.
  */
 export function OverviewView({
   rows,
@@ -271,6 +272,15 @@ export function OverviewView({
                   </p>
                   <h2 className="type-card-title">{t("overview.readiness.title")}</h2>
                   <p className="type-ui-caption">{t("overview.readiness.body", readiness)}</p>
+                  {office && readiness.ready < readiness.total ? (
+                    <AppLink
+                      href={`/exams/${next.id}/edit/roster`}
+                      className="mt-1 inline-flex items-center gap-1.5 rounded-sm outline-none type-label-m focus-visible:shadow-focus"
+                    >
+                      {t("wizard.overview.fixRoster", { count: readiness.total - readiness.ready })}
+                      <Icon name="arrow-right" className="size-4" />
+                    </AppLink>
+                  ) : null}
                 </div>
               </section>
             ) : null}

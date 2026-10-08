@@ -1,10 +1,14 @@
 // WP 1.3: the exam office creates and schedules an exam through the wizard (0.4, 0.2 with 0.2a, 0.3
 // with 0.3a and 0.3b, 0.5) with demo/roster.csv. The bad rows show on 0.3a and are fixed one by one;
 // the clean file imports, and importing it again adds nobody; Aigerim and Nurlan take seats 1 to 12 and
-// 13 to 24, an overlap is refused; Schedule exam returns to 0.1 with the code. Timed against the exit
-// criterion (under 5 minutes by hand). The exam is deleted afterwards.
+// 13 to 24, an overlap is refused; the test invite goes to Dana only; Schedule exam sends the 24 invites
+// through send-invites (WP 1.4) and returns to 0.1 with the code. Timed against the exit criterion
+// (under 5 minutes by hand). Then a bounced address is fixed through 0.3b and its invite goes out again,
+// and 0.3's Resend sends one invite again. Every email goes to the Resend stub on the port the served
+// functions' env file names (readFunctionsEnv), never to Resend. The exam is deleted afterwards.
 import { readFileSync, writeFileSync } from "node:fs";
 import { expect, type Page, test } from "@playwright/test";
+import { readFunctionsEnv, startResendStub } from "../test/integration/resend-stub.ts";
 import { signIn } from "./support/dashboard.ts";
 import { ROOT } from "./support/env.ts";
 import { message } from "./support/messages.ts";
@@ -53,6 +57,9 @@ test("the exam office creates and schedules an exam from the demo roster in unde
 }, testInfo) => {
   test.setTimeout(300_000);
   const admin = adminClient();
+  const functionsEnv = readFunctionsEnv();
+  const stub = await startResendStub(functionsEnv.port);
+  const inbox = (address: string) => functionsEnv.sink ?? address;
   await signIn(page, STAFF.dana);
   const started = Date.now();
 
@@ -183,13 +190,25 @@ test("the exam office creates and schedules an exam from the demo roster in unde
       { seat_from: 13, seat_to: 24 },
     ]);
 
-    // 0.5: the summary, the test invite disabled until send-invites exists, and Schedule exam.
+    // 0.5: the summary; the test invite goes to Dana alone and writes nothing.
     await page.getByRole("button", { name: m("roster.next"), exact: true }).click();
     await page.waitForURL(/\/edit\/review$/);
     await expect(page.getByText(TITLE, { exact: true })).toBeVisible();
     await expect(page.getByText("24 invites go out", { exact: true })).toBeVisible();
-    await expect(page.getByRole("button", { name: m("review.testInvite"), exact: true })).toBeDisabled();
-    await expect(page.getByText(m("review.invitesUnavailable"))).toBeVisible();
+    await page.getByRole("button", { name: m("review.testInvite"), exact: true }).click();
+    await expect(page.getByText(m("review.testInviteSent"), { exact: true })).toBeVisible({
+      timeout: 30_000,
+    });
+    expect(stub.batches).toHaveLength(1);
+    expect(stub.emails().map((email) => email.to)).toEqual([[inbox(STAFF.dana)]]);
+    expect(stub.emails()[0]?.subject).toContain(TITLE);
+    const states = async () =>
+      ((await admin.from("invites").select("state").eq("exam_id", examId)).data ?? []).map(
+        (row) => row.state,
+      );
+    expect(new Set(await states())).toEqual(new Set(["pending"]));
+
+    // Schedule exam: the code, and the 24 invites through send-invites in one batch.
     await page.getByRole("button", { name: m("review.schedule"), exact: true }).click();
     await page.waitForURL(/\/overview/, { timeout: 60_000 });
     const toast = page.getByText(/^Exam scheduled\. Students join with the code (MATH2-204-[A-Z]{3}\d*)\.$/);
@@ -201,7 +220,76 @@ test("the exam office creates and schedules an exam from the demo roster in unde
     const elapsed = Date.now() - started;
     console.log(`e2e: wizard from New exam to the code ${code} in ${(elapsed / 1000).toFixed(1)} s`);
     expect(elapsed).toBeLessThan(5 * 60_000);
+
+    expect(stub.batches).toHaveLength(2);
+    const sent = stub.batches[1]?.emails ?? [];
+    expect(sent).toHaveLength(24);
+    expect(new Set(sent.map((email) => email.to[0]))).toEqual(
+      new Set(
+        functionsEnv.sink
+          ? [functionsEnv.sink]
+          : readFileSync(fixedCsv(testInfo.outputPath("roster-sent.csv")), "utf8")
+              .trimEnd()
+              .split("\n")
+              .slice(1)
+              .map((line) => line.split(",")[2]),
+      ),
+    );
+    expect(sent.every((email) => email.text.includes(code ?? "-"))).toBe(true);
+    expect(await states()).toEqual(Array.from({ length: 24 }, () => "sent"));
+    await expect(page.getByText(/did not go out/)).toHaveCount(0);
+
+    // 0.3b on the scheduled exam: Kairat's invite bounced (Resend's webhook is Phase 2, so the test
+    // sets it); the new address saves and his invite goes out again to it.
+    const kairat = (
+      await admin
+        .from("exam_students")
+        .select("student_id, students!inner(student_number)")
+        .eq("exam_id", examId)
+        .eq("students.student_number", "20235001")
+        .single()
+    ).data?.student_id as string;
+    await admin
+      .from("invites")
+      .update({ state: "bounced", error: "The mailbox does not exist." })
+      .eq("exam_id", examId)
+      .eq("student_id", kairat);
+    await page.goto(`/exams/${examId}/edit/roster`);
+    const kairatRow = page.getByRole("row").filter({ hasText: "Kairat Kairatov" });
+    await expect(kairatRow.getByText(m("roster.invite.bounced"), { exact: true })).toBeVisible();
+    await kairatRow.getByRole("button", { name: m("roster.action.fixEmail"), exact: true }).click();
+    const fix = page.getByRole("dialog");
+    await expect(fix.getByText("Fix Kairat’s email", { exact: true })).toBeVisible();
+    await expect(fix.getByText(m("roster.fix.helperScheduled"), { exact: true })).toBeVisible();
+    await fix
+      .getByLabel(m("roster.fix.label.email"), { exact: true })
+      .fill("kairat.kairatov@student.kru.test");
+    await fix.getByRole("checkbox", { name: m("roster.fix.roster") }).click();
+    await fix.getByRole("button", { name: m("save"), exact: true }).click();
+    await expect(fix).toBeHidden({ timeout: 30_000 });
+    await expect.poll(() => stub.batches.length, { timeout: 30_000 }).toBe(3);
+    expect(stub.batches[2]?.emails.map((email) => email.to)).toEqual([
+      [inbox("kairat.kairatov@student.kru.test")],
+    ]);
+    const fixed = await admin
+      .from("invites")
+      .select("state, email")
+      .eq("exam_id", examId)
+      .eq("student_id", kairat)
+      .single();
+    expect(fixed.data).toEqual({ state: "sent", email: "kairat.kairatov@student.kru.test" });
+    await expect(kairatRow.getByText(m("roster.invite.sent"), { exact: true })).toBeVisible();
+
+    // 0.3's Resend: one more email for Aigerim Baimukhanova, nobody else.
+    const aigerimRow = page.getByRole("row").filter({ hasText: "Aigerim Baimukhanova" });
+    await aigerimRow.getByRole("button", { name: m("roster.action.resend"), exact: true }).click();
+    await expect(
+      page.getByText("The invite went out again to Aigerim Baimukhanova.", { exact: true }),
+    ).toBeVisible({ timeout: 30_000 });
+    expect(stub.batches).toHaveLength(4);
+    expect(stub.batches[3]?.emails.map((email) => email.to)).toEqual([[inbox("20235002@student.kru.test")]]);
   } finally {
     await admin.from("exams").delete().eq("id", examId);
+    await stub.close();
   }
 });

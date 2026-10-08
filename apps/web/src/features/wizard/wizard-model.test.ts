@@ -10,7 +10,6 @@ import {
   courseSuggestions,
   examDraftFromRow,
   examTimes,
-  FixInviteEmailInput,
   fromAlmaty,
   groupFromRow,
   inTab,
@@ -24,11 +23,13 @@ import {
   nextSeatRange,
   nextStep,
   normaliseHost,
+  parseScheduledNotice,
   parseSeatError,
   parseWizardStep,
   previousStep,
   proctorOfSeat,
   removeProctor,
+  scheduledHref,
   scheduleFailure,
   seatProblem,
   stepperStates,
@@ -302,12 +303,28 @@ describe("invites in the students table", () => {
     expect(matchesSearch(madina, "dias")).toBe(false);
   });
 
-  it("checks 0.3b's address before it leaves the browser", () => {
-    const base = { exam_id: EXAM_ID, student_id: EXAM_ID, roster: true };
-    expect(FixInviteEmailInput.safeParse({ ...base, email: " Y.Tokhtarov@KRU.test " }).data?.email).toBe(
-      "y.tokhtarov@kru.test",
+  it("hands 0.1 the code and, only when some invites did not go out, the exam and their number", () => {
+    expect(scheduledHref("MATH2-204-FRI2", EXAM_ID, 0)).toBe("/overview?scheduled=MATH2-204-FRI2");
+    const href = scheduledHref("MATH2-204-FRI2", EXAM_ID, 3);
+    expect(href).toBe(`/overview?scheduled=MATH2-204-FRI2&exam=${EXAM_ID}&unsent=3`);
+    const query = Object.fromEntries(new URL(href, "http://uki.test").searchParams);
+    expect(parseScheduledNotice(query)).toEqual({ code: "MATH2-204-FRI2", examId: EXAM_ID, unsent: 3 });
+    expect(parseScheduledNotice({ scheduled: "MATH2-204-FRI2" })).toEqual({
+      code: "MATH2-204-FRI2",
+      examId: null,
+      unsent: 0,
+    });
+  });
+
+  it("ignores a notice that is missing or not well formed", () => {
+    expect(parseScheduledNotice({})).toBeNull();
+    expect(parseScheduledNotice({ scheduled: "<script>" })).toBeNull();
+    expect(parseScheduledNotice({ scheduled: ["MATH2-204-FRI", "X"] })).toBeNull();
+    expect(parseScheduledNotice({ scheduled: "MATH2-204-FRI", exam: "nope", unsent: "3" })?.unsent).toBe(0);
+    expect(parseScheduledNotice({ scheduled: "MATH2-204-FRI", exam: EXAM_ID, unsent: "-1" })?.unsent).toBe(0);
+    expect(parseScheduledNotice({ scheduled: "MATH2-204-FRI", exam: EXAM_ID, unsent: "2.5" })?.unsent).toBe(
+      0,
     );
-    expect(FixInviteEmailInput.safeParse({ ...base, email: "yerlan.kru.test" }).success).toBe(false);
   });
 });
 

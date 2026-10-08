@@ -15,15 +15,7 @@ import { dayOf, formatGroupCodes, timeOf, weekdayOf } from "../../lib/format.ts"
 import { AppLink } from "../shell/app-link.tsx";
 import { scheduleExam, sendTestInvite, type WizardError } from "./wizard-actions.ts";
 import { WizardFrame } from "./wizard-frame.tsx";
-import {
-  almatyParts,
-  checkChips,
-  examTimes,
-  previousStep,
-  SEND_INVITES_READY,
-  sortLocales,
-  stepHref,
-} from "./wizard-model.ts";
+import { almatyParts, checkChips, examTimes, previousStep, sortLocales, stepHref } from "./wizard-model.ts";
 
 export type ReviewViewProps = {
   exam: ExamDraft;
@@ -80,8 +72,9 @@ function SummaryRow({ label, children }: { label: string; children: ReactNode })
 /**
  * 0.5 New exam · Review (Figma 159:12771): every step summed up with an Edit link back to it, what
  * happens when the exam is scheduled, and Send a test invite to me. Schedule exam runs schedule_exam:
- * a problem shows with a link to the step that fixes it; success returns to 0.1 with the exam code.
- * send-invites is WP 1.4, so the test invite stays disabled with its reason until it exists.
+ * a problem shows with a link to the step that fixes it; success sends the invites (send-invites, WP
+ * 1.4) and returns to 0.1 with the exam code. The test invite is written for the roster's first
+ * student, so it waits for the roster.
  */
 export function ReviewView({ exam, settings, groupCodes, rosterSize, assignments }: ReviewViewProps) {
   const t = useTranslations("dashboard.wizard");
@@ -292,18 +285,18 @@ export function ReviewView({ exam, settings, groupCodes, rosterSize, assignments
           </div>
           <Button
             variant="secondary"
-            disabled={!SEND_INVITES_READY}
+            disabled={rosterSize === 0}
             loading={testing}
             onClick={() => void test()}
-            aria-describedby={SEND_INVITES_READY ? undefined : `${exam.id}-invites`}
+            aria-describedby={rosterSize === 0 ? `${exam.id}-invites` : undefined}
           >
             {t("review.testInvite")}
           </Button>
-          {SEND_INVITES_READY ? null : (
+          {rosterSize === 0 ? (
             <p id={`${exam.id}-invites`} className="opacity-60 type-ui-caption">
-              {t("review.invitesUnavailable")}
+              {t("review.testInviteNeedsRoster")}
             </p>
-          )}
+          ) : null}
         </section>
       </div>
     </WizardFrame>
