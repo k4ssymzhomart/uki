@@ -25,6 +25,16 @@ loadRootPublicEnv();
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
+/**
+ * The public report pages (WP 1.9): never indexed, never cached, and they never send the address (which
+ * holds the share token) to another site, the stills' storage URLs included.
+ */
+const PUBLIC_REPORT_HEADERS = [
+  { key: "Referrer-Policy", value: "no-referrer" },
+  { key: "Cache-Control", value: "no-store" },
+  { key: "X-Robots-Tag", value: "noindex, nofollow" },
+];
+
 const nextConfig: NextConfig = {
   // Workspace packages ship TypeScript source (docs/decisions.md): Next.js compiles them.
   transpilePackages: ["@uki/ui", "@uki/tokens", "@uki/contracts", "@uki/i18n", "@uki/db"],
@@ -33,6 +43,12 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   turbopack: { root: repoRoot },
   outputFileTracingRoot: repoRoot,
+  async headers() {
+    return [
+      { source: "/r/:token*", headers: PUBLIC_REPORT_HEADERS },
+      { source: "/verify/:code*", headers: PUBLIC_REPORT_HEADERS },
+    ];
+  },
 };
 
 export default withNextIntl(nextConfig);
