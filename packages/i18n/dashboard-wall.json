@@ -1,150 +1,595 @@
 {
-  "dashboard.wall.title": "Live wall",
-  "dashboard.wall.breadcrumb": "Live / {exam} · {left} left",
-  "dashboard.wall.stat.onScreen.label": "On screen",
-  "dashboard.wall.stat.onScreen.caption": "of {writing} writing",
-  "dashboard.wall.stat.warnings.label": "Warnings",
-  "dashboard.wall.stat.warnings.caption": "gaze or tabs, last 5 min",
-  "dashboard.wall.stat.flagged.label": "Flagged",
-  "dashboard.wall.stat.flagged.caption": "phone, second face",
-  "dashboard.wall.stat.paused.label": "Paused",
-  "dashboard.wall.stat.paused.caption": "no face or camera lost",
-  "dashboard.wall.sort.label": "Order of the wall",
-  "dashboard.wall.sort.flags": "Flags first",
-  "dashboard.wall.sort.seat": "Seat order",
-  "dashboard.wall.filter.paused": "Paused · {count}",
-  "dashboard.wall.messageGroup": "Message group",
-  "dashboard.wall.extendTime": "Extend time",
-  "dashboard.wall.grid.label": "Students",
-  "dashboard.wall.tile.phone": "phone {score, number, ::.00} · {time}",
-  "dashboard.wall.tile.phoneNoScore": "phone · {time}",
-  "dashboard.wall.tile.secondFace": "second face · {time}",
-  "dashboard.wall.tile.lookedAway": "looked away {count}× · {seconds, number, ::.#} s",
-  "dashboard.wall.tile.lookedAwayOnce": "looked away {seconds, number, ::.#} s",
-  "dashboard.wall.tile.tabBlocked": "tab blocked · {time}",
-  "dashboard.wall.tile.paused": "{reason, select, face_missing {no face} camera_lost {camera lost} proctor {paused by proctor} other {paused}} · {duration}",
-  "dashboard.wall.tile.pausedNoTime": "{reason, select, face_missing {no face} camera_lost {camera lost} proctor {paused by proctor} other {paused}}",
-  "dashboard.wall.tile.noSignal": "no signal · {duration}",
-  "dashboard.wall.tile.noSignalNever": "no signal",
-  "dashboard.wall.tile.onScreen": "on screen · Q {question}",
-  "dashboard.wall.tile.onScreenNoQuestion": "on screen",
-  "dashboard.wall.tile.done": "{state, select, submitted {submitted} time_up {time up} other {ended}}",
-  "dashboard.wall.tile.state": "{state, select, flagged {Flagged} warning {Warning} paused {Paused} no_signal {No signal} done {Done} other {On screen}}",
-  "dashboard.wall.action.header": "{name} · {number}",
-  "dashboard.wall.action.timeline": "Open timeline",
-  "dashboard.wall.action.message": "Message",
-  "dashboard.wall.action.pause": "Pause exam",
-  "dashboard.wall.action.resume": "Resume exam",
-  "dashboard.wall.action.end": "End session",
-  "dashboard.wall.message.headerGroup": "Quick message · {group}",
-  "dashboard.wall.message.headerStudent": "Quick message · {name}",
-  "dashboard.wall.message.write": "Write a message",
-  "dashboard.wall.message.note": "Each student reads it in their language.",
-  "dashboard.wall.message.dialogBody": "Goes to {target} as typed, without translation.",
-  "dashboard.wall.message.everyone": "everyone in {group}",
-  "dashboard.wall.message.field": "Message",
-  "dashboard.wall.message.counter": "{count}/{max}",
-  "dashboard.wall.message.send": "Send",
-  "dashboard.wall.message.cancel": "Cancel",
-  "dashboard.wall.extend.title": "Extend time",
-  "dashboard.wall.extend.who": "Who",
-  "dashboard.wall.extend.everyone": "Everyone · {count}",
-  "dashboard.wall.extend.add": "Add",
-  "dashboard.wall.extend.option": "+{minutes} min",
-  "dashboard.wall.extend.note": "Ends at {newEnd} instead of {oldEnd}. Students see the new time at once.",
-  "dashboard.wall.extend.submit": "Add {minutes} minutes",
-  "dashboard.wall.end.title": "End {name}’s exam?",
-  "dashboard.wall.end.body": "{pronoun, select, he {His answers so far are saved and he can’t continue.} she {Her answers so far are saved and she can’t continue.} other {Their answers so far are saved and they can’t continue.}} The exam office sees your reason in the report.",
-  "dashboard.wall.end.reason": "Reason (required)",
-  "dashboard.wall.end.helper": "Goes into the integrity report · {count}/{max}",
-  "dashboard.wall.end.cancel": "{pronoun, select, he {Keep him writing} she {Keep her writing} other {Keep them writing}}",
-  "dashboard.wall.end.confirm": "End exam",
-  "dashboard.wall.toast.region": "Notifications",
-  "dashboard.wall.toast.close": "Close",
-  "dashboard.wall.error": "{code, select, forbidden {You can’t send commands for this exam.} not_found {That session no longer exists.} conflict {The session changed before the command arrived. Nothing was sent.} unauthorized {Your sign-in has expired. Sign in again.} rate_limited {Too many commands at once. Try again in a moment.} bad_request {That command was not accepted.} other {Could not reach Üki. Try again.}}",
-  "dashboard.wall.feed.title": "Live events",
-  "dashboard.wall.feed.row": "{name} · {event}",
-  "dashboard.wall.drawer.close": "Close timeline",
-  "dashboard.wall.drawer.meta": "{number}{seat, select, none {} other { · seat {seat}}}{os, select, macos { · macOS} windows { · Windows} other {}}",
-  "dashboard.wall.drawer.state": "{state, select, paused {paused} no_signal {no signal} submitted {submitted} time_up {time up} ended {ended} lobby {checking in} other {on screen now}}",
-  "dashboard.wall.drawer.question": "Q {question} of {total}",
-  "dashboard.wall.drawer.questionNoTotal": "Q {question}",
-  "dashboard.wall.drawer.phoneChip": "phone {score, number, ::.00}",
-  "dashboard.wall.drawer.stills": "Stills",
-  "dashboard.wall.drawer.still": "Still {index} of {count}, {time}",
-  "dashboard.wall.drawer.timeline": "Timeline",
-  "dashboard.wall.drawer.loading": "Loading the timeline",
-  "dashboard.wall.drawer.messageLabel": "{pronoun, select, he {Quick message · sent in his language} she {Quick message · sent in her language} other {Quick message · sent in their language}}",
-  "dashboard.wall.drawer.send": "Send",
-  "dashboard.wall.event.gaze_on_screen.title": "On screen again",
-  "dashboard.wall.event.gaze_off_screen.title": "Looked away",
-  "dashboard.wall.event.gaze_off_screen.feed": "looked away",
-  "dashboard.wall.event.gaze_off_screen.detail": "{seconds, number, ::.#} s, {direction, select, left {to the left} right {to the right} other {up}}",
-  "dashboard.wall.event.gaze_off_screen.repeat": "{count, plural, =2 {Second} =3 {Third} =4 {Fourth} =5 {Fifth} other {{count, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}}} time, {seconds, number, ::.#} s in total",
-  "dashboard.wall.event.gaze_down.title": "Looked down",
-  "dashboard.wall.event.gaze_down.feed": "looked down",
-  "dashboard.wall.event.gaze_down.detail": "{seconds, number, ::.#} s",
-  "dashboard.wall.event.phone_detected.title": "Phone in frame",
-  "dashboard.wall.event.phone_detected.feed": "phone in frame",
-  "dashboard.wall.event.phone_detected.detail": "Confidence {score, number, ::.00}{kept, select, yes { · frame kept} other {}}",
-  "dashboard.wall.event.phone_detected.held": "Held for {seconds, number, ::.#} s",
-  "dashboard.wall.event.face_missing.title": "No face in frame",
-  "dashboard.wall.event.face_missing.feed": "no face",
-  "dashboard.wall.event.face_missing.detail": "{seconds, number, ::.#} s",
-  "dashboard.wall.event.face_second.title": "Second face",
-  "dashboard.wall.event.face_second.feed": "second face",
-  "dashboard.wall.event.face_second.detail": "Someone leaned in for {seconds, number, ::.#} s",
-  "dashboard.wall.event.camera_lost.title": "Camera lost",
-  "dashboard.wall.event.camera_lost.feed": "camera lost",
-  "dashboard.wall.event.camera_lost.detail": "Camera stopped sending frames",
-  "dashboard.wall.event.tab_blocked.title": "New tab blocked",
-  "dashboard.wall.event.tab_blocked.feed": "new tab blocked",
-  "dashboard.wall.event.tab_blocked.detail": "{target, select, named {Tried to open {name}} lock {Tried to open a browser tab} other {Tried to open another tab or app}}",
-  "dashboard.wall.event.copy_blocked.title": "Copy or paste blocked in Üki Lock",
-  "dashboard.wall.event.copy_blocked.feed": "copy blocked",
-  "dashboard.wall.event.copy_blocked.detail": "{kind, select, copy {Copy} cut {Cut} paste {Paste} other {Print}}",
-  "dashboard.wall.event.site_closed.title": "Blocked site closed",
-  "dashboard.wall.event.site_closed.feed": "blocked site closed",
-  "dashboard.wall.event.site_closed.detail": "{host}",
-  "dashboard.wall.event.net_offline.title": "Network lost",
-  "dashboard.wall.event.net_offline.feed": "network lost",
-  "dashboard.wall.event.net_offline.detail": "{seconds, number, ::.#} s offline · {queued, plural, one {# event} other {# events}} queued",
-  "dashboard.wall.event.identity_matched.title": "Card and face matched at check-in",
-  "dashboard.wall.event.identity_matched.detail": "Similarity {score, number, ::.00} · {tries, plural, one {# try} other {# tries}}",
-  "dashboard.wall.event.exam_started.title": "Exam started",
-  "dashboard.wall.event.browser_locked.title": "Browser locked, other tabs closed",
-  "dashboard.wall.event.answer_saved.title": "Answer saved",
-  "dashboard.wall.event.session_paused.title": "Session paused",
-  "dashboard.wall.event.session_paused.feed": "session paused",
-  "dashboard.wall.event.session_paused.detail": "{reason, select, face_missing {No face} camera_lost {Camera lost} other {By the proctor}} · timer stopped",
-  "dashboard.wall.event.session_resumed.title": "Session resumed",
-  "dashboard.wall.event.session_resumed.detail": "Paused for {seconds, number, ::.#} s",
-  "dashboard.wall.event.exam_submitted.title": "Answers handed in",
-  "dashboard.wall.event.exam_submitted.detail": "Time used {duration}",
-  "dashboard.wall.event.exam_time_up.title": "Time ran out, answers handed in",
-  "dashboard.wall.event.proctor_paused.title": "Paused by the proctor",
-  "dashboard.wall.event.proctor_paused.feed": "paused by the proctor",
-  "dashboard.wall.event.proctor_resumed.title": "Resumed by the proctor",
-  "dashboard.wall.event.proctor_resumed.feed": "resumed by the proctor",
-  "dashboard.wall.event.proctor_ended.title": "Ended by the proctor",
-  "dashboard.wall.event.proctor_ended.feed": "ended by the proctor",
-  "dashboard.wall.event.proctor_ended.detail": "{reason}",
-  "dashboard.wall.event.proctor_time_added.title": "Time added · +{minutes} min",
-  "dashboard.wall.event.proctor_time_added.feed": "time added · +{minutes} min",
-  "dashboard.wall.event.proctor_time_added.detail": "{scope, select, group {Everyone} other {This student}}",
-  "dashboard.wall.event.proctor_message.title": "Message sent",
-  "dashboard.wall.event.proctor_message.feed": "message sent",
-  "dashboard.wall.event.proctor_message.detail": "“{text}”",
-  "dashboard.wall.event.proctor_by": "By {name}",
-  "dashboard.wall.event.student_help_requested.title": "Asked for help",
-  "dashboard.wall.event.student_help_requested.feed": "asked for help",
-  "dashboard.wall.event.student_help_requested.detail": "{topic, select, identity {Identity check} question {About a question} other {Technical problem}}",
-  "dashboard.wall.event.lock_app_disconnected.title": "Üki app closed while Üki Lock was on",
-  "dashboard.wall.event.lock_app_disconnected.feed": "app disconnected",
-  "dashboard.wall.event.lock_app_disconnected.detail": "{side, select, lock {Üki Lock went away} other {The app closed}}",
-  "dashboard.wall.event.lock_fullscreen_exit.title": "Left full screen",
-  "dashboard.wall.event.lock_fullscreen_exit.feed": "left full screen",
-  "dashboard.wall.event.lock_fullscreen_exit.detail": "{count, plural, one {# time} other {# times}} this session",
-  "dashboard.wall.event.proctor_note.title": "Note",
-  "dashboard.wall.event.proctor_note.detail": "“{text}”"
+  "$comment": "Dashboard strings: key to { en, ru }. English comes from the Figma dashboard frames. The Russian is a first pass by the agent (WP 1.2): native review needed, P.18.",
+  "dashboard.wall.title": {
+    "en": "Live wall",
+    "ru": "Экран наблюдения"
+  },
+  "dashboard.wall.breadcrumb": {
+    "en": "Live / {exam} · {left} left",
+    "ru": "Наблюдение / {exam} · осталось {left}"
+  },
+  "dashboard.wall.stat.onScreen.label": {
+    "en": "On screen",
+    "ru": "На экране"
+  },
+  "dashboard.wall.stat.onScreen.caption": {
+    "en": "of {writing} writing",
+    "ru": "из {writing} пишущих"
+  },
+  "dashboard.wall.stat.warnings.label": {
+    "en": "Warnings",
+    "ru": "Предупреждения"
+  },
+  "dashboard.wall.stat.warnings.caption": {
+    "en": "gaze or tabs, last 5 min",
+    "ru": "взгляд или вкладки, последние 5 мин"
+  },
+  "dashboard.wall.stat.flagged.label": {
+    "en": "Flagged",
+    "ru": "С отметками"
+  },
+  "dashboard.wall.stat.flagged.caption": {
+    "en": "phone, second face",
+    "ru": "телефон, второе лицо"
+  },
+  "dashboard.wall.stat.paused.label": {
+    "en": "Paused",
+    "ru": "На паузе"
+  },
+  "dashboard.wall.stat.paused.caption": {
+    "en": "no face or camera lost",
+    "ru": "нет лица или камеры"
+  },
+  "dashboard.wall.sort.label": {
+    "en": "Order of the wall",
+    "ru": "Порядок на экране"
+  },
+  "dashboard.wall.sort.flags": {
+    "en": "Flags first",
+    "ru": "Сначала отметки"
+  },
+  "dashboard.wall.sort.seat": {
+    "en": "Seat order",
+    "ru": "По местам"
+  },
+  "dashboard.wall.filter.paused": {
+    "en": "Paused · {count}",
+    "ru": "На паузе · {count}"
+  },
+  "dashboard.wall.messageGroup": {
+    "en": "Message group",
+    "ru": "Написать группе"
+  },
+  "dashboard.wall.extendTime": {
+    "en": "Extend time",
+    "ru": "Добавить время"
+  },
+  "dashboard.wall.grid.label": {
+    "en": "Students",
+    "ru": "Студенты"
+  },
+  "dashboard.wall.tile.phone": {
+    "en": "phone {score, number, ::.00} · {time}",
+    "ru": "телефон {score, number, ::.00} · {time}"
+  },
+  "dashboard.wall.tile.phoneNoScore": {
+    "en": "phone · {time}",
+    "ru": "телефон · {time}"
+  },
+  "dashboard.wall.tile.secondFace": {
+    "en": "second face · {time}",
+    "ru": "второе лицо · {time}"
+  },
+  "dashboard.wall.tile.lookedAway": {
+    "en": "looked away {count}× · {seconds, number, ::.#} s",
+    "ru": "взгляд в сторону {count}× · {seconds, number, ::.#} с"
+  },
+  "dashboard.wall.tile.lookedAwayOnce": {
+    "en": "looked away {seconds, number, ::.#} s",
+    "ru": "взгляд в сторону {seconds, number, ::.#} с"
+  },
+  "dashboard.wall.tile.tabBlocked": {
+    "en": "tab blocked · {time}",
+    "ru": "вкладка заблокирована · {time}"
+  },
+  "dashboard.wall.tile.paused": {
+    "en": "{reason, select, face_missing {no face} camera_lost {camera lost} proctor {paused by proctor} other {paused}} · {duration}",
+    "ru": "{reason, select, face_missing {нет лица} camera_lost {нет камеры} proctor {пауза от проктора} other {пауза}} · {duration}"
+  },
+  "dashboard.wall.tile.pausedNoTime": {
+    "en": "{reason, select, face_missing {no face} camera_lost {camera lost} proctor {paused by proctor} other {paused}}",
+    "ru": "{reason, select, face_missing {нет лица} camera_lost {нет камеры} proctor {пауза от проктора} other {пауза}}"
+  },
+  "dashboard.wall.tile.noSignal": {
+    "en": "no signal · {duration}",
+    "ru": "нет сигнала · {duration}"
+  },
+  "dashboard.wall.tile.noSignalNever": {
+    "en": "no signal",
+    "ru": "нет сигнала"
+  },
+  "dashboard.wall.tile.onScreen": {
+    "en": "on screen · Q {question}",
+    "ru": "на экране · вопрос {question}"
+  },
+  "dashboard.wall.tile.onScreenNoQuestion": {
+    "en": "on screen",
+    "ru": "на экране"
+  },
+  "dashboard.wall.tile.done": {
+    "en": "{state, select, submitted {submitted} time_up {time up} other {ended}}",
+    "ru": "{state, select, submitted {сдано} time_up {время вышло} other {завершено}}"
+  },
+  "dashboard.wall.tile.state": {
+    "en": "{state, select, flagged {Flagged} warning {Warning} paused {Paused} no_signal {No signal} done {Done} other {On screen}}",
+    "ru": "{state, select, flagged {Отметка} warning {Предупреждение} paused {Пауза} no_signal {Нет сигнала} done {Завершено} other {На экране}}"
+  },
+  "dashboard.wall.action.header": {
+    "en": "{name} · {number}",
+    "ru": "{name} · {number}"
+  },
+  "dashboard.wall.action.timeline": {
+    "en": "Open timeline",
+    "ru": "Открыть хронологию"
+  },
+  "dashboard.wall.action.message": {
+    "en": "Message",
+    "ru": "Написать"
+  },
+  "dashboard.wall.action.pause": {
+    "en": "Pause exam",
+    "ru": "Приостановить экзамен"
+  },
+  "dashboard.wall.action.resume": {
+    "en": "Resume exam",
+    "ru": "Продолжить экзамен"
+  },
+  "dashboard.wall.action.end": {
+    "en": "End session",
+    "ru": "Завершить сессию"
+  },
+  "dashboard.wall.message.headerGroup": {
+    "en": "Quick message · {group}",
+    "ru": "Быстрое сообщение · {group}"
+  },
+  "dashboard.wall.message.headerStudent": {
+    "en": "Quick message · {name}",
+    "ru": "Быстрое сообщение · {name}"
+  },
+  "dashboard.wall.message.write": {
+    "en": "Write a message",
+    "ru": "Написать сообщение"
+  },
+  "dashboard.wall.message.note": {
+    "en": "Each student reads it in their language.",
+    "ru": "Каждый студент прочитает его на своём языке."
+  },
+  "dashboard.wall.message.dialogBody": {
+    "en": "Goes to {target} as typed, without translation.",
+    "ru": "Получатель: {target}. Уходит как написано, без перевода."
+  },
+  "dashboard.wall.message.everyone": {
+    "en": "everyone in {group}",
+    "ru": "все в группе {group}"
+  },
+  "dashboard.wall.message.field": {
+    "en": "Message",
+    "ru": "Сообщение"
+  },
+  "dashboard.wall.message.counter": {
+    "en": "{count}/{max}",
+    "ru": "{count}/{max}"
+  },
+  "dashboard.wall.message.send": {
+    "en": "Send",
+    "ru": "Отправить"
+  },
+  "dashboard.wall.message.cancel": {
+    "en": "Cancel",
+    "ru": "Отмена"
+  },
+  "dashboard.wall.extend.title": {
+    "en": "Extend time",
+    "ru": "Добавить время"
+  },
+  "dashboard.wall.extend.who": {
+    "en": "Who",
+    "ru": "Кому"
+  },
+  "dashboard.wall.extend.everyone": {
+    "en": "Everyone · {count}",
+    "ru": "Всем · {count}"
+  },
+  "dashboard.wall.extend.add": {
+    "en": "Add",
+    "ru": "Добавить"
+  },
+  "dashboard.wall.extend.option": {
+    "en": "+{minutes} min",
+    "ru": "+{minutes} мин"
+  },
+  "dashboard.wall.extend.note": {
+    "en": "Ends at {newEnd} instead of {oldEnd}. Students see the new time at once.",
+    "ru": "Окончание в {newEnd} вместо {oldEnd}. Студенты сразу увидят новое время."
+  },
+  "dashboard.wall.extend.submit": {
+    "en": "Add {minutes} minutes",
+    "ru": "Добавить {minutes, plural, one {# минуту} few {# минуты} many {# минут} other {# минуты}}"
+  },
+  "dashboard.wall.end.title": {
+    "en": "End {name}’s exam?",
+    "ru": "Завершить экзамен: {name}?"
+  },
+  "dashboard.wall.end.body": {
+    "en": "{pronoun, select, he {His answers so far are saved and he can’t continue.} she {Her answers so far are saved and she can’t continue.} other {Their answers so far are saved and they can’t continue.}} The exam office sees your reason in the report.",
+    "ru": "{pronoun, select, he {Его ответы на этот момент сохранятся, продолжить он не сможет.} she {Её ответы на этот момент сохранятся, продолжить она не сможет.} other {Ответы на этот момент сохранятся, продолжить будет нельзя.}} Экзаменационный отдел увидит вашу причину в отчёте."
+  },
+  "dashboard.wall.end.reason": {
+    "en": "Reason (required)",
+    "ru": "Причина (обязательно)"
+  },
+  "dashboard.wall.end.helper": {
+    "en": "Goes into the integrity report · {count}/{max}",
+    "ru": "Попадёт в отчёт о добросовестности · {count}/{max}"
+  },
+  "dashboard.wall.end.cancel": {
+    "en": "{pronoun, select, he {Keep him writing} she {Keep her writing} other {Keep them writing}}",
+    "ru": "{pronoun, select, he {Пусть пишет дальше} she {Пусть пишет дальше} other {Пусть пишет дальше}}"
+  },
+  "dashboard.wall.end.confirm": {
+    "en": "End exam",
+    "ru": "Завершить экзамен"
+  },
+  "dashboard.wall.toast.region": {
+    "en": "Notifications",
+    "ru": "Уведомления"
+  },
+  "dashboard.wall.toast.close": {
+    "en": "Close",
+    "ru": "Закрыть"
+  },
+  "dashboard.wall.error": {
+    "en": "{code, select, forbidden {You can’t send commands for this exam.} not_found {That session no longer exists.} conflict {The session changed before the command arrived. Nothing was sent.} unauthorized {Your sign-in has expired. Sign in again.} rate_limited {Too many commands at once. Try again in a moment.} bad_request {That command was not accepted.} other {Could not reach Üki. Try again.}}",
+    "ru": "{code, select, forbidden {Вы не можете отправлять команды на этом экзамене.} not_found {Этой сессии больше нет.} conflict {Сессия изменилась раньше, чем пришла команда. Ничего не отправлено.} unauthorized {Срок входа истёк. Войдите снова.} rate_limited {Слишком много команд сразу. Попробуйте через минуту.} bad_request {Команда не принята.} other {Не удалось связаться с Üki. Попробуйте снова.}}"
+  },
+  "dashboard.wall.feed.title": {
+    "en": "Live events",
+    "ru": "События"
+  },
+  "dashboard.wall.feed.row": {
+    "en": "{name} · {event}",
+    "ru": "{name} · {event}"
+  },
+  "dashboard.wall.drawer.close": {
+    "en": "Close timeline",
+    "ru": "Закрыть хронологию"
+  },
+  "dashboard.wall.drawer.meta": {
+    "en": "{number}{seat, select, none {} other { · seat {seat}}}{os, select, macos { · macOS} windows { · Windows} other {}}",
+    "ru": "{number}{seat, select, none {} other { · место {seat}}}{os, select, macos { · macOS} windows { · Windows} other {}}"
+  },
+  "dashboard.wall.drawer.state": {
+    "en": "{state, select, paused {paused} no_signal {no signal} submitted {submitted} time_up {time up} ended {ended} lobby {checking in} other {on screen now}}",
+    "ru": "{state, select, paused {на паузе} no_signal {нет сигнала} submitted {сдано} time_up {время вышло} ended {завершено} lobby {проходит регистрацию} other {сейчас на экране}}"
+  },
+  "dashboard.wall.drawer.question": {
+    "en": "Q {question} of {total}",
+    "ru": "Вопрос {question} из {total}"
+  },
+  "dashboard.wall.drawer.questionNoTotal": {
+    "en": "Q {question}",
+    "ru": "Вопрос {question}"
+  },
+  "dashboard.wall.drawer.phoneChip": {
+    "en": "phone {score, number, ::.00}",
+    "ru": "телефон {score, number, ::.00}"
+  },
+  "dashboard.wall.drawer.stills": {
+    "en": "Stills",
+    "ru": "Снимки"
+  },
+  "dashboard.wall.drawer.still": {
+    "en": "Still {index} of {count}, {time}",
+    "ru": "Снимок {index} из {count}, {time}"
+  },
+  "dashboard.wall.drawer.timeline": {
+    "en": "Timeline",
+    "ru": "Хронология"
+  },
+  "dashboard.wall.drawer.loading": {
+    "en": "Loading the timeline",
+    "ru": "Загружаем хронологию"
+  },
+  "dashboard.wall.drawer.messageLabel": {
+    "en": "{pronoun, select, he {Quick message · sent in his language} she {Quick message · sent in her language} other {Quick message · sent in their language}}",
+    "ru": "{pronoun, select, he {Быстрое сообщение · на его языке} she {Быстрое сообщение · на её языке} other {Быстрое сообщение · на языке студента}}"
+  },
+  "dashboard.wall.drawer.send": {
+    "en": "Send",
+    "ru": "Отправить"
+  },
+  "dashboard.wall.event.gaze_on_screen.title": {
+    "en": "On screen again",
+    "ru": "Снова смотрит на экран"
+  },
+  "dashboard.wall.event.gaze_off_screen.title": {
+    "en": "Looked away",
+    "ru": "Взгляд в сторону"
+  },
+  "dashboard.wall.event.gaze_off_screen.feed": {
+    "en": "looked away",
+    "ru": "взгляд в сторону"
+  },
+  "dashboard.wall.event.gaze_off_screen.detail": {
+    "en": "{seconds, number, ::.#} s, {direction, select, left {to the left} right {to the right} other {up}}",
+    "ru": "{seconds, number, ::.#} с, {direction, select, left {влево} right {вправо} other {вверх}}"
+  },
+  "dashboard.wall.event.gaze_off_screen.repeat": {
+    "en": "{count, plural, =2 {Second} =3 {Third} =4 {Fourth} =5 {Fifth} other {{count, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}}} time, {seconds, number, ::.#} s in total",
+    "ru": "{count, plural, =2 {Второй} =3 {Третий} =4 {Четвёртый} =5 {Пятый} other {{count, selectordinal, other {#-й}}}} раз, всего {seconds, number, ::.#} с"
+  },
+  "dashboard.wall.event.gaze_down.title": {
+    "en": "Looked down",
+    "ru": "Взгляд вниз"
+  },
+  "dashboard.wall.event.gaze_down.feed": {
+    "en": "looked down",
+    "ru": "взгляд вниз"
+  },
+  "dashboard.wall.event.gaze_down.detail": {
+    "en": "{seconds, number, ::.#} s",
+    "ru": "{seconds, number, ::.#} с"
+  },
+  "dashboard.wall.event.phone_detected.title": {
+    "en": "Phone in frame",
+    "ru": "Телефон в кадре"
+  },
+  "dashboard.wall.event.phone_detected.feed": {
+    "en": "phone in frame",
+    "ru": "телефон в кадре"
+  },
+  "dashboard.wall.event.phone_detected.detail": {
+    "en": "Confidence {score, number, ::.00}{kept, select, yes { · frame kept} other {}}",
+    "ru": "Уверенность {score, number, ::.00}{kept, select, yes { · кадр сохранён} other {}}"
+  },
+  "dashboard.wall.event.phone_detected.held": {
+    "en": "Held for {seconds, number, ::.#} s",
+    "ru": "В кадре {seconds, number, ::.#} с"
+  },
+  "dashboard.wall.event.face_missing.title": {
+    "en": "No face in frame",
+    "ru": "Нет лица в кадре"
+  },
+  "dashboard.wall.event.face_missing.feed": {
+    "en": "no face",
+    "ru": "нет лица"
+  },
+  "dashboard.wall.event.face_missing.detail": {
+    "en": "{seconds, number, ::.#} s",
+    "ru": "{seconds, number, ::.#} с"
+  },
+  "dashboard.wall.event.face_second.title": {
+    "en": "Second face",
+    "ru": "Второе лицо"
+  },
+  "dashboard.wall.event.face_second.feed": {
+    "en": "second face",
+    "ru": "второе лицо"
+  },
+  "dashboard.wall.event.face_second.detail": {
+    "en": "Someone leaned in for {seconds, number, ::.#} s",
+    "ru": "Кто-то заглянул в кадр на {seconds, number, ::.#} с"
+  },
+  "dashboard.wall.event.camera_lost.title": {
+    "en": "Camera lost",
+    "ru": "Камера отключилась"
+  },
+  "dashboard.wall.event.camera_lost.feed": {
+    "en": "camera lost",
+    "ru": "камера отключилась"
+  },
+  "dashboard.wall.event.camera_lost.detail": {
+    "en": "Camera stopped sending frames",
+    "ru": "Камера перестала передавать кадры"
+  },
+  "dashboard.wall.event.tab_blocked.title": {
+    "en": "New tab blocked",
+    "ru": "Новая вкладка заблокирована"
+  },
+  "dashboard.wall.event.tab_blocked.feed": {
+    "en": "new tab blocked",
+    "ru": "новая вкладка заблокирована"
+  },
+  "dashboard.wall.event.tab_blocked.detail": {
+    "en": "{target, select, named {Tried to open {name}} lock {Tried to open a browser tab} other {Tried to open another tab or app}}",
+    "ru": "{target, select, named {Попытка открыть {name}} lock {Попытка открыть вкладку браузера} other {Попытка открыть другую вкладку или приложение}}"
+  },
+  "dashboard.wall.event.copy_blocked.title": {
+    "en": "Copy or paste blocked in Üki Lock",
+    "ru": "Копирование или вставка заблокированы в Üki Lock"
+  },
+  "dashboard.wall.event.copy_blocked.feed": {
+    "en": "copy blocked",
+    "ru": "копирование заблокировано"
+  },
+  "dashboard.wall.event.copy_blocked.detail": {
+    "en": "{kind, select, copy {Copy} cut {Cut} paste {Paste} other {Print}}",
+    "ru": "{kind, select, copy {Копирование} cut {Вырезание} paste {Вставка} other {Печать}}"
+  },
+  "dashboard.wall.event.site_closed.title": {
+    "en": "Blocked site closed",
+    "ru": "Запрещённый сайт закрыт"
+  },
+  "dashboard.wall.event.site_closed.feed": {
+    "en": "blocked site closed",
+    "ru": "запрещённый сайт закрыт"
+  },
+  "dashboard.wall.event.site_closed.detail": {
+    "en": "{host}",
+    "ru": "{host}"
+  },
+  "dashboard.wall.event.net_offline.title": {
+    "en": "Network lost",
+    "ru": "Сеть потеряна"
+  },
+  "dashboard.wall.event.net_offline.feed": {
+    "en": "network lost",
+    "ru": "сеть потеряна"
+  },
+  "dashboard.wall.event.net_offline.detail": {
+    "en": "{seconds, number, ::.#} s offline · {queued, plural, one {# event} other {# events}} queued",
+    "ru": "{seconds, number, ::.#} с без сети · в очереди {queued, plural, one {# событие} few {# события} many {# событий} other {# события}}"
+  },
+  "dashboard.wall.event.identity_matched.title": {
+    "en": "Card and face matched at check-in",
+    "ru": "Билет и лицо совпали при входе"
+  },
+  "dashboard.wall.event.identity_matched.detail": {
+    "en": "Similarity {score, number, ::.00} · {tries, plural, one {# try} other {# tries}}",
+    "ru": "Сходство {score, number, ::.00} · {tries, plural, one {# попытка} few {# попытки} many {# попыток} other {# попытки}}"
+  },
+  "dashboard.wall.event.exam_started.title": {
+    "en": "Exam started",
+    "ru": "Экзамен начался"
+  },
+  "dashboard.wall.event.browser_locked.title": {
+    "en": "Browser locked, other tabs closed",
+    "ru": "Браузер заблокирован, другие вкладки закрыты"
+  },
+  "dashboard.wall.event.answer_saved.title": {
+    "en": "Answer saved",
+    "ru": "Ответ сохранён"
+  },
+  "dashboard.wall.event.session_paused.title": {
+    "en": "Session paused",
+    "ru": "Сессия приостановлена"
+  },
+  "dashboard.wall.event.session_paused.feed": {
+    "en": "session paused",
+    "ru": "сессия приостановлена"
+  },
+  "dashboard.wall.event.session_paused.detail": {
+    "en": "{reason, select, face_missing {No face} camera_lost {Camera lost} other {By the proctor}} · timer stopped",
+    "ru": "{reason, select, face_missing {Нет лица} camera_lost {Камера отключилась} other {Проктором}} · таймер остановлен"
+  },
+  "dashboard.wall.event.session_resumed.title": {
+    "en": "Session resumed",
+    "ru": "Сессия продолжена"
+  },
+  "dashboard.wall.event.session_resumed.detail": {
+    "en": "Paused for {seconds, number, ::.#} s",
+    "ru": "Пауза длилась {seconds, number, ::.#} с"
+  },
+  "dashboard.wall.event.exam_submitted.title": {
+    "en": "Answers handed in",
+    "ru": "Ответы сданы"
+  },
+  "dashboard.wall.event.exam_submitted.detail": {
+    "en": "Time used {duration}",
+    "ru": "Затрачено {duration}"
+  },
+  "dashboard.wall.event.exam_time_up.title": {
+    "en": "Time ran out, answers handed in",
+    "ru": "Время вышло, ответы сданы"
+  },
+  "dashboard.wall.event.proctor_paused.title": {
+    "en": "Paused by the proctor",
+    "ru": "Приостановлено проктором"
+  },
+  "dashboard.wall.event.proctor_paused.feed": {
+    "en": "paused by the proctor",
+    "ru": "приостановлено проктором"
+  },
+  "dashboard.wall.event.proctor_resumed.title": {
+    "en": "Resumed by the proctor",
+    "ru": "Продолжено проктором"
+  },
+  "dashboard.wall.event.proctor_resumed.feed": {
+    "en": "resumed by the proctor",
+    "ru": "продолжено проктором"
+  },
+  "dashboard.wall.event.proctor_ended.title": {
+    "en": "Ended by the proctor",
+    "ru": "Завершено проктором"
+  },
+  "dashboard.wall.event.proctor_ended.feed": {
+    "en": "ended by the proctor",
+    "ru": "завершено проктором"
+  },
+  "dashboard.wall.event.proctor_ended.detail": {
+    "en": "{reason}",
+    "ru": "{reason}"
+  },
+  "dashboard.wall.event.proctor_time_added.title": {
+    "en": "Time added · +{minutes} min",
+    "ru": "Добавлено время · +{minutes} мин"
+  },
+  "dashboard.wall.event.proctor_time_added.feed": {
+    "en": "time added · +{minutes} min",
+    "ru": "добавлено время · +{minutes} мин"
+  },
+  "dashboard.wall.event.proctor_time_added.detail": {
+    "en": "{scope, select, group {Everyone} other {This student}}",
+    "ru": "{scope, select, group {Всем} other {Этому студенту}}"
+  },
+  "dashboard.wall.event.proctor_message.title": {
+    "en": "Message sent",
+    "ru": "Сообщение отправлено"
+  },
+  "dashboard.wall.event.proctor_message.feed": {
+    "en": "message sent",
+    "ru": "сообщение отправлено"
+  },
+  "dashboard.wall.event.proctor_message.detail": {
+    "en": "“{text}”",
+    "ru": "«{text}»"
+  },
+  "dashboard.wall.event.proctor_by": {
+    "en": "By {name}",
+    "ru": "Проктор: {name}"
+  },
+  "dashboard.wall.event.student_help_requested.title": {
+    "en": "Asked for help",
+    "ru": "Просит помощи"
+  },
+  "dashboard.wall.event.student_help_requested.feed": {
+    "en": "asked for help",
+    "ru": "просит помощи"
+  },
+  "dashboard.wall.event.student_help_requested.detail": {
+    "en": "{topic, select, identity {Identity check} question {About a question} other {Technical problem}}",
+    "ru": "{topic, select, identity {Проверка личности} question {Вопрос по заданию} other {Техническая проблема}}"
+  },
+  "dashboard.wall.event.lock_app_disconnected.title": {
+    "en": "Üki app closed while Üki Lock was on",
+    "ru": "Приложение Üki закрылось при включённом Üki Lock"
+  },
+  "dashboard.wall.event.lock_app_disconnected.feed": {
+    "en": "app disconnected",
+    "ru": "приложение отключилось"
+  },
+  "dashboard.wall.event.lock_app_disconnected.detail": {
+    "en": "{side, select, lock {Üki Lock went away} other {The app closed}}",
+    "ru": "{side, select, lock {Üki Lock отключился} other {Приложение закрылось}}"
+  },
+  "dashboard.wall.event.lock_fullscreen_exit.title": {
+    "en": "Left full screen",
+    "ru": "Выход из полноэкранного режима"
+  },
+  "dashboard.wall.event.lock_fullscreen_exit.feed": {
+    "en": "left full screen",
+    "ru": "выход из полноэкранного режима"
+  },
+  "dashboard.wall.event.lock_fullscreen_exit.detail": {
+    "en": "{count, plural, one {# time} other {# times}} this session",
+    "ru": "{count, plural, one {# раз} few {# раза} many {# раз} other {# раза}} за сессию"
+  },
+  "dashboard.wall.event.proctor_note.title": {
+    "en": "Note",
+    "ru": "Заметка"
+  },
+  "dashboard.wall.event.proctor_note.detail": {
+    "en": "“{text}”",
+    "ru": "«{text}»"
+  }
 }

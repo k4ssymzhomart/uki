@@ -60,6 +60,469 @@
       "title": "Версия Üki"
     }
   },
+  "dashboard": {
+    "common": {
+      "allGroups": "Все группы",
+      "dateTime": "{date} · {time}",
+      "groups": "{count, plural, one {Группа {codes}} few {Группы {codes}} many {Группы {codes}} other {Группы {codes}}}",
+      "minutes": "{minutes} мин",
+      "proctors": "{count, plural, one {# проктор} few {# проктора} many {# прокторов} other {# проктора}}",
+      "todayTime": "Сегодня · {time}",
+      "withDetail": "{main} · {detail}"
+    },
+    "lobby": {
+      "banner": {
+        "joined": "Вошли {joined} из {total}.",
+        "needHelp": "{count, plural, =1 {Одному студенту нужна помощь.} one {Помощь нужна # студенту.} few {Помощь нужна # студентам.} many {Помощь нужна # студентам.} other {Помощь нужна # студента.}}",
+        "notJoined": "{count, plural, =1 {Один студент ещё не открыл Üki.} one {# студент ещё не открыл Üki.} few {# студента ещё не открыли Üki.} many {# студентов ещё не открыли Üki.} other {# студента ещё не открыли Üki.}}",
+        "started": "Начался в {time}",
+        "startsAt": "Начало в {time} · через {minutes} мин"
+      },
+      "breadcrumb": "Наблюдение / {exam} · {groups}",
+      "chip": {
+        "checking": "Регистрация",
+        "done": "Завершено",
+        "needsHelp": "Нужна помощь",
+        "notJoined": "Нет входа",
+        "paused": "Пауза",
+        "ready": "Готово",
+        "writing": "Пишет"
+      },
+      "column": {
+        "action": "Действие",
+        "device": "Устройство",
+        "status": "Статус",
+        "student": "Студент",
+        "where": "Где сейчас"
+      },
+      "detail": {
+        "appOpen": "Открыто: {app}",
+        "bounced": "Письмо-приглашение не доставлено",
+        "cameraBlocked": "Камеру занимает другое приложение",
+        "cardRetry": "Билет не читается · попытка {attempt} из {max}",
+        "waiting": "Ждёт начала"
+      },
+      "device": "{os} · Üki {version}",
+      "message": "Написать",
+      "messageEveryone": "Написать всем",
+      "noDevice": "—",
+      "os": {
+        "macos": "macOS",
+        "windows": "Windows"
+      },
+      "startError": {
+        "alreadyStarted": "Экзамен уже начался.",
+        "failed": "Экзамен не начался. Попробуйте снова.",
+        "forbidden": "Начать экзамен может только старший проктор или экзаменационный отдел."
+      },
+      "startExam": "Начать экзамен",
+      "stat": {
+        "joined": {
+          "caption": "{total, plural, one {из # студента} few {из # студентов} many {из # студентов} other {из # студента}}",
+          "label": "Вошли"
+        },
+        "needHelp": {
+          "caption": "Личность или другие приложения",
+          "label": "Нужна помощь"
+        },
+        "notJoined": {
+          "caption": "Приглашение открыли: {count}",
+          "label": "Не вошли"
+        },
+        "ready": {
+          "caption": "Все проверки пройдены",
+          "label": "Готовы"
+        }
+      },
+      "step": {
+        "checking": "Проверка системы",
+        "finished": "Завершено",
+        "identity": "Проверка личности",
+        "joined": "Вход выполнен",
+        "notJoined": "Нет входа",
+        "rules": "Правила",
+        "writing": "Пишет экзамен"
+      },
+      "table": {
+        "empty": "В этом списке нет студентов.",
+        "filter": {
+          "all": "Все",
+          "needHelp": "Нужна помощь · {count}",
+          "notJoined": "Не вошли · {count}",
+          "ready": "Готовы · {count}"
+        },
+        "filterLabel": "Фильтр студентов",
+        "search": "Найти студента",
+        "title": "Регистрация"
+      },
+      "title": "Лобби"
+    },
+    "overview": {
+      "check": {
+        "gaze": "Взгляд",
+        "id": "Студенческий билет",
+        "lock": "Üki Lock",
+        "phone": "Телефон"
+      },
+      "column": {
+        "checks": "Проверки",
+        "exam": "Экзамен",
+        "open": "Открыть",
+        "status": "Статус",
+        "students": "Студенты",
+        "when": "Когда"
+      },
+      "exams": {
+        "empty": "Здесь нет экзаменов.",
+        "title": "Экзамены"
+      },
+      "filter": {
+        "all": "Все",
+        "done": "Завершены",
+        "label": "Фильтр экзаменов",
+        "live": "Идут",
+        "upcoming": "Предстоящие"
+      },
+      "next": {
+        "body": "Лобби открывается в {time}. {students, plural, one {# студент} few {# студента} many {# студентов} other {# студента}}, {proctors, plural, one {# проктор} few {# проктора} many {# прокторов} other {# проктора}}.",
+        "openLobby": "Открыть лобби",
+        "overline": "Следующий экзамен · {date}",
+        "title": "{course} · {time}"
+      },
+      "readiness": {
+        "body": "Список {ready} из {total} · правила на ҚАЗ, РУС, ENG · прокторы назначены.",
+        "overline": "Перед экзаменом · {weekday}",
+        "title": "Готово к проведению"
+      },
+      "stat": {
+        "live": {
+          "label": "Идут сейчас"
+        },
+        "review": {
+          "label": "Ждут проверки"
+        },
+        "upcoming": {
+          "caption": "Далее: {course} · {weekday} {time}",
+          "label": "Предстоящие"
+        },
+        "video": {
+          "caption": "Только события и отмеченные кадры",
+          "label": "Загружено видео",
+          "value": "{megabytes} МБ"
+        }
+      },
+      "status": {
+        "cancelled": "Отменён",
+        "draft": "Черновик",
+        "live": "Идёт сейчас",
+        "reviewed": "Проверен",
+        "scheduled": "Запланирован",
+        "toReview": "{count, plural, one {# отметка на проверку} few {# отметки на проверку} many {# отметок на проверку} other {# отметки на проверку}}"
+      },
+      "title": "Обзор"
+    },
+    "shell": {
+      "lookupFailed": {
+        "body": "Ваша учётная запись не загрузилась, поэтому страница пока не открывается. Попробуйте ещё раз через минуту.",
+        "retry": "Попробовать снова",
+        "title": "Не удалось связаться с Üki"
+      },
+      "nav": {
+        "exams": "Экзамены",
+        "live": "Наблюдение",
+        "overview": "Обзор"
+      },
+      "navLabel": "Панель управления",
+      "note": {
+        "body": "Видео не покидает ноутбуки студентов. Передаются только события и отмеченные кадры.",
+        "title": "На устройстве"
+      },
+      "role": {
+        "admin": "Администратор",
+        "exam_office": "Экзаменационный отдел",
+        "proctor": "Проктор"
+      },
+      "section": {
+        "workspace": "Рабочее пространство"
+      },
+      "signOut": "Выйти",
+      "toast": {
+        "close": "Закрыть",
+        "label": "Уведомления"
+      }
+    },
+    "signIn": {
+      "brand": {
+        "body": "Üki наблюдает на ноутбуке. Наружу уходят только события и отмеченные кадры. Каждую отметку проверяет человек.",
+        "fact": {
+          "human": "По каждой отметке решает человек",
+          "languages": "Казахский, русский, английский",
+          "video": "Видео не покидает ноутбук"
+        },
+        "overline": "КРУ · Костанай · Экзаменационный отдел",
+        "title": "Экзамены, которые остаются на ноутбуке студента."
+      },
+      "copyright": "© 2026 Üki · Костанай",
+      "email": "Рабочая почта",
+      "error": {
+        "credentials": "Неверная почта или пароль.",
+        "email": "Введите рабочую почту.",
+        "notStaff": "Эта учётная запись не может работать в панели.",
+        "password": "Введите пароль.",
+        "rateLimited": "Слишком много попыток. Подождите минуту и попробуйте снова.",
+        "unavailable": "Вход сейчас недоступен. Попробуйте ещё раз."
+      },
+      "hidePassword": "Скрыть пароль",
+      "keep": "Не выходить 12 часов",
+      "lead": "Используйте почту, на которую пришло приглашение экзаменационного отдела.",
+      "legal": "Конфиденциальность  ·  Условия",
+      "noAccount": "Нет учётной записи? Приглашение присылает экзаменационный отдел.",
+      "password": "Пароль",
+      "showPassword": "Показать пароль",
+      "submit": "Войти",
+      "title": "Вход в Üki."
+    },
+    "wall": {
+      "action": {
+        "end": "Завершить сессию",
+        "header": "{name} · {number}",
+        "message": "Написать",
+        "pause": "Приостановить экзамен",
+        "resume": "Продолжить экзамен",
+        "timeline": "Открыть хронологию"
+      },
+      "breadcrumb": "Наблюдение / {exam} · осталось {left}",
+      "drawer": {
+        "close": "Закрыть хронологию",
+        "loading": "Загружаем хронологию",
+        "messageLabel": "{pronoun, select, he {Быстрое сообщение · на его языке} she {Быстрое сообщение · на её языке} other {Быстрое сообщение · на языке студента}}",
+        "meta": "{number}{seat, select, none {} other { · место {seat}}}{os, select, macos { · macOS} windows { · Windows} other {}}",
+        "phoneChip": "телефон {score, number, ::.00}",
+        "question": "Вопрос {question} из {total}",
+        "questionNoTotal": "Вопрос {question}",
+        "send": "Отправить",
+        "state": "{state, select, paused {на паузе} no_signal {нет сигнала} submitted {сдано} time_up {время вышло} ended {завершено} lobby {проходит регистрацию} other {сейчас на экране}}",
+        "still": "Снимок {index} из {count}, {time}",
+        "stills": "Снимки",
+        "timeline": "Хронология"
+      },
+      "end": {
+        "body": "{pronoun, select, he {Его ответы на этот момент сохранятся, продолжить он не сможет.} she {Её ответы на этот момент сохранятся, продолжить она не сможет.} other {Ответы на этот момент сохранятся, продолжить будет нельзя.}} Экзаменационный отдел увидит вашу причину в отчёте.",
+        "cancel": "{pronoun, select, he {Пусть пишет дальше} she {Пусть пишет дальше} other {Пусть пишет дальше}}",
+        "confirm": "Завершить экзамен",
+        "helper": "Попадёт в отчёт о добросовестности · {count}/{max}",
+        "reason": "Причина (обязательно)",
+        "title": "Завершить экзамен: {name}?"
+      },
+      "error": "{code, select, forbidden {Вы не можете отправлять команды на этом экзамене.} not_found {Этой сессии больше нет.} conflict {Сессия изменилась раньше, чем пришла команда. Ничего не отправлено.} unauthorized {Срок входа истёк. Войдите снова.} rate_limited {Слишком много команд сразу. Попробуйте через минуту.} bad_request {Команда не принята.} other {Не удалось связаться с Üki. Попробуйте снова.}}",
+      "event": {
+        "answer_saved": {
+          "title": "Ответ сохранён"
+        },
+        "browser_locked": {
+          "title": "Браузер заблокирован, другие вкладки закрыты"
+        },
+        "camera_lost": {
+          "detail": "Камера перестала передавать кадры",
+          "feed": "камера отключилась",
+          "title": "Камера отключилась"
+        },
+        "copy_blocked": {
+          "detail": "{kind, select, copy {Копирование} cut {Вырезание} paste {Вставка} other {Печать}}",
+          "feed": "копирование заблокировано",
+          "title": "Копирование или вставка заблокированы в Üki Lock"
+        },
+        "exam_started": {
+          "title": "Экзамен начался"
+        },
+        "exam_submitted": {
+          "detail": "Затрачено {duration}",
+          "title": "Ответы сданы"
+        },
+        "exam_time_up": {
+          "title": "Время вышло, ответы сданы"
+        },
+        "face_missing": {
+          "detail": "{seconds, number, ::.#} с",
+          "feed": "нет лица",
+          "title": "Нет лица в кадре"
+        },
+        "face_second": {
+          "detail": "Кто-то заглянул в кадр на {seconds, number, ::.#} с",
+          "feed": "второе лицо",
+          "title": "Второе лицо"
+        },
+        "gaze_down": {
+          "detail": "{seconds, number, ::.#} с",
+          "feed": "взгляд вниз",
+          "title": "Взгляд вниз"
+        },
+        "gaze_off_screen": {
+          "detail": "{seconds, number, ::.#} с, {direction, select, left {влево} right {вправо} other {вверх}}",
+          "feed": "взгляд в сторону",
+          "repeat": "{count, plural, =2 {Второй} =3 {Третий} =4 {Четвёртый} =5 {Пятый} other {{count, selectordinal, other {#-й}}}} раз, всего {seconds, number, ::.#} с",
+          "title": "Взгляд в сторону"
+        },
+        "gaze_on_screen": {
+          "title": "Снова смотрит на экран"
+        },
+        "identity_matched": {
+          "detail": "Сходство {score, number, ::.00} · {tries, plural, one {# попытка} few {# попытки} many {# попыток} other {# попытки}}",
+          "title": "Билет и лицо совпали при входе"
+        },
+        "lock_app_disconnected": {
+          "detail": "{side, select, lock {Üki Lock отключился} other {Приложение закрылось}}",
+          "feed": "приложение отключилось",
+          "title": "Приложение Üki закрылось при включённом Üki Lock"
+        },
+        "lock_fullscreen_exit": {
+          "detail": "{count, plural, one {# раз} few {# раза} many {# раз} other {# раза}} за сессию",
+          "feed": "выход из полноэкранного режима",
+          "title": "Выход из полноэкранного режима"
+        },
+        "net_offline": {
+          "detail": "{seconds, number, ::.#} с без сети · в очереди {queued, plural, one {# событие} few {# события} many {# событий} other {# события}}",
+          "feed": "сеть потеряна",
+          "title": "Сеть потеряна"
+        },
+        "phone_detected": {
+          "detail": "Уверенность {score, number, ::.00}{kept, select, yes { · кадр сохранён} other {}}",
+          "feed": "телефон в кадре",
+          "held": "В кадре {seconds, number, ::.#} с",
+          "title": "Телефон в кадре"
+        },
+        "proctor_by": "Проктор: {name}",
+        "proctor_ended": {
+          "detail": "{reason}",
+          "feed": "завершено проктором",
+          "title": "Завершено проктором"
+        },
+        "proctor_message": {
+          "detail": "«{text}»",
+          "feed": "сообщение отправлено",
+          "title": "Сообщение отправлено"
+        },
+        "proctor_note": {
+          "detail": "«{text}»",
+          "title": "Заметка"
+        },
+        "proctor_paused": {
+          "feed": "приостановлено проктором",
+          "title": "Приостановлено проктором"
+        },
+        "proctor_resumed": {
+          "feed": "продолжено проктором",
+          "title": "Продолжено проктором"
+        },
+        "proctor_time_added": {
+          "detail": "{scope, select, group {Всем} other {Этому студенту}}",
+          "feed": "добавлено время · +{minutes} мин",
+          "title": "Добавлено время · +{minutes} мин"
+        },
+        "session_paused": {
+          "detail": "{reason, select, face_missing {Нет лица} camera_lost {Камера отключилась} other {Проктором}} · таймер остановлен",
+          "feed": "сессия приостановлена",
+          "title": "Сессия приостановлена"
+        },
+        "session_resumed": {
+          "detail": "Пауза длилась {seconds, number, ::.#} с",
+          "title": "Сессия продолжена"
+        },
+        "site_closed": {
+          "detail": "{host}",
+          "feed": "запрещённый сайт закрыт",
+          "title": "Запрещённый сайт закрыт"
+        },
+        "student_help_requested": {
+          "detail": "{topic, select, identity {Проверка личности} question {Вопрос по заданию} other {Техническая проблема}}",
+          "feed": "просит помощи",
+          "title": "Просит помощи"
+        },
+        "tab_blocked": {
+          "detail": "{target, select, named {Попытка открыть {name}} lock {Попытка открыть вкладку браузера} other {Попытка открыть другую вкладку или приложение}}",
+          "feed": "новая вкладка заблокирована",
+          "title": "Новая вкладка заблокирована"
+        }
+      },
+      "extend": {
+        "add": "Добавить",
+        "everyone": "Всем · {count}",
+        "note": "Окончание в {newEnd} вместо {oldEnd}. Студенты сразу увидят новое время.",
+        "option": "+{minutes} мин",
+        "submit": "Добавить {minutes, plural, one {# минуту} few {# минуты} many {# минут} other {# минуты}}",
+        "title": "Добавить время",
+        "who": "Кому"
+      },
+      "extendTime": "Добавить время",
+      "feed": {
+        "row": "{name} · {event}",
+        "title": "События"
+      },
+      "filter": {
+        "paused": "На паузе · {count}"
+      },
+      "grid": {
+        "label": "Студенты"
+      },
+      "message": {
+        "cancel": "Отмена",
+        "counter": "{count}/{max}",
+        "dialogBody": "Получатель: {target}. Уходит как написано, без перевода.",
+        "everyone": "все в группе {group}",
+        "field": "Сообщение",
+        "headerGroup": "Быстрое сообщение · {group}",
+        "headerStudent": "Быстрое сообщение · {name}",
+        "note": "Каждый студент прочитает его на своём языке.",
+        "send": "Отправить",
+        "write": "Написать сообщение"
+      },
+      "messageGroup": "Написать группе",
+      "sort": {
+        "flags": "Сначала отметки",
+        "label": "Порядок на экране",
+        "seat": "По местам"
+      },
+      "stat": {
+        "flagged": {
+          "caption": "телефон, второе лицо",
+          "label": "С отметками"
+        },
+        "onScreen": {
+          "caption": "из {writing} пишущих",
+          "label": "На экране"
+        },
+        "paused": {
+          "caption": "нет лица или камеры",
+          "label": "На паузе"
+        },
+        "warnings": {
+          "caption": "взгляд или вкладки, последние 5 мин",
+          "label": "Предупреждения"
+        }
+      },
+      "tile": {
+        "done": "{state, select, submitted {сдано} time_up {время вышло} other {завершено}}",
+        "lookedAway": "взгляд в сторону {count}× · {seconds, number, ::.#} с",
+        "lookedAwayOnce": "взгляд в сторону {seconds, number, ::.#} с",
+        "noSignal": "нет сигнала · {duration}",
+        "noSignalNever": "нет сигнала",
+        "onScreen": "на экране · вопрос {question}",
+        "onScreenNoQuestion": "на экране",
+        "paused": "{reason, select, face_missing {нет лица} camera_lost {нет камеры} proctor {пауза от проктора} other {пауза}} · {duration}",
+        "pausedNoTime": "{reason, select, face_missing {нет лица} camera_lost {нет камеры} proctor {пауза от проктора} other {пауза}}",
+        "phone": "телефон {score, number, ::.00} · {time}",
+        "phoneNoScore": "телефон · {time}",
+        "secondFace": "второе лицо · {time}",
+        "state": "{state, select, flagged {Отметка} warning {Предупреждение} paused {Пауза} no_signal {Нет сигнала} done {Завершено} other {На экране}}",
+        "tabBlocked": "вкладка заблокирована · {time}"
+      },
+      "title": "Экран наблюдения",
+      "toast": {
+        "close": "Закрыть",
+        "region": "Уведомления"
+      }
+    }
+  },
   "done": {
     "body": "Ваши ответы приняты.",
     "close": "Закрыть Üki",

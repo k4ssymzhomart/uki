@@ -1,6 +1,9 @@
 /**
  * `pnpm i18n:build` (pnpm --filter @uki/i18n build): catalog.json and every dashboard*.json to
- * messages/en.json, kk.json and ru.json. Exits 1 and writes nothing when any message has a problem.
+ * messages/en.json, kk.json and ru.json. Dashboard messages are `{ "en": "...", "ru": "..." }` and go
+ * into en.json and ru.json; kk.json has none, so Kazakh falls back to English (src/messages.ts).
+ * Exits 1 and writes nothing when any message has a problem, including a missing or empty Russian
+ * or English dashboard message.
  * `--check` writes nothing and also exits 1 when a messages file is out of date.
  */
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -27,32 +30,45 @@ export function dashboardFiles(root: string = I18N_ROOT): string[] {
 }
 
 /**
- * Merges the dashboard files into one flat map for buildMessages. A file that is not a JSON object,
- * or a key that two files both define, is a problem; values are checked later by buildMessages.
+ * A dashboard file may start with a `"$comment"` string for notes about the whole file (for example
+ * that its Russian waits for a native read-through); it is not a message and is not merged.
+ */
+export const DASHBOARD_COMMENT_KEY = "$comment";
+
+/**
+ * Merges the dashboard files into one flat map of `dashboard.*` key to `{ en, ru }` for buildMessages,
+ * plus the file each key came from. A file that is not a JSON object, a `$comment` that is not a
+ * string, or a key that two files both define, is a problem; values are checked later by
+ * buildMessages.
  */
 export function mergeDashboard(files: readonly { file: string; data: unknown }[]): {
   merged: Record<string, unknown>;
+  sources: Record<string, string>;
   problems: string[];
 } {
   const merged: Record<string, unknown> = {};
-  const owner = new Map<string, string>();
+  const sources: Record<string, string> = {};
   const problems: string[] = [];
   for (const { file, data } of files) {
     if (typeof data !== "object" || data === null || Array.isArray(data)) {
-      problems.push(`${file}: must be an object of dashboard.* keys to English text`);
+      problems.push(`${file}: must be an object of dashboard.* keys to { "en": "...", "ru": "..." }`);
       continue;
     }
     for (const [key, value] of Object.entries(data)) {
-      const first = owner.get(key);
+      if (key === DASHBOARD_COMMENT_KEY) {
+        if (typeof value !== "string") problems.push(`${file}: ${key}: must be a string`);
+        continue;
+      }
+      const first = sources[key];
       if (first !== undefined) {
         problems.push(`${file}: ${key}: duplicate key, already in ${first}`);
         continue;
       }
-      owner.set(key, file);
+      sources[key] = file;
       merged[key] = value;
     }
   }
-  return { merged, problems };
+  return { merged, sources, problems };
 }
 
 /** The three messages files, by path relative to packages/i18n, or the problems that stop the build. */
@@ -62,7 +78,7 @@ export function generateAll(root: string = I18N_ROOT): {
 } {
   const read = (file: string) => JSON.parse(readFileSync(join(root, file), "utf8")) as unknown;
   const dashboard = mergeDashboard(dashboardFiles(root).map((file) => ({ file, data: read(file) })));
-  const result = buildMessages(read("catalog.json"), dashboard.merged);
+  const result = buildMessages(read("catalog.json"), dashboard.merged, dashboard.sources);
   const problems = [...dashboard.problems, ...result.problems];
   if (!result.messages || problems.length > 0) return { files: null, problems };
   const messages = result.messages;
@@ -101,9 +117,13 @@ function main(): void {
   }
   const catalog = readJson("catalog.json") as { keys: unknown[] };
   const sources = dashboardFiles();
-  const dashboard = sources.reduce((sum, file) => sum + Object.keys(readJson(file) as object).length, 0);
+  const dashboard = sources.reduce(
+    (sum, file) =>
+      sum + Object.keys(readJson(file) as object).filter((key) => key !== DASHBOARD_COMMENT_KEY).length,
+    0,
+  );
   console.log(
-    `@uki/i18n: ${catalog.keys.length} catalog keys and ${dashboard} dashboard keys (${sources.join(", ")}) checked; ${stale.length === 0 ? "messages up to date" : `wrote ${stale.join(", ")}`}`,
+    `@uki/i18n: ${catalog.keys.length} catalog keys and ${dashboard} dashboard keys in en and ru (${sources.join(", ")}) checked; ${stale.length === 0 ? "messages up to date" : `wrote ${stale.join(", ")}`}`,
   );
 }
 

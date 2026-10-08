@@ -1,143 +1,567 @@
 {
-  "dashboard.common.groups": "{count, plural, one {Group {codes}} other {Groups {codes}}}",
-  "dashboard.common.allGroups": "All groups",
-  "dashboard.common.proctors": "{count, plural, one {# proctor} other {# proctors}}",
-  "dashboard.common.minutes": "{minutes} min",
-  "dashboard.common.dateTime": "{date} · {time}",
-  "dashboard.common.todayTime": "Today · {time}",
-  "dashboard.common.withDetail": "{main} · {detail}",
-  "dashboard.shell.navLabel": "Dashboard",
-  "dashboard.shell.section.workspace": "Workspace",
-  "dashboard.shell.nav.overview": "Overview",
-  "dashboard.shell.nav.exams": "Exams",
-  "dashboard.shell.nav.live": "Live",
-  "dashboard.shell.role.exam_office": "Exam office",
-  "dashboard.shell.role.proctor": "Proctor",
-  "dashboard.shell.role.admin": "Admin",
-  "dashboard.shell.note.title": "On device",
-  "dashboard.shell.note.body": "Video never leaves student laptops. Only events and flagged frames travel.",
-  "dashboard.shell.signOut": "Sign out",
-  "dashboard.shell.toast.label": "Notifications",
-  "dashboard.shell.toast.close": "Close",
-  "dashboard.shell.lookupFailed.title": "Could not reach Üki",
-  "dashboard.shell.lookupFailed.body": "Your account did not load, so this page cannot open yet. Try again in a moment.",
-  "dashboard.shell.lookupFailed.retry": "Try again",
-  "dashboard.signIn.brand.overline": "KRU · Kostanay · Exam office",
-  "dashboard.signIn.brand.title": "Exams that stay on the student’s laptop.",
-  "dashboard.signIn.brand.body": "Üki watches on the laptop. Only events and flagged frames leave it. A person reviews every flag.",
-  "dashboard.signIn.brand.fact.video": "Video never leaves the laptop",
-  "dashboard.signIn.brand.fact.human": "Every flag gets a human decision",
-  "dashboard.signIn.brand.fact.languages": "Kazakh, Russian, English",
-  "dashboard.signIn.title": "Sign in to Üki.",
-  "dashboard.signIn.lead": "Use the email your exam office invited.",
-  "dashboard.signIn.email": "Work email",
-  "dashboard.signIn.password": "Password",
-  "dashboard.signIn.showPassword": "Show password",
-  "dashboard.signIn.hidePassword": "Hide password",
-  "dashboard.signIn.keep": "Keep me signed in for 12 hours",
-  "dashboard.signIn.submit": "Sign in",
-  "dashboard.signIn.noAccount": "No account? Your exam office sends the invitation email.",
-  "dashboard.signIn.copyright": "© 2026 Üki · Kostanay",
-  "dashboard.signIn.legal": "Privacy  ·  Terms",
-  "dashboard.signIn.error.email": "Enter your work email.",
-  "dashboard.signIn.error.password": "Enter your password.",
-  "dashboard.signIn.error.credentials": "The email or password is wrong.",
-  "dashboard.signIn.error.notStaff": "This account cannot use the dashboard.",
-  "dashboard.signIn.error.rateLimited": "Too many tries. Wait a minute, then try again.",
-  "dashboard.signIn.error.unavailable": "Sign-in is unavailable right now. Try again.",
-  "dashboard.overview.title": "Overview",
-  "dashboard.overview.stat.upcoming.label": "Upcoming",
-  "dashboard.overview.stat.upcoming.caption": "Next: {course} · {weekday} {time}",
-  "dashboard.overview.stat.live.label": "Live now",
-  "dashboard.overview.stat.review.label": "Needs review",
-  "dashboard.overview.stat.video.label": "Video uploaded",
-  "dashboard.overview.stat.video.value": "{megabytes} MB",
-  "dashboard.overview.stat.video.caption": "Events and flagged frames only",
-  "dashboard.overview.exams.title": "Exams",
-  "dashboard.overview.exams.empty": "No exams here.",
-  "dashboard.overview.filter.label": "Filter exams",
-  "dashboard.overview.filter.all": "All",
-  "dashboard.overview.filter.upcoming": "Upcoming",
-  "dashboard.overview.filter.live": "Live",
-  "dashboard.overview.filter.done": "Done",
-  "dashboard.overview.column.exam": "Exam",
-  "dashboard.overview.column.when": "When",
-  "dashboard.overview.column.students": "Students",
-  "dashboard.overview.column.checks": "Checks",
-  "dashboard.overview.column.status": "Status",
-  "dashboard.overview.column.open": "Open",
-  "dashboard.overview.check.lock": "Üki Lock",
-  "dashboard.overview.check.gaze": "Gaze",
-  "dashboard.overview.check.phone": "Phone",
-  "dashboard.overview.check.id": "Student card",
-  "dashboard.overview.status.draft": "Draft",
-  "dashboard.overview.status.scheduled": "Scheduled",
-  "dashboard.overview.status.live": "Live now",
-  "dashboard.overview.status.toReview": "{count, plural, one {# flag to review} other {# flags to review}}",
-  "dashboard.overview.status.reviewed": "Reviewed",
-  "dashboard.overview.status.cancelled": "Cancelled",
-  "dashboard.overview.next.overline": "Next exam · {date}",
-  "dashboard.overview.next.title": "{course} · {time}",
-  "dashboard.overview.next.body": "Lobby opens at {time}. {students, plural, one {# student} other {# students}}, {proctors, plural, one {# proctor} other {# proctors}}.",
-  "dashboard.overview.next.openLobby": "Open lobby",
-  "dashboard.overview.readiness.overline": "Before {weekday}",
-  "dashboard.overview.readiness.title": "Ready to run",
-  "dashboard.overview.readiness.body": "Roster {ready} of {total} · rules in ҚАЗ, РУС, ENG · proctors assigned.",
-  "dashboard.lobby.title": "Lobby",
-  "dashboard.lobby.breadcrumb": "Live / {exam} · {groups}",
-  "dashboard.lobby.banner.startsAt": "Starts at {time} · in {minutes} min",
-  "dashboard.lobby.banner.started": "Started at {time}",
-  "dashboard.lobby.banner.joined": "{joined} of {total} students are in.",
-  "dashboard.lobby.banner.needHelp": "{count, plural, =1 {One needs help.} =2 {Two need help.} =3 {Three need help.} =4 {Four need help.} =5 {Five need help.} =6 {Six need help.} =7 {Seven need help.} =8 {Eight need help.} =9 {Nine need help.} =10 {Ten need help.} one {# needs help.} other {# need help.}}",
-  "dashboard.lobby.banner.notJoined": "{count, plural, =1 {One has not opened Üki yet.} =2 {Two have not opened Üki yet.} =3 {Three have not opened Üki yet.} =4 {Four have not opened Üki yet.} =5 {Five have not opened Üki yet.} =6 {Six have not opened Üki yet.} =7 {Seven have not opened Üki yet.} =8 {Eight have not opened Üki yet.} =9 {Nine have not opened Üki yet.} =10 {Ten have not opened Üki yet.} one {# has not opened Üki yet.} other {# have not opened Üki yet.}}",
-  "dashboard.lobby.messageEveryone": "Message everyone",
-  "dashboard.lobby.startExam": "Start exam",
-  "dashboard.lobby.startError.alreadyStarted": "The exam has already started.",
-  "dashboard.lobby.startError.forbidden": "Only the lead proctor or the exam office can start the exam.",
-  "dashboard.lobby.startError.failed": "The exam did not start. Try again.",
-  "dashboard.lobby.stat.joined.label": "Joined",
-  "dashboard.lobby.stat.joined.caption": "of {total} students",
-  "dashboard.lobby.stat.ready.label": "Ready",
-  "dashboard.lobby.stat.ready.caption": "Passed every check",
-  "dashboard.lobby.stat.needHelp.label": "Need help",
-  "dashboard.lobby.stat.needHelp.caption": "Identity or other apps",
-  "dashboard.lobby.stat.notJoined.label": "Not joined",
-  "dashboard.lobby.stat.notJoined.caption": "Invite opened by {count}",
-  "dashboard.lobby.table.title": "Check-in",
-  "dashboard.lobby.table.filterLabel": "Filter students",
-  "dashboard.lobby.table.filter.needHelp": "Need help · {count}",
-  "dashboard.lobby.table.filter.notJoined": "Not joined · {count}",
-  "dashboard.lobby.table.filter.ready": "Ready · {count}",
-  "dashboard.lobby.table.filter.all": "All",
-  "dashboard.lobby.table.search": "Find a student",
-  "dashboard.lobby.table.empty": "No students in this list.",
-  "dashboard.lobby.column.student": "Student",
-  "dashboard.lobby.column.where": "Where they are",
-  "dashboard.lobby.column.device": "Device",
-  "dashboard.lobby.column.status": "Status",
-  "dashboard.lobby.column.action": "Action",
-  "dashboard.lobby.step.notJoined": "Not joined",
-  "dashboard.lobby.step.joined": "Joined",
-  "dashboard.lobby.step.checking": "System check",
-  "dashboard.lobby.step.identity": "Identity check",
-  "dashboard.lobby.step.rules": "Rules",
-  "dashboard.lobby.step.writing": "Writing",
-  "dashboard.lobby.step.finished": "Finished",
-  "dashboard.lobby.detail.waiting": "Waiting for the start",
-  "dashboard.lobby.detail.bounced": "Invite email bounced",
-  "dashboard.lobby.detail.appOpen": "{app} is open",
-  "dashboard.lobby.detail.cameraBlocked": "Camera blocked by another app",
-  "dashboard.lobby.detail.cardRetry": "Card unreadable · retry {attempt} of {max}",
-  "dashboard.lobby.chip.needsHelp": "Needs help",
-  "dashboard.lobby.chip.ready": "Ready",
-  "dashboard.lobby.chip.notJoined": "Not joined",
-  "dashboard.lobby.chip.checking": "Checking in",
-  "dashboard.lobby.chip.writing": "Writing",
-  "dashboard.lobby.chip.paused": "Paused",
-  "dashboard.lobby.chip.done": "Done",
-  "dashboard.lobby.os.macos": "macOS",
-  "dashboard.lobby.os.windows": "Windows",
-  "dashboard.lobby.device": "{os} · Üki {version}",
-  "dashboard.lobby.noDevice": "—",
-  "dashboard.lobby.message": "Message"
+  "$comment": "Dashboard strings: key to { en, ru }. English comes from the Figma dashboard frames. The Russian is a first pass by the agent (WP 1.2): native review needed, P.18.",
+  "dashboard.common.groups": {
+    "en": "{count, plural, one {Group {codes}} other {Groups {codes}}}",
+    "ru": "{count, plural, one {Группа {codes}} few {Группы {codes}} many {Группы {codes}} other {Группы {codes}}}"
+  },
+  "dashboard.common.allGroups": {
+    "en": "All groups",
+    "ru": "Все группы"
+  },
+  "dashboard.common.proctors": {
+    "en": "{count, plural, one {# proctor} other {# proctors}}",
+    "ru": "{count, plural, one {# проктор} few {# проктора} many {# прокторов} other {# проктора}}"
+  },
+  "dashboard.common.minutes": {
+    "en": "{minutes} min",
+    "ru": "{minutes} мин"
+  },
+  "dashboard.common.dateTime": {
+    "en": "{date} · {time}",
+    "ru": "{date} · {time}"
+  },
+  "dashboard.common.todayTime": {
+    "en": "Today · {time}",
+    "ru": "Сегодня · {time}"
+  },
+  "dashboard.common.withDetail": {
+    "en": "{main} · {detail}",
+    "ru": "{main} · {detail}"
+  },
+  "dashboard.shell.navLabel": {
+    "en": "Dashboard",
+    "ru": "Панель управления"
+  },
+  "dashboard.shell.section.workspace": {
+    "en": "Workspace",
+    "ru": "Рабочее пространство"
+  },
+  "dashboard.shell.nav.overview": {
+    "en": "Overview",
+    "ru": "Обзор"
+  },
+  "dashboard.shell.nav.exams": {
+    "en": "Exams",
+    "ru": "Экзамены"
+  },
+  "dashboard.shell.nav.live": {
+    "en": "Live",
+    "ru": "Наблюдение"
+  },
+  "dashboard.shell.role.exam_office": {
+    "en": "Exam office",
+    "ru": "Экзаменационный отдел"
+  },
+  "dashboard.shell.role.proctor": {
+    "en": "Proctor",
+    "ru": "Проктор"
+  },
+  "dashboard.shell.role.admin": {
+    "en": "Admin",
+    "ru": "Администратор"
+  },
+  "dashboard.shell.note.title": {
+    "en": "On device",
+    "ru": "На устройстве"
+  },
+  "dashboard.shell.note.body": {
+    "en": "Video never leaves student laptops. Only events and flagged frames travel.",
+    "ru": "Видео не покидает ноутбуки студентов. Передаются только события и отмеченные кадры."
+  },
+  "dashboard.shell.signOut": {
+    "en": "Sign out",
+    "ru": "Выйти"
+  },
+  "dashboard.shell.toast.label": {
+    "en": "Notifications",
+    "ru": "Уведомления"
+  },
+  "dashboard.shell.toast.close": {
+    "en": "Close",
+    "ru": "Закрыть"
+  },
+  "dashboard.shell.lookupFailed.title": {
+    "en": "Could not reach Üki",
+    "ru": "Не удалось связаться с Üki"
+  },
+  "dashboard.shell.lookupFailed.body": {
+    "en": "Your account did not load, so this page cannot open yet. Try again in a moment.",
+    "ru": "Ваша учётная запись не загрузилась, поэтому страница пока не открывается. Попробуйте ещё раз через минуту."
+  },
+  "dashboard.shell.lookupFailed.retry": {
+    "en": "Try again",
+    "ru": "Попробовать снова"
+  },
+  "dashboard.signIn.brand.overline": {
+    "en": "KRU · Kostanay · Exam office",
+    "ru": "КРУ · Костанай · Экзаменационный отдел"
+  },
+  "dashboard.signIn.brand.title": {
+    "en": "Exams that stay on the student’s laptop.",
+    "ru": "Экзамены, которые остаются на ноутбуке студента."
+  },
+  "dashboard.signIn.brand.body": {
+    "en": "Üki watches on the laptop. Only events and flagged frames leave it. A person reviews every flag.",
+    "ru": "Üki наблюдает на ноутбуке. Наружу уходят только события и отмеченные кадры. Каждую отметку проверяет человек."
+  },
+  "dashboard.signIn.brand.fact.video": {
+    "en": "Video never leaves the laptop",
+    "ru": "Видео не покидает ноутбук"
+  },
+  "dashboard.signIn.brand.fact.human": {
+    "en": "Every flag gets a human decision",
+    "ru": "По каждой отметке решает человек"
+  },
+  "dashboard.signIn.brand.fact.languages": {
+    "en": "Kazakh, Russian, English",
+    "ru": "Казахский, русский, английский"
+  },
+  "dashboard.signIn.title": {
+    "en": "Sign in to Üki.",
+    "ru": "Вход в Üki."
+  },
+  "dashboard.signIn.lead": {
+    "en": "Use the email your exam office invited.",
+    "ru": "Используйте почту, на которую пришло приглашение экзаменационного отдела."
+  },
+  "dashboard.signIn.email": {
+    "en": "Work email",
+    "ru": "Рабочая почта"
+  },
+  "dashboard.signIn.password": {
+    "en": "Password",
+    "ru": "Пароль"
+  },
+  "dashboard.signIn.showPassword": {
+    "en": "Show password",
+    "ru": "Показать пароль"
+  },
+  "dashboard.signIn.hidePassword": {
+    "en": "Hide password",
+    "ru": "Скрыть пароль"
+  },
+  "dashboard.signIn.keep": {
+    "en": "Keep me signed in for 12 hours",
+    "ru": "Не выходить 12 часов"
+  },
+  "dashboard.signIn.submit": {
+    "en": "Sign in",
+    "ru": "Войти"
+  },
+  "dashboard.signIn.noAccount": {
+    "en": "No account? Your exam office sends the invitation email.",
+    "ru": "Нет учётной записи? Приглашение присылает экзаменационный отдел."
+  },
+  "dashboard.signIn.copyright": {
+    "en": "© 2026 Üki · Kostanay",
+    "ru": "© 2026 Üki · Костанай"
+  },
+  "dashboard.signIn.legal": {
+    "en": "Privacy  ·  Terms",
+    "ru": "Конфиденциальность  ·  Условия"
+  },
+  "dashboard.signIn.error.email": {
+    "en": "Enter your work email.",
+    "ru": "Введите рабочую почту."
+  },
+  "dashboard.signIn.error.password": {
+    "en": "Enter your password.",
+    "ru": "Введите пароль."
+  },
+  "dashboard.signIn.error.credentials": {
+    "en": "The email or password is wrong.",
+    "ru": "Неверная почта или пароль."
+  },
+  "dashboard.signIn.error.notStaff": {
+    "en": "This account cannot use the dashboard.",
+    "ru": "Эта учётная запись не может работать в панели."
+  },
+  "dashboard.signIn.error.rateLimited": {
+    "en": "Too many tries. Wait a minute, then try again.",
+    "ru": "Слишком много попыток. Подождите минуту и попробуйте снова."
+  },
+  "dashboard.signIn.error.unavailable": {
+    "en": "Sign-in is unavailable right now. Try again.",
+    "ru": "Вход сейчас недоступен. Попробуйте ещё раз."
+  },
+  "dashboard.overview.title": {
+    "en": "Overview",
+    "ru": "Обзор"
+  },
+  "dashboard.overview.stat.upcoming.label": {
+    "en": "Upcoming",
+    "ru": "Предстоящие"
+  },
+  "dashboard.overview.stat.upcoming.caption": {
+    "en": "Next: {course} · {weekday} {time}",
+    "ru": "Далее: {course} · {weekday} {time}"
+  },
+  "dashboard.overview.stat.live.label": {
+    "en": "Live now",
+    "ru": "Идут сейчас"
+  },
+  "dashboard.overview.stat.review.label": {
+    "en": "Needs review",
+    "ru": "Ждут проверки"
+  },
+  "dashboard.overview.stat.video.label": {
+    "en": "Video uploaded",
+    "ru": "Загружено видео"
+  },
+  "dashboard.overview.stat.video.value": {
+    "en": "{megabytes} MB",
+    "ru": "{megabytes} МБ"
+  },
+  "dashboard.overview.stat.video.caption": {
+    "en": "Events and flagged frames only",
+    "ru": "Только события и отмеченные кадры"
+  },
+  "dashboard.overview.exams.title": {
+    "en": "Exams",
+    "ru": "Экзамены"
+  },
+  "dashboard.overview.exams.empty": {
+    "en": "No exams here.",
+    "ru": "Здесь нет экзаменов."
+  },
+  "dashboard.overview.filter.label": {
+    "en": "Filter exams",
+    "ru": "Фильтр экзаменов"
+  },
+  "dashboard.overview.filter.all": {
+    "en": "All",
+    "ru": "Все"
+  },
+  "dashboard.overview.filter.upcoming": {
+    "en": "Upcoming",
+    "ru": "Предстоящие"
+  },
+  "dashboard.overview.filter.live": {
+    "en": "Live",
+    "ru": "Идут"
+  },
+  "dashboard.overview.filter.done": {
+    "en": "Done",
+    "ru": "Завершены"
+  },
+  "dashboard.overview.column.exam": {
+    "en": "Exam",
+    "ru": "Экзамен"
+  },
+  "dashboard.overview.column.when": {
+    "en": "When",
+    "ru": "Когда"
+  },
+  "dashboard.overview.column.students": {
+    "en": "Students",
+    "ru": "Студенты"
+  },
+  "dashboard.overview.column.checks": {
+    "en": "Checks",
+    "ru": "Проверки"
+  },
+  "dashboard.overview.column.status": {
+    "en": "Status",
+    "ru": "Статус"
+  },
+  "dashboard.overview.column.open": {
+    "en": "Open",
+    "ru": "Открыть"
+  },
+  "dashboard.overview.check.lock": {
+    "en": "Üki Lock",
+    "ru": "Üki Lock"
+  },
+  "dashboard.overview.check.gaze": {
+    "en": "Gaze",
+    "ru": "Взгляд"
+  },
+  "dashboard.overview.check.phone": {
+    "en": "Phone",
+    "ru": "Телефон"
+  },
+  "dashboard.overview.check.id": {
+    "en": "Student card",
+    "ru": "Студенческий билет"
+  },
+  "dashboard.overview.status.draft": {
+    "en": "Draft",
+    "ru": "Черновик"
+  },
+  "dashboard.overview.status.scheduled": {
+    "en": "Scheduled",
+    "ru": "Запланирован"
+  },
+  "dashboard.overview.status.live": {
+    "en": "Live now",
+    "ru": "Идёт сейчас"
+  },
+  "dashboard.overview.status.toReview": {
+    "en": "{count, plural, one {# flag to review} other {# flags to review}}",
+    "ru": "{count, plural, one {# отметка на проверку} few {# отметки на проверку} many {# отметок на проверку} other {# отметки на проверку}}"
+  },
+  "dashboard.overview.status.reviewed": {
+    "en": "Reviewed",
+    "ru": "Проверен"
+  },
+  "dashboard.overview.status.cancelled": {
+    "en": "Cancelled",
+    "ru": "Отменён"
+  },
+  "dashboard.overview.next.overline": {
+    "en": "Next exam · {date}",
+    "ru": "Следующий экзамен · {date}"
+  },
+  "dashboard.overview.next.title": {
+    "en": "{course} · {time}",
+    "ru": "{course} · {time}"
+  },
+  "dashboard.overview.next.body": {
+    "en": "Lobby opens at {time}. {students, plural, one {# student} other {# students}}, {proctors, plural, one {# proctor} other {# proctors}}.",
+    "ru": "Лобби открывается в {time}. {students, plural, one {# студент} few {# студента} many {# студентов} other {# студента}}, {proctors, plural, one {# проктор} few {# проктора} many {# прокторов} other {# проктора}}."
+  },
+  "dashboard.overview.next.openLobby": {
+    "en": "Open lobby",
+    "ru": "Открыть лобби"
+  },
+  "dashboard.overview.readiness.overline": {
+    "en": "Before {weekday}",
+    "ru": "Перед экзаменом · {weekday}"
+  },
+  "dashboard.overview.readiness.title": {
+    "en": "Ready to run",
+    "ru": "Готово к проведению"
+  },
+  "dashboard.overview.readiness.body": {
+    "en": "Roster {ready} of {total} · rules in ҚАЗ, РУС, ENG · proctors assigned.",
+    "ru": "Список {ready} из {total} · правила на ҚАЗ, РУС, ENG · прокторы назначены."
+  },
+  "dashboard.lobby.title": {
+    "en": "Lobby",
+    "ru": "Лобби"
+  },
+  "dashboard.lobby.breadcrumb": {
+    "en": "Live / {exam} · {groups}",
+    "ru": "Наблюдение / {exam} · {groups}"
+  },
+  "dashboard.lobby.banner.startsAt": {
+    "en": "Starts at {time} · in {minutes} min",
+    "ru": "Начало в {time} · через {minutes} мин"
+  },
+  "dashboard.lobby.banner.started": {
+    "en": "Started at {time}",
+    "ru": "Начался в {time}"
+  },
+  "dashboard.lobby.banner.joined": {
+    "en": "{joined} of {total} students are in.",
+    "ru": "Вошли {joined} из {total}."
+  },
+  "dashboard.lobby.banner.needHelp": {
+    "en": "{count, plural, =1 {One needs help.} =2 {Two need help.} =3 {Three need help.} =4 {Four need help.} =5 {Five need help.} =6 {Six need help.} =7 {Seven need help.} =8 {Eight need help.} =9 {Nine need help.} =10 {Ten need help.} one {# needs help.} other {# need help.}}",
+    "ru": "{count, plural, =1 {Одному студенту нужна помощь.} one {Помощь нужна # студенту.} few {Помощь нужна # студентам.} many {Помощь нужна # студентам.} other {Помощь нужна # студента.}}"
+  },
+  "dashboard.lobby.banner.notJoined": {
+    "en": "{count, plural, =1 {One has not opened Üki yet.} =2 {Two have not opened Üki yet.} =3 {Three have not opened Üki yet.} =4 {Four have not opened Üki yet.} =5 {Five have not opened Üki yet.} =6 {Six have not opened Üki yet.} =7 {Seven have not opened Üki yet.} =8 {Eight have not opened Üki yet.} =9 {Nine have not opened Üki yet.} =10 {Ten have not opened Üki yet.} one {# has not opened Üki yet.} other {# have not opened Üki yet.}}",
+    "ru": "{count, plural, =1 {Один студент ещё не открыл Üki.} one {# студент ещё не открыл Üki.} few {# студента ещё не открыли Üki.} many {# студентов ещё не открыли Üki.} other {# студента ещё не открыли Üki.}}"
+  },
+  "dashboard.lobby.messageEveryone": {
+    "en": "Message everyone",
+    "ru": "Написать всем"
+  },
+  "dashboard.lobby.startExam": {
+    "en": "Start exam",
+    "ru": "Начать экзамен"
+  },
+  "dashboard.lobby.startError.alreadyStarted": {
+    "en": "The exam has already started.",
+    "ru": "Экзамен уже начался."
+  },
+  "dashboard.lobby.startError.forbidden": {
+    "en": "Only the lead proctor or the exam office can start the exam.",
+    "ru": "Начать экзамен может только старший проктор или экзаменационный отдел."
+  },
+  "dashboard.lobby.startError.failed": {
+    "en": "The exam did not start. Try again.",
+    "ru": "Экзамен не начался. Попробуйте снова."
+  },
+  "dashboard.lobby.stat.joined.label": {
+    "en": "Joined",
+    "ru": "Вошли"
+  },
+  "dashboard.lobby.stat.joined.caption": {
+    "en": "of {total} students",
+    "ru": "{total, plural, one {из # студента} few {из # студентов} many {из # студентов} other {из # студента}}"
+  },
+  "dashboard.lobby.stat.ready.label": {
+    "en": "Ready",
+    "ru": "Готовы"
+  },
+  "dashboard.lobby.stat.ready.caption": {
+    "en": "Passed every check",
+    "ru": "Все проверки пройдены"
+  },
+  "dashboard.lobby.stat.needHelp.label": {
+    "en": "Need help",
+    "ru": "Нужна помощь"
+  },
+  "dashboard.lobby.stat.needHelp.caption": {
+    "en": "Identity or other apps",
+    "ru": "Личность или другие приложения"
+  },
+  "dashboard.lobby.stat.notJoined.label": {
+    "en": "Not joined",
+    "ru": "Не вошли"
+  },
+  "dashboard.lobby.stat.notJoined.caption": {
+    "en": "Invite opened by {count}",
+    "ru": "Приглашение открыли: {count}"
+  },
+  "dashboard.lobby.table.title": {
+    "en": "Check-in",
+    "ru": "Регистрация"
+  },
+  "dashboard.lobby.table.filterLabel": {
+    "en": "Filter students",
+    "ru": "Фильтр студентов"
+  },
+  "dashboard.lobby.table.filter.needHelp": {
+    "en": "Need help · {count}",
+    "ru": "Нужна помощь · {count}"
+  },
+  "dashboard.lobby.table.filter.notJoined": {
+    "en": "Not joined · {count}",
+    "ru": "Не вошли · {count}"
+  },
+  "dashboard.lobby.table.filter.ready": {
+    "en": "Ready · {count}",
+    "ru": "Готовы · {count}"
+  },
+  "dashboard.lobby.table.filter.all": {
+    "en": "All",
+    "ru": "Все"
+  },
+  "dashboard.lobby.table.search": {
+    "en": "Find a student",
+    "ru": "Найти студента"
+  },
+  "dashboard.lobby.table.empty": {
+    "en": "No students in this list.",
+    "ru": "В этом списке нет студентов."
+  },
+  "dashboard.lobby.column.student": {
+    "en": "Student",
+    "ru": "Студент"
+  },
+  "dashboard.lobby.column.where": {
+    "en": "Where they are",
+    "ru": "Где сейчас"
+  },
+  "dashboard.lobby.column.device": {
+    "en": "Device",
+    "ru": "Устройство"
+  },
+  "dashboard.lobby.column.status": {
+    "en": "Status",
+    "ru": "Статус"
+  },
+  "dashboard.lobby.column.action": {
+    "en": "Action",
+    "ru": "Действие"
+  },
+  "dashboard.lobby.step.notJoined": {
+    "en": "Not joined",
+    "ru": "Нет входа"
+  },
+  "dashboard.lobby.step.joined": {
+    "en": "Joined",
+    "ru": "Вход выполнен"
+  },
+  "dashboard.lobby.step.checking": {
+    "en": "System check",
+    "ru": "Проверка системы"
+  },
+  "dashboard.lobby.step.identity": {
+    "en": "Identity check",
+    "ru": "Проверка личности"
+  },
+  "dashboard.lobby.step.rules": {
+    "en": "Rules",
+    "ru": "Правила"
+  },
+  "dashboard.lobby.step.writing": {
+    "en": "Writing",
+    "ru": "Пишет экзамен"
+  },
+  "dashboard.lobby.step.finished": {
+    "en": "Finished",
+    "ru": "Завершено"
+  },
+  "dashboard.lobby.detail.waiting": {
+    "en": "Waiting for the start",
+    "ru": "Ждёт начала"
+  },
+  "dashboard.lobby.detail.bounced": {
+    "en": "Invite email bounced",
+    "ru": "Письмо-приглашение не доставлено"
+  },
+  "dashboard.lobby.detail.appOpen": {
+    "en": "{app} is open",
+    "ru": "Открыто: {app}"
+  },
+  "dashboard.lobby.detail.cameraBlocked": {
+    "en": "Camera blocked by another app",
+    "ru": "Камеру занимает другое приложение"
+  },
+  "dashboard.lobby.detail.cardRetry": {
+    "en": "Card unreadable · retry {attempt} of {max}",
+    "ru": "Билет не читается · попытка {attempt} из {max}"
+  },
+  "dashboard.lobby.chip.needsHelp": {
+    "en": "Needs help",
+    "ru": "Нужна помощь"
+  },
+  "dashboard.lobby.chip.ready": {
+    "en": "Ready",
+    "ru": "Готово"
+  },
+  "dashboard.lobby.chip.notJoined": {
+    "en": "Not joined",
+    "ru": "Нет входа"
+  },
+  "dashboard.lobby.chip.checking": {
+    "en": "Checking in",
+    "ru": "Регистрация"
+  },
+  "dashboard.lobby.chip.writing": {
+    "en": "Writing",
+    "ru": "Пишет"
+  },
+  "dashboard.lobby.chip.paused": {
+    "en": "Paused",
+    "ru": "Пауза"
+  },
+  "dashboard.lobby.chip.done": {
+    "en": "Done",
+    "ru": "Завершено"
+  },
+  "dashboard.lobby.os.macos": {
+    "en": "macOS",
+    "ru": "macOS"
+  },
+  "dashboard.lobby.os.windows": {
+    "en": "Windows",
+    "ru": "Windows"
+  },
+  "dashboard.lobby.device": {
+    "en": "{os} · Üki {version}",
+    "ru": "{os} · Üki {version}"
+  },
+  "dashboard.lobby.noDevice": {
+    "en": "—",
+    "ru": "—"
+  },
+  "dashboard.lobby.message": {
+    "en": "Message",
+    "ru": "Написать"
+  }
 }

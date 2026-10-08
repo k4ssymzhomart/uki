@@ -492,3 +492,9 @@ Choices that `20261009000000_phase1.sql` and the Phase 1 contracts make where th
 - `serveApi({ auth: "secret" })` becomes `withSupabase({ auth: "secret:*" })`. The bare `"secret"` matches only the key named `default`, so rotating the secret key (P.17) would lock out retention and pilot-notify.
 - `retention`, `pilot-notify` and `shared-report` need `verify_jwt = false` in `config.toml` when they are added (1.9, 1.12, 1.13).
 - `request_pilot` adds a cap of 30 requests an hour across all addresses, on top of the plan's 3 per address a day, because each request sends you an email.
+
+## 2026-10-08 · 1.2 Shell and Russian: dashboard string format
+
+- **Dashboard strings are now `key → { "en": "...", "ru": "..." }`** in `packages/i18n/dashboard.json`, `dashboard-wall.json` and every other `dashboard-<part>.json`. `pnpm i18n:build` merges them into `messages/en.json` and `messages/ru.json` and fails on a missing or empty English or Russian message, on arguments that differ between the two, and on a Russian plural arm Russian does not have; every Phase 0 check stays. This replaces the Phase 0 line “English only, merged into `messages/en.json` only”. Kazakh has no dashboard namespace and falls back to English.
+- Each file may start with a `"$comment"` string. Phase 0's two files carry “native review needed, P.18”: the Russian for all 289 keys (Phase 0's 287 and WP 1.1's two proctor-note keys) is a first pass by the agent.
+- Russian terms follow the catalog: flag is «отметка», flagged frames are «отмеченные кадры», the exam office is «экзаменационный отдел», the live wall is «экран наблюдения».
