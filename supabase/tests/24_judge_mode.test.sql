@@ -229,7 +229,7 @@ select is(t.err($$select public.issue_command(t.id('s2'), null, 'pause', '{"text
   'forbidden:read_only', 'issue_command refuses the observer (a pause)');
 select is(t.err($$select public.issue_command(null, t.id('demo'), 'message', '{"text":"Ten minutes left","scope":"group"}', 'group', gen_random_uuid())$$),
   'forbidden:read_only', 'issue_command refuses the observer (a group message)');
-select like(t.err($$select public.start_exam(t.id('demo'))$$), 'forbidden%', 'start_exam refuses the observer');
+select alike(t.err($$select public.start_exam(t.id('demo'))$$), 'forbidden%', 'start_exam refuses the observer');
 select is(t.err($$select public.close_help_request(t.id('h2'))$$), 'forbidden:read_only',
   'close_help_request refuses the observer (Mark done)');
 select is(t.err($$select public.close_help_request(t.id('h2'), 'On my way')$$), 'forbidden:read_only',
@@ -238,23 +238,23 @@ select is(t.err($$select public.decide_session(t.id('s2'), 'no_issue', null)$$),
   'decide_session refuses the observer');
 select is(t.err($$select public.add_session_note(t.id('s2'), 'A note')$$), 'forbidden:read_only',
   'add_session_note refuses the observer');
-select like(t.err($$select public.create_share(t.id('report1'))$$), 'forbidden%', 'create_share refuses the observer');
-select like(t.err($$select public.confirm_seats(t.id('demo'), null)$$), 'forbidden%', 'confirm_seats refuses the observer');
-select like(t.err($$select public.confirm_seats(t.id('demo'), 'Seats 1 to 3 please')$$), 'forbidden%',
+select alike(t.err($$select public.create_share(t.id('report1'))$$), 'forbidden%', 'create_share refuses the observer');
+select alike(t.err($$select public.confirm_seats(t.id('demo'), null)$$), 'forbidden%', 'confirm_seats refuses the observer');
+select alike(t.err($$select public.confirm_seats(t.id('demo'), 'Seats 1 to 3 please')$$), 'forbidden%',
   'confirm_seats refuses the observer''s change request');
-select like(t.err($$select public.save_exam_draft('{"title":"Judge exam"}'::jsonb)$$), 'forbidden%',
+select alike(t.err($$select public.save_exam_draft('{"title":"Judge exam"}'::jsonb)$$), 'forbidden%',
   'save_exam_draft refuses the observer');
-select like(t.err($$select public.import_roster(t.id('demo'), '[]'::jsonb)$$), 'forbidden%', 'import_roster refuses the observer');
-select like(t.err($$select public.assign_proctors(t.id('demo'), '[]'::jsonb)$$), 'forbidden%',
+select alike(t.err($$select public.import_roster(t.id('demo'), '[]'::jsonb)$$), 'forbidden%', 'import_roster refuses the observer');
+select alike(t.err($$select public.assign_proctors(t.id('demo'), '[]'::jsonb)$$), 'forbidden%',
   'assign_proctors refuses the observer');
-select like(t.err($$select public.schedule_exam(t.id('demo'))$$), 'forbidden%', 'schedule_exam refuses the observer');
-select like(t.err($$select public.session_heartbeat(t.id('s1'))$$), 'forbidden%',
+select alike(t.err($$select public.schedule_exam(t.id('demo'))$$), 'forbidden%', 'schedule_exam refuses the observer');
+select alike(t.err($$select public.session_heartbeat(t.id('s1'))$$), 'forbidden%',
   'session_heartbeat refuses the observer (not the session owner)');
-select like(t.err($$select public.submit_session(t.id('s1'))$$), 'forbidden%', 'submit_session refuses the observer');
+select alike(t.err($$select public.submit_session(t.id('s1'))$$), 'forbidden%', 'submit_session refuses the observer');
 -- revoke_share arrives with WP 1.9's follow-up; checked when it is there.
 select case
   when to_regprocedure('public.revoke_share(uuid)') is null then skip('revoke_share is not on this branch', 1)
-  else like(t.err(format('select public.revoke_share(%L)',
+  else alike(t.err(format('select public.revoke_share(%L)',
     (select rs.id from public.report_shares rs where rs.report_id = t.id('report1') limit 1))), 'forbidden%',
     'revoke_share refuses the observer')
 end;
@@ -370,15 +370,15 @@ select is(t.messages('exam:' || t.id('demo'), 'session', jsonb_build_object('id'
   0::bigint, 'and broadcasts nothing');
 
 select t.login(t.uid_of(t.id('s1')));
-select like(t.err($$select public.session_heartbeat(t.id('s4'))$$), 'forbidden%', 'another student is refused');
-select like(t.err(format('select public.session_heartbeat(%L)', gen_random_uuid())), 'not_found%',
+select alike(t.err($$select public.session_heartbeat(t.id('s4'))$$), 'forbidden%', 'another student is refused');
+select alike(t.err(format('select public.session_heartbeat(%L)', gen_random_uuid())), 'not_found%',
   'an unknown session is not_found');
 reset role;
 select t.login(t.id('mirror'));
-select like(t.err($$select public.session_heartbeat(t.id('s4'))$$), 'forbidden%', 'a proctor is refused');
+select alike(t.err($$select public.session_heartbeat(t.id('s4'))$$), 'forbidden%', 'a proctor is refused');
 reset role;
 select t.anon();
-select like(t.err($$select public.session_heartbeat(t.id('s4'))$$), 'permission denied%',
+select alike(t.err($$select public.session_heartbeat(t.id('s4'))$$), 'permission denied%',
   'a visitor with only the publishable key cannot call it');
 reset role;
 
@@ -388,7 +388,7 @@ reset role;
 select t.login(t.id('s4_uid'));
 select is((public.demo_live_status() -> 'exam' ->> 'id')::uuid, t.id('demo'), 'a simulated student reads DEMO-LIVE''s status');
 select is((public.demo_live_status() ->> 'viewers')::int, 0, 'nobody watches yet');
-select like(t.err($$select public.demo_live_seen(t.id('demo'))$$), 'forbidden%', 'a student cannot mark the wall as watched');
+select alike(t.err($$select public.demo_live_seen(t.id('demo'))$$), 'forbidden%', 'a student cannot mark the wall as watched');
 reset role;
 select t.login(t.id('judge'));
 select is((public.demo_live_seen(t.id('demo')) ->> 'duration_min')::int, 720, 'the observer''s open wall marks itself');
@@ -397,10 +397,10 @@ select t.login(t.id('mirror'));
 select is(t.err($$select public.demo_live_seen(t.id('demo'))$$), null, 'so does a proctor''s');
 reset role;
 select t.login(t.id('outsider'));
-select like(t.err($$select public.demo_live_seen(t.id('demo'))$$), 'forbidden%', 'a proctor of another exam is refused');
+select alike(t.err($$select public.demo_live_seen(t.id('demo'))$$), 'forbidden%', 'a proctor of another exam is refused');
 reset role;
 select t.login(t.id('office'));
-select like(t.err($$select public.demo_live_seen(t.id('math2'))$$), 'not_found%', 'any other exam is not_found');
+select alike(t.err($$select public.demo_live_seen(t.id('math2'))$$), 'not_found%', 'any other exam is not_found');
 reset role;
 select t.login(t.id('s4_uid'));
 select is((public.demo_live_status() ->> 'viewers')::int, 2, 'the status counts the two open walls');
@@ -410,10 +410,10 @@ select t.login(t.id('s4_uid'));
 select is((public.demo_live_status() ->> 'viewers')::int, 1, 'a wall not seen for 90 s no longer counts');
 reset role;
 select t.anon();
-select like(t.err($$select public.demo_live_status()$$), 'permission denied%', 'a visitor cannot read the status');
+select alike(t.err($$select public.demo_live_status()$$), 'permission denied%', 'a visitor cannot read the status');
 reset role;
 select t.login(t.id('judge'));
-select like(t.err($$select count(*) from public.demo_live_views$$), 'permission denied%',
+select alike(t.err($$select count(*) from public.demo_live_views$$), 'permission denied%',
   'nobody reads demo_live_views directly');
 reset role;
 
@@ -431,7 +431,7 @@ select is((select array_agg(storage_path) from public.demo_live_orphans()),
   array[(select name from storage.objects where bucket_id = 'frames' and name like t.id('demo') || '/' || t.id('gone') || '/%')],
   'orphans: only the DEMO-LIVE still whose session is gone, never one of a live session or of another exam');
 select t.login(t.id('judge'));
-select like(t.err($$select * from public.demo_live_orphans()$$), 'permission denied%', 'staff cannot list them');
+select alike(t.err($$select * from public.demo_live_orphans()$$), 'permission denied%', 'staff cannot list them');
 reset role;
 
 -- ---------------------------------------------------------------------------
