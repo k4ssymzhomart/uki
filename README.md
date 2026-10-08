@@ -95,7 +95,7 @@ packages/
   detection/      Camera loop, MediaPipe Face Landmarker and Object Detector worker, rules engine, card match
   ui/             React components on Radix, styled with the tokens; icons through src/icons.ts
   tokens/         tokens.css, the Tailwind v4 theme and text styles, generated from figma-variables.json
-  i18n/           catalog.json (student and Lock strings), dashboard*.json (dashboard, English), built messages
+  i18n/           catalog.json (student and Lock strings), dashboard*.json (dashboard, en and ru), built messages
   db/             Typed Supabase client factory and the generated database types
   config/         Shared tsconfig and Vitest settings
 supabase/         config.toml, migrations, Edge Functions (ingest, frames, command, stills), seed.sql, pgTAP tests
@@ -143,7 +143,7 @@ Technical limits recorded in [docs/decisions.md](docs/decisions.md):
 - Model binaries are not in git: `pnpm models` and `pnpm models:verify` must run before packaging.
 - Only message and add_time can go to a whole group; pause (of a writing session), resume (of a paused one) and end go to one session, and a finished session refuses every command.
 - The live wall's StudentTile has Figma's ok, warn, flag and paused states only; Done and No signal map onto them until Design draws those.
-- The dashboard is English only (`packages/i18n/dashboard*.json`); students get Kazakh, Russian and English.
+- The dashboard is English and Russian (`packages/i18n/dashboard*.json`, switched in the account menu and kept in the `uki_locale` cookie); its Russian is a first pass awaiting a native read-through (P.18). Students get Kazakh, Russian and English.
 - Windows keeps the native window frame until the Windows frame (2.1w, Phase 2) is decided.
 - TypeScript is pinned to 5.9 (not 7) until after Demo Day.
 - The desktop's built content security policy has no `style-src`, so inline `<style>` elements are blocked: the student window must not use the UI kit's Dialog, Select or menus (Radix's scroll lock injects one) unless the policy changes first.
