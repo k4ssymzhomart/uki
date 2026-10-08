@@ -45,6 +45,8 @@ export type OverviewViewProps = {
    * "All faculties"; undefined for a proctor, who sees their own faculty.
    */
   scopeName?: string;
+  /** Exams with a proctor's open change request (0.9a, WP 1.5): their chip reads Change requested. */
+  changeRequests?: readonly string[];
 };
 
 /** Where an exam's row leads in Phase 0: its lobby before the start, its live wall after. */
@@ -59,7 +61,14 @@ function examHref(row: OverviewRow): string | undefined {
  * exam's card with Open lobby, and 0.1b behind Video uploaded. Import CSV and New exam stay hidden
  * until the wizard (WP 1.3) lands.
  */
-export function OverviewView({ rows, groupCount, readiness, nowMs, scopeName }: OverviewViewProps) {
+export function OverviewView({
+  rows,
+  groupCount,
+  readiness,
+  nowMs,
+  scopeName,
+  changeRequests = [],
+}: OverviewViewProps) {
   const t = useTranslations("dashboard");
   const locale = useDashboardLocale();
   const staff = useStaff();
@@ -179,6 +188,8 @@ export function OverviewView({ rows, groupCount, readiness, nowMs, scopeName }: 
             <tbody>
               {visible.map((row) => {
                 const chip = statusChip(row);
+                const changeRequested =
+                  examPhase(row.status) === "upcoming" && changeRequests.includes(row.id);
                 return (
                   <RowExam
                     key={row.id}
@@ -194,8 +205,12 @@ export function OverviewView({ rows, groupCount, readiness, nowMs, scopeName }: 
                       phone: t("overview.check.phone"),
                       id: t("overview.check.id"),
                     }}
-                    status={chip.status}
-                    statusLabel={t(`overview.status.${chip.key}`, { count: chip.count ?? 0 })}
+                    status={changeRequested ? "warn" : chip.status}
+                    statusLabel={
+                      changeRequested
+                        ? t("myExams.status.changeRequested")
+                        : t(`overview.status.${chip.key}`, { count: chip.count ?? 0 })
+                    }
                     href={examHref(row)}
                     linkAs={AppLink}
                   />

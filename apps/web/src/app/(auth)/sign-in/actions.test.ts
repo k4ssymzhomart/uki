@@ -72,6 +72,11 @@ describe("signIn", () => {
     expect(db.signOut).not.toHaveBeenCalled();
   });
 
+  it("sends a proctor to 0.9, /my-exams (WP 1.5)", async () => {
+    fakeSupabase([{ data: { ...ROW, full_name: "Nurlan Bekov", role: "proctor" }, error: null }]);
+    await expect(signIn(INITIAL, form())).rejects.toThrow("redirect /my-exams");
+  });
+
   it("says sign-in is unavailable, not that the account cannot use the dashboard, when the read fails twice", async () => {
     const db = fakeSupabase([DB_DOWN]);
     expect(await signIn(INITIAL, form())).toEqual({

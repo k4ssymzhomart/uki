@@ -1,6 +1,7 @@
 import {
   Device,
   ExamStatus,
+  Locale,
   parseStatusDetail,
   SessionState,
   SessionStatus,
@@ -24,7 +25,8 @@ import { z } from "zod";
  * detail needs help. 1.5 draws three of them, each with its dashboard.lobby.detail.* string:
  * - `app:<name>`: "Telegram is open";
  * - `camera:busy`: "Camera blocked by another app";
- * - `card:retry:<n>` (and `card:help:<n>` on 1.3a): "Card unreadable · retry 2 of 3".
+ * - `card:retry:<n>`: "Card unreadable · retry 2 of 3", and `card:help:<n>` on 1.3a: 1.5b's
+ *   "Card unreadable · 3 of 3 tries".
  * The other details (lock, network, storage, other camera problems) have no string in Figma yet: the row
  * shows its step and Needs help without a detail line. Text outside the vocabulary is never shown.
  */
@@ -47,7 +49,12 @@ export const RosterEntry = z.object({
   student_id: Uuid,
   seat: z.number().int().nullable(),
   invite_status: z.string(),
-  student: z.object({ full_name: z.string(), student_number: z.string() }),
+  student: z.object({
+    full_name: z.string(),
+    student_number: z.string(),
+    /** The student's group, for 1.5a's "20231044 · Group 204". */
+    group: z.object({ code: z.string() }).nullable().optional().catch(null),
+  }),
 });
 export type RosterEntry = z.infer<typeof RosterEntry>;
 
@@ -60,10 +67,22 @@ export const LobbySession = z.object({
   state: SessionState,
   status: SessionStatus.catch({}),
   device: DeviceCell,
+  /** The app's language, for 1.5b's "Sent in English, Madina's app language"; Kazakh by default. */
+  locale: Locale.catch("kk"),
 });
 export type LobbySession = z.infer<typeof LobbySession>;
 
-export const LOBBY_SESSION_COLUMNS = "id, student_id, state, status, device";
+/** A proctor's open change request on 0.9a, as the exam office sees it in the lobby. */
+export const ChangeRequestRow = z.object({
+  staff_id: Uuid,
+  seat_from: z.number().int().positive().nullable(),
+  seat_to: z.number().int().positive().nullable(),
+  change_request: z.string(),
+  staff: z.object({ full_name: z.string() }),
+});
+export type ChangeRequestRow = z.infer<typeof ChangeRequestRow>;
+
+export const LOBBY_SESSION_COLUMNS = "id, student_id, state, status, device, locale";
 
 export function parseRows<T>(schema: z.ZodType<T>, rows: readonly unknown[]): T[] {
   return rows.flatMap((row) => {
@@ -86,7 +105,8 @@ export type StepDetail =
   | { key: "bounced" }
   | { key: "cameraBlocked" }
   | { key: "appOpen"; app: string }
-  | { key: "cardRetry"; attempt: number; max: number };
+  | { key: "cardRetry"; attempt: number; max: number }
+  | { key: "cardHelp"; tries: number; max: number };
 
 /** dashboard.lobby.chip.* */
 export type ChipKey = "needsHelp" | "notJoined" | "checking" | "ready" | "writing" | "paused" | "done";
@@ -97,6 +117,14 @@ export type LobbyRow = {
   name: string;
   number: string;
   seat: number | null;
+  /** The student's group code, "204". */
+  group: string | null;
+  /** The session's state; null before the student joins. */
+  state: SessionState | null;
+  /** What holds the student at a check step (status.detail), for 1.5a and 1.5b. */
+  problem: StatusDetail | null;
+  /** The app's language. */
+  locale: Locale | null;
   category: LobbyCategory;
   step: StepKey;
   detail: StepDetail | null;
@@ -127,7 +155,9 @@ export function problemDetail(detail: StatusDetail): StepDetail | null {
     case "camera":
       return detail.problem === "busy" ? { key: "cameraBlocked" } : null;
     case "card":
-      return { key: "cardRetry", attempt: detail.tries, max: THRESHOLDS.identity.maxTries };
+      return detail.problem === "help"
+        ? { key: "cardHelp", tries: detail.tries, max: THRESHOLDS.identity.maxTries }
+        : { key: "cardRetry", attempt: detail.tries, max: THRESHOLDS.identity.maxTries };
     default:
       return null;
   }
@@ -166,12 +196,17 @@ function chipOf(category: LobbyCategory, state: SessionState | null): LobbyRow["
 /** One student's row: the roster entry and the student's session, if they joined. */
 export function lobbyRow(entry: RosterEntry, session: LobbySession | null): LobbyRow {
   const category = categoryOf(session);
+  const problem = session ? checkProblem(session) : null;
   const base = {
     studentId: entry.student_id,
     sessionId: session?.id ?? null,
     name: entry.student.full_name,
     number: entry.student.student_number,
     seat: entry.seat,
+    group: entry.student.group?.code ?? null,
+    state: session?.state ?? null,
+    problem,
+    locale: session?.locale ?? null,
     category,
     chip: chipOf(category, session?.state ?? null),
   };
@@ -183,7 +218,6 @@ export function lobbyRow(entry: RosterEntry, session: LobbySession | null): Lobb
       device: null,
     };
   }
-  const problem = checkProblem(session);
   return {
     ...base,
     step: STEP_OF_STATE[session.state],
@@ -196,6 +230,84 @@ export function lobbyRow(entry: RosterEntry, session: LobbySession | null): Lobb
 export function lobbyRows(roster: readonly RosterEntry[], sessions: readonly LobbySession[]): LobbyRow[] {
   const byStudent = new Map(sessions.map((session) => [session.student_id, session]));
   return roster.map((entry) => lobbyRow(entry, byStudent.get(entry.student_id) ?? null));
+}
+
+// ---------------------------------------------------------------------------------------------------
+// 1.5a: the student card on a lobby row
+
+/** The four check-in steps of 1.5a's bar, in order. */
+export const CHECK_IN_STEPS = ["system", "identity", "rules", "ready"] as const;
+export type CheckInStepId = (typeof CHECK_IN_STEPS)[number];
+
+const STEP_NUMBER: Record<SessionState, number> = {
+  joined: 1,
+  checking: 1,
+  identity: 2,
+  rules: 3,
+  ready: 4,
+  writing: 4,
+  paused: 4,
+  submitted: 4,
+  time_up: 4,
+  ended: 4,
+};
+
+/**
+ * Where a student is in check-in: the step's number (1 to 4) and the state of each step on 1.5a's bar.
+ * Steps before the current one are done; the current one is warn while something holds the student
+ * there, done once the student is ready (or past check-in), and still to do otherwise.
+ */
+export function checkInProgress(
+  state: SessionState,
+  problem: StatusDetail | null,
+): { step: number; steps: { id: CheckInStepId; state: "done" | "warn" | "todo" }[] } {
+  const step = STEP_NUMBER[state];
+  const finished = !CHECK_STATES.includes(state) && state !== "rules";
+  return {
+    step,
+    steps: CHECK_IN_STEPS.map((id, index) => {
+      if (index + 1 < step) return { id, state: "done" };
+      if (index + 1 > step) return { id, state: "todo" };
+      return { id, state: problem ? "warn" : finished ? "done" : "todo" };
+    }),
+  };
+}
+
+/** The card's "retry 2 of 3" (1.3) or "3 of 3 tries" (1.3a) beside the step, for a card problem. */
+export type CardTriesMeta =
+  | { key: "retry"; attempt: number; max: number }
+  | { key: "tries"; tries: number; max: number };
+
+export function cardTriesMeta(problem: StatusDetail | null): CardTriesMeta | null {
+  if (problem?.kind !== "card") return null;
+  const max = THRESHOLDS.identity.maxTries;
+  return problem.problem === "help"
+    ? { key: "tries", tries: problem.tries, max }
+    : { key: "retry", attempt: problem.tries, max };
+}
+
+/** 1.5a's Problem fact: the lobby's detail line, or "Card unreadable" for the card; null otherwise. */
+export type ProblemFact =
+  | { key: "appOpen"; app: string }
+  | { key: "cameraBlocked" }
+  | { key: "cardUnreadable" };
+
+export function problemFact(problem: StatusDetail | null): ProblemFact | null {
+  switch (problem?.kind) {
+    case "app":
+      return { key: "appOpen", app: problem.name };
+    case "camera":
+      return problem.problem === "busy" ? { key: "cameraBlocked" } : null;
+    case "card":
+      return { key: "cardUnreadable" };
+    default:
+      return null;
+  }
+}
+
+/** 1.5b: a student held at the identity check by the card, who may need a hint. */
+export function stuckOnIdentity(row: Pick<LobbyRow, "state" | "problem">): boolean {
+  return row.state === "identity" && row.problem?.kind === "card";
 }
 
 // ---------------------------------------------------------------------------------------------------
@@ -318,4 +430,28 @@ export function mergeSessions(
     byId.set(session.id, session);
   }
   return [...byId.values()];
+}
+
+/** "Madina Tulegenova" gives "Madina", as 1.5b writes "Hint for Madina". */
+export function firstName(fullName: string): string {
+  return fullName.trim().split(/\s+/u)[0] ?? "";
+}
+
+/** The most a hint holds: 1.5b's counter reads "78/200" (the server takes up to 280, MESSAGE_TEXT_MAX). */
+export const HINT_MAX = 200;
+
+/**
+ * 1.5b's log: the session's identity help requests and the proctors' messages, oldest first. Other help
+ * topics belong to the exam (2.4d), not to check-in.
+ */
+export function identityHelpLog<T extends { type: string; data: Record<string, unknown>; at: string }>(
+  events: readonly T[],
+): T[] {
+  return events
+    .filter(
+      (event) =>
+        event.type === "proctor.message" ||
+        (event.type === "student.help_requested" && event.data.topic === "identity"),
+    )
+    .sort((a, b) => toMs(a.at) - toMs(b.at));
 }
