@@ -26,6 +26,7 @@ async function waitForFunctions(supabaseUrl: string): Promise<void> {
   const expected = [
     ["ingest", 401],
     ["command", 401],
+    ["data-request", 401],
     ["shared-report", 400],
   ] as const;
   for (const [name, want] of expected) {

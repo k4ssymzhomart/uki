@@ -17,7 +17,9 @@ export type FunctionName =
   | "stills"
   | "send-invites"
   | "pilot-notify"
-  | "shared-report";
+  | "shared-report"
+  | "data-request"
+  | "retention";
 
 export interface FunctionReply {
   status: number;

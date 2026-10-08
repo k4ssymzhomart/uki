@@ -9,7 +9,16 @@ declare module "vitest" {
   }
 }
 
-export const FUNCTIONS = ["ingest", "frames", "command", "stills", "send-invites", "pilot-notify"] as const;
+export const FUNCTIONS = [
+  "ingest",
+  "frames",
+  "command",
+  "stills",
+  "send-invites",
+  "pilot-notify",
+  "data-request",
+  "retention",
+] as const;
 /** Functions without a caller credential (`auth: "none"`): an empty body is a 400, not a 401. */
 export const OPEN_FUNCTIONS = ["shared-report"] as const;
 
