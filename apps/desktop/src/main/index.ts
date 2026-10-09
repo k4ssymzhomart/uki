@@ -98,7 +98,7 @@ function notify<C extends IpcEventChannel>(channel: C, ...args: IpcEventArgs<C>)
 }
 
 const watcher = createBlockedAppWatcher({
-  findApps: () => (devFlags.ignoreBlockedApps ? Promise.resolve([]) : findBlockedApps(os)),
+  findApps: (scan) => (devFlags.ignoreBlockedApps ? Promise.resolve([]) : findBlockedApps(os, scan)),
   onAppeared: (apps) => notify(IPC_CHANNELS.checksBlockedApps, apps),
   onError: (error) => console.error("[desktop] process scan failed:", error),
 });
@@ -209,8 +209,8 @@ if (debugSwitch !== null) {
         quit: () => app.quit(),
         examActive: examHoldsApp,
         scan: devFlags.ignoreBlockedApps
-          ? withoutBlockedApps(() => scanSystem({ os, userDataPath: app.getPath("userData") }))
-          : () => scanSystem({ os, userDataPath: app.getPath("userData") }),
+          ? withoutBlockedApps((scan) => scanSystem({ os, userDataPath: app.getPath("userData"), scan }))
+          : (scan) => scanSystem({ os, userDataPath: app.getPath("userData"), scan }),
         cameraAccess: () => requestCameraAccess(os, systemPreferences),
         watcher,
         lockdown,

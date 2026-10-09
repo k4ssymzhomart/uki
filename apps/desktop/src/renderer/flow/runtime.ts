@@ -41,6 +41,7 @@ import {
   type FlowStage,
   ingestStatus,
   lockExamState,
+  scanOptions,
   stageOf,
   wantsDetection,
   wantsExamWatch,
@@ -736,7 +737,7 @@ export class FlowRuntime {
     const watch = wantsExamWatch(snapshot);
     if (watch !== this.applied.watch) {
       this.applied.watch = watch;
-      this.guard.scan(watch);
+      this.guard.scan(watch, scanOptions(snapshot));
     }
 
     const hidden = wantsHidden(snapshot);
@@ -762,7 +763,7 @@ export class FlowRuntime {
           bridge,
           onRows: (rows) => this.send({ type: "CHECK_ROWS", rows }),
         });
-        this.systemCheck.start();
+        this.systemCheck.start(scanOptions(snapshot));
       } else {
         this.systemCheck?.stop();
       }

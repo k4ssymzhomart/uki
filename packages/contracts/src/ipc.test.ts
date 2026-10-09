@@ -20,6 +20,16 @@ describe("IPC channels", () => {
     expect(() => parseIpcArgs(IPC_CHANNELS.lockSend, [{ type: "lock.event" }])).toThrow();
     expect(parseIpcArgs(IPC_CHANNELS.checksWatch, [false])).toEqual([false]);
     expect(() => parseIpcArgs(IPC_CHANNELS.checksWatch, [])).toThrow();
+    // C2: in-app exams ask for browsers too; without the option, none.
+    expect(parseIpcArgs(IPC_CHANNELS.checksWatch, [true, { browsers: true }])).toEqual([
+      true,
+      { browsers: true },
+    ]);
+    expect(() => parseIpcArgs(IPC_CHANNELS.checksWatch, [true, { browsers: 1 }])).toThrow();
+    expect(parseIpcArgs(IPC_CHANNELS.checksScan, [])).toEqual([]);
+    expect(parseIpcArgs(IPC_CHANNELS.checksScan, [{ browsers: false }])).toEqual([{ browsers: false }]);
+    expect(() => parseIpcArgs(IPC_CHANNELS.checksScan, [null])).toThrow();
+    expect(() => parseIpcArgs(IPC_CHANNELS.checksScan, [{ browsers: true }, 1])).toThrow();
     expect(() => parseIpcArgs(IPC_CHANNELS.checksCameraAccess, ["camera"])).toThrow();
   });
 
@@ -31,11 +41,14 @@ describe("IPC channels", () => {
     });
     expect(
       parseIpcResult(IPC_CHANNELS.checksScan, {
-        apps: [{ id: "telegram", name: "Telegram", kind: "app" }],
+        apps: [
+          { id: "telegram", name: "Telegram", kind: "app" },
+          { id: "chrome", name: "Google Chrome", kind: "browser" },
+        ],
         screenShare: [],
         freeMb: 20480,
       }).apps,
-    ).toHaveLength(1);
+    ).toHaveLength(2);
     expect(parseIpcResult(IPC_CHANNELS.lockStatus, "paired")).toBe("paired");
     expect(() => parseIpcResult(IPC_CHANNELS.lockStatus, "lost")).toThrow();
     expect(parseIpcResult(IPC_CHANNELS.receiptSavePdf, null)).toBeNull();

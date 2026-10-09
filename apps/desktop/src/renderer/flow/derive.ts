@@ -4,11 +4,13 @@
 import {
   type AppToLock,
   appDetail,
+  blocksBrowsers,
   CardTries,
   type ExamStatePhase,
   formatStatusDetail,
   Host,
   type IngestStatus,
+  type ScanOptions,
   type StatusDetail,
 } from "@uki/contracts";
 import type { SnapshotFrom } from "xstate";
@@ -118,6 +120,15 @@ export function wantsDetection(snapshot: FlowSnapshot): DetectionWant {
 
 export function wantsSystemCheck(snapshot: FlowSnapshot): boolean {
   return stageOf(snapshot) === "system";
+}
+
+/**
+ * What the process scan looks for besides the blocked apps, on 1.2 and during the exam: other browsers
+ * in in-app exams only (C2), since a browser exam needs its browser.
+ */
+export function scanOptions(snapshot: FlowSnapshot): ScanOptions {
+  const mode = snapshot.context.joined?.exam.mode;
+  return { browsers: mode !== undefined && blocksBrowsers(mode) };
 }
 
 /** The card match runs on 1.3 and keeps retrying on 1.3a, until it matches. */

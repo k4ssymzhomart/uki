@@ -44,9 +44,11 @@ const bridge: UkiBridge = {
     quit: () => invoke(IPC_CHANNELS.appQuit),
   },
   checks: {
-    scan: () => invoke(IPC_CHANNELS.checksScan),
+    // No trailing undefined: the main process would see an argument that is not a ScanOptions.
+    scan: (options) => (options ? invoke(IPC_CHANNELS.checksScan, options) : invoke(IPC_CHANNELS.checksScan)),
     cameraAccess: () => invoke(IPC_CHANNELS.checksCameraAccess),
-    watch: (on) => invoke(IPC_CHANNELS.checksWatch, on),
+    watch: (on, options) =>
+      options ? invoke(IPC_CHANNELS.checksWatch, on, options) : invoke(IPC_CHANNELS.checksWatch, on),
     onBlockedApps: (callback) => subscribe(IPC_CHANNELS.checksBlockedApps, (apps) => callback(apps)),
   },
   exam: {

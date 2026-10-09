@@ -14,8 +14,10 @@ import {
   type IpcInvokeChannel,
   type IpcResult,
   type LockStatus,
+  NO_BROWSERS,
   parseIpcArgs,
   parseIpcResult,
+  type ScanOptions,
   type ScanResult,
   type WatchLabel,
 } from "@uki/contracts";
@@ -99,9 +101,10 @@ export type HandlerDeps = {
   /** app.quit(); refused while the exam holds the app (lockdown, the tray or the exam's scan). */
   quit: () => void;
   examActive: () => boolean;
-  scan: () => Promise<ScanResult>;
+  /** The 1.2 scan; browsers too when the renderer asks (in-app exams). */
+  scan: (options: ScanOptions) => Promise<ScanResult>;
   cameraAccess: () => Promise<boolean>;
-  watcher: { start(): void; stop(): void };
+  watcher: { start(options: ScanOptions): void; stop(): void };
   lockdown: { set(on: boolean): void };
   trayMode: {
     set(on: boolean): Promise<void>;
@@ -119,10 +122,10 @@ export function createIpcHandlers(deps: HandlerDeps): IpcHandlers {
       if (deps.examActive()) throw new Error(`${IPC_CHANNELS.appQuit}: refused while the exam runs`);
       deps.quit();
     },
-    [IPC_CHANNELS.checksScan]: () => deps.scan(),
+    [IPC_CHANNELS.checksScan]: (options) => deps.scan(options ?? NO_BROWSERS),
     [IPC_CHANNELS.checksCameraAccess]: () => deps.cameraAccess(),
-    [IPC_CHANNELS.checksWatch]: (on) => {
-      if (on) deps.watcher.start();
+    [IPC_CHANNELS.checksWatch]: (on, options) => {
+      if (on) deps.watcher.start(options ?? NO_BROWSERS);
       else deps.watcher.stop();
     },
     [IPC_CHANNELS.examLockdown]: (on) => deps.lockdown.set(on),

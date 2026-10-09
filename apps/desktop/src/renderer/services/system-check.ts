@@ -2,8 +2,9 @@
 // (GET /auth/v1/health under 1,000 ms), browser lock (the relay's status), other apps and screen
 // sharing (the main process's process scan), and storage (1 GB free). The camera row comes from the
 // detection worker's camera check. Check again re-runs everything; the Lock status arrives as it
-// changes (and is also polled), so pairing turns its row green without a click.
-import { type LockStatus, THRESHOLDS, type UkiBridge } from "@uki/contracts";
+// changes (and is also polled), so pairing turns its row green without a click. In-app exams also ask
+// the scan for other browsers (C2), which fail the Other apps row by name, like Telegram.
+import { type LockStatus, NO_BROWSERS, type ScanOptions, THRESHOLDS, type UkiBridge } from "@uki/contracts";
 import type { CameraCheck } from "@uki/detection";
 import type { CheckRows } from "../flow/types.ts";
 import type { CameraProblem } from "../flow/view-model.ts";
@@ -41,14 +42,17 @@ export class SystemCheck {
   private timer: ReturnType<typeof setInterval> | null = null;
   private unsubscribe: (() => void) | null = null;
   private active = false;
+  private scanOptions: ScanOptions = NO_BROWSERS;
 
   constructor(options: SystemCheckOptions) {
     this.options = options;
   }
 
-  start(): void {
+  /** `scan`: what the process scan looks for besides the blocked apps (browsers in in-app exams). */
+  start(scan: ScanOptions = NO_BROWSERS): void {
     if (this.active) return;
     this.active = true;
+    this.scanOptions = scan;
     this.unsubscribe = this.options.bridge.lock.onStatus((status) => this.emit({ lock: status }));
     void this.run();
     this.timer = setInterval(() => void this.lock(), LOCK_POLL_MS);
@@ -83,7 +87,7 @@ export class SystemCheck {
 
   private async scan(): Promise<void> {
     try {
-      const result = await this.options.bridge.checks.scan();
+      const result = await this.options.bridge.checks.scan(this.scanOptions);
       const app = result.apps[0]?.name ?? null;
       const share = result.screenShare[0]?.name ?? null;
       this.emit({

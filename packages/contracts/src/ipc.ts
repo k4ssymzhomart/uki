@@ -1,17 +1,17 @@
 // packages/contracts/src/ipc.ts: every call is checked with Zod in the main process.
 // The preload exposes one `window.uki` of type UkiBridge; each method maps to one IPC channel below.
 import { z } from "zod";
-import { BlockedApp } from "./blocked-apps.ts";
+import { BlockedApp, ScanOptions } from "./blocked-apps.ts";
 import { AppToLock, LockToApp, PairCode } from "./lock.ts";
 import { UtcTimestamp } from "./primitives.ts";
 import { DesktopOs } from "./session.ts";
 
-export type { BlockedApp } from "./blocked-apps.ts";
+export type { BlockedApp, ScanOptions } from "./blocked-apps.ts";
 
 export const AppInfo = z.object({ version: z.string(), os: DesktopOs, arch: z.string() });
 export type AppInfo = z.infer<typeof AppInfo>;
 
-/** Result of the 1.2 process and disk scan. */
+/** Result of the 1.2 process and disk scan. Browsers, when asked for, are in `apps` (row "Other apps"). */
 export const ScanResult = z.object({
   apps: z.array(BlockedApp),
   screenShare: z.array(BlockedApp),
@@ -29,10 +29,11 @@ export type LockPairCode = z.infer<typeof LockPairCode>;
 export interface UkiBridge {
   app: { info(): Promise<{ version: string; os: "macos" | "windows"; arch: string }>; quit(): Promise<void> };
   checks: {
-    scan(): Promise<{ apps: BlockedApp[]; screenShare: BlockedApp[]; freeMb: number }>;
+    // C2 (docs/decisions.md): `options` asks for other browsers too, in in-app exams; none without it.
+    scan(options?: ScanOptions): Promise<{ apps: BlockedApp[]; screenShare: BlockedApp[]; freeMb: number }>;
     // Added in WP 0.6 (docs/decisions.md): the plan's bridge has no call for these three.
     cameraAccess(): Promise<boolean>; // macOS asks with systemPreferences.askForMediaAccess("camera"); true when granted
-    watch(on: boolean): Promise<void>; // the 15 s process scan during the exam
+    watch(on: boolean, options?: ScanOptions): Promise<void>; // the 15 s process scan during the exam
     onBlockedApps(cb: (apps: BlockedApp[]) => void): () => void; // blocked apps that appeared since the previous scan
   };
   exam: {
@@ -77,9 +78,9 @@ export type IpcChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS];
 export const IPC_INVOKE = {
   [IPC_CHANNELS.appInfo]: { args: z.tuple([]), result: AppInfo },
   [IPC_CHANNELS.appQuit]: { args: z.tuple([]), result: z.void() },
-  [IPC_CHANNELS.checksScan]: { args: z.tuple([]), result: ScanResult },
+  [IPC_CHANNELS.checksScan]: { args: z.tuple([ScanOptions.optional()]), result: ScanResult },
   [IPC_CHANNELS.checksCameraAccess]: { args: z.tuple([]), result: z.boolean() },
-  [IPC_CHANNELS.checksWatch]: { args: z.tuple([z.boolean()]), result: z.void() },
+  [IPC_CHANNELS.checksWatch]: { args: z.tuple([z.boolean(), ScanOptions.optional()]), result: z.void() },
   [IPC_CHANNELS.examLockdown]: { args: z.tuple([z.boolean()]), result: z.void() },
   [IPC_CHANNELS.examHideToTray]: { args: z.tuple([z.boolean()]), result: z.void() },
   [IPC_CHANNELS.lockStatus]: { args: z.tuple([]), result: LockStatus },
