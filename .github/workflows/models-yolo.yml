@@ -1,0 +1,156 @@
+# The YOLO11n phone models for A6 (docs/finals-plan.md): Ultralytics' COCO-pretrained yolo11n.pt exported
+# to ONNX at 320 × 320 and 416 × 416 (opset 17, simplified, no NMS in the graph: the detection worker runs
+# NMS in JavaScript), each checked with onnxruntime (input [1, 3, s, s], output [1, 84, anchors], class 67
+# "cell phone"), with its SHA-256 printed and written to SHA256SUMS. This Mac has no torch and a slow link,
+# so the export runs here.
+#
+#   pull_request (this file changed)   export and keep the files as the run's "yolo11n-onnx" artifact
+#   workflow_dispatch on main          export, then publish the files as assets of the GitHub pre-release
+#                                      named by `tag` (default models-yolo11n-v1)
+#
+#   gh workflow run models-yolo.yml --ref main
+#
+# The release is created with --prerelease --latest=false, so https://github.com/k4ssymzhomart/uki/releases/latest
+# keeps pointing at the installers the landing page links (desktop-dist.yml). A tag that already exists
+# is never overwritten: apps/desktop/resources/models/manifest.json pins each asset's SHA-256, so a new
+# export needs a new tag (for example models-yolo11n-v2) and `pnpm models --update`.
+#
+# Licence: Ultralytics and its YOLO11 weights are AGPL-3.0 (docs/decisions.md, A6).
+name: YOLO models
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Pre-release tag for the ONNX files (must not exist yet)
+        required: false
+        default: models-yolo11n-v1
+        type: string
+      publish:
+        description: Publish the files as a GitHub pre-release (main only)
+        required: false
+        default: true
+        type: boolean
+  pull_request:
+    paths:
+      - .github/workflows/models-yolo.yml
+
+concurrency:
+  group: models-yolo-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    name: Export yolo11n to ONNX (320 and 416)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Ultralytics with the CPU-only torch
+        run: |
+          python -m pip install --upgrade pip
+          pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+          pip install "ultralytics==8.4.174" onnx onnxslim onnxruntime
+          pip freeze | grep -iE '^(ultralytics|torch|torchvision|onnx|onnxslim|onnxruntime)==' | tee versions.txt
+      - name: Export, check and hash
+        run: |
+          mkdir -p dist
+          cat > export.py <<'PY'
+          import ast, hashlib, json, os, shutil, sys
+
+          import numpy as np
+          import onnx
+          import onnxruntime as ort
+          from ultralytics import YOLO
+
+          os.makedirs("dist", exist_ok=True)
+          card = {"source": "yolo11n.pt (Ultralytics, COCO 2017, AGPL-3.0)", "opset": 17, "files": []}
+          for size in (320, 416):
+              exported = YOLO("yolo11n.pt").export(
+                  format="onnx", imgsz=size, opset=17, simplify=True, nms=False, dynamic=False, batch=1
+              )
+              target = f"dist/yolo11n-{size}.onnx"
+              shutil.move(exported, target)
+              model = onnx.load(target)
+              onnx.checker.check_model(model)
+              names = ast.literal_eval({p.key: p.value for p in model.metadata_props}["names"])
+              assert names[67] == "cell phone", names[67]
+              session = ort.InferenceSession(target, providers=["CPUExecutionProvider"])
+              inp, out = session.get_inputs()[0], session.get_outputs()[0]
+              assert inp.shape == [1, 3, size, size], inp.shape
+              anchors = sum((size // stride) ** 2 for stride in (8, 16, 32))
+              (y,) = session.run(None, {inp.name: np.zeros((1, 3, size, size), np.float32)})
+              assert y.shape == (1, 84, anchors), y.shape
+              digest = hashlib.sha256(open(target, "rb").read()).hexdigest()
+              entry = {
+                  "file": os.path.basename(target),
+                  "bytes": os.path.getsize(target),
+                  "sha256": digest,
+                  "input": {"name": inp.name, "shape": inp.shape},
+                  "output": {"name": out.name, "shape": list(y.shape)},
+                  "classes": 80,
+                  "phone_class": 67,
+              }
+              card["files"].append(entry)
+              print(f"{entry['file']}  {entry['bytes']} bytes  sha256 {digest}", flush=True)
+          card["versions"] = open("versions.txt").read().split()
+          json.dump(card, open("dist/model-card.json", "w"), indent=2)
+          PY
+          python export.py
+          (cd dist && sha256sum yolo11n-320.onnx yolo11n-416.onnx | tee SHA256SUMS)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: yolo11n-onnx
+          path: dist/
+          if-no-files-found: error
+          retention-days: 30
+
+  publish:
+    name: Publish the pre-release
+    needs: export
+    if: github.event_name == 'workflow_dispatch' && inputs.publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      TAG: ${{ inputs.tag }}
+    steps:
+      - name: Only main publishes
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::the models are published from main only, not $GITHUB_REF"; exit 1
+          fi
+          case "$TAG" in models-*) ;; *) echo "::error::the tag must start with models-"; exit 1;; esac
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "::error::$TAG exists; its hashes are pinned in manifest.json. Use a new tag."; exit 1
+          fi
+      - uses: actions/download-artifact@v4
+        with:
+          name: yolo11n-onnx
+          path: dist
+      - name: Create the pre-release (never the latest release)
+        run: |
+          {
+            echo "YOLO11n phone models for Üki (A6). Ultralytics' COCO-pretrained \`yolo11n.pt\` exported to ONNX, opset 17, simplified, no NMS in the graph; class 67 is \"cell phone\"."
+            echo
+            echo "Made by run $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID from $GITHUB_SHA."
+            echo
+            echo "Licence: Ultralytics YOLO11 and its weights are AGPL-3.0. Fine for this public hackathon repository; commercial use needs an Ultralytics licence or an Apache-2.0 model."
+            echo
+            echo '```'
+            cat dist/SHA256SUMS
+            echo '```'
+          } > notes.md
+          gh release create "$TAG" dist/yolo11n-320.onnx dist/yolo11n-416.onnx dist/SHA256SUMS dist/model-card.json \
+            --target "$GITHUB_SHA" --prerelease --latest=false \
+            --title "Models: YOLO11n ONNX ($TAG)" --notes-file notes.md
+          gh release view "$TAG" --json tagName,isPrerelease,assets --jq '{tag: .tagName, prerelease: .isPrerelease, assets: [.assets[] | {name, size}]}'
+          echo "latest release is still: $(gh release view --json tagName --jq .tagName)"
