@@ -1249,3 +1249,28 @@ Judge mode (the user's request of 8 and 9 October; no Figma frame): one always-l
 
 **Not done here**
 - The landing's Live demo button, `/demo` and `/demo/live` (the jury guide package) and `/try` are other packages'. The coordinator deploys the simulator to the VPS and runs `pnpm judge:setup` against the cloud project; this branch never touched either.
+
+## 2026-10-09 · Detection thresholds: phone_score 0.55
+
+Item A1 of the finals brief (`docs/finals-plan.md`), decided by the owner after the live test of 9 October. It replaces the 0.85 of the plan's "Starting thresholds" and of "Phone flag: confidence ≥ 0.85" in `docs/design-handoff.md`, and closes the `phone_score` half of P.6 and of "Detection thresholds: evidence so far".
+
+**Why.** The owner's live test with real phones (`docs/phase-1-exit.md`, "Live test, 9 October"), on the MacBook Pro M4 in Chrome (`/try`, 640 × 480, EfficientDet-Lite0 int8 on CPU, 51–60 ms a check, 2.5 phone checks a second):
+
+| Phone | Score |
+| --- | --- |
+| At face height, back to the webcam (the "photographing the screen" pose) | 0.50–0.74 |
+| At chest height while reading it | 0.52–0.79 |
+| Cut by the frame edge, or seen edge-on | 0 (missed) |
+| At `phone_score` 0.85, the old default | 0 detections |
+| False positives above 0.5 in about 3 minutes of sitting, eating, hand on face | none (phone-like objects not yet measured) |
+
+The packaged macOS app v0.1.2 on the cloud project, `DEMO-LIVE` at 0.55 (seat 20249025), flagged `phone.detected` at 0.738 and 0.656 with 3 stills each. 0.85 never fires on a real phone; 0.55 caught every pose the model sees at all and raised no false flag in the time measured.
+
+**What changed** (`fix/phone-threshold`):
+- `DEFAULT_EXAM_CHECKS.phone_score` is 0.55 (`packages/contracts/src/checks.ts`), so `ExamChecks.parse({})`, `/try`'s `DEMO_CHECKS` and `DEFAULT_WORKSPACE_SETTINGS` follow.
+- Migration `20261014010000_phone_score_default.sql`: the column defaults of `exams.checks` and `workspaces.settings` (`default_checks`) are 0.55, so the seed (which takes the defaults), a new workspace and every exam made without checks start at 0.55.
+- The same migration moves a workspace whose `default_checks.phone_score` is still the untouched 0.85 to 0.55, because `save_exam_draft` copies the workspace's default checks into a new draft: without the move, a new draft on the cloud project would still show 0.85. "Untouched" is `public.phone_score_untouched(workspace)`: 0.85 and no `settings.update` audit row of that workspace that changed `phone_score` (the A.4 trigger writes one for every change). A value someone chose on A.4, 0.85 included, stays; the move itself is audited as `settings.update` by the service. Existing exams keep their checks: an exam's checks belong to that exam.
+- 0.2 and A.4 offer 0.5, 0.55, 0.6, 0.65, 0.7, 0.75 and 0.85 (`PHONE_OPTIONS` in the wizard and settings models), plus the current value when it is another one, as before. Nothing lower than 0.5: the Object Detector's own `scoreThreshold` (`THRESHOLDS.phone.detectorScore`) is 0.5, so it never reports a lower score.
+- `pnpm demo:reset` gives Mathematics 2, Physics 1 and the seed's Linear Algebra draft `phone_score` 0.55 and keeps their other checks: the cloud project was seeded before this change. `pnpm judge:setup` sets `DEMO-LIVE`'s checks itself (B1, `fix/judge-demo-live`).
+- Unchanged: the rule (two checks in a row, until A2), the detector's 0.5, every `THRESHOLDS` constant, and exams already scheduled. The desktop end-to-end test keeps its own 0.7 for the brand kit's phone picture (0.77).
+- Still to measure: phone-like objects (calculator, remote, wallet, cup) at 0.55, on the MacBook and on the Windows lab PC (E1); the bench (A7) gives the numbers on the owner's frames.
