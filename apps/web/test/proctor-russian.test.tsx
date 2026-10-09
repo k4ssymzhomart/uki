@@ -44,7 +44,7 @@ vi.mock("../src/features/overview/data-kept-popover.tsx", () => ({ DataKeptTile:
 
 const NOW = Date.parse("2026-10-08T07:00:00Z");
 const NURLAN = { ...DANA, initials: "NB", fullName: "Nurlan Bekov", role: "proctor" as const };
-const CHECKS = { gaze_s: 2, phone_score: 0.85, face_missing_s: 10, identity: true, lock: true };
+const CHECKS = { gaze_s: 2, phone_score: 0.55, face_missing_s: 10, identity: true, lock: true };
 
 function myExam(n: number, title: string, startsAt: string, confirmed: boolean, seats: boolean): MyExam {
   return {

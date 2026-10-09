@@ -3,10 +3,14 @@
 // Tuning changes `exams.checks` defaults, not these constants.
 import { z } from "zod";
 
-/** Defaults of the `exams.checks` column. */
+/**
+ * Defaults of the `exams.checks` column. `phone_score` was 0.85 until the live test of 9 October scored
+ * real phones 0.50 to 0.79 (docs/decisions.md, "Detection thresholds: phone_score 0.55"); migration
+ * 20261014010000_phone_score_default.sql sets the same value as the column defaults.
+ */
 export const DEFAULT_EXAM_CHECKS = {
   gaze_s: 2,
-  phone_score: 0.85,
+  phone_score: 0.55,
   face_missing_s: 10,
   identity: true,
   lock: true,

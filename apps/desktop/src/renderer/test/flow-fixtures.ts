@@ -54,7 +54,7 @@ export function joinOutput(
       status: "scheduled",
       checks: {
         gaze_s: 2,
-        phone_score: 0.85,
+        phone_score: 0.55,
         face_missing_s: 10,
         identity: overrides.identity ?? true,
         lock: overrides.lock ?? true,

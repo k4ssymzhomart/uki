@@ -156,7 +156,7 @@ export class FakeServer implements SimApi {
         duration_min: 720,
         lobby_opens_at: this.startsAt,
         status: "live",
-        checks: { gaze_s: 2, phone_score: 0.85, face_missing_s: 10, identity: true, lock: true },
+        checks: { gaze_s: 2, phone_score: 0.55, face_missing_s: 10, identity: false, lock: false },
         lms_url: null,
         lms_done_path: null,
         allowed_sites: [],

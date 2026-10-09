@@ -201,7 +201,7 @@ select is((public.save_exam_draft(jsonb_build_object('id', t.id('draft'), 'title
   'starts_at', (select friday from t.when), 'duration_min', 90, 'room', '204')) ->> 'title'),
   'Mathematics 2 · Midterm', 'step 1 (0.4) saves the details, trimmed');
 select is((public.save_exam_draft(jsonb_build_object('id', t.id('draft'), 'checks', '{"gaze_s":3}'::jsonb)) -> 'checks'),
-  '{"gaze_s":3,"phone_score":0.85,"face_missing_s":10,"identity":true,"lock":true}'::jsonb,
+  '{"gaze_s":3,"phone_score":0.55,"face_missing_s":10,"identity":true,"lock":true}'::jsonb,
   'step 2 (0.2) merges one check into the rest');
 select is((public.save_exam_draft(jsonb_build_object('id', t.id('draft'), 'browser_rules', '{"calculator":false}'::jsonb))
   -> 'browser_rules' ->> 'calculator'), 'false', 'E.1 switches one rule');

@@ -26,6 +26,7 @@ import {
   parseScheduledNotice,
   parseSeatError,
   parseWizardStep,
+  PHONE_OPTIONS,
   previousStep,
   proctorOfSeat,
   removeProctor,
@@ -192,6 +193,13 @@ describe("choices", () => {
     expect(withCurrent(["Midterm"], "")).toEqual(["Midterm"]);
   });
 
+  it("offers 0.2's phone confidences around the 0.55 default, and keeps an older exam's 0.9", () => {
+    expect(PHONE_OPTIONS).toEqual([0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.85]);
+    expect(DEFAULT_EXAM_CHECKS.phone_score).toBe(0.55);
+    expect(withCurrent(PHONE_OPTIONS, DEFAULT_EXAM_CHECKS.phone_score)).toEqual([...PHONE_OPTIONS]);
+    expect(withCurrent(PHONE_OPTIONS, 0.9)).toEqual([0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.85, 0.9]);
+  });
+
   it("reads the exam's own host and the sites typed into Add site", () => {
     expect(lmsHost("https://exam.kru.test/physics-1/quiz-3")).toBe("exam.kru.test");
     expect(lmsHost("not a url")).toBeNull();
@@ -333,7 +341,7 @@ describe("review", () => {
     expect(checkChips(draft()).map((chip) => [chip.key, chip.on, chip.value])).toEqual([
       ["lock", true, undefined],
       ["gaze", true, 2],
-      ["phone", true, 0.85],
+      ["phone", true, 0.55],
       ["identity", true, undefined],
       ["secondPerson", true, undefined],
       ["microphone", false, undefined],

@@ -7,7 +7,8 @@
 //    rows, still objects and proctor commands (simulated sessions too). Mathematics 2 · Midterm starts
 //    in 15 minutes (server clock, whole minutes), lobby open from 20 minutes before, 90 minutes,
 //    scheduled; Physics 1 · Quiz 3 started 5 minutes ago, 40 minutes, live, and with SEED_LMS_URL set
-//    its lms_url points at that mock portal.
+//    its lms_url points at that mock portal. Both, and the seed's Linear Algebra draft, get the default
+//    phone_score 0.55 with their other checks kept (A1; a cloud project seeded before held 0.85).
 // 3. Seed v2 (scripts/lib/seed-v2/apply.ts): deletes the exams the wizard made (judge mode's DEMO-LIVE
 //    stays), puts back the students with programme and year, the Autumn 2026 term with its decisions,
 //    Mathematics 2's invites with Yerlan's bounced and Nurlan's unconfirmed seats, History of
@@ -35,12 +36,18 @@ import {
   UsageError,
 } from "./lib/cli.ts";
 import { serverClock } from "./lib/clock.ts";
-import { DEMO_EXAMS, type DemoExamKey, demoSchedule, physicsLmsUrl } from "./lib/demo.ts";
+import {
+  DEMO_EXAMS,
+  type DemoExamKey,
+  demoSchedule,
+  physicsLmsUrl,
+  withDefaultPhoneScore,
+} from "./lib/demo.ts";
 import { describeTarget, isLocalUrl, loadEnvFile, readScriptEnv } from "./lib/env.ts";
 import { warmRealtime } from "./lib/realtime-warmup.ts";
 import { applySeedV2 } from "./lib/seed-v2/apply.ts";
 import { clearExamSessions } from "./lib/seed-v2/clear.ts";
-import { STAFF_EMAIL } from "./lib/seed-v2/story.ts";
+import { EXAM, STAFF_EMAIL } from "./lib/seed-v2/story.ts";
 import { adminClient, staffClient } from "./lib/supabase.ts";
 
 const log = createLogger("demo:reset");
@@ -64,6 +71,7 @@ interface ExamRow {
   code: string | null;
   title: string;
   status: string;
+  checks: unknown;
 }
 
 async function main(): Promise<void> {
@@ -109,7 +117,7 @@ async function main(): Promise<void> {
   const keys = Object.keys(DEMO_EXAMS) as DemoExamKey[];
   const codes = keys.map((key) => DEMO_EXAMS[key].code);
   const rows = must(
-    await client.from("exams").select("id, code, title, status").in("code", codes),
+    await client.from("exams").select("id, code, title, status, checks").in("code", codes),
     "demo exams",
   ) as ExamRow[];
   const byKey = new Map<DemoExamKey, ExamRow>();
@@ -156,8 +164,9 @@ async function main(): Promise<void> {
       lobby_opens_at: string;
       duration_min: number;
       status: "scheduled" | "live";
+      checks: ReturnType<typeof withDefaultPhoneScore>;
       lms_url?: string;
-    } = { ...plan };
+    } = { ...plan, checks: withDefaultPhoneScore(exam.checks) };
     if (key === "physics" && env.SEED_LMS_URL !== undefined) update.lms_url = physicsLmsUrl(env.SEED_LMS_URL);
     if (!args["dry-run"]) {
       ok(await client.from("exams").update(update).eq("id", exam.id), `update ${exam.title}`);
@@ -168,12 +177,28 @@ async function main(): Promise<void> {
         ? `starts ${almatyTime(starts)} Almaty, lobby open since ${almatyTime(Date.parse(plan.lobby_opens_at))}`
         : `started ${almatyTime(starts)} Almaty`;
     summary.push(
-      `${style.bold(exam.title)} (${exam.code}): ${exam.status} -> ${plan.status}, ${when}, ${plan.duration_min} min` +
+      `${style.bold(exam.title)} (${exam.code}): ${exam.status} -> ${plan.status}, ${when}, ${plan.duration_min} min, ` +
+        `phone_score ${update.checks.phone_score}` +
         (update.lms_url ? `, lms_url ${update.lms_url}` : ""),
       `  ${args["dry-run"] ? "would clear" : "cleared"} ${cleared.sessions} sessions (${cleared.simulated} simulated), ` +
         `${cleared.answers} answers, ${cleared.events} events, ${cleared.frames} frames rows, ` +
         `${cleared.stills} still objects, ${cleared.commands} commands`,
     );
+  }
+  // The seed's Linear Algebra draft (0.1, and 0.2 when it is opened) shows the same default.
+  const draft = await client
+    .from("exams")
+    .select("id, title, status, checks")
+    .eq("id", EXAM.linearAlgebra)
+    .eq("status", "draft")
+    .maybeSingle();
+  ok(draft, "Linear Algebra draft");
+  if (draft.data !== null) {
+    const checks = withDefaultPhoneScore(draft.data.checks);
+    if (!args["dry-run"]) {
+      ok(await client.from("exams").update({ checks }).eq("id", draft.data.id), `update ${draft.data.title}`);
+    }
+    summary.push(`${style.bold(draft.data.title)} (draft): phone_score ${checks.phone_score}`);
   }
   for (const line of summary) log.info(line);
 

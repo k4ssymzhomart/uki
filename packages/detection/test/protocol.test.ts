@@ -17,7 +17,7 @@ describe("renderer to worker messages", () => {
     const parsed = MainToWorker.parse({ type: "init", checks: { gaze_s: 3 }, mode: "app", models });
     expect(parsed).toEqual({
       type: "init",
-      checks: { gaze_s: 3, phone_score: 0.85, face_missing_s: 10, identity: true, lock: true },
+      checks: { gaze_s: 3, phone_score: 0.55, face_missing_s: 10, identity: true, lock: true },
       mode: "app",
       models,
       delegate: { face: "GPU", phone: "CPU" },

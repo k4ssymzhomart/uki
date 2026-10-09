@@ -74,7 +74,7 @@ describe("the /try runtime", () => {
       mode: "app",
       debug: true,
       stills: false,
-      checks: { gaze_s: 2, phone_score: 0.85, face_missing_s: 10 },
+      checks: { gaze_s: 2, phone_score: 0.55, face_missing_s: 10 },
       models: {
         wasmBase: "https://uki.test/models/wasm",
         faceLandmarker: "https://uki.test/models/face_landmarker.task",

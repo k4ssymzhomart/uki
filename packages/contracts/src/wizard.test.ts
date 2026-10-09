@@ -241,7 +241,7 @@ describe("settings and browser rules", () => {
       retention_days: 90,
       lobby_minutes: 20,
       default_duration_min: 90,
-      default_checks: { gaze_s: 2, phone_score: 0.85, face_missing_s: 10, identity: true, lock: true },
+      default_checks: { gaze_s: 2, phone_score: 0.55, face_missing_s: 10, identity: true, lock: true },
     });
     expect(WorkspaceSettings.safeParse({ ...DEFAULT_WORKSPACE_SETTINGS, retention_days: 0 }).success).toBe(
       false,

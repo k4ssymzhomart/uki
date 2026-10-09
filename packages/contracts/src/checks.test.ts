@@ -5,7 +5,7 @@ describe("ExamChecks", () => {
   it("fills the plan's defaults, as in the column default", () => {
     expect(ExamChecks.parse({})).toEqual({
       gaze_s: 2,
-      phone_score: 0.85,
+      phone_score: 0.55,
       face_missing_s: 10,
       identity: true,
       lock: true,

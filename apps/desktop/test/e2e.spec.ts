@@ -238,9 +238,9 @@ async function checkInLate(app: LaunchedApp, number: string): Promise<void> {
 test.beforeAll(async () => {
   rmSync(FRAMES_DIR, { recursive: true, force: true });
   mkdirSync(FRAMES_DIR, { recursive: true });
-  // EfficientDet-Lite0 scores the brand kit's phone picture at about 0.77, under the 0.85 default: the
-  // exam's phone_score (an exam setting) is lowered so the run exercises the whole 2.2 path. The real
-  // threshold is a tuning question for real phones on the MacBook and a lab PC.
+  // EfficientDet-Lite0 scores the brand kit's phone picture at about 0.77. The run pins the exam's
+  // phone_score (an exam setting) at 0.7, as it did under the old 0.85 default, so the whole 2.2 path
+  // runs whatever the default is (0.55 since the live test of 9 October; docs/decisions.md).
   fixture = await createFixture({ startsInMin: 20, checks: { phone_score: PHONE_SCORE } });
   madina = await launchApp("madina", { kiosk: KIOSK });
 });

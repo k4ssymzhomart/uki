@@ -17,7 +17,7 @@ import {
 
 // Thursday 8 October 2026, 12:00 in Almaty (07:00 UTC): 0.9's "Today 14:00" is Physics 1.
 const NOW = Date.parse("2026-10-08T07:00:00Z");
-const CHECKS = { gaze_s: 2, phone_score: 0.85, face_missing_s: 10, identity: true, lock: true };
+const CHECKS = { gaze_s: 2, phone_score: 0.55, face_missing_s: 10, identity: true, lock: true };
 
 function exam(
   n: number,

@@ -15,8 +15,8 @@ export const LOBBY_OPTIONS = [10, 15, 20, 30, 45, 60] as const;
 export const DURATION_OPTIONS = [30, 40, 45, 50, 60, 75, 90, 120, 150, 180] as const;
 /** Gaze threshold, in seconds: 0.2a's Strict, Default and Calm, as on 0.2. */
 export const GAZE_OPTIONS = [1, 2, 3] as const;
-/** Phone confidence, as on 0.2. */
-export const PHONE_OPTIONS = [0.75, 0.8, 0.85, 0.9, 0.95] as const;
+/** Phone confidence, as on 0.2: around the 0.55 default (docs/decisions.md, "Detection thresholds: phone_score 0.55"). */
+export const PHONE_OPTIONS = [0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.85] as const;
 
 /** The choices of a select: the fixed list plus the current value when it is not on it, in order. */
 export function withCurrent(options: readonly number[], current: number): number[] {
