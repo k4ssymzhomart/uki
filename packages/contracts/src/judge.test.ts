@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   DEMO_FIRST_NUMBER,
+  DEMO_LIVE_CHECKS,
   DEMO_LIVE_CODE,
   DemoLivePurgeInput,
   DemoLiveSeenOutput,
   DemoLiveStatus,
+  demoRealAppNumbers,
   demoStudentNumbers,
+  ExamChecks,
   ExamCode,
   SessionHeartbeatOutput,
   STAFF_ROLES,
@@ -26,6 +29,15 @@ describe("judge mode contracts", () => {
     expect(demoStudentNumbers(24)).toHaveLength(24);
     expect(demoStudentNumbers(99)).toHaveLength(30);
     expect(demoStudentNumbers(-1)).toEqual([]);
+  });
+
+  it("DEMO-LIVE asks for no Lock and no card, and flags phones at 0.55", () => {
+    expect(DEMO_LIVE_CHECKS).toEqual({ lock: false, identity: false, phone_score: 0.55 });
+    expect(ExamChecks.parse(DEMO_LIVE_CHECKS)).toMatchObject(DEMO_LIVE_CHECKS);
+  });
+
+  it("leaves 20249026 to 20249030 to people with the real app", () => {
+    expect(demoRealAppNumbers()).toEqual(["20249026", "20249027", "20249028", "20249029", "20249030"]);
   });
 
   it("observer is a staff role", () => {

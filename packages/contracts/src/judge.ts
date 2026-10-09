@@ -24,6 +24,22 @@ export function demoStudentNumbers(count: number = DEMO_ROSTER_SIZE): string[] {
   );
 }
 
+/**
+ * DEMO-LIVE's own checks (finals brief, B1): no Üki Lock and no card check, so a person with the real app
+ * joins with the code and a student ID alone, and phones flag at 0.55, the value the live test of
+ * 9 October chose. `pnpm judge:setup` merges them into the exam's checks and keeps every other key.
+ */
+export const DEMO_LIVE_CHECKS = { lock: false, identity: false, phone_score: 0.55 } as const;
+
+/** The roster numbers left to people with the real app (the simulator plays 20249001 to 20249024). */
+export const DEMO_REAL_APP_FIRST = 20249026;
+export function demoRealAppNumbers(): string[] {
+  return demoStudentNumbers().filter((number) => Number(number) >= DEMO_REAL_APP_FIRST);
+}
+
+/** The audit action `pnpm judge:free-seat` writes when it frees a DEMO-LIVE seat. */
+export const DEMO_LIVE_FREE_SEAT_ACTION = "demo_live.free_seat";
+
 /** The read-only staff account judges sign in with (role observer, assigned to DEMO-LIVE only). */
 export const JUDGE_EMAIL = "judge@kru.test";
 

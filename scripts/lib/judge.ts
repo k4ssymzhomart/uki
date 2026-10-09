@@ -1,13 +1,18 @@
 // The pure parts of `pnpm judge:setup` (scripts/judge-setup.ts; docs/runbooks/judge-mode.md): the DEMO
-// roster, the exam's timing, the judge's password and where it is written (the gitignored env file and
-// a one-pager outside the repository), and the one-pager itself.
+// roster, the exam's timing and checks, the judge's password and where it is written (the gitignored env
+// file and a one-pager outside the repository), and the one-pager itself. Also those of
+// `pnpm judge:free-seat` (scripts/judge-free-seat.ts): which number it takes and what it reports.
 import { randomBytes } from "node:crypto";
 import { isAbsolute, relative, resolve } from "node:path";
 import {
+  DEMO_LIVE_CHECKS,
+  DEMO_LIVE_CODE,
   DEMO_LIVE_DURATION_MIN,
   DEMO_LIVE_ROLLOVER_MIN,
   DEMO_LIVE_TITLE,
+  demoRealAppNumbers,
   demoStudentNumbers,
+  ExamChecks,
   JUDGE_EMAIL,
   type Locale,
 } from "../../packages/contracts/src/index.ts";
@@ -15,6 +20,8 @@ import {
 export const DEFAULT_DASHBOARD_URL = "https://uki-web.vercel.app";
 export const JUDGE_NAME = "Hackathon Judge";
 export const JUDGE_PASSWORD_KEY = "JUDGE_PASSWORD";
+/** The desktop app's downloads (WP 0.15; the landing's download-model.ts keeps the same link). */
+export const RELEASES_URL = "https://github.com/k4ssymzhomart/uki/releases/latest";
 
 /** 30 made-up students of group DEMO; none shares a name with the seeded staff or the demo's two students. */
 const NAMES = [
@@ -95,6 +102,20 @@ export function needsNewRun(
   return starts + exam.duration_min * 60_000 - nowMs < DEMO_LIVE_ROLLOVER_MIN * 60_000;
 }
 
+/**
+ * DEMO-LIVE's checks: the exam's stored checks with DEMO_LIVE_CHECKS on top (lock and identity off,
+ * phone_score 0.55), every other check kept. Refuses stored checks the database itself would refuse.
+ */
+export function demoLiveChecks(current: unknown): ExamChecks {
+  return { ...ExamChecks.parse(current ?? {}), ...DEMO_LIVE_CHECKS };
+}
+
+/** "20249026–20249030": the IDs the one-pager gives judges with the real app. */
+export function realAppRange(): string {
+  const numbers = demoRealAppNumbers();
+  return `${numbers[0]}–${numbers.at(-1)}`;
+}
+
 /** A new password: 24 characters of base64url from 18 random bytes. */
 export function generatePassword(bytes: (n: number) => Buffer = randomBytes): string {
   return bytes(18).toString("base64url");
@@ -170,8 +191,73 @@ Also on the site, without signing in:
    integrity report with its verify code.
 
 Your account is read-only: it sees what a proctor of this exam sees, and Üki refuses its replies, notes,
-decisions, share links and commands. Every student, flag and still in this exam is simulated.
+decisions, share links and commands. Every student, flag and still in this exam is simulated, except the
+ones below.
+
+## Try the real app
+
+Try the real app: download Üki, code ${DEMO_LIVE_CODE}, student ID ${realAppRange()}.
+
+- Download: ${RELEASES_URL} (macOS and Windows; the page says how to open an app that is not signed yet).
+- Enter the code and one of those IDs. This exam asks for no Üki Lock and no student card: after the
+  camera check and the rules you write the 20 questions, and you appear on the same wall as the
+  simulated class. Pick up a phone, look away or leave the picture, and watch the wall.
+- An ID someone else is using answers that it is already taken: try the next one.
 
 _Generated ${options.generatedAt.toISOString().slice(0, 16).replace("T", " ")} UTC by \`pnpm judge:setup\`. Keep this file outside the repository._
 `;
+}
+
+/** The student number `pnpm judge:free-seat` was given: one of DEMO-LIVE's 30, or a usage message. */
+export function parseSeatNumber(positionals: readonly string[]): { number: string } | { error: string } {
+  const roster = demoStudentNumbers();
+  if (positionals.length !== 1) {
+    return { error: `give one student number, ${roster[0]} to ${roster.at(-1)}` };
+  }
+  const number = (positionals[0] as string).trim();
+  if (!roster.includes(number)) {
+    return { error: `${number} is not on ${DEMO_LIVE_CODE}'s roster (${roster[0]} to ${roster.at(-1)})` };
+  }
+  return { number };
+}
+
+/** What `pnpm judge:free-seat` deleted for one session, child rows first, as demo_live_tick does. */
+export const FREE_SEAT_TABLES = [
+  "reports",
+  "review_decisions",
+  "help_requests",
+  "session_commands",
+  "frames",
+  "events",
+  "answers",
+] as const;
+export type FreeSeatTable = (typeof FREE_SEAT_TABLES)[number];
+export type FreeSeatCounts = Record<FreeSeatTable | "sessions", number>;
+
+/** "1 session, 6 events, 2 frames rows, …": the counts that are not zero, sessions first. */
+export function describeCounts(counts: FreeSeatCounts): string {
+  const label: Record<keyof FreeSeatCounts, [string, string]> = {
+    sessions: ["session", "sessions"],
+    events: ["event", "events"],
+    frames: ["frames row", "frames rows"],
+    answers: ["answer", "answers"],
+    help_requests: ["help request", "help requests"],
+    session_commands: ["command", "commands"],
+    review_decisions: ["decision", "decisions"],
+    reports: ["report", "reports"],
+  };
+  const order: (keyof FreeSeatCounts)[] = [
+    "sessions",
+    "events",
+    "frames",
+    "answers",
+    "help_requests",
+    "session_commands",
+    "review_decisions",
+    "reports",
+  ];
+  const parts = order
+    .filter((key) => counts[key] > 0)
+    .map((key) => `${counts[key]} ${label[key][counts[key] === 1 ? 0 : 1]}`);
+  return parts.length === 0 ? "nothing" : parts.join(", ");
 }

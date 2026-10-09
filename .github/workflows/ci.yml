@@ -7,8 +7,8 @@
 #             supabase functions serve; pgTAP; the functions' integration tests and the
 #             desktop flow against the stack; seed v2 checked row for row (pnpm seed:check); the
 #             dashboard smoke test (Playwright Chromium); the demo scripts against the real schema, each
-#             demo:reset checked; then send-invites (WP 1.4) and pilot-notify (WP 1.13) again with
-#             UKI_EMAIL_SINK set
+#             demo:reset checked, and judge:free-seat around a seat a student holds; then send-invites
+#             (WP 1.4) and pilot-notify (WP 1.13) again with UKI_EMAIL_SINK set
 #   build     web (with the /try models, checked against the SHA-256 manifest), the mock portal and Üki
 #             Lock (Chrome and Edge zips, uploaded as the uki-lock artifact), then the Üki Lock smoke test
 #             in headless Chrome for Testing and the /try demo with Chromium's fake camera
@@ -129,13 +129,22 @@ jobs:
         run: pnpm test:integration:desktop
       - name: Dashboard smoke test
         run: pnpm e2e
-      - name: Demo scripts against the schema (demo:reset v2 twice, checked each time)
+      - name: Demo scripts against the schema (demo:reset v2 twice, checked each time; judge:free-seat)
         run: |
           pnpm demo:reset
           pnpm seed:check --demo
           pnpm demo:simulate --sessions 20 --speed 4 --start-after 15 --seconds 50 --watch
           pnpm demo:reset
           pnpm seed:check --demo
+          # judge mode: DEMO-LIVE, a laptop on seat 20249026 with a flag and its stills, the seat freed,
+          # checked (rows, stills, audit row, the same laptop joins again), freed again, then a no-op.
+          state="$RUNNER_TEMP/free-seat"
+          pnpm judge:setup --one-pager "$RUNNER_TEMP/judge-one-pager.md"
+          node --import tsx scripts/judge-free-seat-check.ts occupy 20249026 --state "$state"
+          pnpm judge:free-seat 20249026
+          node --import tsx scripts/judge-free-seat-check.ts verify 20249026 --state "$state"
+          pnpm judge:free-seat 20249026
+          pnpm judge:free-seat 20249026
       - name: send-invites and pilot-notify with UKI_EMAIL_SINK (the functions served again with a sink)
         run: |
           pkill -f "functions serve" || true
