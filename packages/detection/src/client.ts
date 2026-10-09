@@ -1,12 +1,14 @@
 // The renderer's side of the detection worker: starts it, pumps camera frames with back-pressure (one
 // frame in flight), forwards camera loss, applies the 480 × 360 fallback and turns worker messages into
-// typed callbacks. Every message from the worker is checked with WorkerToMain.
+// typed callbacks. Every message from the worker is checked with WorkerToMain. The per-frame geometry
+// (face boxes, head pose, phone boxes) is a subscription, `onGeometry`, so every overlay that draws it
+// (1.2, 2.1, /try, the lab overlay) can listen and stop listening on its own.
 import type { CameraLostReason } from "@uki/contracts";
 import type { Camera } from "./camera.ts";
 import { defaultNow } from "./camera.ts";
 import type { Delegate, DetectionDebug, DetectionPhase } from "./debug.ts";
 import type { InputSize } from "./perf.ts";
-import { type InitMessage, type MainToWorker, WorkerToMain } from "./protocol.ts";
+import { type DetectionGeometry, type InitMessage, type MainToWorker, WorkerToMain } from "./protocol.ts";
 import type { RuleCue, RuleEvent, RulesState, StillRequest } from "./rules.ts";
 import type { CameraCheck } from "./signals.ts";
 
@@ -53,11 +55,20 @@ export interface DetectionClient {
   setPhase(phase: DetectionPhase): void;
   /** "I'm here" on 2.3. True when the worker sent session.resumed. */
   resume(): Promise<boolean>;
+  /**
+   * Calls `listener` with the geometry of every frame the worker tracks (check and exam phases), until
+   * the returned function or `dispose` is called. Numbers only: no frame or pixel reaches it.
+   */
+  onGeometry(listener: GeometryListener): () => void;
+  /** The last frame's geometry, or null before the first one and after dispose. */
+  readonly geometry: DetectionGeometry | null;
   /** Tells the worker to close and terminates it. */
   dispose(): void;
   readonly phase: DetectionPhase;
   readonly ready: boolean;
 }
+
+export type GeometryListener = (geometry: DetectionGeometry) => void;
 
 export interface DetectionClientOptions {
   now?: () => number;
@@ -79,6 +90,8 @@ export function createDetectionClient(
   let camera: Camera | null = null;
   let requestId = 0;
   const resumes = new Map<number, (ok: boolean) => void>();
+  const geometryListeners = new Set<GeometryListener>();
+  let geometry: DetectionGeometry | null = null;
   let pendingInit: {
     resolve: (delegate: { face: Delegate; phone: Delegate | null }) => void;
     reject: (error: Error) => void;
@@ -129,6 +142,10 @@ export function createDetectionClient(
       case "state":
         handlers.onState?.(msg.state);
         return;
+      case "geometry":
+        geometry = msg.geometry;
+        for (const listener of geometryListeners) listener(msg.geometry);
+        return;
       case "camera-check":
         handlers.onCameraCheck?.(msg.check);
         return;
@@ -160,6 +177,9 @@ export function createDetectionClient(
     },
     get ready() {
       return ready;
+    },
+    get geometry() {
+      return geometry;
     },
 
     init(init) {
@@ -206,6 +226,14 @@ export function createDetectionClient(
       });
     },
 
+    onGeometry(listener) {
+      if (disposed) return () => {};
+      geometryListeners.add(listener);
+      return () => {
+        geometryListeners.delete(listener);
+      };
+    },
+
     dispose() {
       if (disposed) return;
       send({ type: "dispose" });
@@ -216,6 +244,8 @@ export function createDetectionClient(
       worker.terminate();
       for (const resolve of resumes.values()) resolve(false);
       resumes.clear();
+      geometryListeners.clear();
+      geometry = null;
       pendingInit?.reject(new Error("disposed"));
       pendingInit = null;
     },

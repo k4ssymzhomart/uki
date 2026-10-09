@@ -1,5 +1,6 @@
 export * from "./api.ts";
 export * from "./blocked-apps.ts";
+export * from "./box.ts";
 export * from "./browser-rules.ts";
 export * from "./checks.ts";
 export * from "./commands.ts";

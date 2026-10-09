@@ -1,7 +1,8 @@
 // The camera and the detection worker for one session ("On-device detection" in docs/phase-0-plan.md).
 // The flow asks for a phase (off, idle, check, exam); this module opens the camera once, starts the
 // worker with the exam's checks and mode, checks the model manifest, and pumps frames. Everything the
-// worker reports goes out through the handlers; nothing here talks to the server.
+// worker reports goes out through the handlers, and the per-frame geometry through `onGeometry`, for
+// the live overlay; nothing here talks to the server.
 import type { ExamChecks, ExamMode } from "@uki/contracts";
 import {
   type Camera,
@@ -9,6 +10,7 @@ import {
   type DetectionClient,
   type DetectionHandlers,
   type DetectionPhase,
+  type GeometryListener,
   MODEL_PATHS,
   ModelManifest,
   modelUrls,
@@ -77,6 +79,7 @@ export class DetectionRuntime {
   private starting: Promise<void> | null = null;
   private phase: DetectionWantPhase = "off";
   private disposed = false;
+  private readonly geometryListeners = new Set<GeometryListener>();
 
   constructor(options: DetectionRuntimeOptions) {
     this.options = options;
@@ -117,8 +120,20 @@ export class DetectionRuntime {
     return this.client ? this.client.resume() : false;
   }
 
+  /**
+   * The geometry of every tracked frame (face boxes, head pose, phone boxes) for the live overlay, across
+   * worker restarts, until the returned function is called.
+   */
+  onGeometry(listener: GeometryListener): () => void {
+    this.geometryListeners.add(listener);
+    return () => {
+      this.geometryListeners.delete(listener);
+    };
+  }
+
   dispose(): void {
     this.disposed = true;
+    this.geometryListeners.clear();
     this.close();
   }
 
@@ -156,6 +171,9 @@ export class DetectionRuntime {
         await (this.options.checkModels ?? (() => checkModelManifest()))();
         const client = createDetectionClient((this.options.createWorker ?? defaultWorker)(), handlers);
         this.client = client;
+        client.onGeometry((geometry) => {
+          for (const listener of this.geometryListeners) listener(geometry);
+        });
         await client.init({
           checks: this.options.checks,
           mode: this.options.mode,

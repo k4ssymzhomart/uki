@@ -1,6 +1,7 @@
 // Every event is named and typed here and only here. The envelope and the review map are the plan's
 // ("Event envelope"); EVENT_DATA follows its "Event data" table.
 import { z } from "zod";
+import { Box, FACE_BOXES_MAX } from "./box.ts";
 import { CommandScope, END_REASON_MAX, MessagePreset, MessageText } from "./commands.ts";
 import { Host, Timestamp, UtcTimestamp, Uuid } from "./primitives.ts";
 
@@ -200,13 +201,28 @@ export const TabBlockedLockData = z.object({ host: Host.nullable() });
 /** From the desktop app: the blocked app's name, or null when focus left the exam window. */
 export const TabBlockedAppData = z.object({ app: BlockedAppName.nullable() });
 
+/**
+ * The boxes detection events carry (Phase F, A3), each a Box from box.ts, normalised to the camera
+ * frame. Every one is optional: the released app v0.1.2 and the demo simulator send none, and a box is
+ * left out when the detector gave none.
+ * - `face_box` (gaze.*): the student's face when the look crossed `gaze_s` (gaze.on_screen: when the
+ *   return began), which is when the event's first still is taken.
+ * - `box` (phone.detected): the best phone detection of the check that fired the event.
+ * - `boxes` (face.second): every face in the frame that fired the event, the student's face first.
+ */
+const FaceBox = Box.optional();
+
 export const EVENT_DATA = {
-  "gaze.on_screen": Empty,
-  "gaze.off_screen": z.object({ duration_ms: DurationMs, direction: GazeDirection }),
-  "gaze.down": z.object({ duration_ms: DurationMs }),
-  "phone.detected": z.object({ score: Score, held_ms: DurationMs }),
+  "gaze.on_screen": z.object({ face_box: FaceBox }),
+  "gaze.off_screen": z.object({ duration_ms: DurationMs, direction: GazeDirection, face_box: FaceBox }),
+  "gaze.down": z.object({ duration_ms: DurationMs, face_box: FaceBox }),
+  "phone.detected": z.object({ score: Score, held_ms: DurationMs, box: Box.optional() }),
   "face.missing": z.object({ duration_ms: DurationMs }),
-  "face.second": z.object({ duration_ms: DurationMs, faces: z.number().int().min(2) }),
+  "face.second": z.object({
+    duration_ms: DurationMs,
+    faces: z.number().int().min(2),
+    boxes: z.array(Box).min(1).max(FACE_BOXES_MAX).optional(),
+  }),
   "camera.lost": z.object({ reason: CameraLostReason }),
   "tab.blocked": z.union([TabBlockedLockData, TabBlockedAppData]),
   "copy.blocked": z.object({ kind: CopyKind }),

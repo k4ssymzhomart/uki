@@ -7,7 +7,10 @@
 // - `lookOutL`, `lookInL` and so on are MediaPipe's eyeLookOutLeft, eyeLookInLeft... A side look is the
 //   mean of eyeLookOut on one eye and eyeLookIn on the other, so a left/right swap in the blendshape
 //   names only swaps the reported direction, never whether the look counts.
-import { THRESHOLDS } from "@uki/contracts";
+import { type Box, boxFromEdges, THRESHOLDS } from "@uki/contracts";
+
+/** A box normalised to the camera frame (0 to 1): the one Box of @uki/contracts. */
+export type { Box };
 
 /** What the rules engine needs from one frame. Angles in degrees, look scores from 0 to 1. */
 export interface FaceSignals {
@@ -36,14 +39,6 @@ export const NO_FACE: FaceSignals = {
   lookDown: 0,
 };
 
-/** A box in normalized image coordinates (0 to 1). */
-export interface Box {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
 /** The parts of MediaPipe's FaceLandmarkerResult this file reads; the real result is assignable to it. */
 export interface LandmarkerResultLike {
   faceLandmarks: ReadonlyArray<ReadonlyArray<{ x: number; y: number }>>;
@@ -53,7 +48,10 @@ export interface LandmarkerResultLike {
 
 const RAD_TO_DEG = 180 / Math.PI;
 
-/** The bounding box of one face's landmarks, clamped to the image. */
+/**
+ * The bounding box of one face's landmarks (their min and max), clamped to the image and rounded to
+ * BOX_DECIMALS (boxFromEdges in @uki/contracts).
+ */
 export function landmarkBox(landmarks: ReadonlyArray<{ x: number; y: number }>): Box | null {
   if (landmarks.length === 0) return null;
   let minX = Number.POSITIVE_INFINITY;
@@ -66,11 +64,7 @@ export function landmarkBox(landmarks: ReadonlyArray<{ x: number; y: number }>):
     if (point.y < minY) minY = point.y;
     if (point.y > maxY) maxY = point.y;
   }
-  const x = Math.max(0, Math.min(1, minX));
-  const y = Math.max(0, Math.min(1, minY));
-  const right = Math.max(0, Math.min(1, maxX));
-  const bottom = Math.max(0, Math.min(1, maxY));
-  return { x, y, width: Math.max(0, right - x), height: Math.max(0, bottom - y) };
+  return boxFromEdges(minX, minY, maxX, maxY);
 }
 
 /** The face the rules follow: the largest one, which is the student closest to the camera. */
@@ -88,18 +82,28 @@ export function primaryFaceIndex(result: LandmarkerResultLike): number {
   return best;
 }
 
-/**
- * Yaw and pitch from a 4 × 4 facial transformation matrix. The face's forward axis (the canonical
- * model's +z) in camera space is the third column of the rotation. MediaPipe packs the matrix column
- * major; the layout is detected from where the translation sits (the face is tens of centimetres in
- * front of the camera, so |tz| is large), so a row-major matrix gives the same angles.
- */
-export function headAngles(matrix: { rows: number; columns: number; data: ArrayLike<number> }): {
+/** One face's head pose in degrees. */
+export interface HeadPose {
   yawDeg: number;
   pitchDeg: number;
-} {
+  /** Tilt in the image plane; positive when the top of the head leans towards the image's left edge. */
+  rollDeg: number;
+}
+
+type TransformMatrix = { rows: number; columns: number; data: ArrayLike<number> };
+
+/**
+ * Yaw, pitch and roll from a 4 × 4 facial transformation matrix. The face's forward axis (the canonical
+ * model's +z) in camera space is the third column of the rotation; yaw and pitch come from it. Roll is
+ * the rotation about that axis, from the second row of the rotation (R = Ry(yaw) · Rx · Rz(roll)).
+ * MediaPipe packs the matrix column major; the layout is detected from where the translation sits (the
+ * face is tens of centimetres in front of the camera, so |tz| is large), so a row-major matrix gives
+ * the same angles.
+ */
+export function headPose(matrix: TransformMatrix): HeadPose {
   const d = matrix.data;
-  if (matrix.rows !== 4 || matrix.columns !== 4 || d.length < 16) return { yawDeg: 0, pitchDeg: 0 };
+  if (matrix.rows !== 4 || matrix.columns !== 4 || d.length < 16)
+    return { yawDeg: 0, pitchDeg: 0, rollDeg: 0 };
   const columnMajor = Math.abs(d[14] ?? 0) >= Math.abs(d[11] ?? 0);
   const at = (row: number, column: number): number =>
     (columnMajor ? d[column * 4 + row] : d[row * 4 + column]) ?? 0;
@@ -108,10 +112,18 @@ export function headAngles(matrix: { rows: number; columns: number; data: ArrayL
   const fz = at(2, 2);
   const yawDeg = Math.atan2(fx, fz) * RAD_TO_DEG;
   const pitchDeg = Math.atan2(fy, Math.hypot(fx, fz)) * RAD_TO_DEG;
-  return { yawDeg: round(yawDeg, 2), pitchDeg: round(pitchDeg, 2) };
+  const rollDeg = Math.atan2(at(1, 0), at(1, 1)) * RAD_TO_DEG;
+  return { yawDeg: round(yawDeg, 2), pitchDeg: round(pitchDeg, 2), rollDeg: round(rollDeg, 2) };
+}
+
+/** Yaw and pitch, what the rules engine reads (headPose without roll). */
+export function headAngles(matrix: TransformMatrix): { yawDeg: number; pitchDeg: number } {
+  const { yawDeg, pitchDeg } = headPose(matrix);
+  return { yawDeg, pitchDeg };
 }
 
 function round(value: number, digits: number): number {
+  if (!Number.isFinite(value)) return 0;
   const factor = 10 ** digits;
   return Math.round(value * factor) / factor;
 }
@@ -142,6 +154,30 @@ export function faceSignals(result: LandmarkerResultLike): FaceSignals {
     lookInR: blendshape(categories, "eyeLookInRight"),
     lookDown: (blendshape(categories, "eyeLookDownLeft") + blendshape(categories, "eyeLookDownRight")) / 2,
   };
+}
+
+/** One face for the live overlay: its landmark box and head pose. */
+export interface FaceGeometry extends HeadPose {
+  box: Box;
+}
+
+/**
+ * Every face in a Face Landmarker result, the primary face (the one the rules follow) first, then the
+ * others in the landmarker's order. A face without landmarks is left out; one without a matrix has a
+ * pose of zeros.
+ */
+export function faceGeometry(result: LandmarkerResultLike): FaceGeometry[] {
+  const primary = primaryFaceIndex(result);
+  const order = result.faceLandmarks.map((_, index) => index);
+  if (primary > 0) order.unshift(...order.splice(primary, 1));
+  const faces: FaceGeometry[] = [];
+  for (const index of order) {
+    const box = landmarkBox(result.faceLandmarks[index] ?? []);
+    if (!box) continue;
+    const matrix = result.facialTransformationMatrixes?.[index];
+    faces.push({ box, ...(matrix ? headPose(matrix) : { yawDeg: 0, pitchDeg: 0, rollDeg: 0 }) });
+  }
+  return faces;
 }
 
 /** Side-look scores: the mean of eyeLookOut on one eye and eyeLookIn on the other. */

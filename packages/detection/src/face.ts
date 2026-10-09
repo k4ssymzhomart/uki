@@ -4,7 +4,7 @@
 import { FaceLandmarker } from "@mediapipe/tasks-vision";
 import type { Delegate } from "./debug.ts";
 import type { FaceDetector, FaceFrame } from "./pipeline.ts";
-import { faceSignals, landmarkBox, primaryFaceIndex } from "./signals.ts";
+import { faceGeometry, faceSignals } from "./signals.ts";
 import { monotonic, visionFileset } from "./vision.ts";
 
 export interface FaceTrackerOptions {
@@ -46,9 +46,8 @@ export async function createFaceTracker(options: FaceTrackerOptions): Promise<Fa
     delegate,
     detect(image: ImageBitmap, at: number): FaceFrame {
       const result = landmarker.detectForVideo(image, stamp(at));
-      const index = primaryFaceIndex(result);
-      const landmarks = index >= 0 ? result.faceLandmarks[index] : undefined;
-      return { signals: faceSignals(result), box: landmarks ? landmarkBox(landmarks) : null };
+      const faces = faceGeometry(result);
+      return { signals: faceSignals(result), box: faces[0]?.box ?? null, faces };
     },
     close() {
       landmarker.close();

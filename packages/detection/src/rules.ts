@@ -23,12 +23,17 @@
 //   sends session.resumed when a face is in view and the camera works.
 // Every event's `at` is the moment its threshold was crossed, which is also when the first still is
 // taken: the server dates still i at `event.at + THRESHOLDS.stills.offsetsMs[i]`.
+// Boxes (Phase F, A3): when the signals carry them, events carry the boxes of that same moment, so they
+// match the first still: gaze.* `face_box`, face.second `boxes`, phone.detected `box`. Signals without
+// boxes (older traces) give events without them.
 import {
+  type Box,
   type CameraLostReason,
   type EventData,
   type ExamChecks,
   ExamChecks as ExamChecksSchema,
   type ExamMode,
+  FACE_BOXES_MAX,
   type GazeDirection,
   THRESHOLDS,
   uuidv7,
@@ -39,11 +44,17 @@ import { type FaceSignals, sideLook } from "./signals.ts";
 /** 2.2 closes after this long with no phone ("Student flow": 2.1 after 2 s with no phone). */
 export const PHONE_WARNING_CLEAR_MS: number = THRESHOLDS.phone.warningClearMs;
 
-export type FrameSignal = { kind: "frame" } & FaceSignals;
+export type FrameSignal = {
+  kind: "frame";
+  /** Every face's box, the primary face first; left out when the detector gives none. */
+  boxes?: readonly Box[];
+} & FaceSignals;
 /** One Object Detector check: the best "cell phone" score, 0 when none was found. */
 export interface PhoneSignal {
   kind: "phone";
   score: number;
+  /** The best detection's box; left out when none was found or the detector gives none. */
+  box?: Box;
 }
 export type CameraSignal =
   | { kind: "camera"; state: "lost"; reason: CameraLostReason }
@@ -128,7 +139,7 @@ interface Look {
   start: number;
   lastAwayAt: number;
   counts: Record<Direction, number>;
-  crossed: { at: number; id: string; type: "gaze.off_screen" | "gaze.down" } | null;
+  crossed: { at: number; id: string; type: "gaze.off_screen" | "gaze.down"; faceBox?: Box } | null;
 }
 
 /** Sorts one frame into on screen, off screen (left, right, up) or down. Off screen wins over down. */
@@ -164,6 +175,11 @@ function round3(value: number): number {
   return Math.round(value * 1000) / 1000;
 }
 
+/** `{ face_box }` for a gaze event, or nothing without a box. */
+function faceBoxData(box: Box | undefined): { face_box?: Box } {
+  return box ? { face_box: box } : {};
+}
+
 export function createRules(
   checksInput: z.input<typeof ExamChecksSchema> | ExamChecks = {},
   options: RulesOptions = {},
@@ -187,6 +203,7 @@ export function createRules(
   // Gaze
   let look: Look | null = null;
   let onSince: number | null = null;
+  let onSinceBox: Box | undefined;
   let awaitingReturn = false;
 
   // Face presence and face.missing
@@ -237,11 +254,17 @@ export function createRules(
           out,
           "gaze.off_screen",
           crossed.at,
-          { duration_ms, direction: dominantDirection(look.counts) },
+          { duration_ms, direction: dominantDirection(look.counts), ...faceBoxData(crossed.faceBox) },
           { id: crossed.id, stills: true },
         );
       } else {
-        emit(out, "gaze.down", crossed.at, { duration_ms }, { id: crossed.id, stills: true });
+        emit(
+          out,
+          "gaze.down",
+          crossed.at,
+          { duration_ms, ...faceBoxData(crossed.faceBox) },
+          { id: crossed.id, stills: true },
+        );
       }
       out.push({ kind: "cue", cue: "away", on: false });
       awaitingReturn = true;
@@ -321,11 +344,12 @@ export function createRules(
       twoMax = Math.max(twoMax, s.faces);
       if (!secondFired && at - twoSince >= secondMs) {
         secondFired = true;
+        const boxes = s.boxes?.slice(0, FACE_BOXES_MAX) ?? [];
         const id = emit(
           out,
           "face.second",
           at,
-          { duration_ms: Math.round(at - twoSince), faces: twoMax },
+          { duration_ms: Math.round(at - twoSince), faces: twoMax, ...(boxes.length > 0 ? { boxes } : {}) },
           { stills: true },
         );
         requestStills(out, id, at);
@@ -352,17 +376,20 @@ export function createRules(
         const c = look.counts;
         const type = c.down > c.left + c.right + c.up ? "gaze.down" : "gaze.off_screen";
         const id = newId(at);
-        look.crossed = { at, id, type };
+        look.crossed = { at, id, type, ...(s.boxes?.[0] ? { faceBox: s.boxes[0] } : {}) };
         requestStills(out, id, at);
         out.push({ kind: "cue", cue: "away", on: true });
       }
       return;
     }
-    onSince ??= at;
+    if (onSince === null) {
+      onSince = at;
+      onSinceBox = s.boxes?.[0];
+    }
     if (at - onSince >= gapMs) {
       if (look) closeLook(out, onSince);
       if (awaitingReturn) {
-        emit(out, "gaze.on_screen", onSince, {});
+        emit(out, "gaze.on_screen", onSince, faceBoxData(onSinceBox));
         awaitingReturn = false;
       }
     }
@@ -385,7 +412,7 @@ export function createRules(
         out,
         "phone.detected",
         at,
-        { score, held_ms: Math.round(at - run.firstAt) },
+        { score, held_ms: Math.round(at - run.firstAt), ...(s.box ? { box: s.box } : {}) },
         { stills: true },
       );
       requestStills(out, id, at);

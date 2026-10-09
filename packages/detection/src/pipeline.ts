@@ -1,11 +1,17 @@
 // The worker-side pipeline for one frame: face tracking, the phone check every 400 ms (1 s in the
-// fallback), the rules engine, the still schedule and the fps meter. Detectors and the clock are passed
-// in, so tests run it with recorded signals and a fake capture. It is the only caller of
-// `stills.capture`, and it calls it only for a still the rules engine requested.
+// fallback), the rules engine, the still schedule, the per-frame geometry for the live overlay and the
+// fps meter. Detectors and the clock are passed in, so tests run it with recorded signals and a fake
+// capture. It is the only caller of `stills.capture`, and it calls it only for a still the rules engine
+// requested.
 import type { ExamChecks, ExamMode } from "@uki/contracts";
 import { DEBUG_INTERVAL_MS, type Delegate, type DetectionDebug, type DetectionPhase } from "./debug.ts";
 import { createPerfMonitor } from "./perf.ts";
-import { CAMERA_CHECK_INTERVAL_MS, type WorkerToMain } from "./protocol.ts";
+import {
+  CAMERA_CHECK_INTERVAL_MS,
+  type DetectionGeometry,
+  type PhoneDetection,
+  type WorkerToMain,
+} from "./protocol.ts";
 import {
   type CameraSignal,
   classifyFrame,
@@ -14,14 +20,26 @@ import {
   type Rules,
   type RulesState,
 } from "./rules.ts";
-import { type Box, cameraCheck, type FaceSignals, type LumaStats, NO_FACE, sideLook } from "./signals.ts";
+import {
+  type Box,
+  cameraCheck,
+  type FaceGeometry,
+  type FaceSignals,
+  type LumaStats,
+  NO_FACE,
+  sideLook,
+} from "./signals.ts";
 import { createStillSchedule, type DueStill } from "./still-schedule.ts";
 import { stills } from "./stills.ts";
+
+export type { PhoneDetection };
 
 export interface FaceFrame {
   signals: FaceSignals;
   /** The primary face's box, normalized; null without a face. */
   box: Box | null;
+  /** Every face's box and head pose, the primary face first (faceGeometry in signals.ts). */
+  faces: readonly FaceGeometry[];
 }
 
 export interface FaceDetector {
@@ -31,8 +49,8 @@ export interface FaceDetector {
 
 export interface PhoneDetector {
   readonly delegate: Delegate;
-  /** Best "cell phone" score in the frame, 0 when none. */
-  detect(image: ImageBitmap, at: number): number;
+  /** The "cell phone" detections in the frame, best first, at most PHONE_DETECTIONS_MAX; empty when none. */
+  detect(image: ImageBitmap, at: number): readonly PhoneDetection[];
 }
 
 export interface PipelineDeps {
@@ -106,6 +124,8 @@ export function createPipeline(
   let lastDigest = "";
   let lastSignals: FaceSignals = NO_FACE;
   let lastPhoneScore: number | null = null;
+  /** The last phone check of the exam phase, for the geometry message. */
+  let lastPhone: DetectionGeometry["phone"] = null;
   let lastInput: { width: number; height: number } | null = null;
   let faceTime = { sum: 0, count: 0 };
   let phoneTime = { sum: 0, count: 0 };
@@ -203,21 +223,27 @@ export function createPipeline(
       }
 
       if (phase === "exam" && rules) {
-        const outputs = rules.push({ kind: "frame", ...face.signals }, at);
+        const boxes = face.faces.map((geometry) => geometry.box);
+        const outputs = rules.push({ kind: "frame", ...face.signals, boxes }, at);
         if (deps.phone && !rules.state().paused && at - lastPhoneAt >= perf.phoneIntervalMs) {
           lastPhoneAt = at;
           const t1 = now();
-          const score = deps.phone.detect(image, at);
+          const detections = deps.phone.detect(image, at);
           phoneTime.sum += now() - t1;
           phoneTime.count += 1;
           phoneChecks.push(at);
+          const best = detections[0];
+          const score = best?.score ?? 0;
           lastPhoneScore = score;
-          outputs.push(...rules.push({ kind: "phone", score }, at));
+          lastPhone = { at, detections: detections.slice() };
+          outputs.push(...rules.push({ kind: "phone", score, ...(best ? { box: best.box } : {}) }, at));
         }
         postOutputs(outputs);
         for (const still of schedule.due(at)) takeStill(image, still, at);
         postState();
       }
+
+      post({ type: "geometry", geometry: { at, faces: face.faces.slice(), phone: lastPhone } });
 
       if (options.debug && (lastDebugAt === null || at - lastDebugAt >= DEBUG_INTERVAL_MS)) postDebug(at);
     },
@@ -234,6 +260,7 @@ export function createPipeline(
       if (phase === "exam" && rules) {
         postOutputs(rules.finish(at));
         schedule.cancel();
+        lastPhone = null;
       }
       if (next === "exam" && !rules) {
         rules = createRules(

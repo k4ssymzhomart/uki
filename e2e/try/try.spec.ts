@@ -7,6 +7,7 @@
 import { copyFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { type Browser, chromium, expect, type Page, test } from "@playwright/test";
+import { WorkerToMain } from "../../packages/detection/src/protocol.ts";
 import { ROOT } from "../support/env.ts";
 import { message } from "../support/messages.ts";
 
@@ -158,6 +159,81 @@ test.describe("the /try demo without a camera", () => {
       await expect(page.getByText(message(`dashboard.try.error.${problem}.body`))).toBeVisible();
       await expect(page.getByRole("button", { name: message("dashboard.try.retry") })).toBeVisible();
       await expect(page.getByTestId("try-status")).toHaveAttribute("data-status", "failed");
+    });
+  }
+});
+
+/**
+ * The page's detection worker messages of type `geometry` (Phase F, A3), recorded by wrapping the
+ * page's Worker before the app starts one. The app itself only subscribes; nothing draws them yet.
+ */
+async function recordGeometry(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const scope = window as unknown as { Worker: typeof Worker; ukiGeometry: unknown[] };
+    const Original = scope.Worker;
+    scope.ukiGeometry = [];
+    scope.Worker = class extends Original {
+      constructor(url: string | URL, options?: WorkerOptions) {
+        super(url, options);
+        this.addEventListener("message", (event: MessageEvent<unknown>) => {
+          const data = event.data as { type?: unknown } | null;
+          if (data?.type === "geometry" && scope.ukiGeometry.length < 500) scope.ukiGeometry.push(data);
+        });
+      }
+    };
+  });
+}
+
+test.describe("the /try demo's geometry, on the real models", () => {
+  for (const name of ["normal", "phone"] as const) {
+    test(`posts face${name === "phone" ? " and phone" : ""} boxes that pass the protocol (${name} picture)`, async ({
+      baseURL,
+    }) => {
+      const browser = await chromium.launch({
+        args: [...FAKE_CAMERA, `--use-file-for-fake-video-capture=${cameraFile(name)}`],
+      });
+      try {
+        const context = await browser.newContext({ baseURL, viewport: { width: 1440, height: 900 } });
+        const page = await context.newPage();
+        await recordGeometry(page);
+        await page.goto("/try");
+        await startDemo(page);
+        const recorded = async () =>
+          page.evaluate(() => (window as unknown as { ukiGeometry: unknown[] }).ukiGeometry);
+        const withPhone = (messages: unknown[]) =>
+          messages.filter(
+            (m) =>
+              ((m as { geometry: { phone: { detections: unknown[] } | null } }).geometry.phone?.detections
+                .length ?? 0) > 0,
+          );
+        await expect.poll(async () => (await recorded()).length, { timeout: 60_000 }).toBeGreaterThan(20);
+        if (name === "phone") {
+          await expect
+            .poll(async () => withPhone(await recorded()).length, { timeout: 60_000 })
+            .toBeGreaterThan(0);
+        }
+        const messages = await recorded();
+        for (const value of messages) {
+          const parsed = WorkerToMain.safeParse(value);
+          expect(parsed.success, JSON.stringify(value)).toBe(true);
+        }
+        if (name === "normal") {
+          const faces = messages.flatMap((m) => (m as { geometry: { faces: unknown[] } }).geometry.faces);
+          expect(faces.length).toBeGreaterThan(0);
+        }
+        if (name === "phone") {
+          const phones = withPhone(messages);
+          console.log(
+            `[geometry] ${name}: ${messages.length} messages, a phone box in ${phones.length}, e.g. ${JSON.stringify((phones[0] as { geometry: unknown }).geometry)}`,
+          );
+        } else {
+          console.log(
+            `[geometry] ${name}: ${messages.length} messages, e.g. ${JSON.stringify((messages.at(-1) as { geometry: unknown }).geometry)}`,
+          );
+        }
+      } finally {
+        await browser.close();
+      }
     });
   }
 });

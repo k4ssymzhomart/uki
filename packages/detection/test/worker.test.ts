@@ -9,7 +9,7 @@ vi.mock("../src/face.ts", () => ({
   createFaceTracker: vi.fn(async () => ({ delegate: "GPU", detect: faceFrameOf, close: vi.fn() })),
 }));
 vi.mock("../src/phone.ts", () => ({
-  createPhoneDetector: vi.fn(async () => ({ delegate: "CPU", detect: () => 0, close: vi.fn() })),
+  createPhoneDetector: vi.fn(async () => ({ delegate: "CPU", detect: () => [], close: vi.fn() })),
 }));
 
 const posted: unknown[] = [];

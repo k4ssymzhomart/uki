@@ -3,9 +3,9 @@
 import type { ExamMode } from "@uki/contracts";
 import { ExamChecks } from "@uki/contracts";
 import { vi } from "vitest";
-import { createPipeline, type FaceFrame, type Pipeline } from "../../src/pipeline.ts";
+import { createPipeline, type FaceFrame, type PhoneDetection, type Pipeline } from "../../src/pipeline.ts";
 import type { WorkerToMain } from "../../src/protocol.ts";
-import { NO_FACE } from "../../src/signals.ts";
+import { type FaceGeometry, NO_FACE } from "../../src/signals.ts";
 import { counterIds } from "./replay.ts";
 import { type FrameRow, rowToSignal, type TraceFixture } from "./trace.ts";
 
@@ -22,13 +22,29 @@ export function fakeBitmap(row: FrameRow | null, width = 640, height = 480): Ima
   return bitmap as unknown as ImageBitmap;
 }
 
+/** Where the fake face detector puts the student's face, and a second face beside it. */
+export const FAKE_FACE_BOX = { x: 0.3, y: 0.2, width: 0.4, height: 0.5 } as const;
+export const FAKE_SECOND_FACE_BOX = { x: 0.75, y: 0.1, width: 0.2, height: 0.3 } as const;
+/** Where the fake phone detector puts a phone it finds. */
+export const FAKE_PHONE_BOX = { x: 0.55, y: 0.45, width: 0.12, height: 0.25 } as const;
+
 export function faceFrameOf(bitmap: ImageBitmap): FaceFrame {
   const row = (bitmap as unknown as FakeBitmap).row;
-  if (!row) return { signals: NO_FACE, box: null };
+  if (!row) return { signals: NO_FACE, box: null, faces: [] };
   const signal = rowToSignal(row).signal;
-  if (signal.kind !== "frame") return { signals: NO_FACE, box: null };
-  const { kind: _kind, ...signals } = signal;
-  return { signals, box: signals.faces > 0 ? { x: 0.3, y: 0.2, width: 0.4, height: 0.5 } : null };
+  if (signal.kind !== "frame") return { signals: NO_FACE, box: null, faces: [] };
+  const { kind: _kind, boxes: _boxes, ...signals } = signal;
+  const faces: FaceGeometry[] = [];
+  if (signals.faces > 0) {
+    faces.push({ box: { ...FAKE_FACE_BOX }, yawDeg: signals.yawDeg, pitchDeg: signals.pitchDeg, rollDeg: 0 });
+  }
+  if (signals.faces > 1) faces.push({ box: { ...FAKE_SECOND_FACE_BOX }, yawDeg: 0, pitchDeg: 0, rollDeg: 0 });
+  return { signals, box: faces[0]?.box ?? null, faces };
+}
+
+/** The fake phone detector's answer for a check that scored `score` (nothing below the detector's 0.5). */
+export function phoneDetectionsOf(score: number): PhoneDetection[] {
+  return score > 0 ? [{ box: { ...FAKE_PHONE_BOX }, score }] : [];
 }
 
 export interface FakeRun {
@@ -36,7 +52,7 @@ export interface FakeRun {
   posted: WorkerToMain[];
   capture: ReturnType<typeof vi.fn<(image: ImageBitmap) => Promise<Blob>>>;
   faceDetect: ReturnType<typeof vi.fn<(image: ImageBitmap, at: number) => FaceFrame>>;
-  phoneDetect: ReturnType<typeof vi.fn<(image: ImageBitmap, at: number) => number>>;
+  phoneDetect: ReturnType<typeof vi.fn<(image: ImageBitmap, at: number) => PhoneDetection[]>>;
   /** Frames handed to capture, as their `at`. */
   capturedAt: number[];
   run(fixture: TraceFixture): void;
@@ -60,7 +76,7 @@ export function fakePipeline(
     return new Blob([new Uint8Array([0xff, 0xd8, 0xff])], { type: "image/jpeg" });
   });
   const faceDetect = vi.fn((image: ImageBitmap, _at: number) => faceFrameOf(image));
-  const phoneDetect = vi.fn((_image: ImageBitmap, at: number) => phoneScores.get(at) ?? 0);
+  const phoneDetect = vi.fn((_image: ImageBitmap, at: number) => phoneDetectionsOf(phoneScores.get(at) ?? 0));
   const pipeline = createPipeline(
     {
       face: { delegate: "GPU", detect: faceDetect },

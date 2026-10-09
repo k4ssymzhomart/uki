@@ -178,3 +178,45 @@ describe("the /try runtime", () => {
     await expect(resumed).resolves.toBe(true);
   });
 });
+
+describe("the /try runtime's geometry", () => {
+  const geometry = (at: number) => ({
+    at,
+    faces: [{ box: { x: 0.3, y: 0.2, width: 0.4, height: 0.5 }, yawDeg: 2, pitchDeg: -6, rollDeg: 1 }],
+    phone: {
+      at: at - 30,
+      detections: [{ box: { x: 0.55, y: 0.45, width: 0.12, height: 0.25 }, score: 0.71 }],
+    },
+  });
+
+  it("passes each frame's geometry to the overlay across Stop and Start, and nothing from a stopped run", async () => {
+    const workers: FakeWorker[] = [];
+    const { runtime } = setup({
+      createWorker: () => {
+        const worker = new FakeWorker();
+        workers.push(worker);
+        return worker;
+      },
+    });
+    const seen: number[] = [];
+    const stop = runtime.onGeometry((g) => seen.push(g.at));
+    for (const index of [0, 1]) {
+      const started = runtime.start();
+      await flush();
+      workers[index]?.emit({ type: "ready", delegate: { face: "GPU", phone: "CPU" } });
+      await started;
+      workers[index]?.emit({ type: "geometry", geometry: geometry(100 * (index + 1)) });
+      runtime.stop();
+      workers[index]?.emit({ type: "geometry", geometry: geometry(999) });
+    }
+    expect(seen).toEqual([100, 200]);
+    stop();
+    const started = runtime.start();
+    await flush();
+    workers[2]?.emit({ type: "ready", delegate: { face: "GPU", phone: "CPU" } });
+    await started;
+    workers[2]?.emit({ type: "geometry", geometry: geometry(300) });
+    expect(seen).toEqual([100, 200]);
+    runtime.stop();
+  });
+});
