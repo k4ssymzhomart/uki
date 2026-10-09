@@ -41,7 +41,13 @@ describe("physicsLmsUrl", () => {
 describe("withDefaultPhoneScore", () => {
   it("moves an exam seeded at 0.85 to the 0.55 default and keeps its other checks", () => {
     expect(
-      withDefaultPhoneScore({ gaze_s: 3, phone_score: 0.85, face_missing_s: 10, identity: false, lock: true }),
+      withDefaultPhoneScore({
+        gaze_s: 3,
+        phone_score: 0.85,
+        face_missing_s: 10,
+        identity: false,
+        lock: true,
+      }),
     ).toEqual({ gaze_s: 3, phone_score: 0.55, face_missing_s: 10, identity: false, lock: true });
   });
 

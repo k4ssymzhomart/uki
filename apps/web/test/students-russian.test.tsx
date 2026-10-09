@@ -99,7 +99,7 @@ describe("WP 1.11 pages in Russian", () => {
     expect(screen.getByRole("heading", { level: 1, name: ru.settings.title })).toBeTruthy();
     expect(text).toContain("Администрирование / Настройки");
     expect(text).toContain("2 секунды");
-    expect(text).toContain("0,85");
+    expect(text).toContain("0,55");
     expect(text).toContain("90 дней");
     expect(text).toContain("за 20 мин до начала");
     expect(screen.getByRole("switch", { name: ru.settings.checks.identity.title })).toBeTruthy();
