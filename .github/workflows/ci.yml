@@ -15,7 +15,8 @@
 #   windows   WP 0.12 on windows-latest: pnpm check, the x64 zip, the NSIS installer, the launch test of
 #             the packaged Uki.exe from the zip and from a current-user install, and the lab zip; WP 0.13:
 #             the real keyboard hook installed and removed, Koffi in every Windows build, and the
-#             launch test's log showing that the packaged app loaded it; the smoke zip for a Windows box
+#             launch test's log showing that the packaged app loaded it; C2: the real process scan
+#             with PowerShell's windowed-browser query; the smoke zip for a Windows box
 #             with no webcam (the synthetic camera, built with the release's variables) and its launch
 #             test. Each build is checked for exactly its variant's development-only code
 #             (.github/scripts/desktop-variant-check.sh): none in the shipped builds
@@ -258,6 +259,8 @@ jobs:
         run: pnpm check
       - name: Keyboard hook (WP 0.13) installs and removes the real WH_KEYBOARD_LL hook through Koffi
         run: pnpm --filter desktop exec vitest run --reporter=verbose src/main/keyboard-hook.win32.test.ts
+      - name: Process scan (C2) counts a browser only while it has a window (Notepad, Edge headless and windowed)
+        run: pnpm --filter desktop exec vitest run --reporter=verbose src/main/scan.win32.test.ts
       - name: Model files cache
         uses: actions/cache@v4
         with:
