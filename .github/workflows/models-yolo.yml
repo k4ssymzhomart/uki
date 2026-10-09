@@ -55,7 +55,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
-          pip install "ultralytics>=8.3.0,<9" onnx onnxslim onnxruntime
+          pip install "ultralytics==8.4.174" onnx onnxslim onnxruntime
           pip freeze | grep -iE '^(ultralytics|torch|torchvision|onnx|onnxslim|onnxruntime)==' | tee versions.txt
       - name: Export, check and hash
         run: |
@@ -72,7 +72,7 @@ jobs:
           card = {"source": "yolo11n.pt (Ultralytics, COCO 2017, AGPL-3.0)", "opset": 17, "files": []}
           for size in (320, 416):
               exported = YOLO("yolo11n.pt").export(
-                  format="onnx", imgsz=size, opset=17, simplify=True, nms=False, dynamic=False, half=False, batch=1
+                  format="onnx", imgsz=size, opset=17, simplify=True, nms=False, dynamic=False, batch=1
               )
               target = f"dist/yolo11n-{size}.onnx"
               shutil.move(exported, target)
