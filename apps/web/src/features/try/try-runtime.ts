@@ -9,6 +9,7 @@ import {
   type DetectionDebug,
   defaultNow,
   type FrameSource,
+  type GeometryListener,
   modelUrls,
   type RuleCue,
   type RulesState,
@@ -44,6 +45,7 @@ export class TryRuntime {
   /** Bumped by every start and stop, so a start that is overtaken cleans up after itself. */
   private run = 0;
   private startedAt = 0;
+  private readonly geometryListeners = new Set<GeometryListener>();
 
   constructor(handlers: TryHandlers, deps: TryDeps) {
     this.handlers = handlers;
@@ -97,6 +99,10 @@ export class TryRuntime {
       },
     });
     this.client = client;
+    client.onGeometry((geometry) => {
+      if (!current()) return;
+      for (const listener of this.geometryListeners) listener(geometry);
+    });
     const urls = modelUrls(deps.modelsBase());
     try {
       await client.init({
@@ -121,6 +127,17 @@ export class TryRuntime {
     client.attach(camera);
     client.setPhase("exam");
     handlers.onStatus({ kind: "running" });
+  }
+
+  /**
+   * The geometry of every tracked frame (face boxes, head pose, phone boxes) for the live overlay, across
+   * Stop and Start, until the returned function is called.
+   */
+  onGeometry(listener: GeometryListener): () => void {
+    this.geometryListeners.add(listener);
+    return () => {
+      this.geometryListeners.delete(listener);
+    };
   }
 
   /** "I'm here" after the pause: true when the rules engine sent session.resumed. */
