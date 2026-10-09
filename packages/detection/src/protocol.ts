@@ -7,18 +7,29 @@
 //   phase    idle | check | exam, at            still       a JPEG Blob for a flagged event
 //   resume   "I'm here" on 2.3, at, requestId   resumed     whether the resume was allowed
 //   dispose                                     state       rule state for 2.1, 2.2 and 2.3, on change
+//                                               geometry    face boxes, head pose and phone boxes, per frame
 //                                               camera-check the 1.2 camera row, in the check phase
 //                                               degraded    the fallback switched on
 //                                               debug       overlay data, with debug: true
 //                                               error       init, frame or message failures
 //
 // Phases: `check` runs face tracking and the camera row (1.2, 1.3); `exam` adds phone checks, the rules
-// engine and stills; `idle` ignores frames. `at` is laptop time in ms from the renderer's clock
+// engine and stills; `idle` ignores frames. `geometry` goes out for every tracked frame in `check` and
+// `exam`, for the live overlay: numbers only (boxes normalised to the frame, angles), never pixels. `at` is laptop time in ms from the renderer's clock
 // (performance.timeOrigin + performance.now(), monotonic), so events and stills share one clock.
-import { CameraLostReason, EVENT_DATA, ExamChecks, ExamMode, STILL } from "@uki/contracts";
+import {
+  Box,
+  CameraLostReason,
+  EVENT_DATA,
+  ExamChecks,
+  ExamMode,
+  FACE_BOXES_MAX,
+  STILL,
+} from "@uki/contracts";
 import { z } from "zod";
 import { Delegate, DetectionDebug, DetectionPhase, InputSizeSchema, RulesStateSchema } from "./debug.ts";
 import { RULE_EVENT_TYPES } from "./rules.ts";
+import type { FaceGeometry } from "./signals.ts";
 
 const Time = z.number().finite();
 
@@ -140,6 +151,43 @@ export const RuleOutputSchema = z.union([
   z.strictObject({ kind: z.literal("cue"), cue: z.literal("away"), on: z.boolean() }),
 ]);
 
+/** Phone detections kept per check: the Object Detector's maxResults. */
+export const PHONE_DETECTIONS_MAX = 3;
+
+const Angle = z.number().min(-180).max(180);
+
+/** One face: its landmark box (min and max of the landmarks) and head pose in degrees. */
+export const FaceGeometrySchema = z.strictObject({
+  box: Box,
+  yawDeg: Angle,
+  pitchDeg: Angle,
+  rollDeg: Angle,
+});
+
+// FaceGeometry (signals.ts) and FaceGeometrySchema must describe the same object.
+type Same<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
+const faceGeometryMatches: Same<FaceGeometry, z.infer<typeof FaceGeometrySchema>> = true;
+void faceGeometryMatches;
+
+/** One "cell phone" detection: its box and score. */
+export const PhoneDetectionSchema = z.strictObject({ box: Box, score: z.number().min(0).max(1) });
+export type PhoneDetection = z.infer<typeof PhoneDetectionSchema>;
+
+/**
+ * What the detectors saw in one frame, for the live overlay (D1). `faces`: every face, the one the
+ * rules follow first. `phone`: the last phone check, with its time, up to PHONE_DETECTIONS_MAX
+ * detections best first; null in the check phase and before the first check of the exam phase. Phone
+ * checks run every 400 ms, so most frames repeat the last check; `phone.at` tells how old it is.
+ */
+export const DetectionGeometrySchema = z.strictObject({
+  at: Time,
+  faces: z.array(FaceGeometrySchema).max(FACE_BOXES_MAX),
+  phone: z
+    .strictObject({ at: Time, detections: z.array(PhoneDetectionSchema).max(PHONE_DETECTIONS_MAX) })
+    .nullable(),
+});
+export type DetectionGeometry = z.infer<typeof DetectionGeometrySchema>;
+
 export const CameraCheckSchema = z.strictObject({
   ready: z.boolean(),
   faces: z.number().int().nonnegative(),
@@ -173,6 +221,7 @@ export const WorkerToMain = z.discriminatedUnion("type", [
     blob: BlobLike,
   }),
   z.strictObject({ type: z.literal("state"), state: RulesStateSchema }),
+  z.strictObject({ type: z.literal("geometry"), geometry: DetectionGeometrySchema }),
   z.strictObject({ type: z.literal("camera-check"), check: CameraCheckSchema }),
   z.strictObject({
     type: z.literal("degraded"),
