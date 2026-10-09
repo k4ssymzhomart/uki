@@ -133,7 +133,7 @@ describe("A.2 and A.3 reads", () => {
               default_duration_min: 90,
               default_checks: {
                 gaze_s: 2,
-                phone_score: 0.85,
+                phone_score: 0.55,
                 face_missing_s: 10,
                 identity: true,
                 lock: true,

@@ -298,7 +298,7 @@ Do not use it for the lab checklist in section 4: its camera and capture behavio
    - On 1.3, the picture holds a card with the joined number and the same student's photo, so the identity check should pass, as it does in the desktop end-to-end test.
    - During the exam, Ctrl+Shift+S changes the picture.
      - The empty seat pauses the exam for no face (2.3). Back on the student, I'm here resumes it.
-     - The phone picture scores about 0.77 as a phone. It raises the phone warning (2.2) and a flag on the wall only if DEMO-LIVE's phone threshold (`phone_score` in the exam's checks) is at or below that score. With the 0.85 default it may not flag (P.6). The end-to-end test sets 0.7 for this picture.
+     - The phone picture scores about 0.77 as a phone. It raises the phone warning (2.2) and a flag on the wall only if DEMO-LIVE's phone threshold (`phone_score` in the exam's checks) is at or below that score. DEMO-LIVE checks at 0.55 (the default since 9 October, A1), so it flags. The end-to-end test sets 0.7 for this picture.
    - Lockdown takes the VPS's screen. End session on the dashboard releases it; Ctrl+Shift+Q is the fallback. In the Remote Desktop client, Ctrl+Alt+End stands in for Ctrl+Alt+Del.
 6. **Stop.** Submit or end the session, then close the window. To remove the app, delete `C:\apps\uki\smoke`. Its data stays in `%APPDATA%\Üki` unless you delete that too.
 

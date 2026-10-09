@@ -23,7 +23,7 @@ describe("A.4 Settings", () => {
     const text = document.body.textContent ?? "";
     expect(text).toContain("Admin / Settings");
     expect(text).toContain("Every new exam starts with these. Each exam can change them.");
-    for (const value of ["Қазақша", "2 seconds", "0.85", "90 days", "90 min", "20 min before the start"]) {
+    for (const value of ["Қазақша", "2 seconds", "0.55", "90 days", "90 min", "20 min before the start"]) {
       expect(text).toContain(value);
     }
     expect(toggle("Browser lock").getAttribute("aria-checked")).toBe("true");

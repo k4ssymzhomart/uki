@@ -34,7 +34,10 @@ describe("A.4 settings", () => {
   it("offers the fixed choices plus a current value that is not one of them", () => {
     expect(withCurrent(GAZE_OPTIONS, 2)).toEqual([1, 2, 3]);
     expect(withCurrent(GAZE_OPTIONS, 2.5)).toEqual([1, 2, 2.5, 3]);
-    expect(withCurrent(PHONE_OPTIONS, 0.77)).toEqual([0.75, 0.77, 0.8, 0.85, 0.9, 0.95]);
+    expect(PHONE_OPTIONS).toEqual([0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.85]);
+    expect(PHONE_OPTIONS).toContain(DEFAULT_WORKSPACE_SETTINGS.default_checks.phone_score);
+    expect(withCurrent(PHONE_OPTIONS, 0.77)).toEqual([0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.77, 0.85]);
+    expect(withCurrent(PHONE_OPTIONS, 0.9)).toEqual([0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.85, 0.9]);
     expect(withCurrent(DURATION_OPTIONS, 90)).toEqual([...DURATION_OPTIONS]);
   });
 });

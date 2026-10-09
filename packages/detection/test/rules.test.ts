@@ -1,4 +1,4 @@
-import { parseEventData, REVIEW, THRESHOLDS } from "@uki/contracts";
+import { DEFAULT_EXAM_CHECKS, parseEventData, REVIEW, THRESHOLDS } from "@uki/contracts";
 import { describe, expect, it } from "vitest";
 import { RuleEventSchema } from "../src/protocol.ts";
 import { classifyFrame, PHONE_WARNING_CLEAR_MS, type RuleEvent } from "../src/rules.ts";
@@ -245,7 +245,8 @@ describe("jitter around the thresholds", () => {
     let hit = false;
     for (let at = 0; at < 10_000; at += THRESHOLDS.phone.intervalMs) {
       replay.push(at, face());
-      replay.push(at, { kind: "phone", score: hit ? 0.9 : 0.84 });
+      // Just under the default phone_score on every other check.
+      replay.push(at, { kind: "phone", score: hit ? 0.9 : DEFAULT_EXAM_CHECKS.phone_score - 0.01 });
       hit = !hit;
     }
     expect(replay.events).toEqual([]);

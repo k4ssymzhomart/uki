@@ -2202,6 +2202,7 @@ export type Database = {
         Args: { s: Database["public"]["Tables"]["sessions"]["Row"] }
         Returns: number
       }
+      phone_score_untouched: { Args: { p_workspace: string }; Returns: boolean }
       pre_exam_rank: { Args: { p_state: string }; Returns: number }
       privacy_delete_check: {
         Args: { p_actor: string; p_request_id: string }

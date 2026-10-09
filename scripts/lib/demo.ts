@@ -1,6 +1,7 @@
 // The demo exams from "Demo script and seed data" in docs/phase-0-plan.md and the times `pnpm
 // demo:reset` gives them. The seed (supabase/seed.sql) uses the same rules, so a fresh `db reset` and
 // a `demo:reset` produce the same schedule.
+import { DEFAULT_EXAM_CHECKS, ExamChecks } from "../../packages/contracts/src/index.ts";
 
 export const DEMO_EXAMS = {
   /** Mathematics 2 · Midterm: app exam, starts in 15 minutes, lobby open from 20 minutes before. */
@@ -45,4 +46,13 @@ export function demoSchedule(nowMs: number): Record<DemoExamKey, DemoSchedule> {
 export function physicsLmsUrl(base: string): string {
   if (base.endsWith(PHYSICS_LMS_PATH)) return base;
   return `${base.replace(/\/+$/, "")}${PHYSICS_LMS_PATH}`;
+}
+
+/**
+ * An exam's checks with the default `phone_score` (0.55 since the live test of 9 October; docs/decisions.md,
+ * "Detection thresholds: phone_score 0.55") and every other check kept. demo:reset gives it to the
+ * seed's exams that are not over, which a cloud project seeded before that change holds at 0.85.
+ */
+export function withDefaultPhoneScore(checks: unknown): ExamChecks {
+  return { ...ExamChecks.parse(checks ?? {}), phone_score: DEFAULT_EXAM_CHECKS.phone_score };
 }

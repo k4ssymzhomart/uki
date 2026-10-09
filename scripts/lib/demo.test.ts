@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEMO_EXAMS, demoSchedule, physicsLmsUrl } from "./demo.ts";
+import { DEMO_EXAMS, demoSchedule, physicsLmsUrl, withDefaultPhoneScore } from "./demo.ts";
 
 describe("demoSchedule", () => {
   const now = Date.parse("2026-10-16T05:42:37.512Z");
@@ -35,5 +35,34 @@ describe("physicsLmsUrl", () => {
     expect(physicsLmsUrl("http://localhost:5180")).toBe("http://localhost:5180/physics-1/quiz-3");
     expect(physicsLmsUrl("https://uki-lms.vercel.app/")).toBe("https://uki-lms.vercel.app/physics-1/quiz-3");
     expect(physicsLmsUrl("https://x.app/physics-1/quiz-3")).toBe("https://x.app/physics-1/quiz-3");
+  });
+});
+
+describe("withDefaultPhoneScore", () => {
+  it("moves an exam seeded at 0.85 to the 0.55 default and keeps its other checks", () => {
+    expect(
+      withDefaultPhoneScore({
+        gaze_s: 3,
+        phone_score: 0.85,
+        face_missing_s: 10,
+        identity: false,
+        lock: true,
+      }),
+    ).toEqual({ gaze_s: 3, phone_score: 0.55, face_missing_s: 10, identity: false, lock: true });
+  });
+
+  it("fills a partial or missing checks object with the defaults", () => {
+    expect(withDefaultPhoneScore({ lock: false })).toEqual({
+      gaze_s: 2,
+      phone_score: 0.55,
+      face_missing_s: 10,
+      identity: true,
+      lock: false,
+    });
+    expect(withDefaultPhoneScore(null).phone_score).toBe(0.55);
+  });
+
+  it("refuses checks the database would refuse", () => {
+    expect(() => withDefaultPhoneScore({ gaze_s: 0 })).toThrow();
   });
 });
