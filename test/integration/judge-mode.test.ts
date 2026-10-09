@@ -1,5 +1,6 @@
 // Judge mode end to end on the local stack (docs/runbooks/judge-mode.md):
-//   `pnpm judge:setup` makes DEMO-LIVE, its roster and the judge account, twice without a change;
+//   `pnpm judge:setup` makes DEMO-LIVE, its roster, its checks (no Lock, no card, phones at 0.55) and the
+//   judge account, twice without a change;
 //   simulated students (apps/judge-sim) sign in anonymously, join, check in, heartbeat and play episodes
 //   with stills through ingest and frames, with the publishable key only;
 //   the judge (observer) reads the wall, the stills and the report, and every write is refused, the
@@ -67,7 +68,7 @@ function password(): string {
 async function demoExam() {
   const { data, error } = await adminClient()
     .from("exams")
-    .select("id, status, starts_at, duration_min, title")
+    .select("id, status, starts_at, duration_min, title, checks")
     .eq("code", DEMO_LIVE_CODE)
     .single();
   if (error) throw new Error(error.message);
@@ -146,6 +147,7 @@ describe("judge setup", () => {
   it("makes DEMO-LIVE live for 720 minutes with 30 students and 20 questions", async () => {
     const exam = await demoExam();
     expect(exam).toMatchObject({ status: "live", duration_min: 720, title: "Demo · Live" });
+    expect(exam.checks).toMatchObject({ lock: false, identity: false, phone_score: 0.55 });
     const admin = adminClient();
     const roster = await admin.from("exam_students").select("seat").eq("exam_id", examId);
     expect(roster.data).toHaveLength(30);
@@ -156,10 +158,14 @@ describe("judge setup", () => {
   it("is idempotent: a second run keeps the exam, the run, the questions and the password", async () => {
     const before = await demoExam();
     const pw = password();
+    // Checks changed by hand: the three DEMO-LIVE checks come back, every other key is kept.
+    const tuned = { ...(before.checks as Record<string, unknown>), gaze_s: 3, lock: true, phone_score: 0.85 };
+    await adminClient().from("exams").update({ checks: tuned }).eq("id", before.id);
     setup();
     const after = await demoExam();
     expect(after.id).toBe(before.id);
     expect(after.starts_at).toBe(before.starts_at);
+    expect(after.checks).toMatchObject({ gaze_s: 3, lock: false, identity: false, phone_score: 0.55 });
     expect(password()).toBe(pw);
     const questions = await adminClient().from("exam_questions").select("position").eq("exam_id", examId);
     expect(questions.data).toHaveLength(20);

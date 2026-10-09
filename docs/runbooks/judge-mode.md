@@ -1,6 +1,6 @@
 # Runbook: judge mode
 
-Judges open Üki from a link and find it working at any hour: one exam, "Demo · Live" (code `DEMO-LIVE`), is always live on the cloud project, with about 24 simulated students writing it. A small simulator on the Windows VPS plays the students; the database keeps the exam live forever; the judge signs in with a read-only account. This runbook says what runs where, how to set it up, deploy it to the VPS, restart it, read its logs and remove it, and why it stays inside Supabase's free plan for 30 days of 24/7 running.
+Judges open Üki from a link and find it working at any hour: one exam, "Demo · Live" (code `DEMO-LIVE`), is always live on the cloud project, with about 24 simulated students writing it. A small simulator on the Windows VPS plays the students; the database keeps the exam live forever; the judge signs in with a read-only account. A person with the real app joins the same exam on one of the free seats, 20249026 to 20249030. This runbook says what runs where, how to set it up, deploy it to the VPS, restart it, free a seat, read its logs and remove it, and why it stays inside Supabase's free plan for 30 days of 24/7 running.
 
 Decisions behind it: `docs/decisions.md`, "Judge mode". Evidence: `docs/phase-1-exit.md`, "Judge mode".
 
@@ -8,7 +8,8 @@ Decisions behind it: `docs/decisions.md`, "Judge mode". Evidence: `docs/phase-1-
 
 | Piece | Where | What it does |
 | --- | --- | --- |
-| `DEMO-LIVE`, group `DEMO`, students 20249001 to 20249030, 20 questions, `judge@kru.test` | Cloud database | Made once by `pnpm judge:setup` on your laptop, with the secret key from `.env.cloud` |
+| `DEMO-LIVE`, group `DEMO`, students 20249001 to 20249030, 20 questions, `judge@kru.test` | Cloud database | Made once by `pnpm judge:setup` on your laptop, with the secret key from `.env.cloud`. Checks: `lock` false, `identity` false, `phone_score` 0.55 |
+| `pnpm judge:free-seat <number>` | Your laptop, secret key from `.env.cloud` | Deletes one student's session of the current run, its rows and its stills (through `demo-live-purge`), and writes a `demo_live.free_seat` audit row, so a laptop can join that seat again |
 | The `observer` staff role | Cloud database (`20261013130100_judge_mode.sql`) | Reads exactly what an assigned proctor reads; a statement trigger on every table refuses every write it could reach (commands, notes, decisions, replies, share links, seats, the wizard) with `forbidden` / `read_only`. Its reads still write their audit rows |
 | `demo_live_tick` | `pg_cron`, every minute | Keeps `DEMO-LIVE` live: with less than 30 minutes left it deletes the run's sessions, events, frames rows, help requests, commands, answers, decisions and reports, starts a new 720-minute run now with the lobby open, writes a `demo_live.rollover` audit row and asks `demo-live-purge` to delete the stills. A cancelled `DEMO-LIVE` is left alone: that is the off switch |
 | `demo-live-purge` | Edge Function (secret key, called by the tick through `pg_net` with the Vault key) | Deletes the stills of sessions that no longer exist (`demo_live_orphans`) through the Storage API. Once an hour the tick also calls it when an upload landed after a rollover |
@@ -40,8 +41,9 @@ pnpm judge:setup --env-file .env.cloud
 It asks before touching the cloud project (`--yes` skips the question) and prints what it did, never the password:
 
 - group `DEMO` with 30 students, `DEMO-LIVE` "Demo · Live" live now for 720 minutes (or kept as it is when it has a run with 30 minutes or more left), and 20 questions copied from Mathematics 2;
+- `DEMO-LIVE`'s checks: `lock` false (no Üki Lock), `identity` false (no student card on 1.3) and `phone_score` 0.55 (`DEMO_LIVE_CHECKS` in `packages/contracts/src/judge.ts`), merged into the exam's checks on every run, so a value changed by hand comes back and every other check (`gaze_s`, `face_missing_s`) keeps what it has;
 - `judge@kru.test`, role `observer`, assigned to `DEMO-LIVE` only, its password `JUDGE_PASSWORD` from `.env.cloud`, or a new random one appended to `.env.cloud`;
-- the judge one-pager at `uki-judge-one-pager.md` next to the repository (`/Users/k4ssym/Downloads/qostanai/uki-judge-one-pager.md`): the dashboard and Live demo links, the email, the password, `/demo` and `/try`, three things to try. It is written outside the repository on purpose; `--one-pager <path>` puts it elsewhere, never inside the repository.
+- the judge one-pager at `uki-judge-one-pager.md` next to the repository (`/Users/k4ssym/Downloads/qostanai/uki-judge-one-pager.md`): the dashboard and Live demo links, the email, the password, `/demo` and `/try`, three things to try, and "Try the real app: download Üki, code DEMO-LIVE, student ID 20249026–20249030." with the release link (https://github.com/k4ssymzhomart/uki/releases/latest). It is written outside the repository on purpose; `--one-pager <path>` puts it elsewhere, never inside the repository.
 
 Run it again at any time: it fills in what is missing and changes nothing else; an existing judge account keeps its password, so a judge who is signed in stays signed in. A new judge password: delete the `JUDGE_PASSWORD` line from `.env.cloud` and run it again (that signs the judge out everywhere). When the one-pager's password does not work (the account was changed by hand), `--reset-password` sets `JUDGE_PASSWORD` on the account again.
 
@@ -102,6 +104,30 @@ The first start signs the 24 students in, 10 seconds apart (about 4 minutes), ea
 | Upgrade it | Build again, copy the new folder, run `install.ps1` again with the same parameters: the tasks stop, the files are replaced, the state stays, the tasks start |
 | Switch judge mode off in the database | The exam office sets `DEMO-LIVE`'s status to `cancelled`; the tick leaves it alone and the simulator waits (`invalid_code`). Setting it back to `live` gives it a new run at the next tick |
 | Start a fresh run now | `pnpm judge:setup` does not; move the exam's `starts_at` back 700 minutes and the next tick rolls it over |
+
+## Free a seat
+
+A seat of `DEMO-LIVE` belongs to the first anonymous user that joins it, until the rollover (every 11.5 hours). The stage laptop and the judges' laptops use 20249026 to 20249030; 20249025 is the seat the live test of 9 October took, freed the same way. To join a seat again before the rollover, between rehearsals, or when a judge's laptop holds the number the stage needs, free it on your laptop:
+
+```sh
+pnpm judge:free-seat 20249026 --env-file .env.cloud --yes
+```
+
+| Step | What happens |
+| --- | --- |
+| 1 | Finds `DEMO-LIVE` and the student with that number (any of 20249001 to 20249030; a simulated one just joins again) |
+| 2 | Deletes the student's session of the current run with its reports, review decisions, help requests, commands, frames rows, events and answers, children first, as the rollover does. Nothing else of the run changes |
+| 3 | Calls `demo-live-purge` with the secret key: it deletes the stills of every `DEMO-LIVE` session that no longer exists (`demo_live_orphans`), this one's included, through the Storage API. The script then lists the session's folder in the frames bucket and expects it empty |
+| 4 | Writes one `audit_log` row, `demo_live.free_seat`, actor `service`, object the exam, with the number, the seat, the session id, the counts and the stills removed |
+
+- Without `--yes` it refuses the cloud project (exit 2); on the local stack it runs at once. `--dry-run` reads and counts and changes nothing.
+- A seat that is already free changes nothing, writes no row and exits 0, so running it twice is safe.
+- When the purge fails, the seat is still free and the row is still written (with `purge_error`); it exits 1. Run it again, or wait for the tick's hourly purge (minute 17).
+- The laptop's app then joins again from 1.1 with `DEMO-LIVE` and the number; its session is new.
+- One anonymous user holds at most one seat of a run (`join_exam` answers `already_joined` otherwise). To move a laptop to another number, free the number it holds as well.
+- An open wall keeps the freed student's tile until it reloads: deleted sessions are not broadcast.
+
+CI runs it on the local stack after the demo scripts: `judge:setup`, a laptop on 20249026 with a flag and its stills (`scripts/judge-free-seat-check.ts occupy`), `judge:free-seat 20249026`, the check (`verify`: rows, stills, the audit row, and the same laptop joins again), then twice more.
 
 ## Logs
 

@@ -4,7 +4,8 @@
 // - Group DEMO and its 30 students, 20249001 to 20249030, in the KRU workspace.
 // - The exam "Demo · Live" (DEMO-LIVE): an app exam, live now for 720 minutes with the lobby open, with
 //   group DEMO, the 30 students on seats 1 to 30, and 20 single-choice questions copied from
-//   Mathematics 2. An existing DEMO-LIVE keeps its run unless demo_live_tick would roll it over.
+//   Mathematics 2. An existing DEMO-LIVE keeps its run unless demo_live_tick would roll it over. Its
+//   checks are lock false, identity false and phone_score 0.55 (DEMO_LIVE_CHECKS), every other check kept.
 // - The judge's account, judge@kru.test: staff role observer, assigned to DEMO-LIVE only. Its password is
 //   JUDGE_PASSWORD from the env file when set; otherwise a new random one, appended to the env file. It is
 //   never printed: the one-pager (outside the repository) carries it to the judges.
@@ -29,6 +30,7 @@ import { describeTarget, isLocalUrl, loadEnvFile, readScriptEnv } from "./lib/en
 import {
   appendEnvLine,
   DEFAULT_DASHBOARD_URL,
+  demoLiveChecks,
   demoLiveRun,
   demoRoster,
   generatePassword,
@@ -198,7 +200,7 @@ async function main(): Promise<void> {
   )[0];
   const existing = await admin
     .from("exams")
-    .select("id, status, starts_at, duration_min")
+    .select("id, status, starts_at, duration_min, checks")
     .eq("code", DEMO_LIVE_CODE)
     .maybeSingle();
   ok(existing, "DEMO-LIVE");
@@ -213,12 +215,15 @@ async function main(): Promise<void> {
   };
   let examId: string;
   let rolled = false;
+  // Lock and card off, phones at 0.55; every other check the exam has is kept.
+  const checks = demoLiveChecks(existing.data?.checks ?? null);
   if (existing.data === null) {
     const created = must(
       await admin
         .from("exams")
         .insert({
           ...fields,
+          checks,
           code: DEMO_LIVE_CODE,
           ...demoLiveRun(nowMs),
           scheduled_at: new Date(nowMs).toISOString(),
@@ -236,7 +241,7 @@ async function main(): Promise<void> {
     ok(
       await admin
         .from("exams")
-        .update(rolled ? { ...fields, ...demoLiveRun(nowMs) } : fields)
+        .update(rolled ? { ...fields, checks, ...demoLiveRun(nowMs) } : { ...fields, checks })
         .eq("id", examId),
       "update DEMO-LIVE",
     );
@@ -381,7 +386,8 @@ async function main(): Promise<void> {
   );
   log.info(
     `${DEMO_LIVE_CODE} "${DEMO_LIVE_TITLE}" ${existing.data === null ? "created" : rolled ? "given a new run" : "kept its run"}; ` +
-      `${QUESTIONS} questions; exam ${examId}`,
+      `${QUESTIONS} questions; checks lock ${checks.lock}, identity ${checks.identity}, ` +
+      `phone_score ${checks.phone_score}; exam ${examId}`,
   );
   log.info(
     `${JUDGE_EMAIL}: observer of ${DEMO_LIVE_CODE} only; password ${newPassword ? "new, written to" : "from"} ` +

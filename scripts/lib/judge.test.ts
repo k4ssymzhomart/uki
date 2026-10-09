@@ -2,13 +2,18 @@ import { describe, expect, it } from "vitest";
 import { JUDGE_EMAIL, StudentNumber } from "../../packages/contracts/src/index.ts";
 import {
   appendEnvLine,
+  demoLiveChecks,
   demoLiveRun,
   demoRoster,
+  describeCounts,
   generatePassword,
   isInside,
   liveDemoUrl,
   needsNewRun,
+  parseSeatNumber,
+  RELEASES_URL,
   readEnvValue,
+  realAppRange,
   renderOnePager,
 } from "./judge.ts";
 
@@ -89,5 +94,70 @@ describe("judge setup", () => {
     expect(page).toContain("https://uki-web.vercel.app/demo");
     expect(page).toContain("https://uki-web.vercel.app/try");
     expect(page.match(/^\d\. \*\*/gm)).toHaveLength(3);
+  });
+
+  it("tells judges to try the real app with DEMO-LIVE and the free IDs, with the release link", () => {
+    const page = renderOnePager({
+      dashboardUrl: "https://uki-web.vercel.app",
+      password: "pw",
+      generatedAt: new Date(NOW),
+    });
+    expect(realAppRange()).toBe("20249026–20249030");
+    expect(page).toContain("Try the real app: download Üki, code DEMO-LIVE, student ID 20249026–20249030.");
+    expect(page).toContain(RELEASES_URL);
+    expect(RELEASES_URL).toBe("https://github.com/k4ssymzhomart/uki/releases/latest");
+  });
+
+  it("gives DEMO-LIVE lock and identity off and phones at 0.55, keeping every other check", () => {
+    expect(demoLiveChecks(null)).toEqual({
+      gaze_s: 2,
+      phone_score: 0.55,
+      face_missing_s: 10,
+      identity: false,
+      lock: false,
+    });
+    const tuned = { gaze_s: 3, phone_score: 0.85, face_missing_s: 15, identity: true, lock: true };
+    expect(demoLiveChecks(tuned)).toEqual({
+      gaze_s: 3,
+      phone_score: 0.55,
+      face_missing_s: 15,
+      identity: false,
+      lock: false,
+    });
+    // A second run changes nothing.
+    expect(demoLiveChecks(demoLiveChecks(tuned))).toEqual(demoLiveChecks(tuned));
+    expect(() => demoLiveChecks({ gaze_s: -1 })).toThrow();
+  });
+});
+
+describe("judge free-seat", () => {
+  it("takes exactly one DEMO-LIVE roster number", () => {
+    expect(parseSeatNumber(["20249026"])).toEqual({ number: "20249026" });
+    expect(parseSeatNumber([" 20249030 "])).toEqual({ number: "20249030" });
+    expect(parseSeatNumber(["20249001"])).toEqual({ number: "20249001" });
+    expect(parseSeatNumber([])).toEqual({ error: "give one student number, 20249001 to 20249030" });
+    expect(parseSeatNumber(["20249026", "20249027"])).toHaveProperty("error");
+    expect(parseSeatNumber(["20249031"])).toEqual({
+      error: "20249031 is not on DEMO-LIVE's roster (20249001 to 20249030)",
+    });
+    expect(parseSeatNumber(["26"])).toHaveProperty("error");
+    expect(parseSeatNumber(["20231187"])).toHaveProperty("error");
+  });
+
+  it("reports what it deleted, without the zeros", () => {
+    const none = {
+      sessions: 0,
+      reports: 0,
+      review_decisions: 0,
+      help_requests: 0,
+      session_commands: 0,
+      frames: 0,
+      events: 0,
+      answers: 0,
+    };
+    expect(describeCounts(none)).toBe("nothing");
+    expect(describeCounts({ ...none, sessions: 1, events: 6, frames: 1, answers: 2, help_requests: 1 })).toBe(
+      "1 session, 6 events, 1 frames row, 2 answers, 1 help request",
+    );
   });
 });

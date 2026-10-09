@@ -9,6 +9,8 @@
     "../demo-reset.ts",
     "../demo-simulate.ts",
     "../judge-setup.ts",
+    "../judge-free-seat.ts",
+    "../judge-free-seat-check.ts",
     "../release-assets.ts",
     "../dev.ts",
     "../seed-term.ts",
