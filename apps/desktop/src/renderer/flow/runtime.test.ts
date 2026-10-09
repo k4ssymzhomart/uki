@@ -89,6 +89,15 @@ function stage() {
   return stageOf(runtime.actor.getSnapshot());
 }
 
+/** Whether the window cancels `type` right now (the exam's clipboard guard, C1). */
+function cancelled(type: string): boolean {
+  const event = new Event(type, { bubbles: true, cancelable: true });
+  document.body.dispatchEvent(event);
+  return event.defaultPrevented;
+}
+
+const CLIPBOARD_EVENTS = ["copy", "cut", "paste", "contextmenu", "drop"];
+
 beforeEach(() => {
   useFakeClock();
   bridge = new FakeBridge();
@@ -127,6 +136,8 @@ describe("the flow runtime", () => {
     api.joinOutput = joinOutput({ startsAt: Date.now() + 2 * 60_000 });
     runtime = makeRuntime();
     await joinAndCheckIn();
+    // Before the exam (join, 1.2 to 1.4) the student may paste, for example the exam code.
+    for (const type of CLIPBOARD_EVENTS) expect(cancelled(type), type).toBe(false);
     expect(await outbox.getMeta(META_JOIN, (v) => v)).toEqual({
       code: "MATH2-204-FRI",
       studentNumber: "20231187",
@@ -144,6 +155,9 @@ describe("the flow runtime", () => {
     await advance(2 * 60_000, 1000);
     expect(stage()).toBe("writing");
     expect(bridge.last("lockdown")).toBe(true);
+    // Locked: copy, cut, paste, the context menu and drop are cancelled; typing is not.
+    for (const type of CLIPBOARD_EVENTS) expect(cancelled(type), type).toBe(true);
+    for (const type of ["keydown", "beforeinput", "input"]) expect(cancelled(type), type).toBe(false);
     expect(bridge.lockSent.some((m) => m.type === "lock.start")).toBe(true);
     expect(detection?.phases.at(-1)).toBe("exam");
     bridge.fromLock({ type: "lock.started", tabs_closed: 3 });
@@ -219,6 +233,8 @@ describe("the flow runtime", () => {
     expect(screen()).toMatchObject({ frame: "3.1", receiptId: "UKI-204-0917-MT", flags: 2 });
     expect(bridge.lockSent.some((m) => m.type === "lock.release" && m.reason === "submitted")).toBe(true);
     expect(bridge.last("lockdown")).toBe(false);
+    // 3.1: the receipt ID can be copied again.
+    for (const type of CLIPBOARD_EVENTS) expect(cancelled(type), type).toBe(false);
     expect(detection?.phases.at(-1)).toBe("off");
     await advance(6000, 1000);
     expect(await outbox.getMeta(META_JOIN, (v) => v)).toBeNull();
@@ -307,6 +323,8 @@ describe("the flow runtime", () => {
     expect(stage()).toBe("waitingLock");
     expect(bridge.last("hideToTray")).toBe(true);
     expect(bridge.calls.some(([name]) => name === "lockdown")).toBe(false);
+    // The browser exam's window is not locked; Üki Lock guards copy and paste in the browser.
+    expect(cancelled("paste")).toBe(false);
     expect(bridge.lockSent.at(-1)).toMatchObject({
       type: "exam.state",
       phase: "ready",

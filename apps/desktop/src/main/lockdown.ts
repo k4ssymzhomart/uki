@@ -4,7 +4,8 @@
 // lockdown brings the window back, pins it on top again (and on every Space on macOS) and tells the
 // renderer (exam.onBlur) at most once per 5 seconds; the renderer sends tab.blocked with app null. On
 // Windows, where kiosk mode is only full screen, lockdown also runs the keyboard hook
-// (keyboard-hook.ts), from lockdown on until lockdown off.
+// (keyboard-hook.ts), from lockdown on until lockdown off. On every OS the clipboard is emptied when
+// lockdown starts (C1 in docs/finals-plan.md), so nothing copied before the exam can be pasted into it.
 import type { DesktopOs } from "@uki/contracts";
 import type { BrowserWindow, WebContents } from "electron";
 import type { KeyboardHook } from "./keyboard-hook.ts";
@@ -46,6 +47,10 @@ export type LockdownOptions = {
   onBlur: () => void;
   /** Windows: the keyboard hook, started with lockdown and stopped when it ends, the escape included. */
   keyboardHook?: Pick<KeyboardHook, "start" | "stop">;
+  /** Empties the system clipboard (Electron's clipboard.clear()); called when lockdown turns on. */
+  clearClipboard?: () => void;
+  /** clearClipboard threw; lockdown went on regardless. */
+  onClipboardFailed?: (error: unknown) => void;
   /** After the development escape hatch turned lockdown off. */
   onDevEscape?: () => void;
   /**
@@ -128,8 +133,19 @@ export function createLockdown(options: LockdownOptions): Lockdown {
     window.setMinimizable(true);
   }
 
+  /** Empties the clipboard; a failure never keeps lockdown from starting. */
+  function clearClipboard(): void {
+    try {
+      options.clearClipboard?.();
+    } catch (error) {
+      options.onClipboardFailed?.(error);
+    }
+  }
+
   function set(on: boolean): void {
+    const starting = on && !active;
     active = on;
+    if (starting) clearClipboard();
     if (on) options.keyboardHook?.start();
     else options.keyboardHook?.stop();
     if (!usable(current)) return;

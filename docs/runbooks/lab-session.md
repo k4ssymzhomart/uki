@@ -101,7 +101,7 @@ Also take:
 The hook:
 
 - runs only from lockdown on until lockdown off;
-- reads only each key event's virtual-key code and flags;
+- reads only each key event's virtual-key code and flags, and for Esc, C, X, V and Insert asks Windows whether Ctrl, Shift or Alt is held at that moment;
 - keeps nothing, logs nothing and sends nothing (`apps/desktop/src/main/key-filter.ts` and `keyboard-hook-win32.ts`).
 
 If a security product stops it:
@@ -135,12 +135,21 @@ The checklist from `docs/phase-0-plan.md`, with the steps for each line. Photogr
   4. Press Ctrl+Alt+Del and then Cancel, then Win+L and sign in again. Both work, because they stay with Windows. When you come back, the wall shows a focus loss for Madina: `tab.blocked` with no app name.
   5. Ctrl+Shift+Esc opens Task Manager. The hook leaves it to Windows on purpose, as it does Ctrl+Alt+Del, and the wall shows the focus loss the same way.
   6. In the lab zip, Ctrl+Shift+Q still leaves lockdown.
+- [ ] During lockdown Ctrl+C, Ctrl+X, Ctrl+V, Ctrl+Insert, Shift+Insert, PrtScn and Alt+PrtScn do nothing, and typing still works (C1).
+  1. Before Start exam, copy a word into the clipboard: select the exam code on 1.1, or any text in Notepad, and press Ctrl+C.
+  2. During 2.1, open Ask proctor and type `Calc 5x + 3v` in its Note field, Shift included. Every letter appears: c, x and v alone, with Shift or with AltGr are typing, and the hook lets them through.
+  3. In the same field press Ctrl+V, Ctrl+Shift+V and Shift+Insert. Nothing is pasted: the keys are swallowed, and the clipboard was emptied when the exam started. Right-click in the field: no menu opens.
+  4. Select text in the question and press Ctrl+C, Ctrl+X and Ctrl+Insert. Nothing is copied or cut, and the question is unchanged. Close Ask proctor without sending.
+  5. Press PrtScn, Alt+PrtScn and Ctrl+PrtScn. Nothing happens: no Snipping Tool bar, no "Screenshot copied" notice, and the exam stays in front.
+  6. After End session, open Paint and press Ctrl+V. Nothing from the exam is pasted: no screenshot and no question text.
+  7. The main process log (section 3) shows `keyboard hook on` and `keyboard hook off` and never a key.
 - [ ] A blocked app on the PC turns 1.2 red, and one opened mid-exam sends `tab.blocked`.
   - Microsoft Teams is on the blocked list and often comes preinstalled.
   - An app opened during 2.1 shows on the wall with its name within 15 s, at the next process scan.
-- [ ] PrtScn, Win+Shift+S and the Snipping Tool capture no exam window.
+- [ ] PrtScn, Win+Shift+S and the Snipping Tool capture no exam window: the exam is black or missing in every picture.
   - Win+Shift+S cannot open during lockdown, because the hook swallows the Windows key. Try it on 1.2 to 1.4 too: content protection is on from launch.
-  - During 2.1, try PrtScn and the Snipping Tool's timer.
+  - On 1.4, outside lockdown, press PrtScn, then open Paint and press Ctrl+V. Then take a full-screen snip with the Snipping Tool. In both pictures the Üki window is black or missing: on Windows 10 version 2004 and later, content protection leaves it out of captures entirely, so the picture shows what is behind it. No exam content may show.
+  - During 2.1, PrtScn does nothing (the C1 item above). Start a Snipping Tool snip with a 10-second delay on 1.4, press Start exam as Aigerim at once, and let the snip fire during 2.1: it shows no exam content either.
 - [ ] The lab zip's overlay shows face tracking at 15 fps or more and phone checks at 2 per second or more, with the app under 40% CPU; write down the CPU model and whether the PC has a graphics card.
   - Use the lab zip and press Ctrl+Shift+D during 2.1.
   - The CPU model is in Settings, System, About. Whether there is a graphics card is in Task Manager, Performance, GPU.
@@ -215,8 +224,9 @@ Development runs (`pnpm dev`) are different from the packaged build in two ways.
    - Mission Control (Ctrl+Up or F3)
    - Notification Center (click the clock, or swipe left from the trackpad's right edge)
    - the screenshot keys (Cmd+Shift+3, 4 and 5)
+   - Cmd+C, Cmd+X and Cmd+V on a question and in Ask proctor's Note field, and a right-click (C1)
 
-   Cmd+Tab, Cmd+Q, Force Quit and the menu bar must do nothing. Spotlight, Mission Control, Notification Center and the screenshot keys must either do nothing, or bring the exam back and log `tab.blocked` with no app name, at most once every 5 s on the wall.
+   Cmd+Tab, Cmd+Q, Force Quit and the menu bar must do nothing. Cmd+C, Cmd+X and Cmd+V copy and paste nothing, the right-click opens no menu, and typing in the field still works; text copied before the exam is gone, because lockdown empties the clipboard. Spotlight, Mission Control, Notification Center and the screenshot keys must either do nothing, or bring the exam back and log `tab.blocked` with no app name, at most once every 5 s on the wall.
 3. A screenshot taken before the exam must show no exam window.
 4. End the session from the dashboard.
 

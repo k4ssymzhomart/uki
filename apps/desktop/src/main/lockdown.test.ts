@@ -363,6 +363,65 @@ describe("lockdown on Windows", () => {
   });
 });
 
+describe("the clipboard when lockdown starts (C1)", () => {
+  it("empties the clipboard on every OS when lockdown turns on, once per start", () => {
+    for (const os of ["macos", "windows"] as const) {
+      const fake = fakeWindow();
+      const clearClipboard = vi.fn();
+      const lockdown = createLockdown({ os, devEscape: false, onBlur: vi.fn(), clearClipboard });
+      lockdown.attach(fake.window);
+      expect(clearClipboard).not.toHaveBeenCalled();
+      lockdown.set(true);
+      expect(clearClipboard, os).toHaveBeenCalledOnce();
+      // Applied again while on (a restored session): nothing new to clear.
+      lockdown.set(true);
+      expect(clearClipboard).toHaveBeenCalledOnce();
+      lockdown.set(false);
+      expect(clearClipboard).toHaveBeenCalledOnce();
+      // The next exam's lockdown clears it again.
+      lockdown.set(true);
+      expect(clearClipboard).toHaveBeenCalledTimes(2);
+    }
+  });
+
+  it("clears before the hook starts and before the window locks, also with no window yet", () => {
+    const order: string[] = [];
+    const hook = { start: vi.fn(() => order.push("hook")), stop: vi.fn() };
+    const lockdown = createLockdown({
+      os: "windows",
+      devEscape: false,
+      onBlur: vi.fn(),
+      keyboardHook: hook,
+      clearClipboard: () => order.push("clear"),
+    });
+    lockdown.set(true);
+    expect(order).toEqual(["clear", "hook"]);
+  });
+
+  it("goes on into lockdown when the clipboard cannot be cleared, and reports it", () => {
+    const fake = fakeWindow();
+    const failure = new Error("clipboard busy");
+    const onClipboardFailed = vi.fn();
+    const hook = { start: vi.fn(), stop: vi.fn() };
+    const lockdown = createLockdown({
+      os: "windows",
+      devEscape: false,
+      onBlur: vi.fn(),
+      keyboardHook: hook,
+      clearClipboard: () => {
+        throw failure;
+      },
+      onClipboardFailed,
+    });
+    lockdown.attach(fake.window);
+    expect(() => lockdown.set(true)).not.toThrow();
+    expect(lockdown.active).toBe(true);
+    expect(hook.start).toHaveBeenCalledOnce();
+    expect(fake.calls).toContain("setKiosk(true)");
+    expect(onClipboardFailed).toHaveBeenCalledWith(failure);
+  });
+});
+
 describe("development escape hatch", () => {
   it("leaves lockdown on Cmd+Shift+Q in development builds", () => {
     const fake = fakeWindow();

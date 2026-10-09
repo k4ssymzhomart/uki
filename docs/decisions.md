@@ -1249,3 +1249,36 @@ Judge mode (the user's request of 8 and 9 October; no Figma frame): one always-l
 
 **Not done here**
 - The landing's Live demo button, `/demo` and `/demo/live` (the jury guide package) and `/try` are other packages'. The coordinator deploys the simulator to the VPS and runs `pnpm judge:setup` against the cloud project; this branch never touched either.
+
+## 2026-10-09 · C1 Copy, paste and PrtScn (finals)
+
+The case (Кейс 3, КРУ, section 2.3) names Ctrl+C/V and PrtScn, and the live test of 9 October found the app swallowed neither. The finals brief (`docs/finals-plan.md`, C1) adds them. This changes the 2026-10-08 entry "P.4 Lockdown guard", whose key list was the plan's four. CLAUDE.md's rule still holds: the hook swallows only the keys the plan lists, now the finals brief's too, and only during lockdown.
+
+**The keys the Windows hook now also swallows** (`apps/desktop/src/main/key-filter.ts`):
+
+- **Ctrl+C, Ctrl+X and Ctrl+V.** C, X or V while Ctrl is held and Alt is not, with or without Shift (Ctrl+Shift+V pastes as plain text in Chromium). Ctrl+Alt is AltGr on many keyboard layouts, and AltGr+C, X or V types a letter on some of them (Polish ć and ź; Czech &, # and @). So Ctrl+Alt+C, X and V go on to Windows: they are typing, not copy shortcuts, and the renderer guard below cancels any paste anyway.
+- **Ctrl+Insert and Shift+Insert.** Insert while Ctrl or Shift is held. Insert alone (overtype) goes on.
+- **PrtScn** (`VK_SNAPSHOT`, 0x2C): alone, with Alt, and with any other modifier. One rule covers every Print Screen shortcut, including Windows 11's "Use the Print screen key to open screen capture" and tools that bind Ctrl+PrtScn. Win+PrtScn and Win+Shift+S already die with the Win key, and so does Win+V, the clipboard history.
+
+Down and up events count alike, as before. When Ctrl comes up before C, the lone key-up of C goes on to Windows; a key-up without its key-down does nothing.
+
+**Modifier state comes from `GetAsyncKeyState`, not from the hook's own tracking.** The brief allowed either.
+- A hook that tracked downs and ups itself would keep a memory of keys. It would also go wrong whenever it misses an up: Ctrl+Alt+Del takes the key-ups to the secure desktop, and Windows drops a slow hook until the 10 s reinstall. A Ctrl stuck "down" in that memory would swallow every c, x and v the student types.
+- `GetAsyncKeyState` reads the system's state at that moment and keeps nothing. The hook asks about Ctrl, Shift and Alt only, and only for Esc, C, X, V and Insert; Alt also counts from the event's `LLKHF_ALTDOWN` flag. Every other key is still one table lookup. This replaces the P.4 entry's "asks `GetAsyncKeyState` about Ctrl and Shift only for Esc".
+- The hook still reads only `vkCode` and `flags`, keeps nothing between events, logs only state changes, and never records or sends a key.
+
+**The renderer guard, on every OS.** While lockdown is on (app exams, from the exam's start until 3.1 or 2.1d), the exam renderer cancels `copy`, `cut`, `paste`, `contextmenu` and `drop` on the window in the capture phase (`apps/desktop/src/renderer/services/clipboard-guard.ts`, switched by `ExamGuard.blockClipboard` with lockdown).
+- Key, `input`, `beforeinput` and composition events are untouched, so every text field, such as Ask proctor's note, takes typing as before.
+- It covers macOS, whose Edit menu keeps Cmd+C and Cmd+V for the join form (`menu.ts`), and any paste that reaches the page another way.
+- The join form, 1.2 to 1.4 and the receipt are outside lockdown: pasting the exam code and copying the receipt ID still work. Browser exams never lock the app's window; Üki Lock guards copy and paste in the browser, as before.
+- The app sends no event for a cancelled copy or paste; the brief asks for none. `copy.blocked` stays Üki Lock's event.
+
+**The clipboard is emptied when lockdown starts.** `lockdown.set(true)` calls Electron's `clipboard.clear()` in the main process on the change from off to on, on every OS, before the hook starts. So nothing copied before the exam can be pasted into it. A failed clear is logged and lockdown goes on. The development no-kiosk lockdown (`UKI_DEV_NO_KIOSK`) leaves a developer's clipboard alone. Windows' clipboard history keeps its entries, but Win+V cannot open it during lockdown.
+
+**"A black window" in captures.** The brief says PrtScn and the Snipping Tool capture a black window. That is what macOS and Windows before 10 version 2004 do with content protection. On Windows 11, Electron's `setContentProtection` uses `WDA_EXCLUDEFROMCAPTURE`, which leaves the window out of the capture entirely, so the picture shows whatever is behind the exam. The lab checklist therefore asks for "no exam content in the capture", black or missing.
+
+**Tests.**
+- `key-filter.test.ts` covers the decision for every key and modifier combination.
+- `keyboard-hook.test.ts` covers the binding with Koffi mocked and through real Koffi.
+- `keyboard-hook.win32.test.ts` runs in the Windows CI job. It installs the real hook, injects Ctrl+C, Ctrl+X, Ctrl+V, Ctrl+Insert, Shift+Insert, PrtScn and Alt+PrtScn with `SendInput`, pumps the hook's messages, and checks what the procedure swallowed and what it passed on. The test plays the keys; the hook itself never sends one.
+- The flow runtime test checks that the guard follows lockdown, and `lockdown.test.ts` that the clipboard is cleared once per start.

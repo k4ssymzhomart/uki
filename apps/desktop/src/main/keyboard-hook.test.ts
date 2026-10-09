@@ -21,7 +21,10 @@ afterEach(() => {
 
 const KEY_Q = 0x51;
 const WM_KEYDOWN = 0x100;
+const WM_KEYUP = 0x101;
 const WM_SYSKEYDOWN = 0x104;
+/** KBDLLHOOKSTRUCT.flags: a key-up. */
+const LLKHF_UP = 0x80;
 
 /** A native binding that hands out handles 1n, 2n, ... and records every call in order. */
 function fakeNative(options: { failInstall?: () => boolean } = {}) {
@@ -343,6 +346,42 @@ describe("the Win32 binding (Koffi mocked)", () => {
     }
   });
 
+  it("swallows Ctrl+C, Ctrl+X, Ctrl+V, Ctrl+Insert and PrtScn, down and up, while Ctrl is held", () => {
+    const fake = fakeKoffi({ held: new Set([VK.CONTROL]) });
+    bindWin32KeyboardHook(fake.koffi);
+    for (const vk of [VK.KEY_C, VK.KEY_X, VK.KEY_V, VK.INSERT, VK.SNAPSHOT]) {
+      for (const [wParam, flags] of [
+        [WM_KEYDOWN, 0],
+        [WM_KEYUP, LLKHF_UP],
+      ] as const) {
+        const { result, passedOn } = fake.key(vk, flags, wParam);
+        expect(result, `vk 0x${vk.toString(16)} wParam 0x${wParam.toString(16)}`).toBe(1);
+        expect(passedOn).toBeNull();
+      }
+    }
+  });
+
+  it("swallows Shift+Insert, PrtScn and Alt+PrtScn, and passes C, X and V on when Ctrl is up", () => {
+    const fake = fakeKoffi({ held: new Set([VK.SHIFT]) });
+    bindWin32KeyboardHook(fake.koffi);
+    expect(fake.key(VK.INSERT).result).toBe(1);
+    expect(fake.key(VK.SNAPSHOT).result).toBe(1);
+    expect(fake.key(VK.SNAPSHOT, LLKHF_ALTDOWN, WM_SYSKEYDOWN).result).toBe(1);
+    for (const vk of [VK.KEY_C, VK.KEY_X, VK.KEY_V]) {
+      const { result, passedOn, address } = fake.key(vk);
+      expect(result, `vk 0x${vk.toString(16)}`).toBe(0);
+      expect(passedOn).toEqual([null, HC_ACTION, WM_KEYDOWN, address]);
+    }
+  });
+
+  it("passes AltGr+C, X and V on (Ctrl and Alt held), so AltGr letters still type", () => {
+    const fake = fakeKoffi({ held: new Set([VK.CONTROL, VK.MENU]) });
+    bindWin32KeyboardHook(fake.koffi);
+    for (const vk of [VK.KEY_C, VK.KEY_X, VK.KEY_V]) {
+      expect(fake.key(vk, LLKHF_ALTDOWN).passedOn, `vk 0x${vk.toString(16)}`).not.toBeNull();
+    }
+  });
+
   it("passes Ctrl+Shift+Q on to Windows unchanged, with the same arguments", () => {
     const fake = fakeKoffi({ held: new Set([VK.CONTROL, VK.SHIFT]) });
     bindWin32KeyboardHook(fake.koffi);
@@ -435,6 +474,13 @@ describe.runIf(realKoffi() !== null)("the hook procedure through real Koffi", ()
     expect(Number(koffi.call(procId, procType, HC_ACTION, WM_SYSKEYDOWN, altTab.pointer))).toBe(1);
     const ctrlEsc = event(VK.ESCAPE, 0);
     expect(Number(koffi.call(procId, procType, HC_ACTION, WM_KEYDOWN, ctrlEsc.pointer))).toBe(1);
+    // C1: Ctrl+C, Ctrl+V, Ctrl+Insert (Ctrl is held), PrtScn and Alt+PrtScn.
+    for (const vk of [VK.KEY_C, VK.KEY_V, VK.INSERT, VK.SNAPSHOT]) {
+      const copy = event(vk, 0);
+      expect(Number(koffi.call(procId, procType, HC_ACTION, WM_KEYDOWN, copy.pointer))).toBe(1);
+    }
+    const altPrtScn = event(VK.SNAPSHOT, LLKHF_ALTDOWN);
+    expect(Number(koffi.call(procId, procType, HC_ACTION, WM_SYSKEYDOWN, altPrtScn.pointer))).toBe(1);
     expect(callNext).not.toHaveBeenCalled();
     const ctrlQ = event(KEY_Q, 0);
     expect(Number(koffi.call(procId, procType, HC_ACTION, WM_KEYDOWN, ctrlQ.pointer))).toBe(0);
