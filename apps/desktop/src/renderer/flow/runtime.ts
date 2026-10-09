@@ -731,6 +731,7 @@ export class FlowRuntime {
       this.applied.lockdown = lockdown;
       void bridge.exam.lockdown(lockdown).catch(() => {});
       this.guard.watchFocus(lockdown);
+      this.guard.blockClipboard(lockdown);
     }
 
     const watch = wantsExamWatch(snapshot);

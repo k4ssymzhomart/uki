@@ -8,6 +8,7 @@ import { IPC_CHANNELS, type IpcEventArgs, type IpcEventChannel } from "@uki/cont
 import {
   app,
   type BrowserWindow,
+  clipboard,
   dialog,
   ipcMain,
   Menu,
@@ -122,6 +123,9 @@ const lockdown = devFlags.noKiosk
       devEscape: hasDevEscape(app.isPackaged, import.meta.env.MODE),
       onBlur: () => notify(IPC_CHANNELS.examBlur),
       keyboardHook,
+      clearClipboard: () => clipboard.clear(),
+      onClipboardFailed: (error) =>
+        console.error("[desktop] lockdown: the clipboard was not cleared:", error),
       onDevEscape: () => {
         // The running scan holds the app too: the escape hatch lets quit through again.
         watcher.stop();
