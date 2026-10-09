@@ -564,3 +564,98 @@ Branch `feat/judge-mode` (PR #34). No local database on the development Mac (the
 | The simulator on the VPS | pending | The coordinator: build, copy, `install.ps1` (runbook); check the log, `alive.json` and the indicator | |
 | A judge's path on the cloud: Live demo, sign in, the wall alive within seconds, a refused reply | pending | Hand check after both, with the jury guide's Live demo button merged | |
 | The free-plan usage after a few days | pending | The organisation's usage page: Realtime messages, function calls and egress against the runbook's arithmetic | |
+
+## Phase F · Finals
+
+The last build round before Demo Day, from the owner's brief of 9 October ([finals-plan.md](finals-plan.md)). Each item fills its own subsection below; the case checklist is ticked with evidence as items merge.
+
+### Live test, 9 October
+
+The baseline, measured by the owner before this round.
+
+| What | Result |
+|---|---|
+| `/try` in Chrome, MacBook Pro M4 | 13 fps (target 15); Face Landmarker 24 ms on GPU; Object Detector 51–60 ms on CPU; 2.5 phone checks/s; frames from `MediaStreamTrackProcessor`, 640 × 480 |
+| Phone at face height, back to the webcam (the "photographing the screen" pose) | scores 0.50–0.74 |
+| Phone at chest height while reading it | 0.52–0.79 |
+| Phone cut by the frame edge, or seen edge-on | 0 (missed) |
+| `phone_score` 0.85 (current default) | 0 detections |
+| False positives above 0.5 in ~3 min of sitting, eating, hand on face | none; phone-like objects not yet measured |
+| Packaged macOS app v0.1.2 against the cloud, `DEMO-LIVE` seat 20249025, `phone_score` 0.55 | `phone.detected` 0.738 and 0.656 with 3 stills each; `gaze.down` 7.7 s; `gaze.off_screen` right 2.4 s; `net.offline` 5.8 s with 1 event queued and delivered; event to server 0.9 s online; 20 answers, Ask proctor, submit, receipt `UKI-DEMO-3783-MA` |
+| 1.2 system check | caught Telegram, then Claude (the Claude Code CLI matches the same name) |
+| Content protection on macOS | the window comes out blank in screen captures |
+
+Changed by hand in the cloud database, with the owner's OK: `DEMO-LIVE` checks are `lock: false`, `identity: false`, `phone_score: 0.55`. B1 makes this permanent.
+
+### The case checklist (Кейс 3, КРУ)
+
+Every line must work live on Windows on Demo Day.
+
+| Case requirement | Status | Item | Evidence |
+|---|---|---|---|
+| 2.1 Phone in hand or in front of the screen | Works only at 0.55; misses some angles | A1, A2, A6 | pending |
+| 2.1 Moment the phone is raised to photograph the monitor | Missing | A4 | pending |
+| 2.1 Phone camera aimed at the screen | Missing | A4 (A6 stretch: `phone_back`) | pending |
+| 2.2 Gaze direction; long look down; left and right | Works | A5 closes the side-turn gap | pending |
+| 2.2 Presence in frame; second person | Works (second person not tested live) | E1 | pending |
+| 2.3 Alt+Tab, Win | Hook built, untested on real Windows | E1 | pending |
+| 2.3 Ctrl+C/V, PrtScn | Missing in the app | C1 | pending |
+| 2.3 No tab switching | Kiosk (app) and Üki Lock (browser) | E1 | pending |
+| 2.3 Block other windows and browsers during the test | Partial: blur rule and blocked-apps scan; browsers not checked | C2 | pending |
+| Stack: YOLOv8n/YOLO11n for phone, MediaPipe Face Mesh for gaze | MediaPipe for both | A6 | pending |
+
+### A1 · Default phone_score 0.55
+
+Pending.
+
+### A2 · Phone rule 2 of 3
+
+Pending.
+
+### A3 · Detection boxes
+
+Pending.
+
+### A4 · Phone raised
+
+Pending.
+
+### A5 · Side turn
+
+Pending.
+
+### A6 · YOLO11n phone backend
+
+Pending.
+
+### A7 · Detection bench
+
+Pending.
+
+### B1 · Judge DEMO-LIVE and free seats
+
+Pending.
+
+### B2 · Simulator realism
+
+Pending.
+
+### B3 · Simulator on the VPS
+
+Pending.
+
+### B5 · Demo Day runbook
+
+Pending.
+
+### C1 · Copy, paste and PrtScn
+
+Pending.
+
+### C2 · Other browsers in app mode
+
+Pending.
+
+### E1 · Windows lab session, 12 October
+
+Pending.
