@@ -93,6 +93,9 @@ describe("head pose", () => {
       pitchDeg: -12,
     });
     expect(headPose({ rows: 3, columns: 3, data: [] })).toEqual({ yawDeg: 0, pitchDeg: 0, rollDeg: 0 });
+    const broken = pose(10, 0, 0);
+    broken.data[1] = Number.NaN;
+    expect(Number.isFinite(headPose(broken).rollDeg)).toBe(true);
   });
 });
 
