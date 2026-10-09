@@ -26,8 +26,10 @@ describe("preload bridge", () => {
       [IPC_CHANNELS.appInfo],
       [IPC_CHANNELS.appQuit],
       [IPC_CHANNELS.checksScan],
+      [IPC_CHANNELS.checksScan, { browsers: true }],
       [IPC_CHANNELS.checksCameraAccess],
       [IPC_CHANNELS.checksWatch, true],
+      [IPC_CHANNELS.checksWatch, true, { browsers: false }],
       [IPC_CHANNELS.examLockdown, true],
       [IPC_CHANNELS.examHideToTray, false],
       [IPC_CHANNELS.lockStatus],
@@ -38,8 +40,10 @@ describe("preload bridge", () => {
     await uki.app.info();
     await uki.app.quit();
     await uki.checks.scan();
+    await uki.checks.scan({ browsers: true });
     await uki.checks.cameraAccess();
     await uki.checks.watch(true);
+    await uki.checks.watch(true, { browsers: false });
     await uki.exam.lockdown(true);
     await uki.exam.hideToTray(false);
     await uki.lock.status();

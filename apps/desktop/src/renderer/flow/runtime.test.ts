@@ -298,6 +298,67 @@ describe("the flow runtime", () => {
     expect(api.answers.get(`${SESSION_ID}/${QUESTION_IDS[0]}`)?.choice_id).toBe("c");
   });
 
+  it("app exams (C2): 1.2 asks to close another browser, and one started mid-exam sends tab.blocked", async () => {
+    const chrome = { id: "chrome", name: "Google Chrome", kind: "browser" } as const;
+    api.joinOutput = joinOutput({ startsAt: Date.now() + 60_000 });
+    bridge.scanResult = { apps: [chrome], screenShare: [], freeMb: 50_000 };
+    runtime = makeRuntime();
+    runtime.start();
+    await advance(500);
+    runtime.send({ type: "JOIN", code: "math2-204-fri", studentNumber: "20231187" });
+    await advance(1000);
+    expect(stage()).toBe("system");
+    expect(bridge.scanOptions).toEqual([{ browsers: true }]);
+    // The Other apps row names it with check.apps.fail, as it names Telegram; the lobby sees it too.
+    expect(screen()).toMatchObject({
+      frame: "1.2",
+      apps: { status: "fail", app: "Google Chrome" },
+      canContinue: false,
+    });
+    expect(api.statuses.at(-1)).toEqual({ step: "checking", detail: "app:Google Chrome" });
+
+    // The student closes it and presses Check again.
+    bridge.scanResult = { apps: [], screenShare: [], freeMb: 50_000 };
+    runtime.send({ type: "CHECK_AGAIN" });
+    await advance(1000);
+    expect(bridge.scanOptions).toEqual([{ browsers: true }, { browsers: true }]);
+    expect(screen()).toMatchObject({ frame: "1.2", apps: { status: "ready", app: null }, canContinue: true });
+
+    runtime.send({ type: "CONTINUE" });
+    await advance(500);
+    runtime.send({ type: "CONTINUE" });
+    await advance(2500);
+    runtime.send({ type: "SET_AGREED", agreed: true });
+    await advance(61_000, 1000);
+    expect(stage()).toBe("writing");
+    expect(bridge.watching).toBe(true);
+    expect(bridge.watchOptions).toEqual([{ browsers: true }]);
+
+    // The exam-time scan finds Chrome started: tab.blocked with its name.
+    bridge.blocked([chrome]);
+    await advance(2500);
+    expect(api.ofType("tab.blocked").map((e) => e.data)).toEqual([{ app: "Google Chrome" }]);
+  });
+
+  it("browser exams (C2): the browser the exam needs never fails 1.2 and is never reported", async () => {
+    const chrome = { id: "chrome", name: "Google Chrome", kind: "browser" } as const;
+    const telegram = { id: "telegram", name: "Telegram", kind: "app" } as const;
+    api.joinOutput = joinOutput({ startsAt: Date.now() + 60_000, mode: "browser" });
+    bridge.scanResult = { apps: [chrome], screenShare: [], freeMb: 50_000 };
+    runtime = makeRuntime();
+    await joinAndCheckIn();
+    expect(bridge.scanOptions).toEqual([{ browsers: false }]);
+    runtime.send({ type: "SET_AGREED", agreed: true });
+    await advance(61_000, 1000);
+    bridge.fromLock({ type: "lock.started", tabs_closed: 2 });
+    await advance(2500);
+    expect(bridge.watchOptions).toEqual([{ browsers: false }]);
+    bridge.blocked([chrome]);
+    bridge.blocked([chrome, telegram]);
+    await advance(2500);
+    expect(api.ofType("tab.blocked").map((e) => e.data)).toEqual([{ app: "Telegram" }]);
+  });
+
   it("browser exams: hides the window, sends exam.started on lock.started, submits on the Lock's exam.submitted", async () => {
     api.joinOutput = joinOutput({ startsAt: Date.now() + 60_000, mode: "browser" });
     runtime = makeRuntime();

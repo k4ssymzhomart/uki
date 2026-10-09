@@ -7,6 +7,7 @@ import type {
   LockPairCode,
   LockStatus,
   LockToApp,
+  ScanOptions,
   SessionCommandRow,
   SubmitSessionOutput,
   UkiBridge,
@@ -39,16 +40,28 @@ export class FakeBridge implements UkiBridge {
   };
   cameraGranted = true;
   watching = false;
+  /** What each 1.2 scan and each watch start asked for, oldest first. */
+  scanOptions: Array<ScanOptions | undefined> = [];
+  watchOptions: Array<ScanOptions | undefined> = [];
   private blockedListeners = new Set<(apps: BlockedApp[]) => void>();
   private statusListeners = new Set<(status: LockStatus) => void>();
   private pairCodeListeners = new Set<(code: LockPairCode | null) => void>();
 
   checks = {
-    scan: async () => this.scanResult,
+    // As the main process does: browsers only when asked for.
+    scan: async (options?: ScanOptions) => {
+      this.scanOptions.push(options);
+      const asked = options?.browsers === true;
+      return {
+        ...this.scanResult,
+        apps: this.scanResult.apps.filter((app) => asked || app.kind !== "browser"),
+      };
+    },
     cameraAccess: async () => this.cameraGranted,
-    watch: async (on: boolean) => {
+    watch: async (on: boolean, options?: ScanOptions) => {
       this.watching = on;
       this.calls.push(["watch", on]);
+      if (on) this.watchOptions.push(options);
     },
     onBlockedApps: (cb: (apps: BlockedApp[]) => void) => {
       this.blockedListeners.add(cb);
@@ -105,9 +118,12 @@ export class FakeBridge implements UkiBridge {
     for (const cb of this.lockListeners) cb(message);
   }
 
-  /** The main process's scan found blocked apps that appeared (while watching). */
+  /** The main process's scan found blocked apps that appeared (while watching); browsers only when asked. */
   blocked(apps: BlockedApp[]): void {
-    for (const cb of this.blockedListeners) cb(apps);
+    const asked = this.watchOptions.at(-1)?.browsers === true;
+    const found = apps.filter((app) => asked || app.kind !== "browser");
+    if (found.length === 0) return;
+    for (const cb of this.blockedListeners) cb(found);
   }
 
   setLockStatus(status: LockStatus): void {

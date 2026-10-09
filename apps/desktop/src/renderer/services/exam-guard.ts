@@ -1,9 +1,9 @@
 // What the app watches during an exam ("Window states" and "System check on 1.2" in
 // docs/phase-0-plan.md). In both modes a blocked app or screen-sharing tool that appears mid-exam sends
 // tab.blocked with its name: the main process runs the 15 s process scan (window.uki.checks.watch) and
-// reports only apps that appeared since its previous scan. In app exams, focus leaving the locked
-// window also sends tab.blocked with app null, at most once per 5 s.
-import type { UkiBridge } from "@uki/contracts";
+// reports only apps that appeared since its previous scan. In app exams the scan also looks for other
+// browsers (C2), and focus leaving the locked window sends tab.blocked with app null, at most once per 5 s.
+import { NO_BROWSERS, type ScanOptions, type UkiBridge } from "@uki/contracts";
 
 /** At most one tab.blocked for a lost focus in this window. */
 export const BLUR_THROTTLE_MS = 5_000;
@@ -37,15 +37,18 @@ export class ExamGuard {
     return this.unsubscribeBlur !== null;
   }
 
-  /** Starts or stops the 15 s process scan in the main process. */
-  scan(on: boolean): void {
+  /**
+   * Starts or stops the 15 s process scan in the main process; `options` says whether it looks for
+   * browsers too (in-app exams). A second start while scanning changes nothing.
+   */
+  scan(on: boolean, options: ScanOptions = NO_BROWSERS): void {
     const { bridge } = this.options;
     if (on === this.scanning) return;
     if (on) {
       this.unsubscribeScan = bridge.checks.onBlockedApps((apps) => {
         for (const app of apps) this.options.onBlocked(app.name);
       });
-      void bridge.checks.watch(true).catch(() => {});
+      void bridge.checks.watch(true, options).catch(() => {});
     } else {
       this.unsubscribeScan?.();
       this.unsubscribeScan = null;

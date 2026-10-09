@@ -46,8 +46,12 @@ describe("withoutBlockedApps", () => {
     const scan = vi.fn(
       async (): Promise<ScanResult> => ({ apps: [telegram], screenShare: [zoom], freeMb: 4096 }),
     );
-    await expect(withoutBlockedApps(scan)()).resolves.toEqual({ apps: [], screenShare: [], freeMb: 4096 });
-    expect(scan).toHaveBeenCalledOnce();
+    await expect(withoutBlockedApps(scan)({ browsers: true })).resolves.toEqual({
+      apps: [],
+      screenShare: [],
+      freeMb: 4096,
+    });
+    expect(scan).toHaveBeenCalledExactlyOnceWith({ browsers: true });
   });
 });
 

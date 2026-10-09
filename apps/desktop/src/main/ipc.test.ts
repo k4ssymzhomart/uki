@@ -85,6 +85,9 @@ describe("registerIpcHandlers", () => {
     await expect(ipc.call(IPC_CHANNELS.examLockdown, APP, true, "extra")).rejects.toThrow();
     await expect(ipc.call(IPC_CHANNELS.appInfo, APP, 1)).rejects.toThrow();
     await expect(ipc.call(IPC_CHANNELS.checksWatch, APP, 1)).rejects.toThrow();
+    await expect(ipc.call(IPC_CHANNELS.checksWatch, APP, true, { browsers: "yes" })).rejects.toThrow();
+    await expect(ipc.call(IPC_CHANNELS.checksScan, APP, { browsers: true, extra: 1 })).rejects.toThrow();
+    await expect(ipc.call(IPC_CHANNELS.checksScan, APP, null)).rejects.toThrow();
     await expect(
       ipc.call(IPC_CHANNELS.lockSend, APP, { type: "lock.release", reason: "bored" }),
     ).rejects.toThrow();
@@ -157,8 +160,13 @@ describe("createIpcHandlers", () => {
     expect(d.trayMode.set).toHaveBeenCalledWith(true);
     h[IPC_CHANNELS.checksWatch](true);
     h[IPC_CHANNELS.checksWatch](false);
-    expect(d.watcher.start).toHaveBeenCalledOnce();
+    h[IPC_CHANNELS.checksWatch](true, { browsers: true });
+    // Browsers only when the renderer asks (in-app exams).
+    expect(d.watcher.start.mock.calls).toEqual([[{ browsers: false }], [{ browsers: true }]]);
     expect(d.watcher.stop).toHaveBeenCalledOnce();
+    await h[IPC_CHANNELS.checksScan]();
+    await h[IPC_CHANNELS.checksScan]({ browsers: true });
+    expect(d.scan.mock.calls).toEqual([[{ browsers: false }], [{ browsers: true }]]);
     await expect(h[IPC_CHANNELS.checksCameraAccess]()).resolves.toBe(true);
     await expect(h[IPC_CHANNELS.receiptSavePdf]()).resolves.toMatch(/\.pdf$/);
     expect(h[IPC_CHANNELS.appInfo]()).toEqual({ version: "0.1.0", os: "windows", arch: "x64" });

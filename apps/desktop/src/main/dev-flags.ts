@@ -7,7 +7,7 @@
 //                                watch), for a laptop that runs Telegram or Claude while developing
 //   UKI_DEV_NO_KIOSK=1           exam.lockdown keeps its state (quit and close stay blocked) but never
 //                                takes the screen: no kiosk, no always-on-top, no focus stealing
-import type { ScanResult } from "@uki/contracts";
+import type { ScanOptions, ScanResult } from "@uki/contracts";
 import type { Lockdown } from "./lockdown.ts";
 
 export interface DevFlags {
@@ -49,9 +49,11 @@ export function describeDevFlags(flags: DevFlags): string[] {
   return on;
 }
 
-/** A scan with the blocked apps and screen-sharing tools left out (UKI_DEV_IGNORE_APPS). */
-export function withoutBlockedApps(scan: () => Promise<ScanResult>): () => Promise<ScanResult> {
-  return async () => ({ ...(await scan()), apps: [], screenShare: [] });
+/** A scan with the blocked apps, browsers and screen-sharing tools left out (UKI_DEV_IGNORE_APPS). */
+export function withoutBlockedApps(
+  scan: (options: ScanOptions) => Promise<ScanResult>,
+): (options: ScanOptions) => Promise<ScanResult> {
+  return async (options) => ({ ...(await scan(options)), apps: [], screenShare: [] });
 }
 
 /** Lockdown without the window calls (UKI_DEV_NO_KIOSK): `active` still blocks close and quit. */
